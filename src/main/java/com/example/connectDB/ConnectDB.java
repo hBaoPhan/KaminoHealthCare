@@ -17,7 +17,7 @@ public class ConnectDB {
 	}
 
 	public void connect() throws SQLException {
-		String url = "jdbc:sqlserver://localhost:1433;databasename=QUANLYKAMINOCOFFEE";
+		String url = "jdbc:sqlserver://localhost:1433;databasename=QUANLYKAMINOHEATHCARE";
 		String user = "sa";
 		String password = "sapassword";
 		con = DriverManager.getConnection(url, user, password);
@@ -35,7 +35,7 @@ public class ConnectDB {
 	}
 
 	public void connect1() throws SQLException {
-		String url = "jdbc:mysql://localhost:3306/QUANLYKAMINOCOFFEE?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
+		String url = "jdbc:mysql://localhost:3306/QUANLYKAMINOHEATHCARE?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
 		String user = "root";
 		String pwd = "sapassword";
 
