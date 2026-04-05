@@ -55,7 +55,8 @@ CREATE TABLE KhuyenMai (
     thoiGianBatDau DATETIME NOT NULL,
     thoiGianKetThuc DATETIME NOT NULL,
     loaiKhuyenMai ENUM('PHANTRAM', 'TANGKEM') NOT NULL,
-    khuyenMaiPhanTram DOUBLE DEFAULT 0
+    khuyenMaiPhanTram DOUBLE DEFAULT 0,
+    giaTriDonHangToiThieu DOUBLE DEFAULT 0 -- Thuộc tính mới được thêm vào
 );
 
 -- ==========================================
