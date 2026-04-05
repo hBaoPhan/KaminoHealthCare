@@ -11,6 +11,7 @@ public class KhuyenMai {
     private LoaiKhuyenMai loaiKhuyenMai;
     private double khuyenMaiPhanTram;
     private QuaTang quaTangKem;
+    private double giaTriDonHangToiThieu;
 
     public KhuyenMai() {
     }
@@ -19,7 +20,7 @@ public class KhuyenMai {
         this.maKhuyenMai = maKhuyenMai;
     }
 
-    public KhuyenMai(String maKhuyenMai, String tenKhuyenMai, LocalDateTime thoiGianBatDau, LocalDateTime thoiGianKetThuc, LoaiKhuyenMai loaiKhuyenMai, double khuyenMaiPhanTram, QuaTang quaTangKem) {
+    public KhuyenMai(String maKhuyenMai, String tenKhuyenMai, LocalDateTime thoiGianBatDau, LocalDateTime thoiGianKetThuc, LoaiKhuyenMai loaiKhuyenMai, double khuyenMaiPhanTram, QuaTang quaTangKem, double giaTriDonHangToiThieu) {
         this.maKhuyenMai = maKhuyenMai;
         this.tenKhuyenMai = tenKhuyenMai;
         this.thoiGianBatDau = thoiGianBatDau;
@@ -27,6 +28,7 @@ public class KhuyenMai {
         this.loaiKhuyenMai = loaiKhuyenMai;
         this.khuyenMaiPhanTram = khuyenMaiPhanTram;
         this.quaTangKem = quaTangKem;
+        this.giaTriDonHangToiThieu = giaTriDonHangToiThieu;
     }
 
     public String getMaKhuyenMai() {
@@ -85,6 +87,14 @@ public class KhuyenMai {
         this.quaTangKem = quaTangKem;
     }
 
+    public double getGiaTriDonHangToiThieu() {
+        return giaTriDonHangToiThieu;
+    }
+
+    public void setGiaTriDonHangToiThieu(double giaTriDonHangToiThieu) {
+        this.giaTriDonHangToiThieu = giaTriDonHangToiThieu;
+    }
+
     public boolean daHetHan() {
         return thoiGianKetThuc != null && thoiGianKetThuc.isBefore(LocalDateTime.now());
     }
@@ -111,6 +121,7 @@ public class KhuyenMai {
                 ", thoiGianKetThuc=" + thoiGianKetThuc +
                 ", loaiKhuyenMai=" + loaiKhuyenMai +
                 ", khuyenMaiPhanTram=" + khuyenMaiPhanTram +
+                ", giaTriDonHangToiThieu=" + giaTriDonHangToiThieu +
                 '}';
     }
 }

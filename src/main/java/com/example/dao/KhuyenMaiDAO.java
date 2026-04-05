@@ -26,6 +26,7 @@ public class KhuyenMaiDAO {
                 km.setThoiGianKetThuc(ketQua.getTimestamp("thoiGianKetThuc").toLocalDateTime());
                 km.setLoaiKhuyenMai(LoaiKhuyenMai.valueOf(ketQua.getString("loaiKhuyenMai")));
                 km.setKhuyenMaiPhanTram(ketQua.getDouble("khuyenMaiPhanTram"));
+                km.setGiaTriDonHangToiThieu(ketQua.getDouble("giaTriDonHangToiThieu"));
                 danhSach.add(km);
             }
         } catch (SQLException e) {
@@ -51,6 +52,7 @@ public class KhuyenMaiDAO {
                 km.setThoiGianKetThuc(ketQua.getTimestamp("thoiGianKetThuc").toLocalDateTime());
                 km.setLoaiKhuyenMai(LoaiKhuyenMai.valueOf(ketQua.getString("loaiKhuyenMai")));
                 km.setKhuyenMaiPhanTram(ketQua.getDouble("khuyenMaiPhanTram"));
+                km.setGiaTriDonHangToiThieu(ketQua.getDouble("giaTriDonHangToiThieu"));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -62,7 +64,7 @@ public class KhuyenMaiDAO {
         int soDongThayDoi = 0;
         try {
             Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "INSERT INTO KhuyenMai VALUES (?, ?, ?, ?, ?, ?)";
+            String truyVan = "INSERT INTO KhuyenMai VALUES (?, ?, ?, ?, ?, ?, ?)";
             PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
             lenh.setString(1, km.getMaKhuyenMai());
             lenh.setString(2, km.getTenKhuyenMai());
@@ -70,6 +72,7 @@ public class KhuyenMaiDAO {
             lenh.setTimestamp(4, Timestamp.valueOf(km.getThoiGianKetThuc()));
             lenh.setString(5, km.getLoaiKhuyenMai().name());
             lenh.setDouble(6, km.getKhuyenMaiPhanTram());
+            lenh.setDouble(7, km.getGiaTriDonHangToiThieu());
             soDongThayDoi = lenh.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -81,14 +84,15 @@ public class KhuyenMaiDAO {
         int soDongThayDoi = 0;
         try {
             Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "UPDATE KhuyenMai SET tenKhuyenMai = ?, thoiGianBatDau = ?, thoiGianKetThuc = ?, loaiKhuyenMai = ?, khuyenMaiPhanTram = ? WHERE maKhuyenMai = ?";
+            String truyVan = "UPDATE KhuyenMai SET tenKhuyenMai = ?, thoiGianBatDau = ?, thoiGianKetThuc = ?, loaiKhuyenMai = ?, khuyenMaiPhanTram = ?, giaTriDonHangToiThieu = ? WHERE maKhuyenMai = ?";
             PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
             lenh.setString(1, km.getTenKhuyenMai());
             lenh.setTimestamp(2, Timestamp.valueOf(km.getThoiGianBatDau()));
             lenh.setTimestamp(3, Timestamp.valueOf(km.getThoiGianKetThuc()));
             lenh.setString(4, km.getLoaiKhuyenMai().name());
             lenh.setDouble(5, km.getKhuyenMaiPhanTram());
-            lenh.setString(6, km.getMaKhuyenMai());
+            lenh.setDouble(6, km.getGiaTriDonHangToiThieu());
+            lenh.setString(7, km.getMaKhuyenMai());
             soDongThayDoi = lenh.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
