@@ -138,25 +138,36 @@ public class HoaDon {
     public void setDsChiTiet(List<ChiTietHoaDon> dsChiTiet) {
         this.dsChiTiet = dsChiTiet;
     }
-
-    public double tinhTongTien() {
-        double tong = 0;
-        for (ChiTietHoaDon ct : dsChiTiet) {
-            tong += ct.tinhThanhTien();
+// Tính tổng tiền hàng tạm thời (chưa trừ khuyến mãi)
+    public double tinhTongTienTamThoi() {
+    	if (dsChiTiet == null || dsChiTiet.isEmpty()) return 0.0;
+        double tongTienHang = 0;
+        for (ChiTietHoaDon chiTiet : dsChiTiet) {
+            tongTienHang += chiTiet.tinhThanhTien();
         }
-        return tong;
+        return tongTienHang;
     }
 
     public double tinhTongThue() {
+    	if (dsChiTiet == null || dsChiTiet.isEmpty()) return 0.0;
         double tongThue = 0;
-        for (ChiTietHoaDon ct : dsChiTiet) {
-            if (ct.getDonViQuyDoi() != null && ct.getDonViQuyDoi().getSanPham() != null) {
-                tongThue += ct.tinhThanhTien() * ct.getDonViQuyDoi().getSanPham().getThue();
-            }
+        for (ChiTietHoaDon chiTiet : dsChiTiet) {
+            tongThue += chiTiet.tinhTienThue();
         }
         return tongThue;
     }
-
+// Tính tổng tiền hàng cuối cùng
+    public double tinhTongTienThanhToan() {
+        double tongTienHang = tinhTongTienTamThoi();
+        double soTienGiam = 0.0;
+        
+        if (this.khuyenMai != null && this.khuyenMai.getLoaiKhuyenMai() == LoaiKhuyenMai.PHANTRAM) {
+            soTienGiam = tongTienHang * (this.khuyenMai.getKhuyenMaiPhanTram() / 100.0);
+        }
+        
+        return tongTienHang - soTienGiam;
+    }
+    
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

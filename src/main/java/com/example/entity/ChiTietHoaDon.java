@@ -1,5 +1,6 @@
 package com.example.entity;
 
+import java.util.List;
 import java.util.Objects;
 
 public class ChiTietHoaDon {
@@ -8,21 +9,23 @@ public class ChiTietHoaDon {
     private int soLuong;
     private double donGia;
     private boolean laQuaTangKem;
-    private Lo lo;
+    private List<SuPhanBoLo> dsPhanBoLo;
 
     public ChiTietHoaDon() {
     }
 
-    public ChiTietHoaDon(HoaDon hoaDon, DonViQuyDoi donViQuyDoi, int soLuong, double donGia, boolean laQuaTangKem, Lo lo) {
-        this.hoaDon = hoaDon;
-        this.donViQuyDoi = donViQuyDoi;
-        this.soLuong = soLuong;
-        this.donGia = donGia;
-        this.laQuaTangKem = laQuaTangKem;
-        this.lo = lo;
-    }
+    public ChiTietHoaDon(HoaDon hoaDon, DonViQuyDoi donViQuyDoi, int soLuong, double donGia, boolean laQuaTangKem,
+			List<SuPhanBoLo> dsPhanBoLo) {
+		super();
+		this.hoaDon = hoaDon;
+		this.donViQuyDoi = donViQuyDoi;
+		this.soLuong = soLuong;
+		this.donGia = donGia;
+		this.laQuaTangKem = laQuaTangKem;
+		this.dsPhanBoLo = dsPhanBoLo;
+	}
 
-    public HoaDon getHoaDon() {
+	public HoaDon getHoaDon() {
         return hoaDon;
     }
 
@@ -62,19 +65,28 @@ public class ChiTietHoaDon {
         this.laQuaTangKem = laQuaTangKem;
     }
 
-    public Lo getLo() {
-        return lo;
-    }
 
-    public void setLo(Lo lo) {
-        this.lo = lo;
-    }
+    public List<SuPhanBoLo> getDsPhanBoLo() {
+		return dsPhanBoLo;
+	}
 
-    public double tinhThanhTien() {
+	public void setDsPhanBoLo(List<SuPhanBoLo> dsPhanBoLo) {
+		this.dsPhanBoLo = dsPhanBoLo;
+	}
+
+	public double tinhThanhTien() {
         if (laQuaTangKem) return 0;
-        return soLuong * donGia;
+        return this.soLuong * this.donGia + tinhTienThue();
     }
-
+	
+	public double tinhTienThue() {
+        if (laQuaTangKem || donViQuyDoi == null || donViQuyDoi.getSanPham() == null) {
+            return 0.0;
+        }
+        double thueSuat = donViQuyDoi.getSanPham().getThue();
+        return (this.soLuong * this.donGia) * (thueSuat / 100.0);
+    }
+	
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
