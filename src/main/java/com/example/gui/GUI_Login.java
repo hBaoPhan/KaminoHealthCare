@@ -55,12 +55,12 @@ public class GUI_Login extends JFrame {
     private JPanel createLeftPanel() {
         JPanel panel = new JPanel();
         panel.setBackground(COLOR_PRIMARY);
-        panel.setPreferredSize(new Dimension(450, 600)); // Độ rộng cố định
+        panel.setPreferredSize(new Dimension(500, 600)); // Độ rộng cố định
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS)); // Sắp xếp theo chiều dọc
         panel.setBorder(new EmptyBorder(80, 40, 50, 40)); // Padding
 
         // Logo "KAMINO Healthcare"
-        JLabel lblLogo = new JLabel("KAMINO Healthcare");
+        JLabel lblLogo = new JLabel("KAMINO HEALTHCARE");
         lblLogo.setFont(new Font("Segoe UI", Font.BOLD, 36)); // Font hiện đại, đậm, lớn
         lblLogo.setForeground(Color.WHITE); // Chữ màu trắng
         lblLogo.setAlignmentX(Component.CENTER_ALIGNMENT); // Căn giữa
@@ -69,7 +69,7 @@ public class GUI_Login extends JFrame {
         panel.add(Box.createVerticalStrut(30)); // Khoảng cách dọc
 
         // Hình ảnh minh họa Dược sĩ (Sẽ cần file ảnh thực tế sau)
-        ImageIcon pharmacistIcon = loadIcon("/images/logo.jpg"); 
+        ImageIcon pharmacistIcon = loadIcon("/images/logo2.png"); 
         if (pharmacistIcon != null) {
             Image scaledImage = pharmacistIcon.getImage().getScaledInstance(350, 350, Image.SCALE_SMOOTH);
             lblPharmacistImage = new JLabel(new ImageIcon(scaledImage));
