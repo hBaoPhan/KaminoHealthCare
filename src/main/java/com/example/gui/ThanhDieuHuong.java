@@ -76,14 +76,14 @@ public class ThanhDieuHuong extends JFrame implements MouseListener, ActionListe
 		sidebar.setOpaque(true);
 		sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
 		sidebar.setAlignmentX(Component.CENTER_ALIGNMENT);
-		
+
 		JScrollPane scrollPane = new JScrollPane(sidebar);
 		scrollPane.setBorder(null);
 		scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 		scrollPane.getVerticalScrollBar().setUnitIncrement(16); // Faster scrolling
 		scrollPane.setPreferredSize(new Dimension(200, getHeight()));
-		
+
 		add(scrollPane, BorderLayout.WEST);
 
 		ImageIcon logoData = new ImageIcon("src/main/resources/images/logo.png");
@@ -126,15 +126,15 @@ public class ThanhDieuHuong extends JFrame implements MouseListener, ActionListe
 
 		contentPanel = new JPanel(cardLayout);
 		contentPanel.add(pnlTrangChu = new TrangChuPanel(taiKhoan), "Màn hình chính");
-		contentPanel.add(pnlHoaDon = new HoaDonPanel(), "QL hóa đơn");
-		contentPanel.add(new BanHangPanel(), "Bán hàng");
-		contentPanel.add(new DoiHangPanel(), "Đổi hàng");
-		contentPanel.add(new TraHangPanel(), "Trả hàng");
+		contentPanel.add(pnlHoaDon = new HoaDonPanel(), "> QL hóa đơn");
+		contentPanel.add(new BanHangPanel(), "> Bán hàng");
+		contentPanel.add(new DoiHangPanel(), "> Đổi hàng");
+		contentPanel.add(new TraHangPanel(), "> Trả hàng");
 		contentPanel.add(pnlKhachHang = new KhachHangPanel(), "Khách hàng");
 		isQuanLy = taiKhoan.getNhanVien().getChucVu() == ChucVu.NHANVIENQUANLY;
 		if (isQuanLy) {
-			contentPanel.add(new QLSanPhamPanel(), "QL sản phẩm");
-			contentPanel.add(new NhapLoPanel(), "Nhập lô");
+			contentPanel.add(new QLSanPhamPanel(), "> QL sản phẩm");
+			contentPanel.add(new NhapLoPanel(), "> Nhập lô");
 			contentPanel.add(pnlNhanVien = new NhanVienPanel(), "Nhân viên");
 			contentPanel.add(pnlThongKe = new ThongKePanel(), "Thống Kê");
 		}
