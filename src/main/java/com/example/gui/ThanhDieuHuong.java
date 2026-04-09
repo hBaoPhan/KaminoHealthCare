@@ -13,6 +13,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -28,6 +30,7 @@ import com.example.entity.ChucVu;
 import com.example.entity.TaiKhoan;
 import javax.swing.border.Border;
 import javax.swing.Icon;
+import javax.swing.JScrollPane;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -40,7 +43,7 @@ public class ThanhDieuHuong extends JFrame implements MouseListener, ActionListe
 	private CardLayout cardLayout;
 	private JLabel lblTenTaiKhoan;
 	private JLabel lblChucVu;
-	private Color textHoverColor = Color.decode("#e07b39"); // màu chữ khi hover
+	private Color textHoverColor = Color.decode("#1A73E8");
 	private Color textDefaultColor = Color.BLACK;
 	private Font customFont = new Font("Segoe UI", Font.BOLD, 12);
 	private JButton btnDangXuat;
@@ -51,12 +54,15 @@ public class ThanhDieuHuong extends JFrame implements MouseListener, ActionListe
 	private TrangChuPanel pnlTrangChu;
 	private ThongKePanel pnlThongKe;
 	private boolean isQuanLy;
-	private JLabel[] labels;
+	private List<MenuLabel> menuLabels = new ArrayList<>();
+	private List<MenuItem> menuStructure = new ArrayList<>();
+	private JPanel sidebar;
+	private JPanel pLogout;
 
 	private Border menuPadding = BorderFactory.createEmptyBorder(10, 25, 10, 25);
-	private Color selectedBg = Color.decode("#F7F4EC");
+	private Color selectedBg = Color.decode("#E8F0FE");
 	private Border selectedBorder = BorderFactory.createCompoundBorder(
-			BorderFactory.createMatteBorder(0, 5, 0, 0, Color.decode("#54ACD2")), // Simple left accent line
+			BorderFactory.createMatteBorder(0, 5, 0, 0, Color.decode("#1A73E8")), // Blue accent line
 			menuPadding);
 
 	public ThanhDieuHuong(TaiKhoan taiKhoan) {
@@ -70,13 +76,18 @@ public class ThanhDieuHuong extends JFrame implements MouseListener, ActionListe
 		sidebar.setOpaque(true);
 		sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
 		sidebar.setAlignmentX(Component.CENTER_ALIGNMENT);
-		sidebar.setPreferredSize(new Dimension(200, getHeight()));
-		add(sidebar, BorderLayout.WEST);
+		
+		JScrollPane scrollPane = new JScrollPane(sidebar);
+		scrollPane.setBorder(null);
+		scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+		scrollPane.getVerticalScrollBar().setUnitIncrement(16); // Faster scrolling
+		scrollPane.setPreferredSize(new Dimension(200, getHeight()));
+		
+		add(scrollPane, BorderLayout.WEST);
 
-		ImageIcon LogoIcon = new ImageIcon("src/main/resources/images/logo.png");
-		Image scaledImage = LogoIcon.getImage().getScaledInstance(146, 146, Image.SCALE_SMOOTH);
-		ImageIcon resizedIcon = new ImageIcon(scaledImage);
-		JLabel lblLogo = new JLabel(resizedIcon);
+		ImageIcon logoData = new ImageIcon("src/main/resources/images/logo.png");
+		JLabel lblLogo = new JLabel(new HiDPIIcon(logoData.getImage(), 146, 146));
 		lblLogo.setAlignmentX(Component.CENTER_ALIGNMENT);
 		lblLogo.setBorder(BorderFactory.createEmptyBorder(20, 20, 0, 20));
 		sidebar.add(lblLogo);
@@ -99,86 +110,57 @@ public class ThanhDieuHuong extends JFrame implements MouseListener, ActionListe
 		lblChucVu.setAlignmentX(Component.CENTER_ALIGNMENT);
 
 		sidebar.add(lblKAMINOCOFFEE);
-		sidebar.add(Box.createVerticalStrut(10));
+		sidebar.add(Box.createVerticalStrut(5));
 		sidebar.add(lblXinChao);
 		sidebar.add(lblTenTaiKhoan);
 		sidebar.add(lblChucVu);
+		sidebar.add(Box.createVerticalStrut(5));
 		sidebar.add(Box.createVerticalStrut(10));
-		sidebar.add(Box.createVerticalStrut(20));
 
-		String[] tabs;
-		if (taiKhoan.getNhanVien().getChucVu() == ChucVu.NHANVIENQUANLY) {
-			tabs = new String[] { "Màn hình chính", "Hóa đơn", "Sản phẩm", "Khách hàng", "Nhân viên",
-					"Thống Kê", "Trợ giúp" };
-		} else {
-			tabs = new String[] { "Màn hình chính", "Sản phẩm", "Khách hàng", "Trợ giúp" };
-		}
-
-		labels = new JLabel[tabs.length];
-
-		for (int i = 0; i < tabs.length; i++) {
-			final String tab = tabs[i];
-			labels[i] = new JLabel(tab);
-			labels[i].setFont(customFont);
-			labels[i].setIcon(getIconForTab(tab));
-			labels[i].setIconTextGap(15);
-			labels[i].setBorder(menuPadding);
-			labels[i].addMouseListener(this);
-			labels[i].setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-			// Allow highlights to fill full width
-			labels[i].setAlignmentX(Component.CENTER_ALIGNMENT);
-			labels[i].setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
-			labels[i].setOpaque(true);
-			labels[i].setBackground(Color.WHITE);
-
-			sidebar.add(labels[i]);
-			sidebar.add(Box.createVerticalStrut(2));
-		}
+		this.sidebar = sidebar;
+		initMenuStructure(taiKhoan);
+		initLogoutPanel();
+		renderSidebar();
 
 		cardLayout = new CardLayout();
 
 		contentPanel = new JPanel(cardLayout);
 		contentPanel.add(pnlTrangChu = new TrangChuPanel(taiKhoan), "Màn hình chính");
-		contentPanel.add(pnlHoaDon = new HoaDonPanel(), "Hóa đơn");
+		contentPanel.add(pnlHoaDon = new HoaDonPanel(), "QL hóa đơn");
+		contentPanel.add(new BanHangPanel(), "Bán hàng");
+		contentPanel.add(new DoiHangPanel(), "Đổi hàng");
+		contentPanel.add(new TraHangPanel(), "Trả hàng");
 		contentPanel.add(pnlKhachHang = new KhachHangPanel(), "Khách hàng");
 		isQuanLy = taiKhoan.getNhanVien().getChucVu() == ChucVu.NHANVIENQUANLY;
 		if (isQuanLy) {
-			contentPanel.add(new ThucDonPanel(), "Sản phẩm");
+			contentPanel.add(new QLSanPhamPanel(), "QL sản phẩm");
+			contentPanel.add(new NhapLoPanel(), "Nhập lô");
 			contentPanel.add(pnlNhanVien = new NhanVienPanel(), "Nhân viên");
 			contentPanel.add(pnlThongKe = new ThongKePanel(), "Thống Kê");
 		}
-		contentPanel.add(new JPanel(), "Trợ giúp"); // Temporary stub for Help panel
+		contentPanel.add(new JPanel(), "Trợ giúp");
 
-		sidebar.add(Box.createVerticalGlue());
-		// 2. Định nghĩa nút Đăng xuất và đặt style
+		add(contentPanel, BorderLayout.CENTER);
+	}
+
+	private void initLogoutPanel() {
 		btnDangXuat = new JButton("Đăng xuất");
 		btnDangXuat.setBackground(Color.decode("#DC3545"));
 		btnDangXuat.setForeground(Color.WHITE);
 		btnDangXuat.setAlignmentX(Component.CENTER_ALIGNMENT);
 		btnDangXuat.setBorder(BorderFactory.createLineBorder(Color.red, 5, true));
+		btnDangXuat.addActionListener(this);
 
-		// 3. Đặt nút vào Sidebar
-		// Dùng JPanel để kiểm soát padding và màu nền xung quanh nút
-		JPanel pLogout = new JPanel();
+		pLogout = new JPanel();
 		pLogout.setBackground(sidebarColor);
 		pLogout.setLayout(new BorderLayout());
 		pLogout.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
 		pLogout.add(btnDangXuat);
 		pLogout.setBorder(new EmptyBorder(0, 20, 0, 20));
-
-		sidebar.add(pLogout);
-		sidebar.add(Box.createVerticalStrut(10)); // Khoảng đệm dưới cùng 10px
-
-		// --- CardLayout (CENTER) (GIỮ NGUYÊN) ---
-
-		btnDangXuat.addActionListener(this);
-		add(contentPanel, BorderLayout.CENTER);
-
 	}
 
 	private void capNhatDuLieuKhiDoiThe() {
-		// pnlBan.capNhatDuLieuBanPanel(); // Removed as Ban is no longer in tabs
+
 		pnlKhachHang.taiLaiDanhSach();
 		pnlHoaDon.taiLaiDanhSach();
 		pnlTrangChu.loadThongKeData();
@@ -191,20 +173,26 @@ public class ThanhDieuHuong extends JFrame implements MouseListener, ActionListe
 
 	@Override
 	public void mouseClicked(MouseEvent e) {
-		JLabel clickedLabel = (JLabel) e.getSource();
-		String tabName = clickedLabel.getText();
+		MenuLabel clickedLabel = (MenuLabel) e.getSource();
+		MenuItem item = clickedLabel.getMenuItem();
 
-		for (JLabel label : labels) {
-			if (label == clickedLabel) {
-				label.setBorder(selectedBorder);
-				label.setBackground(selectedBg);
+		if (!item.children.isEmpty()) {
+			item.isExpanded = !item.isExpanded;
+			renderSidebar();
+			return;
+		}
+
+		for (MenuLabel ml : menuLabels) {
+			if (ml == clickedLabel) {
+				ml.setBorder(selectedBorder);
+				ml.setBackground(selectedBg);
 			} else {
-				label.setBorder(menuPadding);
-				label.setBackground(Color.WHITE);
+				ml.setBorder(ml.getMenuItem().isChild ? BorderFactory.createEmptyBorder(10, 45, 10, 25) : menuPadding);
+				ml.setBackground(Color.WHITE);
 			}
 		}
 
-		cardLayout.show(contentPanel, tabName);
+		cardLayout.show(contentPanel, item.name);
 		capNhatDuLieuKhiDoiThe();
 	}
 
@@ -268,6 +256,119 @@ public class ThanhDieuHuong extends JFrame implements MouseListener, ActionListe
 		}
 	}
 
+	private void initMenuStructure(TaiKhoan taiKhoan) {
+		boolean isQL = taiKhoan.getNhanVien().getChucVu() == ChucVu.NHANVIENQUANLY;
+
+		menuStructure.add(new MenuItem("Màn hình chính", "home.png"));
+
+		MenuItem hoaDon = new MenuItem("Hóa đơn", "invoice.png");
+		hoaDon.children.add(new MenuItem("> QL hóa đơn", null, true));
+		hoaDon.children.add(new MenuItem("> Bán hàng", null, true));
+		hoaDon.children.add(new MenuItem("> Đổi hàng", null, true));
+		hoaDon.children.add(new MenuItem("> Trả hàng", null, true));
+		menuStructure.add(hoaDon);
+
+		MenuItem sanPham = new MenuItem("Sản phẩm", "product.png");
+		if (isQL) {
+			sanPham.children.add(new MenuItem("> QL sản phẩm", null, true));
+			sanPham.children.add(new MenuItem("> Nhập lô", null, true));
+		}
+		menuStructure.add(sanPham);
+
+		menuStructure.add(new MenuItem("Khách hàng", "customer.png"));
+
+		if (isQL) {
+			menuStructure.add(new MenuItem("Nhân viên", "staff.png"));
+			menuStructure.add(new MenuItem("Thống Kê", "chart.png"));
+		}
+
+		menuStructure.add(new MenuItem("Trợ giúp", "help.png"));
+	}
+
+	private void renderSidebar() {
+		// Cleanly remove all components after the header (logo, names, etc.)
+		// Header items are at indices 0 to 7
+		Component[] components = sidebar.getComponents();
+		for (int i = components.length - 1; i >= 8; i--) {
+			sidebar.remove(i);
+		}
+		menuLabels.clear();
+
+		for (MenuItem item : menuStructure) {
+			addMenuItemToSidebar(item);
+			if (item.isExpanded) {
+				for (MenuItem child : item.children) {
+					addMenuItemToSidebar(child);
+				}
+			}
+		}
+
+		// Re-add vertical glue and fixed logout section at the bottom
+		sidebar.add(Box.createVerticalGlue());
+		sidebar.add(pLogout);
+		sidebar.add(Box.createVerticalStrut(10));
+
+		sidebar.revalidate();
+		sidebar.repaint();
+	}
+
+	private void addMenuItemToSidebar(MenuItem item) {
+		MenuLabel label = new MenuLabel(item);
+		label.setFont(customFont);
+		if (item.iconPath != null) {
+			label.setIcon(getIconForTab(item.name));
+		}
+		label.setIconTextGap(15);
+		// Indent children
+		int leftPad = item.isChild ? 45 : 25;
+		label.setBorder(BorderFactory.createEmptyBorder(10, leftPad, 10, 25));
+		label.addMouseListener(this);
+		label.setCursor(new Cursor(Cursor.HAND_CURSOR));
+		label.setAlignmentX(Component.CENTER_ALIGNMENT);
+		label.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+		label.setOpaque(true);
+		label.setBackground(Color.WHITE);
+
+		if (!item.children.isEmpty()) {
+			label.setText(item.name + (item.isExpanded ? "   >" : "   <"));
+		}
+
+		sidebar.add(label);
+		sidebar.add(Box.createVerticalStrut(2));
+		menuLabels.add(label);
+	}
+
+	private static class MenuItem {
+		String name;
+		String iconPath;
+		boolean isChild;
+		boolean isExpanded = false;
+		List<MenuItem> children = new ArrayList<>();
+
+		MenuItem(String name, String iconPath) {
+			this(name, iconPath, false);
+		}
+
+		MenuItem(String name, String iconPath, boolean isChild) {
+			this.name = name;
+			this.iconPath = iconPath;
+			this.isChild = isChild;
+		}
+	}
+
+	private static class MenuLabel extends JLabel {
+		private final MenuItem menuItem;
+
+		MenuLabel(MenuItem item) {
+			super(item.name);
+			this.menuItem = item;
+		}
+
+		public MenuItem getMenuItem() {
+			return menuItem;
+		}
+	}
+
 	private Icon getIconForTab(String tabName) {
 		String fileName = switch (tabName) {
 			case "Màn hình chính" -> "home.png";
@@ -283,21 +384,8 @@ public class ThanhDieuHuong extends JFrame implements MouseListener, ActionListe
 		if (fileName != null) {
 			try {
 				String path = "src/main/resources/images/" + fileName;
-				ImageIcon icon = new ImageIcon(path);
-
-				// High-quality scaling using Graphics2D
-				int size = 24;
-				BufferedImage scaledImg = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
-				Graphics2D g2 = scaledImg.createGraphics();
-
-				g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-				g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-				g2.drawImage(icon.getImage(), 0, 0, size, size, null);
-				g2.dispose();
-
-				return new ImageIcon(scaledImg);
+				Image img = new ImageIcon(path).getImage();
+				return new HiDPIIcon(img, 24, 24);
 			} catch (Exception e) {
 				System.err.println("Could not load icon: " + fileName);
 			}
@@ -309,8 +397,7 @@ public class ThanhDieuHuong extends JFrame implements MouseListener, ActionListe
 			public void paintIcon(Component c, Graphics g, int x, int y) {
 				Graphics2D g2 = (Graphics2D) g.create();
 				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-				Color color = Color.GRAY;
-				g2.setColor(color);
+				g2.setColor(Color.GRAY);
 				g2.fillRoundRect(x, y, 16, 16, 5, 5);
 				g2.dispose();
 			}
@@ -325,5 +412,38 @@ public class ThanhDieuHuong extends JFrame implements MouseListener, ActionListe
 				return 24;
 			}
 		};
+	}
+
+	// Class to handle HiDPI sharp rendering for images
+	private static class HiDPIIcon implements Icon {
+		private final Image image;
+		private final int width;
+		private final int height;
+
+		public HiDPIIcon(Image image, int width, int height) {
+			this.image = image;
+			this.width = width;
+			this.height = height;
+		}
+
+		@Override
+		public void paintIcon(Component c, Graphics g, int x, int y) {
+			Graphics2D g2 = (Graphics2D) g.create();
+			g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+			g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			g2.drawImage(image, x, y, width, height, null);
+			g2.dispose();
+		}
+
+		@Override
+		public int getIconWidth() {
+			return width;
+		}
+
+		@Override
+		public int getIconHeight() {
+			return height;
+		}
 	}
 }
