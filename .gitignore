@@ -38,9 +38,17 @@ local.properties
 !.vscode/launch.json
 !.vscode/extensions.json
 !.vscode/*.code-snippets
-
 .history/
 *.code-workspace
+.settings.json
+.factorypath
+.spring-boot-devtools.properties
+*.log
+.idea/
+*.iws
+*.iml
+*.ipr
+nb-configuration.xml
 
 # ==========================================
 # Hệ điều hành (MacOS / Windows)

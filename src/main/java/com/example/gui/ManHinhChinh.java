@@ -1,22 +1,41 @@
 package com.example.gui;
 
-import java.awt.Dimension;
-import java.sql.SQLException;
+import com.example.entity.ChucVu;
+import com.example.entity.NhanVien;
+import com.example.entity.TaiKhoan;
+import com.formdev.flatlaf.FlatLightLaf;
 
-import javax.swing.JFrame;
+import javax.swing.*;
 
-import com.example.connectDB.ConnectDB;
+public class ManHinhChinh {
 
-public class ManHinhChinh extends JFrame {
+   public static void main(String[] args) {
+      setupLookAndFeel();
 
-   public ManHinhChinh() {
-      try {
-         ConnectDB.getInstance().connect1();
-      } catch (SQLException e) {
-         // TODO Auto-generated catch block
-         e.printStackTrace();
-      }
-      this.setSize(new Dimension(300, 400));
+      // Mock data for display
+      NhanVien nv = new NhanVien("NV001", "Hoài Bảo", "123456789", "0987654321", ChucVu.NHANVIENQUANLY, true);
+      TaiKhoan tk = new TaiKhoan("admin", "admin", nv);
+
+      SwingUtilities.invokeLater(() -> {
+         ThanhDieuHuong mainFrame = new ThanhDieuHuong(tk);
+         mainFrame.setVisible(true);
+      });
    }
 
+   private static void setupLookAndFeel() {
+      try {
+         UIManager.setLookAndFeel(new FlatLightLaf());
+         UIManager.put("Button.arc", 10);
+         UIManager.put("Component.arc", 10);
+         UIManager.put("TextComponent.arc", 10);
+      } catch (Exception e) {
+         e.printStackTrace();
+      }
+   }
+
+   // Maintain constructor for compatibility if needed elsewhere
+   public void setVisible(boolean visible) {
+      if (visible)
+         main(new String[] {});
+   }
 }

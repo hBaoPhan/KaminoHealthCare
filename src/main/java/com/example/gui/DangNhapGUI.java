@@ -12,7 +12,7 @@ import java.net.URL;
  * Chỉ tạo Giao diện (UI) Form Đăng nhập Kamino Healthcare.
  * Thiết kế dựa trên hình ảnh Figma. Chưa có xử lý logic.
  */
-public class GUI_Login extends JFrame {
+public class DangNhapGUI extends JFrame {
 
     // --- Components để hiển thị ---
     private RoundedTextField txtUsername;
@@ -24,9 +24,9 @@ public class GUI_Login extends JFrame {
     // --- Bảng màu từ thiết kế Figma ---
     private final Color COLOR_PRIMARY = new Color(0x54ACD2); // Xanh lá cây ForestGreen
     private final Color COLOR_TEXT_HINT = new Color(150, 150, 150); // Màu chữ gợi ý xám
-    private final Color COLOR_LINK = new Color(0, 102, 204);     // Màu xanh dương cho liên kết
+    private final Color COLOR_LINK = new Color(0, 102, 204); // Màu xanh dương cho liên kết
 
-    public GUI_Login() {
+    public DangNhapGUI() {
         // 1. Cấu hình cửa sổ chính
         setTitle("KAMINO Healthcare - Hệ Thống Quản Lý Nhà Thuốc");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -47,8 +47,6 @@ public class GUI_Login extends JFrame {
         setupBasicUIEvents();
     }
 
-    
-    
     /**
      * Tạo Panel bên trái với nền xanh và logo.
      */
@@ -69,7 +67,8 @@ public class GUI_Login extends JFrame {
         panel.add(Box.createVerticalStrut(30)); // Khoảng cách dọc
 
         // Hình ảnh minh họa Dược sĩ (Sẽ cần file ảnh thực tế sau)
-        ImageIcon pharmacistIcon = loadIcon("/images/logo2.png"); 
+
+        ImageIcon pharmacistIcon = loadIcon("/images/logo.png");
         if (pharmacistIcon != null) {
             Image scaledImage = pharmacistIcon.getImage().getScaledInstance(350, 350, Image.SCALE_SMOOTH);
             lblPharmacistImage = new JLabel(new ImageIcon(scaledImage));
@@ -111,7 +110,7 @@ public class GUI_Login extends JFrame {
         txtUsername.setBounds(60, currentY, 400, 45);
         txtUsername.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         // Thêm Padding bên trái để chữ không sát viền
-        txtUsername.setBorder(new EmptyBorder(0, 15, 0, 10)); 
+        txtUsername.setBorder(new EmptyBorder(0, 15, 0, 10));
         panel.add(txtUsername);
 
         currentY += 70;
@@ -121,7 +120,7 @@ public class GUI_Login extends JFrame {
         txtPassword.setBounds(60, currentY, 400, 45);
         txtPassword.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         // Padding bên trái cho chữ, Padding bên phải cho Icon con mắt
-        txtPassword.setBorder(new EmptyBorder(0, 15, 0, 45)); 
+        txtPassword.setBorder(new EmptyBorder(0, 15, 0, 45));
         panel.add(txtPassword);
 
         // Icon con mắt để ẩn/hiện mật khẩu
@@ -156,18 +155,18 @@ public class GUI_Login extends JFrame {
 
         currentY += 80;
 
-//        // --- Chưa có tài khoản? Đăng ký (Liên kết) ---
-//        JLabel lblNoAccount = new JLabel("Chưa có tài khoản?");
-//        lblNoAccount.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-//        lblNoAccount.setBounds(150, currentY, 130, 20);
-//        panel.add(lblNoAccount);
-//
-//        lblRegister = new JLabel("Đăng ký");
-//        lblRegister.setFont(new Font("Segoe UI", Font.BOLD, 14));
-//        lblRegister.setForeground(COLOR_LINK);
-//        lblRegister.setCursor(new Cursor(Cursor.HAND_CURSOR));
-//        lblRegister.setBounds(285, currentY, 70, 20);
-//        panel.add(lblRegister);
+        // // --- Chưa có tài khoản? Đăng ký (Liên kết) ---
+        // JLabel lblNoAccount = new JLabel("Chưa có tài khoản?");
+        // lblNoAccount.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        // lblNoAccount.setBounds(150, currentY, 130, 20);
+        // panel.add(lblNoAccount);
+        //
+        // lblRegister = new JLabel("Đăng ký");
+        // lblRegister.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        // lblRegister.setForeground(COLOR_LINK);
+        // lblRegister.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        // lblRegister.setBounds(285, currentY, 70, 20);
+        // panel.add(lblRegister);
 
         return panel;
     }
@@ -219,7 +218,7 @@ public class GUI_Login extends JFrame {
             setOpaque(false); // Để vẽ nền tùy chỉnh bo góc
             setForeground(COLOR_TEXT_HINT); // Màu chữ gợi ý ban đầu
             setText(hint);
-            
+
             // Xử lý logic hiển thị Hint Text (Chữ gợi ý)
             addFocusListener(new java.awt.event.FocusAdapter() {
                 @Override
@@ -229,6 +228,7 @@ public class GUI_Login extends JFrame {
                         setForeground(Color.BLACK); // Đổi màu chữ sang đen
                     }
                 }
+
                 @Override
                 public void focusLost(java.awt.event.FocusEvent evt) {
                     if (getText().isEmpty()) {
@@ -280,6 +280,7 @@ public class GUI_Login extends JFrame {
                         setEchoChar('•'); // Bắt đầu ẩn ký tự khi nhập
                     }
                 }
+
                 @Override
                 public void focusLost(java.awt.event.FocusEvent evt) {
                     if (new String(getPassword()).isEmpty()) {
@@ -318,17 +319,17 @@ public class GUI_Login extends JFrame {
         // Thiết lập FlatLaf để có giao diện hiện đại, phẳng
         try {
             UIManager.setLookAndFeel(new FlatLightLaf());
-            
+
             // Tùy chỉnh bo góc mặc định cho nút nếu dùng FlatLaf
-            UIManager.put("Button.arc", 15); 
-            
+            UIManager.put("Button.arc", 15);
+
         } catch (Exception ex) {
             System.err.println("Failed to initialize FlatLaf Look and Feel");
         }
 
         // Chạy giao diện trên Event Dispatch Thread
         SwingUtilities.invokeLater(() -> {
-            new GUI_Login().setVisible(true);
+            new DangNhapGUI().setVisible(true);
         });
     }
 }
