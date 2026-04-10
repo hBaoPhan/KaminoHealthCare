@@ -27,9 +27,9 @@ public class DangNhapPanel extends JFrame implements ActionListener{
     private boolean isPasswordHidden = true;
 
     // --- Bảng màu từ thiết kế Figma ---
-    private final Color COLOR_PRIMARY = new Color(0x54ACD2); // Xanh lá cây ForestGreen
-    private final Color COLOR_TEXT_HINT = new Color(150, 150, 150); // Màu chữ gợi ý xám
-    private final Color COLOR_LINK = new Color(0, 102, 204); // Màu xanh dương cho liên kết
+    private final Color COLOR_PRIMARY = new Color(0x54ACD2); 
+    private final Color COLOR_TEXT_HINT = new Color(150, 150, 150); 
+    private final Color COLOR_LINK = new Color(0, 102, 204); 
 
     public DangNhapPanel() {
         // 1. Cấu hình cửa sổ chính
@@ -326,7 +326,7 @@ public class DangNhapPanel extends JFrame implements ActionListener{
                 SwingUtilities.invokeLater(() -> {
                     NhanVien nv = new NhanVien("NV001", "Hoài Bảo", "123456789", "0987654321", ChucVu.NHANVIENQUANLY, true);
                     TaiKhoan tk = new TaiKhoan("admin", "admin", nv);
-                    ThanhDieuHuong mainFrame = new ThanhDieuHuong(tk);
+                    ThanhDieuHuongPanel mainFrame = new ThanhDieuHuongPanel(tk);
                     mainFrame.setVisible(true);
                  });
                 dispose();
