@@ -51,7 +51,7 @@ public class ThanhDieuHuong extends JFrame implements MouseListener, ActionListe
 	private NhanVienPanel pnlNhanVien;
 	private Color sidebarColor = Color.WHITE;
 	private HoaDonPanel pnlHoaDon;
-	private TrangChuPanel pnlTrangChu;
+	private ManHinhChinhPanel pnlTrangChu;
 	private ThongKePanel pnlThongKe;
 	private boolean isQuanLy;
 	private List<MenuLabel> menuLabels = new ArrayList<>();
@@ -125,7 +125,7 @@ public class ThanhDieuHuong extends JFrame implements MouseListener, ActionListe
 		cardLayout = new CardLayout();
 
 		contentPanel = new JPanel(cardLayout);
-		contentPanel.add(pnlTrangChu = new TrangChuPanel(taiKhoan), "Màn hình chính");
+		contentPanel.add(pnlTrangChu = new ManHinhChinhPanel(taiKhoan), "Màn hình chính");
 		contentPanel.add(pnlHoaDon = new HoaDonPanel(), "> QL hóa đơn");
 		contentPanel.add(new BanHangPanel(), "> Bán hàng");
 		contentPanel.add(new DoiHangPanel(), "> Đổi hàng");
@@ -133,7 +133,7 @@ public class ThanhDieuHuong extends JFrame implements MouseListener, ActionListe
 		contentPanel.add(pnlKhachHang = new KhachHangPanel(), "Khách hàng");
 		isQuanLy = taiKhoan.getNhanVien().getChucVu() == ChucVu.NHANVIENQUANLY;
 		if (isQuanLy) {
-			contentPanel.add(new QLSanPhamPanel(), "> QL sản phẩm");
+			contentPanel.add(new SanPhamPanel(), "> QL sản phẩm");
 			contentPanel.add(new NhapLoPanel(), "> Nhập lô");
 			contentPanel.add(pnlNhanVien = new NhanVienPanel(), "Nhân viên");
 			contentPanel.add(pnlThongKe = new ThongKePanel(), "Thống Kê");
@@ -236,7 +236,7 @@ public class ThanhDieuHuong extends JFrame implements MouseListener, ActionListe
 			if (xacNhan == JOptionPane.YES_OPTION) {
 
 				EventQueue.invokeLater(() -> {
-					new DangNhapGUI().setVisible(true);
+					new DangNhapPanel().setVisible(true);
 				});
 				this.dispose();
 

@@ -13,13 +13,13 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 
-public class TrangChuPanel extends JPanel {
+public class ManHinhChinhPanel extends JPanel {
 
     private final Color COLOR_BG = new Color(245, 245, 245);
     private final Font FONT_TITLE = new Font("Segoe UI", Font.BOLD, 18);
     private final Font FONT_STATS = new Font("Segoe UI", Font.BOLD, 24);
 
-    public TrangChuPanel(TaiKhoan taiKhoan) {
+    public ManHinhChinhPanel(TaiKhoan taiKhoan) {
         setLayout(new BorderLayout(20, 20));
         setBackground(COLOR_BG);
         setBorder(new EmptyBorder(20, 20, 20, 20));
