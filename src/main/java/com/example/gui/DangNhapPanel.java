@@ -1,10 +1,15 @@
 package com.example.gui;
 
+import com.example.entity.ChucVu;
+import com.example.entity.NhanVien;
+import com.example.entity.TaiKhoan;
 import com.formdev.flatlaf.FlatLightLaf; // Thư viện tạo giao diện hiện đại
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.geom.RoundRectangle2D;
 import java.net.URL;
 
@@ -12,7 +17,7 @@ import java.net.URL;
  * Chỉ tạo Giao diện (UI) Form Đăng nhập Kamino Healthcare.
  * Thiết kế dựa trên hình ảnh Figma. Chưa có xử lý logic.
  */
-public class DangNhapGUI extends JFrame {
+public class DangNhapPanel extends JFrame implements ActionListener{
 
     // --- Components để hiển thị ---
     private RoundedTextField txtUsername;
@@ -22,11 +27,11 @@ public class DangNhapGUI extends JFrame {
     private boolean isPasswordHidden = true;
 
     // --- Bảng màu từ thiết kế Figma ---
-    private final Color COLOR_PRIMARY = new Color(0x54ACD2); // Xanh lá cây ForestGreen
-    private final Color COLOR_TEXT_HINT = new Color(150, 150, 150); // Màu chữ gợi ý xám
-    private final Color COLOR_LINK = new Color(0, 102, 204); // Màu xanh dương cho liên kết
+    private final Color COLOR_PRIMARY = new Color(0x54ACD2); 
+    private final Color COLOR_TEXT_HINT = new Color(150, 150, 150); 
+    private final Color COLOR_LINK = new Color(0, 102, 204); 
 
-    public DangNhapGUI() {
+    public DangNhapPanel() {
         // 1. Cấu hình cửa sổ chính
         setTitle("KAMINO Healthcare - Hệ Thống Quản Lý Nhà Thuốc");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -151,6 +156,7 @@ public class DangNhapGUI extends JFrame {
         btnLogin.setCursor(new Cursor(Cursor.HAND_CURSOR));
         // Bo góc cho nút (Sẽ được FlatLaf xử lý tự động nếu cấu hình)
         btnLogin.setBounds(60, currentY, 400, 50);
+        btnLogin.addActionListener(this);
         panel.add(btnLogin);
 
         currentY += 80;
@@ -312,24 +318,19 @@ public class DangNhapGUI extends JFrame {
         }
     }
 
-    /**
-     * Hàm main để chạy thử giao diện.
-     */
-    public static void main(String[] args) {
-        // Thiết lập FlatLaf để có giao diện hiện đại, phẳng
-        try {
-            UIManager.setLookAndFeel(new FlatLightLaf());
-
-            // Tùy chỉnh bo góc mặc định cho nút nếu dùng FlatLaf
-            UIManager.put("Button.arc", 15);
-
-        } catch (Exception ex) {
-            System.err.println("Failed to initialize FlatLaf Look and Feel");
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        Object source = e.getSource();
+        if(source.equals(btnLogin)){
+    
+                SwingUtilities.invokeLater(() -> {
+                    NhanVien nv = new NhanVien("NV001", "Hoài Bảo", "123456789", "0987654321", ChucVu.NHANVIENQUANLY, true);
+                    TaiKhoan tk = new TaiKhoan("admin", "admin", nv);
+                    ThanhDieuHuongPanel mainFrame = new ThanhDieuHuongPanel(tk);
+                    mainFrame.setVisible(true);
+                 });
+                dispose();
         }
-
-        // Chạy giao diện trên Event Dispatch Thread
-        SwingUtilities.invokeLater(() -> {
-            new DangNhapGUI().setVisible(true);
-        });
+        throw new UnsupportedOperationException("Unimplemented method 'actionPerformed'");
     }
 }

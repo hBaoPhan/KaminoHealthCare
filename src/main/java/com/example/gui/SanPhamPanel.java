@@ -29,9 +29,8 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableModel;
 
-public class QLSanPhamPanel extends JPanel {
-
-    public QLSanPhamPanel() {
+public class SanPhamPanel extends JPanel {
+    public SanPhamPanel() {
         setLayout(new BorderLayout());
         setBackground(new Color(245, 245, 245));
 
