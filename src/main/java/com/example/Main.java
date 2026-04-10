@@ -7,7 +7,7 @@ import com.example.entity.ChucVu;
 import com.example.entity.NhanVien;
 import com.example.entity.TaiKhoan;
 import com.example.gui.DangNhapPanel;
-import com.example.gui.ThanhDieuHuong;
+import com.example.gui.ThanhDieuHuongPanel;
 import com.formdev.flatlaf.FlatLightLaf;
 
 public class Main {

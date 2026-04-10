@@ -27,6 +27,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import com.example.entity.ChucVu;
+import com.example.entity.KhuyenMai;
 import com.example.entity.TaiKhoan;
 import javax.swing.border.Border;
 import javax.swing.Icon;
@@ -37,7 +38,7 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 
 @SuppressWarnings("serial")
-public class ThanhDieuHuong extends JFrame implements MouseListener, ActionListener {
+public class ThanhDieuHuongPanel extends JFrame implements MouseListener, ActionListener {
 
 	private JPanel contentPanel;
 	private CardLayout cardLayout;
@@ -60,12 +61,12 @@ public class ThanhDieuHuong extends JFrame implements MouseListener, ActionListe
 	private JPanel pLogout;
 
 	private Border menuPadding = BorderFactory.createEmptyBorder(10, 25, 10, 25);
-	private Color selectedBg = Color.decode("#E8F0FE");
+	private Color selectedBg = new Color(0xD8F0F9);
 	private Border selectedBorder = BorderFactory.createCompoundBorder(
 			BorderFactory.createMatteBorder(0, 5, 0, 0, Color.decode("#1A73E8")), // Blue accent line
 			menuPadding);
 
-	public ThanhDieuHuong(TaiKhoan taiKhoan) {
+	public ThanhDieuHuongPanel(TaiKhoan taiKhoan) {
 		setTitle("Kamino Healthcare - Hệ Thống Quản Lý Nhà Thuốc");
 		setExtendedState(JFrame.MAXIMIZED_BOTH);
 		setLocationRelativeTo(null);
@@ -132,10 +133,15 @@ public class ThanhDieuHuong extends JFrame implements MouseListener, ActionListe
 		contentPanel.add(new TraHangPanel(), "> Trả hàng");
 		contentPanel.add(pnlKhachHang = new KhachHangPanel(), "Khách hàng");
 		isQuanLy = taiKhoan.getNhanVien().getChucVu() == ChucVu.NHANVIENQUANLY;
+		contentPanel.add(new SanPhamPanel(), "> QL sản phẩm");
 		if (isQuanLy) {
-			contentPanel.add(new SanPhamPanel(), "> QL sản phẩm");
-			contentPanel.add(new NhapLoPanel(), "> Nhập lô");
-			contentPanel.add(pnlNhanVien = new NhanVienPanel(), "Nhân viên");
+			
+			contentPanel.add(new LoPanel(), "> QL lô");
+			contentPanel.add(new KhuyenMaiPanel(), "Khuyến Mãi"); // Tạo 1 KhuyenMaiPanel sau đó thay thế JPanel()
+            
+            contentPanel.add(pnlNhanVien = new NhanVienPanel(), "> QL Nhân Viên");
+            contentPanel.add(new TaiKhoanPanel(), "> QL Tài Khoản"); // Tạo 1 TaiKhoanPanel sau đó thay thế JPanel()
+
 			contentPanel.add(pnlThongKe = new ThongKePanel(), "Thống Kê");
 		}
 		contentPanel.add(new JPanel(), "Trợ giúp");
@@ -269,16 +275,26 @@ public class ThanhDieuHuong extends JFrame implements MouseListener, ActionListe
 		menuStructure.add(hoaDon);
 
 		MenuItem sanPham = new MenuItem("Sản phẩm", "product.png");
+		
+
+
 		if (isQL) {
 			sanPham.children.add(new MenuItem("> QL sản phẩm", null, true));
-			sanPham.children.add(new MenuItem("> Nhập lô", null, true));
+			sanPham.children.add(new MenuItem("> QL lô", null, true));
 		}
+
 		menuStructure.add(sanPham);
+		menuStructure.add(new MenuItem("Khuyến Mãi", "coupon.png")); 
 
 		menuStructure.add(new MenuItem("Khách hàng", "customer.png"));
 
 		if (isQL) {
-			menuStructure.add(new MenuItem("Nhân viên", "staff.png"));
+			
+			MenuItem nhanVien = new MenuItem("Nhân viên", "staff.png");
+			nhanVien.children.add(new MenuItem("> QL Nhân Viên", null, true));
+			nhanVien.children.add(new MenuItem("> QL Tài Khoản", null, true));
+			menuStructure.add(nhanVien);
+
 			menuStructure.add(new MenuItem("Thống Kê", "chart.png"));
 		}
 
@@ -378,6 +394,7 @@ public class ThanhDieuHuong extends JFrame implements MouseListener, ActionListe
 			case "Nhân viên" -> "staff.png";
 			case "Thống Kê" -> "chart.png";
 			case "Trợ giúp" -> "help.png";
+			case "Khuyến Mãi" -> "coupon.png";
 			default -> null;
 		};
 
