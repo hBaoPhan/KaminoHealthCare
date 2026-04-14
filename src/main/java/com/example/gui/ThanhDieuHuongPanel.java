@@ -87,7 +87,7 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 
 		add(scrollPane, BorderLayout.WEST);
 
-		ImageIcon logoData = new ImageIcon("src/main/resources/images/logo.png");
+		ImageIcon logoData = new ImageIcon("src/main/resources/images/icon/logo.png");
 		JLabel lblLogo = new JLabel(new HiDPIIcon(logoData.getImage(), 146, 146));
 		lblLogo.setAlignmentX(Component.CENTER_ALIGNMENT);
 		lblLogo.setBorder(BorderFactory.createEmptyBorder(20, 20, 0, 20));
@@ -135,12 +135,12 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		isQuanLy = taiKhoan.getNhanVien().getChucVu() == ChucVu.NHANVIENQUANLY;
 		contentPanel.add(new SanPhamPanel(), "> QL sản phẩm");
 		if (isQuanLy) {
-			
+
 			contentPanel.add(new LoPanel(), "> QL lô");
 			contentPanel.add(new KhuyenMaiPanel(), "Khuyến Mãi"); // Tạo 1 KhuyenMaiPanel sau đó thay thế JPanel()
-            
-            contentPanel.add(pnlNhanVien = new NhanVienPanel(), "> QL Nhân Viên");
-            contentPanel.add(new TaiKhoanPanel(), "> QL Tài Khoản"); // Tạo 1 TaiKhoanPanel sau đó thay thế JPanel()
+
+			contentPanel.add(pnlNhanVien = new NhanVienPanel(), "> QL Nhân Viên");
+			contentPanel.add(new TaiKhoanPanel(), "> QL Tài Khoản"); // Tạo 1 TaiKhoanPanel sau đó thay thế JPanel()
 
 			contentPanel.add(pnlThongKe = new ThongKePanel(), "Thống Kê");
 		}
@@ -275,8 +275,6 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		menuStructure.add(hoaDon);
 
 		MenuItem sanPham = new MenuItem("Sản phẩm", "product.png");
-		
-
 
 		if (isQL) {
 			sanPham.children.add(new MenuItem("> QL sản phẩm", null, true));
@@ -284,12 +282,12 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		}
 
 		menuStructure.add(sanPham);
-		menuStructure.add(new MenuItem("Khuyến Mãi", "coupon.png")); 
+		menuStructure.add(new MenuItem("Khuyến Mãi", "coupon.png"));
 
 		menuStructure.add(new MenuItem("Khách hàng", "customer.png"));
 
 		if (isQL) {
-			
+
 			MenuItem nhanVien = new MenuItem("Nhân viên", "staff.png");
 			nhanVien.children.add(new MenuItem("> QL Nhân Viên", null, true));
 			nhanVien.children.add(new MenuItem("> QL Tài Khoản", null, true));
@@ -400,9 +398,9 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 
 		if (fileName != null) {
 			try {
-				String path = "src/main/resources/images/" + fileName;
+				String path = "src/main/resources/images/icon/" + fileName;
 				Image img = new ImageIcon(path).getImage();
-				return new HiDPIIcon(img, 24, 24);
+				return new HiDPIIcon(img, 26, 26);
 			} catch (Exception e) {
 				System.err.println("Could not load icon: " + fileName);
 			}
