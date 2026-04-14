@@ -24,15 +24,12 @@ public class ManHinhChinhPanel extends JPanel {
         setBackground(COLOR_BG);
         setBorder(new EmptyBorder(20, 20, 20, 20));
 
-        // 1. Top Section: Stat Cards
         JPanel topPanel = createTopPanel();
         add(topPanel, BorderLayout.NORTH);
 
-        // 2. Center Section: Tables and Charts
         JPanel centerPanel = createCenterPanel();
         add(centerPanel, BorderLayout.CENTER);
 
-        // 3. Bottom Section: Quick Action Buttons
         JPanel bottomPanel = createBottomPanel();
         add(bottomPanel, BorderLayout.SOUTH);
     }
@@ -55,8 +52,7 @@ public class ManHinhChinhPanel extends JPanel {
         card.setBackground(Color.WHITE);
         card.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(230, 230, 230), 1),
-                new EmptyBorder(15, 15, 15, 15)
-        ));
+                new EmptyBorder(15, 15, 15, 15)));
 
         JLabel lblTitle = new JLabel(title);
         lblTitle.setFont(new Font("Segoe UI", Font.PLAIN, 14));
@@ -80,22 +76,21 @@ public class ManHinhChinhPanel extends JPanel {
         gbc.fill = GridBagConstraints.BOTH;
         gbc.insets = new Insets(10, 0, 10, 0);
 
-        // --- Row 1: Tables ---
         JPanel tablePanel = new JPanel(new GridBagLayout());
         tablePanel.setOpaque(false);
         GridBagConstraints tgbc = new GridBagConstraints();
         tgbc.fill = GridBagConstraints.BOTH;
         tgbc.weighty = 1.0;
 
-        // Left Table: Hóa đơn hôm nay
-        JPanel leftTablePanel = createTableContainer("Hóa đơn hôm nay", new String[]{"Mã Hóa đơn", "Tên KH", "Ngày tạo", "Khuyến mãi", "Người tạo", "Loại hóa đơn", "Tổng tiền", "Trạng thái"});
+        JPanel leftTablePanel = createTableContainer("Hóa đơn hôm nay", new String[] { "Mã Hóa đơn", "Tên KH",
+                "Ngày tạo", "Khuyến mãi", "Người tạo", "Loại hóa đơn", "Tổng tiền", "Trạng thái" });
         tgbc.weightx = 0.7;
         tgbc.gridx = 0;
         tgbc.insets = new Insets(0, 0, 0, 10);
         tablePanel.add(leftTablePanel, tgbc);
 
-        // Right Table: Lô thuốc hết hạn
-        JPanel rightTablePanel = createTableContainer("Lô thuốc hết hạn hôm nay", new String[]{"Mã Lô", "Tên thuốc", "HSD"});
+        JPanel rightTablePanel = createTableContainer("Lô thuốc hết hạn hôm nay",
+                new String[] { "Mã Lô", "Tên thuốc", "HSD" });
         tgbc.weightx = 0.3;
         tgbc.gridx = 1;
         tgbc.insets = new Insets(0, 10, 0, 0);
@@ -107,7 +102,6 @@ public class ManHinhChinhPanel extends JPanel {
         gbc.weighty = 0.5;
         panel.add(tablePanel, gbc);
 
-        // --- Row 2: Charts ---
         JPanel chartContainer = new JPanel(new GridLayout(1, 2, 20, 0));
         chartContainer.setOpaque(false);
 
@@ -131,9 +125,10 @@ public class ManHinhChinhPanel extends JPanel {
         panel.add(lblTitle, BorderLayout.NORTH);
 
         DefaultTableModel model = new DefaultTableModel(columns, 0);
-        // Add some dummy rows
-        for (int i = 0; i < 5; i++) model.addRow(new Object[columns.length]);
-        
+
+        for (int i = 0; i < 5; i++)
+            model.addRow(new Object[columns.length]);
+
         JTable table = new JTable(model);
         table.setRowHeight(30);
         JScrollPane scrollPane = new JScrollPane(table);
@@ -156,10 +151,9 @@ public class ManHinhChinhPanel extends JPanel {
                 "Doanh thu theo giờ",
                 null, null,
                 dataset, PlotOrientation.VERTICAL,
-                false, true, false
-        );
+                false, true, false);
         chart.setBackgroundPaint(Color.WHITE);
-        
+
         return new ChartPanel(chart);
     }
 
@@ -172,8 +166,7 @@ public class ManHinhChinhPanel extends JPanel {
 
         JFreeChart chart = ChartFactory.createRingChart(
                 "Cơ cấu doanh thu theo Nhóm hàng",
-                dataset, true, true, false
-        );
+                dataset, true, true, false);
         chart.setBackgroundPaint(Color.WHITE);
 
         return new ChartPanel(chart);
@@ -215,10 +208,10 @@ public class ManHinhChinhPanel extends JPanel {
     }
 
     public void loadThongKeData() {
-        // Mock method for NavBar callback
+
     }
 
     public void layDuLieuChoHoatDongGanDay() {
-        // Mock method for NavBar callback
+
     }
 }
