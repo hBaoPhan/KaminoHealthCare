@@ -17,6 +17,7 @@ public class HoaDon {
     private String ghiChu;
     private HoaDon hoaDonDoiTra;
     private DonThuoc donThuoc;
+    private PhuongThucThanhToan phuongThucThanhToan;
     private List<ChiTietHoaDon> dsChiTiet;
 
     public HoaDon() {
@@ -28,7 +29,7 @@ public class HoaDon {
         this.dsChiTiet = new ArrayList<>();
     }
 
-    public HoaDon(String maHoaDon, LocalDateTime thoiGianTao, NhanVien nhanVien, boolean trangThaiThanhToan, KhachHang khachHang, KhuyenMai khuyenMai, LoaiHoaDon loaiHoaDon, CaLam ca, String ghiChu, HoaDon hoaDonDoiTra, DonThuoc donThuoc) {
+    public HoaDon(String maHoaDon, LocalDateTime thoiGianTao, NhanVien nhanVien, boolean trangThaiThanhToan, KhachHang khachHang, KhuyenMai khuyenMai, LoaiHoaDon loaiHoaDon, CaLam ca, String ghiChu, HoaDon hoaDonDoiTra, DonThuoc donThuoc, PhuongThucThanhToan phuongThucThanhToan) {
         this.maHoaDon = maHoaDon;
         this.thoiGianTao = thoiGianTao;
         this.nhanVien = nhanVien;
@@ -40,6 +41,7 @@ public class HoaDon {
         this.ghiChu = ghiChu;
         this.hoaDonDoiTra = hoaDonDoiTra;
         this.donThuoc = donThuoc;
+        this.phuongThucThanhToan = phuongThucThanhToan;
         this.dsChiTiet = new ArrayList<>();
     }
 
@@ -129,6 +131,14 @@ public class HoaDon {
 
     public void setDonThuoc(DonThuoc donThuoc) {
         this.donThuoc = donThuoc;
+    }
+
+    public PhuongThucThanhToan getPhuongThucThanhToan() {
+        return phuongThucThanhToan;
+    }
+
+    public void setPhuongThucThanhToan(PhuongThucThanhToan phuongThucThanhToan) {
+        this.phuongThucThanhToan = phuongThucThanhToan;
     }
 
     public List<ChiTietHoaDon> getDsChiTiet() {

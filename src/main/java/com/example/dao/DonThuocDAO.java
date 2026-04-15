@@ -22,7 +22,7 @@ public class DonThuocDAO {
                 dt.setMaDonThuoc(ketQua.getString("maDonThuoc"));
                 dt.setTenBacSi(ketQua.getString("tenBacSi"));
                 dt.setCoSoKhamBenh(ketQua.getString("coSoKhamBenh"));
-                dt.setNgayKeDon(ketQua.getTimestamp("ngayKeDon").toLocalDateTime());
+                dt.setNgayKeDon(ketQua.getDate("ngayKeDon").toLocalDate());
                 danhSach.add(dt);
             }
         } catch (SQLException e) {
@@ -45,7 +45,7 @@ public class DonThuocDAO {
                 dt.setMaDonThuoc(ketQua.getString("maDonThuoc"));
                 dt.setTenBacSi(ketQua.getString("tenBacSi"));
                 dt.setCoSoKhamBenh(ketQua.getString("coSoKhamBenh"));
-                dt.setNgayKeDon(ketQua.getTimestamp("ngayKeDon").toLocalDateTime());
+                dt.setNgayKeDon(ketQua.getDate("ngayKeDon").toLocalDate());
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -62,7 +62,7 @@ public class DonThuocDAO {
             lenh.setString(1, dt.getMaDonThuoc());
             lenh.setString(2, dt.getTenBacSi());
             lenh.setString(3, dt.getCoSoKhamBenh());
-            lenh.setTimestamp(4, Timestamp.valueOf(dt.getNgayKeDon()));
+            lenh.setDate(4, Date.valueOf(dt.getNgayKeDon()));
             soDongThayDoi = lenh.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -78,7 +78,7 @@ public class DonThuocDAO {
             PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
             lenh.setString(1, dt.getTenBacSi());
             lenh.setString(2, dt.getCoSoKhamBenh());
-            lenh.setTimestamp(3, Timestamp.valueOf(dt.getNgayKeDon()));
+            lenh.setDate(3, Date.valueOf(dt.getNgayKeDon()));
             lenh.setString(4, dt.getMaDonThuoc());
             soDongThayDoi = lenh.executeUpdate();
         } catch (SQLException e) {

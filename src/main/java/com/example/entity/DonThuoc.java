@@ -1,13 +1,13 @@
 package com.example.entity;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.Objects;
 
 public class DonThuoc {
     private String maDonThuoc;
     private String tenBacSi;
     private String coSoKhamBenh;
-    private LocalDateTime ngayKeDon;
+    private LocalDate ngayKeDon;
 
     public DonThuoc() {
     }
@@ -16,7 +16,7 @@ public class DonThuoc {
         this.maDonThuoc = maDonThuoc;
     }
 
-    public DonThuoc(String maDonThuoc, String tenBacSi, String coSoKhamBenh, LocalDateTime ngayKeDon) {
+    public DonThuoc(String maDonThuoc, String tenBacSi, String coSoKhamBenh, LocalDate ngayKeDon) {
         this.maDonThuoc = maDonThuoc;
         this.tenBacSi = tenBacSi;
         this.coSoKhamBenh = coSoKhamBenh;
@@ -47,11 +47,11 @@ public class DonThuoc {
         this.coSoKhamBenh = coSoKhamBenh;
     }
 
-    public LocalDateTime getNgayKeDon() {
+    public LocalDate getNgayKeDon() {
         return ngayKeDon;
     }
 
-    public void setNgayKeDon(LocalDateTime ngayKeDon) {
+    public void setNgayKeDon(LocalDate ngayKeDon) {
         this.ngayKeDon = ngayKeDon;
     }
 
