@@ -1,4 +1,5 @@
-package com.example.gui;
+package com.example.gui.screens;
+import com.example.gui.components.*;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -163,12 +164,10 @@ public class SanPhamPanel extends JPanel {
     // PANEL BÊN PHẢI (Thông tin chi tiết sản phẩm)
     // ==========================================
     private JPanel createRightPanel() {
-        JPanel rightPanel = new JPanel(new BorderLayout());
+        RoundedPanel rightPanel = new RoundedPanel(16, true);
+        rightPanel.setLayout(new BorderLayout());
         rightPanel.setBackground(Color.WHITE);
-        rightPanel.setBorder(BorderFactory.createCompoundBorder(
-                new EmptyBorder(10, 10, 10, 10),
-                new LineBorder(Color.LIGHT_GRAY, 1)
-        ));
+        rightPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         // Tiêu đề
         JLabel lblTitle = new JLabel("THÔNG TIN SẢN PHẨM", SwingConstants.CENTER);
@@ -191,8 +190,9 @@ public class SanPhamPanel extends JPanel {
         JLabel imgBox = new JLabel("Image Placeholder", SwingConstants.CENTER);
         imgBox.setPreferredSize(new Dimension(150, 100));
         imgBox.setBorder(new LineBorder(Color.LIGHT_GRAY));
-        JButton btnSelectImage = new JButton("Chọn ảnh");
+        RoundedButton btnSelectImage = new RoundedButton("Chọn ảnh");
         btnSelectImage.setBackground(new Color(153, 225, 255));
+        btnSelectImage.setForeground(Color.BLACK);
         
         JPanel btnWrapper = new JPanel();
         btnWrapper.setBackground(Color.WHITE);
@@ -280,13 +280,12 @@ public class SanPhamPanel extends JPanel {
     }
 
     // Helper method tạo button có màu
-    private JButton createStyledButton(String text, Color bgColor, Color fgColor) {
-        JButton btn = new JButton(text);
+    private RoundedButton createStyledButton(String text, Color bgColor, Color fgColor) {
+        RoundedButton btn = new RoundedButton(text);
         btn.setBackground(bgColor);
         btn.setForeground(fgColor);
-        btn.setFocusPainted(false);
         btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        btn.setBorder(new EmptyBorder(8, 10, 8, 10));
         return btn;
     }
 }
+

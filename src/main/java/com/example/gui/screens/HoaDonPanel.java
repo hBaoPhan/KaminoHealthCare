@@ -1,4 +1,6 @@
-package com.example.gui;
+package com.example.gui.screens;
+
+import com.example.gui.components.*;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -56,12 +58,10 @@ public class HoaDonPanel extends JPanel {
     }
 
     private JPanel createStatCard(String title, String value) {
-        JPanel card = new JPanel();
+        RoundedPanel card = new RoundedPanel(20, true);
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
         card.setBackground(COLOR_CARD_BG);
-        card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(COLOR_BORDER, 1, true),
-                new EmptyBorder(20, 20, 20, 20)));
+        card.setBorder(new EmptyBorder(20, 20, 20, 20));
 
         JLabel lblTitle = new JLabel(title);
         lblTitle.setFont(FONT_TEXT);
@@ -104,24 +104,20 @@ public class HoaDonPanel extends JPanel {
         datePicker.setBackground(Color.WHITE);
         datePicker.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1, true));
 
-        JButton btnView = new JButton("Xem  👁");
+        RoundedButton btnView = new RoundedButton("Xem  👁");
         btnView.setFont(FONT_TEXT);
-        btnView.setPreferredSize(new Dimension(80, 35));
+        btnView.setForeground(Color.DARK_GRAY);
         btnView.setBackground(Color.WHITE);
-        btnView.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1, true));
-        btnView.setFocusPainted(false);
+        btnView.setPreferredSize(new Dimension(80, 35));
 
         leftPanel.add(txtSearch);
         leftPanel.add(datePicker);
         leftPanel.add(btnView);
 
-        JButton btnPayment = new JButton("Thanh toán");
+        RoundedButton btnPayment = new RoundedButton("Thanh toán");
         btnPayment.setFont(FONT_LABEL);
-        btnPayment.setForeground(Color.WHITE);
         btnPayment.setBackground(COLOR_PRIMARY);
         btnPayment.setPreferredSize(new Dimension(120, 40));
-        btnPayment.setFocusPainted(false);
-        btnPayment.setBorder(BorderFactory.createEmptyBorder());
 
         panel.add(leftPanel, BorderLayout.WEST);
         panel.add(btnPayment, BorderLayout.EAST);

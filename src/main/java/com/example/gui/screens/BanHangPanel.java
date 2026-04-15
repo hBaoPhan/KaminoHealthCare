@@ -1,4 +1,5 @@
-package com.example.gui;
+package com.example.gui.screens;
+import com.example.gui.components.*;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -50,9 +51,9 @@ public class BanHangPanel extends JPanel {
         topPanel.add(lblTitle, BorderLayout.WEST);
         topPanel.add(txtSearch, BorderLayout.EAST);
 
-        JPanel tableContainer = new JPanel(new BorderLayout());
+        RoundedPanel tableContainer = new RoundedPanel(12, true);
+        tableContainer.setLayout(new BorderLayout());
         tableContainer.setBackground(COLOR_CARD_BG);
-        tableContainer.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1));
 
         String[] columns = { "Mã sản phẩm", "Tên sản phẩm", "Đơn vị", "Số lượng", "Đơn giá", "Thuế", "Thành tiền" };
         DefaultTableModel model = new DefaultTableModel(columns, 15);
@@ -78,11 +79,10 @@ public class BanHangPanel extends JPanel {
     }
 
     private JPanel createSummaryBar() {
-        JPanel panel = new JPanel(new GridLayout(4, 1, 5, 2));
+        RoundedPanel panel = new RoundedPanel(12, true);
+        panel.setLayout(new GridLayout(4, 1, 5, 2));
         panel.setBackground(COLOR_CARD_BG);
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(COLOR_BORDER, 1),
-                new EmptyBorder(15, 20, 15, 20)));
+        panel.setBorder(new EmptyBorder(15, 20, 15, 20));
 
         panel.add(createSummaryLabel("Tổng tiền hóa đơn :", ""));
         panel.add(createSummaryLabel("Khuyến mãi :", ""));
@@ -102,13 +102,11 @@ public class BanHangPanel extends JPanel {
     }
 
     private JPanel createRightSidebar() {
-        JPanel sidebar = new JPanel();
+        RoundedPanel sidebar = new RoundedPanel(12, true);
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
         sidebar.setPreferredSize(new Dimension(320, 0));
         sidebar.setBackground(COLOR_CARD_BG);
-        sidebar.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(COLOR_BORDER, 1),
-                new EmptyBorder(20, 15, 20, 15)));
+        sidebar.setBorder(new EmptyBorder(20, 15, 20, 15));
 
         sidebar.add(createSectionTitle("Thông tin khách hàng"));
         sidebar.add(Box.createVerticalStrut(10));
@@ -198,15 +196,13 @@ public class BanHangPanel extends JPanel {
         datePicker.getComponentDateTextField().setHorizontalAlignment(JTextField.CENTER);
     }
 
-    private JButton createActionButton(String text, Color bg) {
-        JButton btn = new JButton(text);
+    private RoundedButton createActionButton(String text, Color bg) {
+        RoundedButton btn = new RoundedButton(text);
         btn.setFont(FONT_LABEL);
-        btn.setForeground(Color.WHITE);
         btn.setBackground(bg);
         btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
         btn.setAlignmentX(Component.LEFT_ALIGNMENT);
-        btn.setFocusPainted(false);
-        btn.setBorder(BorderFactory.createEmptyBorder());
         return btn;
     }
 }
+

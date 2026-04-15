@@ -1,4 +1,5 @@
-package com.example.gui;
+package com.example.gui.screens;
+import com.example.gui.components.*;
 
 import com.example.entity.TaiKhoan;
 import org.jfree.chart.ChartFactory;
@@ -47,12 +48,10 @@ public class ManHinhChinhPanel extends JPanel {
     }
 
     private JPanel createStatCard(String title, String value, String subtext) {
-        JPanel card = new JPanel();
+        RoundedPanel card = new RoundedPanel(16, true);
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
         card.setBackground(Color.WHITE);
-        card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(230, 230, 230), 1),
-                new EmptyBorder(15, 15, 15, 15)));
+        card.setBorder(new EmptyBorder(15, 15, 15, 15));
 
         JLabel lblTitle = new JLabel(title);
         lblTitle.setFont(new Font("Segoe UI", Font.PLAIN, 14));
@@ -116,7 +115,8 @@ public class ManHinhChinhPanel extends JPanel {
     }
 
     private JPanel createTableContainer(String title, String[] columns) {
-        JPanel panel = new JPanel(new BorderLayout(0, 10));
+        RoundedPanel panel = new RoundedPanel(16, true);
+        panel.setLayout(new BorderLayout(0, 10));
         panel.setBackground(Color.WHITE);
         panel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
@@ -185,11 +185,10 @@ public class ManHinhChinhPanel extends JPanel {
         return panel;
     }
 
-    private JButton createActionButton(String text, String shortcut, Color color) {
-        JButton btn = new JButton();
+    private RoundedButton createActionButton(String text, String shortcut, Color color) {
+        RoundedButton btn = new RoundedButton("");
         btn.setLayout(new BorderLayout());
         btn.setBackground(color);
-        btn.setForeground(Color.WHITE);
         btn.setFocusPainted(false);
         btn.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
@@ -215,3 +214,4 @@ public class ManHinhChinhPanel extends JPanel {
 
     }
 }
+

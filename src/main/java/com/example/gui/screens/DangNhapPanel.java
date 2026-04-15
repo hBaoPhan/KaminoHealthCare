@@ -1,4 +1,5 @@
-package com.example.gui;
+package com.example.gui.screens;
+import com.example.gui.components.*;
 
 import com.example.entity.ChucVu;
 import com.example.entity.NhanVien;
@@ -17,19 +18,19 @@ import java.net.URL;
  * Chỉ tạo Giao diện (UI) Form Đăng nhập Kamino Healthcare.
  * Thiết kế dựa trên hình ảnh Figma. Chưa có xử lý logic.
  */
-public class DangNhapPanel extends JFrame implements ActionListener{
+public class DangNhapPanel extends JFrame implements ActionListener {
 
     // --- Components để hiển thị ---
     private RoundedTextField txtUsername;
     private RoundedPasswordField txtPassword;
-    private JButton btnLogin;
+    private RoundedButton btnLogin;
     private JLabel lblForgotPassword, lblRegister, lblHidePassword, lblPharmacistImage;
     private boolean isPasswordHidden = true;
 
     // --- Bảng màu từ thiết kế Figma ---
-    private final Color COLOR_PRIMARY = new Color(0x54ACD2); 
-    private final Color COLOR_TEXT_HINT = new Color(150, 150, 150); 
-    private final Color COLOR_LINK = new Color(0, 102, 204); 
+    private final Color COLOR_PRIMARY = new Color(0x54ACD2);
+    private final Color COLOR_TEXT_HINT = new Color(150, 150, 150);
+    private final Color COLOR_LINK = new Color(0, 102, 204);
 
     public DangNhapPanel() {
         // 1. Cấu hình cửa sổ chính
@@ -73,7 +74,7 @@ public class DangNhapPanel extends JFrame implements ActionListener{
 
         // Hình ảnh minh họa Dược sĩ (Sẽ cần file ảnh thực tế sau)
 
-        ImageIcon pharmacistIcon = loadIcon("/images/logo.png");
+        ImageIcon pharmacistIcon = loadIcon("/images/icon/logo.png");
         if (pharmacistIcon != null) {
             Image scaledImage = pharmacistIcon.getImage().getScaledInstance(350, 350, Image.SCALE_SMOOTH);
             lblPharmacistImage = new JLabel(new ImageIcon(scaledImage));
@@ -129,7 +130,7 @@ public class DangNhapPanel extends JFrame implements ActionListener{
         panel.add(txtPassword);
 
         // Icon con mắt để ẩn/hiện mật khẩu
-        lblHidePassword = new JLabel(loadIcon("/images/eye.jpg"));
+        lblHidePassword = new JLabel(loadIcon("/images/icon/eye.jpg"));
         lblHidePassword.setBounds(425, currentY + 10, 24, 24);
         lblHidePassword.setCursor(new Cursor(Cursor.HAND_CURSOR)); // Con trỏ hình bàn tay
         panel.add(lblHidePassword);
@@ -147,14 +148,9 @@ public class DangNhapPanel extends JFrame implements ActionListener{
         currentY += 50;
 
         // --- Nút Đăng Nhập (Lớn, nền xanh, chữ trắng) ---
-        btnLogin = new JButton("Đăng Nhập");
+        btnLogin = new RoundedButton("Đăng Nhập");
         btnLogin.setFont(new Font("Segoe UI", Font.BOLD, 18));
         btnLogin.setBackground(COLOR_PRIMARY);
-        btnLogin.setForeground(Color.WHITE);
-        btnLogin.setFocusPainted(false); // Xóa viền khi focus
-        btnLogin.setBorderPainted(false); // Xóa viền mặc định
-        btnLogin.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        // Bo góc cho nút (Sẽ được FlatLaf xử lý tự động nếu cấu hình)
         btnLogin.setBounds(60, currentY, 400, 50);
         btnLogin.addActionListener(this);
         panel.add(btnLogin);
@@ -321,16 +317,15 @@ public class DangNhapPanel extends JFrame implements ActionListener{
     @Override
     public void actionPerformed(ActionEvent e) {
         Object source = e.getSource();
-        if(source.equals(btnLogin)){
-    
-                SwingUtilities.invokeLater(() -> {
-                    NhanVien nv = new NhanVien("NV001", "Hoài Bảo", "123456789", "0987654321", ChucVu.NHANVIENQUANLY, true);
-                    TaiKhoan tk = new TaiKhoan("admin", "admin", nv);
-                    ThanhDieuHuongPanel mainFrame = new ThanhDieuHuongPanel(tk);
-                    mainFrame.setVisible(true);
-                 });
-                dispose();
+        if (source.equals(btnLogin)) {
+            SwingUtilities.invokeLater(() -> {
+                NhanVien nv = new NhanVien("NV001", "Hoài Bảo", "123456789", "0987654321", ChucVu.NHANVIENQUANLY, true);
+                TaiKhoan tk = new TaiKhoan("admin", "admin", nv);
+                ThanhDieuHuongPanel mainFrame = new ThanhDieuHuongPanel(tk);
+                mainFrame.setVisible(true);
+            });
+            dispose();
         }
-        throw new UnsupportedOperationException("Unimplemented method 'actionPerformed'");
     }
 }
+

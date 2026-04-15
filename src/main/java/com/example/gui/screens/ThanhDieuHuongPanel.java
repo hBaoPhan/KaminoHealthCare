@@ -1,7 +1,10 @@
-package com.example.gui;
+package com.example.gui.screens;
+import com.example.gui.screens.*;
+import com.example.gui.components.*;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
+import java.awt.GridLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
@@ -47,7 +50,9 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 	private Color textHoverColor = Color.decode("#1A73E8");
 	private Color textDefaultColor = Color.BLACK;
 	private Font customFont = new Font("Segoe UI", Font.BOLD, 12);
-	private JButton btnDangXuat;
+	private RoundedButton btnDangXuat;
+	private RoundedButton btnMoCa;
+	private RoundedButton btnKetCa;
 	private KhachHangPanel pnlKhachHang;
 	private NhanVienPanel pnlNhanVien;
 	private Color sidebarColor = Color.WHITE;
@@ -91,28 +96,26 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		JLabel lblLogo = new JLabel(new HiDPIIcon(logoData.getImage(), 146, 146));
 		lblLogo.setAlignmentX(Component.CENTER_ALIGNMENT);
 		lblLogo.setBorder(BorderFactory.createEmptyBorder(20, 20, 0, 20));
-		sidebar.add(lblLogo);
+		// sidebar.add(lblLogo);
 
 		JLabel lblKAMINOCOFFEE = new JLabel("Kamino Healthcare");
 		lblKAMINOCOFFEE.setFont(new Font(lblKAMINOCOFFEE.getFont().getFontName(), Font.BOLD, 17));
 
-		JLabel lblXinChao = new JLabel("Xin chào,");
-		lblTenTaiKhoan = new JLabel(taiKhoan.getNhanVien().getTenNhanVien());
+		lblTenTaiKhoan = new JLabel("Xin chào, " + taiKhoan.getNhanVien().getTenNhanVien());
 		lblChucVu = new JLabel(taiKhoan.getNhanVien().getChucVu() == ChucVu.NHANVIENQUANLY ? "Quản Lý" : "Dược Sĩ");
 		lblChucVu.setForeground(Color.decode("#00A651"));
 
 		lblKAMINOCOFFEE.setBorder(BorderFactory.createEmptyBorder(10, 10, 7, 10));
-		lblXinChao.setBorder(BorderFactory.createEmptyBorder(10, 0, 5, 0));
+
 		lblTenTaiKhoan.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
 		lblChucVu.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
 		lblKAMINOCOFFEE.setAlignmentX(Component.CENTER_ALIGNMENT);
-		lblXinChao.setAlignmentX(Component.CENTER_ALIGNMENT);
+
 		lblTenTaiKhoan.setAlignmentX(Component.CENTER_ALIGNMENT);
 		lblChucVu.setAlignmentX(Component.CENTER_ALIGNMENT);
 
 		sidebar.add(lblKAMINOCOFFEE);
 		sidebar.add(Box.createVerticalStrut(5));
-		sidebar.add(lblXinChao);
 		sidebar.add(lblTenTaiKhoan);
 		sidebar.add(lblChucVu);
 		sidebar.add(Box.createVerticalStrut(5));
@@ -150,19 +153,30 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 	}
 
 	private void initLogoutPanel() {
-		btnDangXuat = new JButton("Đăng xuất");
+		// --- Nút Mở ca (xanh lá) ---
+		btnMoCa = new RoundedButton("Mở ca");
+		btnMoCa.setBackground(Color.decode("#28A745"));
+		btnMoCa.addActionListener(this);
+
+		// --- Nút Kết ca (cam) ---
+		btnKetCa = new RoundedButton("Kết ca");
+		btnKetCa.setBackground(Color.decode("#FD7E14"));
+		btnKetCa.addActionListener(this);
+
+		// --- Nút Đăng xuất (đỏ) ---
+		btnDangXuat = new RoundedButton("Đăng xuất");
 		btnDangXuat.setBackground(Color.decode("#DC3545"));
-		btnDangXuat.setForeground(Color.WHITE);
-		btnDangXuat.setAlignmentX(Component.CENTER_ALIGNMENT);
-		btnDangXuat.setBorder(BorderFactory.createLineBorder(Color.red, 5, true));
 		btnDangXuat.addActionListener(this);
 
-		pLogout = new JPanel();
+		// --- Panel chứa 3 nút theo chiều dọc, tự căng full-width ---
+		pLogout = new JPanel(new GridLayout(3, 1, 0, 6));
 		pLogout.setBackground(sidebarColor);
-		pLogout.setLayout(new BorderLayout());
-		pLogout.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+		pLogout.setMaximumSize(new Dimension(Integer.MAX_VALUE, 150));
+		pLogout.setBorder(new EmptyBorder(5, 20, 10, 20));
+
+		pLogout.add(btnMoCa);
+		pLogout.add(btnKetCa);
 		pLogout.add(btnDangXuat);
-		pLogout.setBorder(new EmptyBorder(0, 20, 0, 20));
 	}
 
 	private void capNhatDuLieuKhiDoiThe() {
@@ -238,17 +252,23 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 					"Bạn có chắc chắn muốn đăng xuất?",
 					"Xác nhận đăng xuất",
 					JOptionPane.YES_NO_OPTION);
-
 			if (xacNhan == JOptionPane.YES_OPTION) {
-
 				EventQueue.invokeLater(() -> {
 					new DangNhapPanel().setVisible(true);
 				});
 				this.dispose();
-
 			}
+		} else if (o.equals(btnMoCa)) {
+			JOptionPane.showMessageDialog(this,
+					"Chức năng Mở ca đang được phát triển.",
+					"Mở ca",
+					JOptionPane.INFORMATION_MESSAGE);
+		} else if (o.equals(btnKetCa)) {
+			JOptionPane.showMessageDialog(this,
+					"Chức năng Kết ca đang được phát triển.",
+					"Kết ca",
+					JOptionPane.INFORMATION_MESSAGE);
 		}
-
 	}
 
 	public void switchTo(String action) {
@@ -301,9 +321,9 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 
 	private void renderSidebar() {
 		// Cleanly remove all components after the header (logo, names, etc.)
-		// Header items are at indices 0 to 7
+		// Header items are at indices 0 to 6 (logo, name, chucVu, 4 spacers)
 		Component[] components = sidebar.getComponents();
-		for (int i = components.length - 1; i >= 8; i--) {
+		for (int i = components.length - 1; i >= 6; i--) {
 			sidebar.remove(i);
 		}
 		menuLabels.clear();
@@ -462,3 +482,5 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		}
 	}
 }
+
+
