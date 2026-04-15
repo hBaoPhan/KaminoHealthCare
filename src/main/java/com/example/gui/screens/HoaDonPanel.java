@@ -87,12 +87,9 @@ public class HoaDonPanel extends JPanel {
         JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
         leftPanel.setOpaque(false);
 
-        JTextField txtSearch = new JTextField("Mã");
+        RoundedTextField txtSearch = new RoundedTextField("Mã", 15);
         txtSearch.setPreferredSize(new Dimension(200, 35));
         txtSearch.setFont(FONT_TEXT);
-        txtSearch.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(COLOR_BORDER, 1, true),
-                new EmptyBorder(0, 10, 0, 10)));
 
         DatePickerSettings dateSettings = new DatePickerSettings();
         dateSettings.setFormatForDatesCommonEra("dd/MM/yyyy");
@@ -126,9 +123,9 @@ public class HoaDonPanel extends JPanel {
     }
 
     private JPanel createTablePanel() {
-        JPanel panel = new JPanel(new BorderLayout());
+        RoundedPanel panel = new RoundedPanel(16, true);
+        panel.setLayout(new BorderLayout());
         panel.setBackground(COLOR_CARD_BG);
-        panel.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1));
 
         String[] columns = { "", "", "", "", "", "", "", "", "" };
         DefaultTableModel model = new DefaultTableModel(columns, 15);
@@ -178,10 +175,9 @@ public class HoaDonPanel extends JPanel {
         lbl.setFont(FONT_LABEL);
         lbl.setPreferredSize(new Dimension(150, 30));
 
-        JTextField field = new JTextField();
+        RoundedTextField field = new RoundedTextField(1);
         field.setEditable(false);
-        field.setBackground(new Color(225, 225, 225));
-        field.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        field.setBackground(new Color(240, 240, 240));
 
         group.add(lbl, BorderLayout.WEST);
         group.add(field, BorderLayout.CENTER);

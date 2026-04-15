@@ -41,12 +41,9 @@ public class BanHangPanel extends JPanel {
         JLabel lblTitle = new JLabel("Danh sách sản phẩm");
         lblTitle.setFont(FONT_TITLE);
 
-        JTextField txtSearch = new JTextField("Mã sản phẩm");
+        RoundedTextField txtSearch = new RoundedTextField("Mã sản phẩm", 15);
         txtSearch.setPreferredSize(new Dimension(250, 35));
         txtSearch.setFont(FONT_TEXT);
-        txtSearch.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(COLOR_BORDER, 1, true),
-                new EmptyBorder(0, 35, 0, 10)));
 
         topPanel.add(lblTitle, BorderLayout.WEST);
         topPanel.add(txtSearch, BorderLayout.EAST);
@@ -110,7 +107,7 @@ public class BanHangPanel extends JPanel {
 
         sidebar.add(createSectionTitle("Thông tin khách hàng"));
         sidebar.add(Box.createVerticalStrut(10));
-        sidebar.add(createFieldGroup("Số điện thoại", new JTextField()));
+        sidebar.add(createFieldGroup("Số điện thoại", new RoundedTextField(10)));
         sidebar.add(Box.createVerticalStrut(25));
 
         // Invoice Info
@@ -181,12 +178,11 @@ public class BanHangPanel extends JPanel {
         return group;
     }
 
-    private JTextField createReadOnlyField(String text) {
-        JTextField field = new JTextField(text);
+    private RoundedTextField createReadOnlyField(String text) {
+        RoundedTextField field = new RoundedTextField(text, 10);
         field.setEditable(false);
         field.setHorizontalAlignment(JTextField.CENTER);
-        field.setBackground(new Color(225, 225, 225));
-        field.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        field.setBackground(new Color(235, 235, 235));
         return field;
     }
 

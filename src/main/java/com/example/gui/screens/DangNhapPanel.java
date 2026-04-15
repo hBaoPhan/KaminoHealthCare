@@ -11,7 +11,6 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.geom.RoundRectangle2D;
 import java.net.URL;
 
 /**
@@ -203,114 +202,6 @@ public class DangNhapPanel extends JFrame implements ActionListener {
             // In lỗi ra console nếu không tìm thấy file, nhưng không làm hỏng giao diện
             System.err.println("Couldn't find file: " + path);
             return null;
-        }
-    }
-
-    // ========================================================================
-    // --- Lớp tùy chỉnh (Custom Components) để vẽ ô nhập liệu bo góc ---
-    // ========================================================================
-
-    class RoundedTextField extends JTextField {
-        private Shape shape;
-        private String hint;
-
-        public RoundedTextField(String hint, int size) {
-            super(size);
-            this.hint = hint;
-            setOpaque(false); // Để vẽ nền tùy chỉnh bo góc
-            setForeground(COLOR_TEXT_HINT); // Màu chữ gợi ý ban đầu
-            setText(hint);
-
-            // Xử lý logic hiển thị Hint Text (Chữ gợi ý)
-            addFocusListener(new java.awt.event.FocusAdapter() {
-                @Override
-                public void focusGained(java.awt.event.FocusEvent evt) {
-                    if (getText().equals(hint)) {
-                        setText(""); // Xóa hint khi user click vào
-                        setForeground(Color.BLACK); // Đổi màu chữ sang đen
-                    }
-                }
-
-                @Override
-                public void focusLost(java.awt.event.FocusEvent evt) {
-                    if (getText().isEmpty()) {
-                        setText(hint); // Hiện lại hint nếu user bỏ trống
-                        setForeground(COLOR_TEXT_HINT);
-                    }
-                }
-            });
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON); // Làm mịn nét
-            g2.setColor(getBackground());
-            g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 15, 15); // Vẽ nền bo góc 15px
-            g2.dispose();
-            super.paintComponent(g);
-        }
-
-        @Override
-        protected void paintBorder(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(new Color(200, 200, 200)); // Màu viền xám nhạt
-            g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 15, 15); // Vẽ viền bo góc
-            g2.dispose();
-        }
-    }
-
-    class RoundedPasswordField extends JPasswordField {
-        private Shape shape;
-        private String hint;
-
-        public RoundedPasswordField(String hint, int size) {
-            super(size);
-            this.hint = hint;
-            setOpaque(false);
-            setForeground(COLOR_TEXT_HINT);
-            setText(hint);
-            setEchoChar((char) 0); // Hiện hint ban đầu (không ẩn)
-
-            addFocusListener(new java.awt.event.FocusAdapter() {
-                @Override
-                public void focusGained(java.awt.event.FocusEvent evt) {
-                    if (new String(getPassword()).equals(hint)) {
-                        setText(""); // Xóa hint
-                        setForeground(Color.BLACK);
-                        setEchoChar('•'); // Bắt đầu ẩn ký tự khi nhập
-                    }
-                }
-
-                @Override
-                public void focusLost(java.awt.event.FocusEvent evt) {
-                    if (new String(getPassword()).isEmpty()) {
-                        setText(hint); // Hiện lại hint
-                        setForeground(COLOR_TEXT_HINT);
-                        setEchoChar((char) 0); // Không ẩn hint
-                    }
-                }
-            });
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(getBackground());
-            g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 15, 15);
-            g2.dispose();
-            super.paintComponent(g);
-        }
-
-        @Override
-        protected void paintBorder(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(new Color(200, 200, 200));
-            g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 15, 15);
-            g2.dispose();
         }
     }
 

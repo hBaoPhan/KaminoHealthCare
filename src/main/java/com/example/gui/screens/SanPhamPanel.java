@@ -56,10 +56,8 @@ public class SanPhamPanel extends JPanel {
         JPanel topBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
         topBar.setBackground(new Color(245, 245, 245));
 
-        JTextField txtSearch = new JTextField(20);
+        RoundedTextField txtSearch = new RoundedTextField("Tìm theo tên", 20);
         txtSearch.setPreferredSize(new Dimension(250, 35));
-        txtSearch.setText(" Tìm theo tên");
-        txtSearch.setForeground(Color.GRAY);
 
         JComboBox<String> cbDanhMuc = new JComboBox<>(new String[]{"Danh mục","Thuốc", "Thực phẩm chức năng", "Dược mỹ phẩm", "Vật dụng y tế"});
         cbDanhMuc.setPreferredSize(new Dimension(150, 35));
@@ -103,13 +101,10 @@ public class SanPhamPanel extends JPanel {
 
     // Helper method tạo thẻ sản phẩm (Product Card)
     private JPanel createProductCard(String name, String price, boolean inStock) {
-        JPanel card = new JPanel();
+        RoundedPanel card = new RoundedPanel(14, true);
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
         card.setBackground(Color.WHITE);
-        card.setBorder(BorderFactory.createCompoundBorder(
-                new LineBorder(new Color(200, 200, 200), 1, true),
-                new EmptyBorder(10, 10, 10, 10)
-        ));
+        card.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         // Ảnh (Mockup)
         JLabel lblImage = new JLabel("Ảnh SP", SwingConstants.CENTER);
@@ -210,11 +205,11 @@ public class SanPhamPanel extends JPanel {
         gbc.gridwidth = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.anchor = GridBagConstraints.WEST;
 
         // Các trường nhập liệu
-        addFormField(formPanel, gbc, row++, "Mã sản phẩm:", new JTextField("HHTP-300MG-H"), false);
-        addFormField(formPanel, gbc, row++, "Tên sản phẩm:", new JTextField("Hoạt Huyết Trường Phúc"), true);
-        addFormField(formPanel, gbc, row++, "Hoạt chất:", new JTextField("Thục địa, Ích mẫu, Ngưu tất"), true);
-        addFormField(formPanel, gbc, row++, "Số lượng tồn:", new JTextField("200"), false);
-        addFormField(formPanel, gbc, row++, "Đơn giá:", new JTextField("99.000"), true);
+        addFormField(formPanel, gbc, row++, "Mã sản phẩm:", new RoundedTextField("HHTP-300MG-H", 15), false);
+        addFormField(formPanel, gbc, row++, "Tên sản phẩm:", new RoundedTextField("Hoạt Huyết Trường Phúc", 15), true);
+        addFormField(formPanel, gbc, row++, "Hoạt chất:", new RoundedTextField("Thục địa, Ích mẫu, Ngưu tất", 15), true);
+        addFormField(formPanel, gbc, row++, "Số lượng tồn:", new RoundedTextField("200", 15), false);
+        addFormField(formPanel, gbc, row++, "Đơn giá:", new RoundedTextField("99.000", 15), true);
         
         JComboBox<String> cbLoaiSP = new JComboBox<>(new String[]{"Thuốc", "Thực phẩm chức năng", "Vật tư y tế"});
         addFormField(formPanel, gbc, row++, "Loại sản phẩm:", cbLoaiSP, true);
@@ -267,13 +262,14 @@ public class SanPhamPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0.3; gbc.insets = new Insets(5, 10, 5, 10);
         panel.add(new JLabel(labelText), gbc);
 
-        if (inputComp instanceof JTextField) {
+        if (inputComp instanceof RoundedTextField) {
+            ((RoundedTextField) inputComp).setEditable(isEditable);
+            if (!isEditable) inputComp.setBackground(new Color(235, 235, 235));
+        } else if (inputComp instanceof JTextField) {
             ((JTextField) inputComp).setEditable(isEditable);
-            if (!isEditable) {
-                inputComp.setBackground(new Color(230, 230, 230));
-            }
+            if (!isEditable) inputComp.setBackground(new Color(230, 230, 230));
         }
-        inputComp.setPreferredSize(new Dimension(200, 28));
+        inputComp.setPreferredSize(new Dimension(200, 32));
 
         gbc.gridx = 1; gbc.gridy = row; gbc.weightx = 0.7;
         panel.add(inputComp, gbc);

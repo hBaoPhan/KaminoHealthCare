@@ -101,8 +101,9 @@ public class ManHinhChinhPanel extends JPanel {
         gbc.weighty = 0.5;
         panel.add(tablePanel, gbc);
 
-        JPanel chartContainer = new JPanel(new GridLayout(1, 2, 20, 0));
-        chartContainer.setOpaque(false);
+        RoundedPanel chartContainer = new RoundedPanel(16, true);
+        chartContainer.setLayout(new GridLayout(1, 2, 20, 0));
+        chartContainer.setBackground(Color.WHITE);
 
         chartContainer.add(createBarChartPanel());
         chartContainer.add(createDonutChartPanel());
