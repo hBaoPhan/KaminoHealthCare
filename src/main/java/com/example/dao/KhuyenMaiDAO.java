@@ -3,12 +3,15 @@ package com.example.dao;
 import com.example.connectDB.ConnectDB;
 import com.example.entity.KhuyenMai;
 import com.example.entity.LoaiKhuyenMai;
+import com.example.entity.QuaTang;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class KhuyenMaiDAO {
+
+    private final QuaTangDAO quaTangDAO = new QuaTangDAO();
 
     public List<KhuyenMai> layTatCa() {
         List<KhuyenMai> danhSach = new ArrayList<>();
@@ -27,6 +30,9 @@ public class KhuyenMaiDAO {
                 km.setLoaiKhuyenMai(LoaiKhuyenMai.valueOf(ketQua.getString("loaiKhuyenMai")));
                 km.setKhuyenMaiPhanTram(ketQua.getDouble("khuyenMaiPhanTram"));
                 km.setGiaTriDonHangToiThieu(ketQua.getDouble("giaTriDonHangToiThieu"));
+                // Load quaTangKem nếu có
+                List<QuaTang> dsQt = quaTangDAO.timTheoKhuyenMai(km.getMaKhuyenMai());
+                if (!dsQt.isEmpty()) km.setQuaTangKem(dsQt.get(0));
                 danhSach.add(km);
             }
         } catch (SQLException e) {
@@ -53,6 +59,9 @@ public class KhuyenMaiDAO {
                 km.setLoaiKhuyenMai(LoaiKhuyenMai.valueOf(ketQua.getString("loaiKhuyenMai")));
                 km.setKhuyenMaiPhanTram(ketQua.getDouble("khuyenMaiPhanTram"));
                 km.setGiaTriDonHangToiThieu(ketQua.getDouble("giaTriDonHangToiThieu"));
+                // Load quaTangKem nếu có
+                List<QuaTang> dsQt = quaTangDAO.timTheoKhuyenMai(km.getMaKhuyenMai());
+                if (!dsQt.isEmpty()) km.setQuaTangKem(dsQt.get(0));
             }
         } catch (SQLException e) {
             e.printStackTrace();

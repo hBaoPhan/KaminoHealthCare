@@ -33,6 +33,8 @@ public class HoaDonDAO {
                 if (maHDDT != null) hd.setHoaDonDoiTra(new HoaDon(maHDDT));
                 String maDT = ketQua.getString("maDonThuoc");
                 if (maDT != null) hd.setDonThuoc(new DonThuoc(maDT));
+                String pttt = ketQua.getString("phuongThucThanhToan");
+                if (pttt != null) hd.setPhuongThucThanhToan(PhuongThucThanhToan.valueOf(pttt));
                 
                 danhSach.add(hd);
             }
@@ -67,6 +69,8 @@ public class HoaDonDAO {
                 if (maHDDT != null) hd.setHoaDonDoiTra(new HoaDon(maHDDT));
                 String maDT = ketQua.getString("maDonThuoc");
                 if (maDT != null) hd.setDonThuoc(new DonThuoc(maDT));
+                String pttt = ketQua.getString("phuongThucThanhToan");
+                if (pttt != null) hd.setPhuongThucThanhToan(PhuongThucThanhToan.valueOf(pttt));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -78,7 +82,7 @@ public class HoaDonDAO {
         int soDongThayDoi = 0;
         try {
             Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "INSERT INTO HoaDon (maHoaDon, thoiGianTao, maNhanVien, trangThaiThanhToan, maKhachHang, maKhuyenMai, loaiHoaDon, maCa, ghiChu, maHoaDonDoiTra, maDonThuoc) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String truyVan = "INSERT INTO HoaDon (maHoaDon, thoiGianTao, maNhanVien, trangThaiThanhToan, maKhachHang, maKhuyenMai, loaiHoaDon, maCa, ghiChu, maHoaDonDoiTra, maDonThuoc, phuongThucThanhToan) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
             lenh.setString(1, hd.getMaHoaDon());
             lenh.setTimestamp(2, Timestamp.valueOf(hd.getThoiGianTao()));
@@ -91,6 +95,7 @@ public class HoaDonDAO {
             lenh.setString(9, hd.getGhiChu());
             lenh.setString(10, hd.getHoaDonDoiTra() != null ? hd.getHoaDonDoiTra().getMaHoaDon() : null);
             lenh.setString(11, hd.getDonThuoc() != null ? hd.getDonThuoc().getMaDonThuoc() : null);
+            lenh.setString(12, hd.getPhuongThucThanhToan() != null ? hd.getPhuongThucThanhToan().name() : null);
             soDongThayDoi = lenh.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -102,7 +107,7 @@ public class HoaDonDAO {
         int soDongThayDoi = 0;
         try {
             Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "UPDATE HoaDon SET thoiGianTao = ?, maNhanVien = ?, trangThaiThanhToan = ?, maKhachHang = ?, maKhuyenMai = ?, loaiHoaDon = ?, maCa = ?, ghiChu = ?, maHoaDonDoiTra = ?, maDonThuoc = ? WHERE maHoaDon = ?";
+            String truyVan = "UPDATE HoaDon SET thoiGianTao = ?, maNhanVien = ?, trangThaiThanhToan = ?, maKhachHang = ?, maKhuyenMai = ?, loaiHoaDon = ?, maCa = ?, ghiChu = ?, maHoaDonDoiTra = ?, maDonThuoc = ?, phuongThucThanhToan = ? WHERE maHoaDon = ?";
             PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
             lenh.setTimestamp(1, Timestamp.valueOf(hd.getThoiGianTao()));
             lenh.setString(2, hd.getNhanVien().getMaNhanVien());
@@ -114,7 +119,8 @@ public class HoaDonDAO {
             lenh.setString(8, hd.getGhiChu());
             lenh.setString(9, hd.getHoaDonDoiTra() != null ? hd.getHoaDonDoiTra().getMaHoaDon() : null);
             lenh.setString(10, hd.getDonThuoc() != null ? hd.getDonThuoc().getMaDonThuoc() : null);
-            lenh.setString(11, hd.getMaHoaDon());
+            lenh.setString(11, hd.getPhuongThucThanhToan() != null ? hd.getPhuongThucThanhToan().name() : null);
+            lenh.setString(12, hd.getMaHoaDon());
             soDongThayDoi = lenh.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
