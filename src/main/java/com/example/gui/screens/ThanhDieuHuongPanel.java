@@ -130,44 +130,44 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		cardLayout = new CardLayout();
 
 		contentPanel = new JPanel(cardLayout);
-		contentPanel.add(pnlTrangChu = new ManHinhChinhPanel(taiKhoan), "Màn hình chính");
-		contentPanel.add(pnlHoaDon = new HoaDonPanel(), "Quản lý hóa đơn");
-		contentPanel.add(new BanHangPanel(), "Bán hàng");
-		contentPanel.add(new DoiHangPanel(), "Đổi hàng");
-		contentPanel.add(new TraHangPanel(), "Trả hàng");
-		contentPanel.add(pnlKhachHang = new KhachHangPanel(), "Khách hàng");
+		contentPanel.add(pnlTrangChu = new ManHinhChinhPanel(taiKhoan), "Màn Hình Chính");
+		contentPanel.add(pnlHoaDon = new HoaDonPanel(), "Quản Lý Hóa Đơn");
+		contentPanel.add(new BanHangPanel(), "Bán Hàng");
+		contentPanel.add(new DoiHangPanel(), "Đổi Hàng");
+		contentPanel.add(new TraHangPanel(), "Trả Hàng");
+		contentPanel.add(pnlKhachHang = new KhachHangPanel(), "Khách Hàng");
 		isQuanLy = taiKhoan.getNhanVien().getChucVu() == ChucVu.NHANVIENQUANLY;
-		contentPanel.add(new SanPhamPanel(), "Quản lý sản phẩm");
+		contentPanel.add(new SanPhamPanel(), "Quản Lý Sản Phẩm");
 		if (isQuanLy) {
 
-			contentPanel.add(new LoPanel(), "Quản lý lô");
+			contentPanel.add(new LoPanel(), "Quản Lý Lô");
 			contentPanel.add(new KhuyenMaiPanel(), "Khuyến Mãi"); // Tạo 1 KhuyenMaiPanel sau đó thay thế JPanel()
-			contentPanel.add(new JPanel(), "Quản lý đơn thuốc");
+			contentPanel.add(new DonThuocPanel(), "Quản Lý Đơn Thuốc");
 
-			contentPanel.add(pnlNhanVien = new NhanVienPanel(), "Quản lý Nhân Viên");
-			contentPanel.add(new TaiKhoanPanel(), "Quản lý Tài Khoản"); // Tạo 1 TaiKhoanPanel sau đó thay thế JPanel()
-			contentPanel.add(new JPanel(), "Quản lý ca làm");
+			contentPanel.add(pnlNhanVien = new NhanVienPanel(), "Quản Lý Nhân Viên");
+			contentPanel.add(new TaiKhoanPanel(), "Quản Lý Tài Khoản"); // Tạo 1 TaiKhoanPanel sau đó thay thế JPanel()
+			contentPanel.add(new CaLamPanel(), "Quản Lý Ca Làm");
 
 			contentPanel.add(pnlThongKe = new ThongKePanel(), "Thống Kê");
 		}
-		contentPanel.add(new JPanel(), "Trợ giúp");
+		contentPanel.add(new JPanel(), "Trợ Giúp");
 
 		add(contentPanel, BorderLayout.CENTER);
 	}
 
 	private void initLogoutPanel() {
 		// --- Nút Mở ca (xanh lá) ---
-		btnMoCa = new RoundedButton("Mở ca");
+		btnMoCa = new RoundedButton("Mở Ca");
 		btnMoCa.setBackground(Color.decode("#28A745"));
 		btnMoCa.addActionListener(this);
 
 		// --- Nút Kết ca (cam) ---
-		btnKetCa = new RoundedButton("Kết ca");
+		btnKetCa = new RoundedButton("Kết Ca");
 		btnKetCa.setBackground(Color.decode("#FD7E14"));
 		btnKetCa.addActionListener(this);
 
 		// --- Nút Đăng xuất (đỏ) ---
-		btnDangXuat = new RoundedButton("Đăng xuất");
+		btnDangXuat = new RoundedButton("Đăng Xuất");
 		btnDangXuat.setBackground(Color.decode("#DC3545"));
 		btnDangXuat.addActionListener(this);
 
@@ -278,9 +278,9 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		CardLayout layout = (CardLayout) contentPanel.getLayout();
 		capNhatDuLieuKhiDoiThe();
 		switch (action) {
-			case "Màn hình chính" -> layout.show(contentPanel, "Màn hình chính");
-			case "Quản lý hóa đơn" -> layout.show(contentPanel, "Hóa đơn");
-			case "Quản lý khách hàng" -> layout.show(contentPanel, "Khách hàng");
+			case "Màn hình chính" -> layout.show(contentPanel, "Màn Hình Chính");
+			case "Quản lý hóa đơn" -> layout.show(contentPanel, "Hóa Đơn");
+			case "Quản lý khách hàng" -> layout.show(contentPanel, "Khách Hàng");
 			case "Xem thống kê" -> layout.show(contentPanel, "Thống Kê");
 		}
 	}
@@ -288,40 +288,40 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 	private void initMenuStructure(TaiKhoan taiKhoan) {
 		boolean isQL = taiKhoan.getNhanVien().getChucVu() == ChucVu.NHANVIENQUANLY;
 
-		menuStructure.add(new MenuItem("Màn hình chính", "home.png"));
+		menuStructure.add(new MenuItem("Màn Hình Chính", "home.png"));
 
-		MenuItem hoaDon = new MenuItem("Hóa đơn", "invoice.png");
-		hoaDon.children.add(new MenuItem("Quản lý hóa đơn", null, true));
-		hoaDon.children.add(new MenuItem("Bán hàng", null, true));
-		hoaDon.children.add(new MenuItem("Đổi hàng", null, true));
-		hoaDon.children.add(new MenuItem("Trả hàng", null, true));
+		MenuItem hoaDon = new MenuItem("Hóa Đơn", "invoice.png");
+		hoaDon.children.add(new MenuItem("Quản Lý Hóa Đơn", null, true));
+		hoaDon.children.add(new MenuItem("Bán Hàng", null, true));
+		hoaDon.children.add(new MenuItem("Đổi Hàng", null, true));
+		hoaDon.children.add(new MenuItem("Trả Hàng", null, true));
 		menuStructure.add(hoaDon);
 
-		MenuItem sanPham = new MenuItem("Sản phẩm", "product.png");
+		MenuItem sanPham = new MenuItem("Sản Phẩm", "product.png");
 
 		if (isQL) {
-			sanPham.children.add(new MenuItem("Quản lý sản phẩm", null, true));
-			sanPham.children.add(new MenuItem("Quản lý lô", null, true));
-			sanPham.children.add(new MenuItem("Quản lý đơn thuốc", null, true));
+			sanPham.children.add(new MenuItem("Quản Lý Sản Phẩm", null, true));
+			sanPham.children.add(new MenuItem("Quản Lý Lô", null, true));
+			sanPham.children.add(new MenuItem("Quản Lý Đơn Thuốc", null, true));
 		}
 
 		menuStructure.add(sanPham);
 		menuStructure.add(new MenuItem("Khuyến Mãi", "coupon.png"));
 
-		menuStructure.add(new MenuItem("Khách hàng", "customer.png"));
+		menuStructure.add(new MenuItem("Khách Hàng", "customer.png"));
 
 		if (isQL) {
 
-			MenuItem nhanVien = new MenuItem("Nhân viên", "staff.png");
-			nhanVien.children.add(new MenuItem("Quản lý Nhân Viên", null, true));
-			nhanVien.children.add(new MenuItem("Quản lý Tài Khoản", null, true));
-			nhanVien.children.add(new MenuItem("Quản lý ca làm", null, true));
+			MenuItem nhanVien = new MenuItem("Nhân Viên", "staff.png");
+			nhanVien.children.add(new MenuItem("Quản Lý Nhân Viên", null, true));
+			nhanVien.children.add(new MenuItem("Quản Lý Tài Khoản", null, true));
+			nhanVien.children.add(new MenuItem("Quản Lý Ca Làm", null, true));
 			menuStructure.add(nhanVien);
 
 			menuStructure.add(new MenuItem("Thống Kê", "chart.png"));
 		}
 
-		menuStructure.add(new MenuItem("Trợ giúp", "help.png"));
+		menuStructure.add(new MenuItem("Trợ Giúp", "help.png"));
 	}
 
 	private void renderSidebar() {
@@ -413,13 +413,13 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 
 	private Icon getIconForTab(String tabName) {
 		String fileName = switch (tabName) {
-			case "Màn hình chính" -> "home.png";
-			case "Hóa đơn" -> "invoice.png";
-			case "Sản phẩm" -> "product.png";
-			case "Khách hàng" -> "customer.png";
-			case "Nhân viên" -> "staff.png";
+			case "Màn Hình Chính" -> "home.png";
+			case "Hóa Đơn" -> "invoice.png";
+			case "Sản Phẩm" -> "product.png";
+			case "Khách Hàng" -> "customer.png";
+			case "Nhân Viên" -> "staff.png";
 			case "Thống Kê" -> "chart.png";
-			case "Trợ giúp" -> "help.png";
+			case "Trợ Giúp" -> "help.png";
 			case "Khuyến Mãi" -> "coupon.png";
 			default -> null;
 		};
