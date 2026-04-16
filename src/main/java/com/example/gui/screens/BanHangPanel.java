@@ -1,4 +1,5 @@
-package com.example.gui;
+﻿package com.example.gui.screens;
+import com.example.gui.components.*;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -10,7 +11,7 @@ import com.github.lgooddatepicker.components.DatePickerSettings;
 
 public class BanHangPanel extends JPanel {
 
-    private final Color COLOR_BG = new Color(245, 245, 245);
+    private final Color COLOR_BG = new Color(241, 246, 255); // #F1F6FF
     private final Color COLOR_CARD_BG = Color.WHITE;
     private final Color COLOR_PRIMARY = new Color(0, 200, 83); // Green
     private final Color COLOR_SECONDARY = new Color(0, 123, 255); // Blue
@@ -40,19 +41,16 @@ public class BanHangPanel extends JPanel {
         JLabel lblTitle = new JLabel("Danh sách sản phẩm");
         lblTitle.setFont(FONT_TITLE);
 
-        JTextField txtSearch = new JTextField("Mã sản phẩm");
+        RoundedTextField txtSearch = new RoundedTextField("Mã sản phẩm", 15);
         txtSearch.setPreferredSize(new Dimension(250, 35));
         txtSearch.setFont(FONT_TEXT);
-        txtSearch.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(COLOR_BORDER, 1, true),
-                new EmptyBorder(0, 35, 0, 10)));
 
         topPanel.add(lblTitle, BorderLayout.WEST);
         topPanel.add(txtSearch, BorderLayout.EAST);
 
-        JPanel tableContainer = new JPanel(new BorderLayout());
+        RoundedPanel tableContainer = new RoundedPanel(12, true);
+        tableContainer.setLayout(new BorderLayout());
         tableContainer.setBackground(COLOR_CARD_BG);
-        tableContainer.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1));
 
         String[] columns = { "Mã sản phẩm", "Tên sản phẩm", "Đơn vị", "Số lượng", "Đơn giá", "Thuế", "Thành tiền" };
         DefaultTableModel model = new DefaultTableModel(columns, 15);
@@ -78,11 +76,10 @@ public class BanHangPanel extends JPanel {
     }
 
     private JPanel createSummaryBar() {
-        JPanel panel = new JPanel(new GridLayout(4, 1, 5, 2));
+        RoundedPanel panel = new RoundedPanel(12, true);
+        panel.setLayout(new GridLayout(4, 1, 5, 2));
         panel.setBackground(COLOR_CARD_BG);
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(COLOR_BORDER, 1),
-                new EmptyBorder(15, 20, 15, 20)));
+        panel.setBorder(new EmptyBorder(15, 20, 15, 20));
 
         panel.add(createSummaryLabel("Tổng tiền hóa đơn :", ""));
         panel.add(createSummaryLabel("Khuyến mãi :", ""));
@@ -102,17 +99,15 @@ public class BanHangPanel extends JPanel {
     }
 
     private JPanel createRightSidebar() {
-        JPanel sidebar = new JPanel();
+        RoundedPanel sidebar = new RoundedPanel(12, true);
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
         sidebar.setPreferredSize(new Dimension(320, 0));
         sidebar.setBackground(COLOR_CARD_BG);
-        sidebar.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(COLOR_BORDER, 1),
-                new EmptyBorder(20, 15, 20, 15)));
+        sidebar.setBorder(new EmptyBorder(20, 15, 20, 15));
 
         sidebar.add(createSectionTitle("Thông tin khách hàng"));
         sidebar.add(Box.createVerticalStrut(10));
-        sidebar.add(createFieldGroup("Số điện thoại", new JTextField()));
+        sidebar.add(createFieldGroup("Số điện thoại", new RoundedTextField(10)));
         sidebar.add(Box.createVerticalStrut(25));
 
         // Invoice Info
@@ -183,12 +178,11 @@ public class BanHangPanel extends JPanel {
         return group;
     }
 
-    private JTextField createReadOnlyField(String text) {
-        JTextField field = new JTextField(text);
+    private RoundedTextField createReadOnlyField(String text) {
+        RoundedTextField field = new RoundedTextField(text, 10);
         field.setEditable(false);
         field.setHorizontalAlignment(JTextField.CENTER);
-        field.setBackground(new Color(225, 225, 225));
-        field.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        field.setBackground(new Color(235, 235, 235));
         return field;
     }
 
@@ -198,15 +192,13 @@ public class BanHangPanel extends JPanel {
         datePicker.getComponentDateTextField().setHorizontalAlignment(JTextField.CENTER);
     }
 
-    private JButton createActionButton(String text, Color bg) {
-        JButton btn = new JButton(text);
+    private RoundedButton createActionButton(String text, Color bg) {
+        RoundedButton btn = new RoundedButton(text);
         btn.setFont(FONT_LABEL);
-        btn.setForeground(Color.WHITE);
         btn.setBackground(bg);
         btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
         btn.setAlignmentX(Component.LEFT_ALIGNMENT);
-        btn.setFocusPainted(false);
-        btn.setBorder(BorderFactory.createEmptyBorder());
         return btn;
     }
 }
+

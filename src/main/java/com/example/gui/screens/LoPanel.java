@@ -1,4 +1,4 @@
-package com.example.gui;
+package com.example.gui.screens;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -13,6 +13,7 @@ public class LoPanel extends JPanel {
 
     public LoPanel() {
         setLayout(new BorderLayout());
+<<<<<<< HEAD:src/main/java/com/example/gui/LoPanel.java
         setBackground(new Color(245, 245, 245));
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, createLeftPanel(), createRightPanel());
@@ -22,6 +23,12 @@ public class LoPanel extends JPanel {
         splitPane.setDividerSize(8);
 
         add(splitPane, BorderLayout.CENTER);
+=======
+        setBackground(new Color(241, 246, 255)); // #F1F6FF
+        JLabel label = new JLabel("Màn hình lô (Đang phát triển)", SwingConstants.CENTER);
+        label.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        add(label, BorderLayout.CENTER);
+>>>>>>> 206c2038d2eb152ffad3673f6e34d896dcdcddff:src/main/java/com/example/gui/screens/LoPanel.java
     }
 
     // ==========================================

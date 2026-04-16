@@ -1,7 +1,11 @@
-package com.example.gui;
+package com.example.gui.screens;
+
+import com.example.gui.screens.*;
+import com.example.gui.components.*;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
+import java.awt.GridLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
@@ -47,7 +51,9 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 	private Color textHoverColor = Color.decode("#1A73E8");
 	private Color textDefaultColor = Color.BLACK;
 	private Font customFont = new Font("Segoe UI", Font.BOLD, 12);
-	private JButton btnDangXuat;
+	private RoundedButton btnDangXuat;
+	private RoundedButton btnMoCa;
+	private RoundedButton btnKetCa;
 	private KhachHangPanel pnlKhachHang;
 	private NhanVienPanel pnlNhanVien;
 	private Color sidebarColor = Color.WHITE;
@@ -61,9 +67,9 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 	private JPanel pLogout;
 
 	private Border menuPadding = BorderFactory.createEmptyBorder(10, 25, 10, 25);
-	private Color selectedBg = new Color(0xD8F0F9);
+	private Color selectedBg = Color.decode("#D2E3FC");
 	private Border selectedBorder = BorderFactory.createCompoundBorder(
-			BorderFactory.createMatteBorder(0, 5, 0, 0, Color.decode("#1A73E8")), // Blue accent line
+			BorderFactory.createMatteBorder(0, 5, 0, 0, Color.decode("#174EA6")), // Blue accent line
 			menuPadding);
 
 	public ThanhDieuHuongPanel(TaiKhoan taiKhoan) {
@@ -73,7 +79,7 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 
 		JPanel sidebar = new JPanel();
-		sidebar.setBackground(Color.WHITE);
+		sidebar.setBackground(sidebarColor);
 		sidebar.setOpaque(true);
 		sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
 		sidebar.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -96,23 +102,21 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		JLabel lblKAMINOCOFFEE = new JLabel("Kamino Healthcare");
 		lblKAMINOCOFFEE.setFont(new Font(lblKAMINOCOFFEE.getFont().getFontName(), Font.BOLD, 17));
 
-		JLabel lblXinChao = new JLabel("Xin chào,");
-		lblTenTaiKhoan = new JLabel(taiKhoan.getNhanVien().getTenNhanVien());
+		lblTenTaiKhoan = new JLabel("Xin chào, " + taiKhoan.getNhanVien().getTenNhanVien());
 		lblChucVu = new JLabel(taiKhoan.getNhanVien().getChucVu() == ChucVu.NHANVIENQUANLY ? "Quản Lý" : "Dược Sĩ");
 		lblChucVu.setForeground(Color.decode("#00A651"));
 
 		lblKAMINOCOFFEE.setBorder(BorderFactory.createEmptyBorder(10, 10, 7, 10));
-		lblXinChao.setBorder(BorderFactory.createEmptyBorder(10, 0, 5, 0));
+
 		lblTenTaiKhoan.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
 		lblChucVu.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
 		lblKAMINOCOFFEE.setAlignmentX(Component.CENTER_ALIGNMENT);
-		lblXinChao.setAlignmentX(Component.CENTER_ALIGNMENT);
+
 		lblTenTaiKhoan.setAlignmentX(Component.CENTER_ALIGNMENT);
 		lblChucVu.setAlignmentX(Component.CENTER_ALIGNMENT);
 
 		sidebar.add(lblKAMINOCOFFEE);
 		sidebar.add(Box.createVerticalStrut(5));
-		sidebar.add(lblXinChao);
 		sidebar.add(lblTenTaiKhoan);
 		sidebar.add(lblChucVu);
 		sidebar.add(Box.createVerticalStrut(5));
@@ -127,20 +131,20 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 
 		contentPanel = new JPanel(cardLayout);
 		contentPanel.add(pnlTrangChu = new ManHinhChinhPanel(taiKhoan), "Màn hình chính");
-		contentPanel.add(pnlHoaDon = new HoaDonPanel(), "> QL hóa đơn");
-		contentPanel.add(new BanHangPanel(), "> Bán hàng");
-		contentPanel.add(new DoiHangPanel(), "> Đổi hàng");
-		contentPanel.add(new TraHangPanel(), "> Trả hàng");
+		contentPanel.add(pnlHoaDon = new HoaDonPanel(), "Quản lý hóa đơn");
+		contentPanel.add(new BanHangPanel(), "Bán hàng");
+		contentPanel.add(new DoiHangPanel(), "Đổi hàng");
+		contentPanel.add(new TraHangPanel(), "Trả hàng");
 		contentPanel.add(pnlKhachHang = new KhachHangPanel(), "Khách hàng");
 		isQuanLy = taiKhoan.getNhanVien().getChucVu() == ChucVu.NHANVIENQUANLY;
-		contentPanel.add(new SanPhamPanel(), "> QL sản phẩm");
+		contentPanel.add(new SanPhamPanel(), "Quản lý sản phẩm");
 		if (isQuanLy) {
 
-			contentPanel.add(new LoPanel(), "> QL lô");
+			contentPanel.add(new LoPanel(), "Quản lý lô");
 			contentPanel.add(new KhuyenMaiPanel(), "Khuyến Mãi"); // Tạo 1 KhuyenMaiPanel sau đó thay thế JPanel()
 
-			contentPanel.add(pnlNhanVien = new NhanVienPanel(), "> QL Nhân Viên");
-			contentPanel.add(new TaiKhoanPanel(), "> QL Tài Khoản"); // Tạo 1 TaiKhoanPanel sau đó thay thế JPanel()
+			contentPanel.add(pnlNhanVien = new NhanVienPanel(), "Quản lý Nhân Viên");
+			contentPanel.add(new TaiKhoanPanel(), "Quản lý Tài Khoản"); // Tạo 1 TaiKhoanPanel sau đó thay thế JPanel()
 
 			contentPanel.add(pnlThongKe = new ThongKePanel(), "Thống Kê");
 		}
@@ -150,19 +154,30 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 	}
 
 	private void initLogoutPanel() {
-		btnDangXuat = new JButton("Đăng xuất");
+		// --- Nút Mở ca (xanh lá) ---
+		btnMoCa = new RoundedButton("Mở ca");
+		btnMoCa.setBackground(Color.decode("#28A745"));
+		btnMoCa.addActionListener(this);
+
+		// --- Nút Kết ca (cam) ---
+		btnKetCa = new RoundedButton("Kết ca");
+		btnKetCa.setBackground(Color.decode("#FD7E14"));
+		btnKetCa.addActionListener(this);
+
+		// --- Nút Đăng xuất (đỏ) ---
+		btnDangXuat = new RoundedButton("Đăng xuất");
 		btnDangXuat.setBackground(Color.decode("#DC3545"));
-		btnDangXuat.setForeground(Color.WHITE);
-		btnDangXuat.setAlignmentX(Component.CENTER_ALIGNMENT);
-		btnDangXuat.setBorder(BorderFactory.createLineBorder(Color.red, 5, true));
 		btnDangXuat.addActionListener(this);
 
-		pLogout = new JPanel();
+		// --- Panel chứa 3 nút theo chiều dọc, tự căng full-width ---
+		pLogout = new JPanel(new GridLayout(3, 1, 0, 6));
 		pLogout.setBackground(sidebarColor);
-		pLogout.setLayout(new BorderLayout());
-		pLogout.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+		pLogout.setMaximumSize(new Dimension(Integer.MAX_VALUE, 150));
+		pLogout.setBorder(new EmptyBorder(5, 20, 10, 20));
+
+		pLogout.add(btnMoCa);
+		pLogout.add(btnKetCa);
 		pLogout.add(btnDangXuat);
-		pLogout.setBorder(new EmptyBorder(0, 20, 0, 20));
 	}
 
 	private void capNhatDuLieuKhiDoiThe() {
@@ -194,7 +209,7 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 				ml.setBackground(selectedBg);
 			} else {
 				ml.setBorder(ml.getMenuItem().isChild ? BorderFactory.createEmptyBorder(10, 45, 10, 25) : menuPadding);
-				ml.setBackground(Color.WHITE);
+				ml.setBackground(sidebarColor);
 			}
 		}
 
@@ -238,17 +253,23 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 					"Bạn có chắc chắn muốn đăng xuất?",
 					"Xác nhận đăng xuất",
 					JOptionPane.YES_NO_OPTION);
-
 			if (xacNhan == JOptionPane.YES_OPTION) {
-
 				EventQueue.invokeLater(() -> {
 					new DangNhapPanel().setVisible(true);
 				});
 				this.dispose();
-
 			}
+		} else if (o.equals(btnMoCa)) {
+			JOptionPane.showMessageDialog(this,
+					"Chức năng Mở ca đang được phát triển.",
+					"Mở ca",
+					JOptionPane.INFORMATION_MESSAGE);
+		} else if (o.equals(btnKetCa)) {
+			JOptionPane.showMessageDialog(this,
+					"Chức năng Kết ca đang được phát triển.",
+					"Kết ca",
+					JOptionPane.INFORMATION_MESSAGE);
 		}
-
 	}
 
 	public void switchTo(String action) {
@@ -268,17 +289,17 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		menuStructure.add(new MenuItem("Màn hình chính", "home.png"));
 
 		MenuItem hoaDon = new MenuItem("Hóa đơn", "invoice.png");
-		hoaDon.children.add(new MenuItem("> QL hóa đơn", null, true));
-		hoaDon.children.add(new MenuItem("> Bán hàng", null, true));
-		hoaDon.children.add(new MenuItem("> Đổi hàng", null, true));
-		hoaDon.children.add(new MenuItem("> Trả hàng", null, true));
+		hoaDon.children.add(new MenuItem("Quản lý hóa đơn", null, true));
+		hoaDon.children.add(new MenuItem("Bán hàng", null, true));
+		hoaDon.children.add(new MenuItem("Đổi hàng", null, true));
+		hoaDon.children.add(new MenuItem("Trả hàng", null, true));
 		menuStructure.add(hoaDon);
 
 		MenuItem sanPham = new MenuItem("Sản phẩm", "product.png");
 
 		if (isQL) {
-			sanPham.children.add(new MenuItem("> QL sản phẩm", null, true));
-			sanPham.children.add(new MenuItem("> QL lô", null, true));
+			sanPham.children.add(new MenuItem("Quản lý sản phẩm", null, true));
+			sanPham.children.add(new MenuItem("Quản lý lô", null, true));
 		}
 
 		menuStructure.add(sanPham);
@@ -289,8 +310,8 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		if (isQL) {
 
 			MenuItem nhanVien = new MenuItem("Nhân viên", "staff.png");
-			nhanVien.children.add(new MenuItem("> QL Nhân Viên", null, true));
-			nhanVien.children.add(new MenuItem("> QL Tài Khoản", null, true));
+			nhanVien.children.add(new MenuItem("Quản lý Nhân Viên", null, true));
+			nhanVien.children.add(new MenuItem("Quản lý Tài Khoản", null, true));
 			menuStructure.add(nhanVien);
 
 			menuStructure.add(new MenuItem("Thống Kê", "chart.png"));
@@ -301,9 +322,9 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 
 	private void renderSidebar() {
 		// Cleanly remove all components after the header (logo, names, etc.)
-		// Header items are at indices 0 to 7
+		// Header items are at indices 0 to 6 (logo, name, chucVu, 4 spacers)
 		Component[] components = sidebar.getComponents();
-		for (int i = components.length - 1; i >= 8; i--) {
+		for (int i = components.length - 1; i >= 6; i--) {
 			sidebar.remove(i);
 		}
 		menuLabels.clear();
@@ -341,10 +362,13 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		label.setAlignmentX(Component.CENTER_ALIGNMENT);
 		label.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
 		label.setOpaque(true);
-		label.setBackground(Color.WHITE);
+		label.setBackground(sidebarColor);
 
 		if (!item.children.isEmpty()) {
-			label.setText(item.name + (item.isExpanded ? "   >" : "   <"));
+			String arrow = item.isExpanded
+					? "    <span style='font-size:7px'>▲</span>"
+					: "    <span style='font-size:7px'>▼</span>";
+			label.setText("<html>" + item.name + arrow + "</html>");
 		}
 
 		sidebar.add(label);

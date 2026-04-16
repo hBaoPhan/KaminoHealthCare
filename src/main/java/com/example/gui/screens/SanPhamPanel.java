@@ -1,4 +1,5 @@
-package com.example.gui;
+package com.example.gui.screens;
+import com.example.gui.components.*;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -46,7 +47,7 @@ import java.awt.event.ActionListener;
 public class SanPhamPanel extends JPanel {
     public SanPhamPanel() {
         setLayout(new BorderLayout());
-        setBackground(new Color(245, 245, 245));
+        setBackground(new Color(241, 246, 255)); // #F1F6FF
 
         // Sử dụng JSplitPane để chia đôi màn hình (Trái: Danh sách, Phải: Chi tiết)
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, createLeftPanel(), createRightPanel());
@@ -62,15 +63,24 @@ public class SanPhamPanel extends JPanel {
     // ==========================================
     private JPanel createLeftPanel() {
         JPanel leftPanel = new JPanel(new BorderLayout(10, 10));
-        leftPanel.setBackground(new Color(245, 245, 245));
+        leftPanel.setBackground(new Color(241, 246, 255)); // #F1F6FF
         leftPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
+<<<<<<< HEAD:src/main/java/com/example/gui/SanPhamPanel.java
         // 1. Top Bar (Danh sách sản phẩm bên trái)
         JPanel topBar = new JPanel(new BorderLayout(15, 0));
         topBar.setBackground(new Color(245, 245, 245));
 
         JPanel leftBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         leftBar.setBackground(new Color(245, 245, 245));
+=======
+        // 1. Top Bar (Tìm kiếm & Danh mục)
+        JPanel topBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
+        topBar.setBackground(new Color(241, 246, 255)); // #F1F6FF
+
+        RoundedTextField txtSearch = new RoundedTextField("Tìm theo tên", 20);
+        txtSearch.setPreferredSize(new Dimension(250, 35));
+>>>>>>> 206c2038d2eb152ffad3673f6e34d896dcdcddff:src/main/java/com/example/gui/screens/SanPhamPanel.java
 
         JLabel lblTitle = new JLabel("Danh sách sản phẩm");
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 14));
@@ -140,9 +150,14 @@ public class SanPhamPanel extends JPanel {
         topBar.add(rightBar, BorderLayout.EAST);
 
         // 2. Grid Sản phẩm
+<<<<<<< HEAD:src/main/java/com/example/gui/SanPhamPanel.java
         GridLayout gridLayout = new GridLayout(0, 5, 15, 15);
         JPanel gridPanel = new JPanel(gridLayout);
         gridPanel.setBackground(new Color(245, 245, 245));
+=======
+        JPanel gridPanel = new JPanel(new GridLayout(0, 4, 15, 15)); // 4 cột, khoảng cách 15px
+        gridPanel.setBackground(new Color(241, 246, 255)); // #F1F6FF
+>>>>>>> 206c2038d2eb152ffad3673f6e34d896dcdcddff:src/main/java/com/example/gui/screens/SanPhamPanel.java
 
         // Thêm 50 card sản phẩm mẫu
         gridPanel.add(createProductCard("Hoạt Huyết Trường Phúc", "99.000đ / Hộp", true));
@@ -202,6 +217,7 @@ public class SanPhamPanel extends JPanel {
         JScrollPane scrollPane = new JScrollPane(gridPanel);
         scrollPane.setBorder(null);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+<<<<<<< HEAD:src/main/java/com/example/gui/SanPhamPanel.java
         scrollPane.setBackground(new Color(245, 245, 245));
         scrollPane.setPreferredSize(new Dimension(0, 700));
 
@@ -218,10 +234,13 @@ public class SanPhamPanel extends JPanel {
                 }
             }
         });
+=======
+        scrollPane.setBackground(new Color(241, 246, 255)); // #F1F6FF
+>>>>>>> 206c2038d2eb152ffad3673f6e34d896dcdcddff:src/main/java/com/example/gui/screens/SanPhamPanel.java
 
         // 3. Phân trang (Mockup đơn giản)
         JPanel paginationPanel = new JPanel();
-        paginationPanel.setBackground(new Color(245, 245, 245));
+        paginationPanel.setBackground(new Color(241, 246, 255)); // #F1F6FF
         paginationPanel.add(new JLabel("• • • •")); 
 
         leftPanel.add(topBar, BorderLayout.NORTH);
@@ -233,9 +252,10 @@ public class SanPhamPanel extends JPanel {
 
     // Helper method tạo thẻ sản phẩm (Product Card)
     private JPanel createProductCard(String name, String price, boolean inStock) {
-        JPanel card = new JPanel();
+        RoundedPanel card = new RoundedPanel(14, true);
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
         card.setBackground(Color.WHITE);
+<<<<<<< HEAD:src/main/java/com/example/gui/SanPhamPanel.java
         card.setBorder(BorderFactory.createCompoundBorder(
                 new LineBorder(new Color(200, 200, 200), 1, true),
                 new EmptyBorder(10, 10, 10, 10)
@@ -244,6 +264,9 @@ public class SanPhamPanel extends JPanel {
         card.setMaximumSize(new Dimension(180, 220));
         card.setMinimumSize(new Dimension(180, 220));
         card.setAlignmentY(Component.TOP_ALIGNMENT);
+=======
+        card.setBorder(new EmptyBorder(10, 10, 10, 10));
+>>>>>>> 206c2038d2eb152ffad3673f6e34d896dcdcddff:src/main/java/com/example/gui/screens/SanPhamPanel.java
 
         // Ảnh (Mockup)
         JLabel lblImage = new JLabel("Ảnh SP", SwingConstants.CENTER);
@@ -309,12 +332,10 @@ public class SanPhamPanel extends JPanel {
     // PANEL BÊN PHẢI (Thông tin chi tiết sản phẩm)
     // ==========================================
     private JPanel createRightPanel() {
-        JPanel rightPanel = new JPanel(new BorderLayout());
+        RoundedPanel rightPanel = new RoundedPanel(16, true);
+        rightPanel.setLayout(new BorderLayout());
         rightPanel.setBackground(Color.WHITE);
-        rightPanel.setBorder(BorderFactory.createCompoundBorder(
-                new EmptyBorder(10, 10, 10, 10),
-                new LineBorder(Color.LIGHT_GRAY, 1)
-        ));
+        rightPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         // Tiêu đề
         JLabel lblTitle = new JLabel("THÔNG TIN SẢN PHẨM", SwingConstants.CENTER);
@@ -337,8 +358,9 @@ public class SanPhamPanel extends JPanel {
         JLabel imgBox = new JLabel("Image Placeholder", SwingConstants.CENTER);
         imgBox.setPreferredSize(new Dimension(150, 100));
         imgBox.setBorder(new LineBorder(Color.LIGHT_GRAY));
-        JButton btnSelectImage = new JButton("Chọn ảnh");
+        RoundedButton btnSelectImage = new RoundedButton("Chọn ảnh");
         btnSelectImage.setBackground(new Color(153, 225, 255));
+<<<<<<< HEAD:src/main/java/com/example/gui/SanPhamPanel.java
         btnSelectImage.addActionListener(e -> {
             JFileChooser chooser = new JFileChooser();
             chooser.setFileFilter(new FileNameExtensionFilter("Hình ảnh", "jpg", "jpeg", "png", "gif"));
@@ -352,6 +374,9 @@ public class SanPhamPanel extends JPanel {
                 );
             }
         });
+=======
+        btnSelectImage.setForeground(Color.BLACK);
+>>>>>>> 206c2038d2eb152ffad3673f6e34d896dcdcddff:src/main/java/com/example/gui/screens/SanPhamPanel.java
         
         JPanel btnWrapper = new JPanel();
         btnWrapper.setBackground(Color.WHITE);
@@ -369,11 +394,11 @@ public class SanPhamPanel extends JPanel {
         gbc.gridwidth = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.anchor = GridBagConstraints.WEST;
 
         // Các trường nhập liệu
-        addFormField(formPanel, gbc, row++, "Mã sản phẩm:", new JTextField("HHTP-300MG-H"), false);
-        addFormField(formPanel, gbc, row++, "Tên sản phẩm:", new JTextField("Hoạt Huyết Trường Phúc"), true);
-        addFormField(formPanel, gbc, row++, "Hoạt chất:", new JTextField("Thục địa, Ích mẫu, Ngưu tất"), true);
-        addFormField(formPanel, gbc, row++, "Số lượng tồn:", new JTextField("200"), false);
-        addFormField(formPanel, gbc, row++, "Đơn giá:", new JTextField("99.000"), true);
+        addFormField(formPanel, gbc, row++, "Mã sản phẩm:", new RoundedTextField("HHTP-300MG-H", 15), false);
+        addFormField(formPanel, gbc, row++, "Tên sản phẩm:", new RoundedTextField("Hoạt Huyết Trường Phúc", 15), true);
+        addFormField(formPanel, gbc, row++, "Hoạt chất:", new RoundedTextField("Thục địa, Ích mẫu, Ngưu tất", 15), true);
+        addFormField(formPanel, gbc, row++, "Số lượng tồn:", new RoundedTextField("200", 15), false);
+        addFormField(formPanel, gbc, row++, "Đơn giá:", new RoundedTextField("99.000", 15), true);
         
         JComboBox<String> cbLoaiSP = new JComboBox<>(new String[]{"Thuốc ETC", "Thuốc OTC", "TPCN"});
         addFormField(formPanel, gbc, row++, "Loại sản phẩm:", cbLoaiSP, true);
@@ -456,28 +481,28 @@ public class SanPhamPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0.3; gbc.insets = new Insets(5, 10, 5, 10);
         panel.add(new JLabel(labelText), gbc);
 
-        if (inputComp instanceof JTextField) {
+        if (inputComp instanceof RoundedTextField) {
+            ((RoundedTextField) inputComp).setEditable(isEditable);
+            if (!isEditable) inputComp.setBackground(new Color(235, 235, 235));
+        } else if (inputComp instanceof JTextField) {
             ((JTextField) inputComp).setEditable(isEditable);
-            if (!isEditable) {
-                inputComp.setBackground(new Color(230, 230, 230));
-            }
+            if (!isEditable) inputComp.setBackground(new Color(230, 230, 230));
         }
-        inputComp.setPreferredSize(new Dimension(200, 28));
+        inputComp.setPreferredSize(new Dimension(200, 32));
 
         gbc.gridx = 1; gbc.gridy = row; gbc.weightx = 0.7;
         panel.add(inputComp, gbc);
     }
 
     // Helper method tạo button có màu
-    private JButton createStyledButton(String text, Color bgColor, Color fgColor) {
-        JButton btn = new JButton(text);
+    private RoundedButton createStyledButton(String text, Color bgColor, Color fgColor) {
+        RoundedButton btn = new RoundedButton(text);
         btn.setBackground(bgColor);
         btn.setForeground(fgColor);
-        btn.setFocusPainted(false);
         btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        btn.setBorder(new EmptyBorder(8, 10, 8, 10));
         return btn;
     }
+<<<<<<< HEAD:src/main/java/com/example/gui/SanPhamPanel.java
 
     private static class RoundedButton extends JButton {
         public RoundedButton(String text) {
@@ -507,3 +532,7 @@ public class SanPhamPanel extends JPanel {
         }
     }
 }
+=======
+}
+
+>>>>>>> 206c2038d2eb152ffad3673f6e34d896dcdcddff:src/main/java/com/example/gui/screens/SanPhamPanel.java
