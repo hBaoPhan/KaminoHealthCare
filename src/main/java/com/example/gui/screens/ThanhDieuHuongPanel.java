@@ -142,9 +142,11 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 
 			contentPanel.add(new LoPanel(), "Quản lý lô");
 			contentPanel.add(new KhuyenMaiPanel(), "Khuyến Mãi"); // Tạo 1 KhuyenMaiPanel sau đó thay thế JPanel()
+			contentPanel.add(new JPanel(), "Quản lý đơn thuốc");
 
 			contentPanel.add(pnlNhanVien = new NhanVienPanel(), "Quản lý Nhân Viên");
 			contentPanel.add(new TaiKhoanPanel(), "Quản lý Tài Khoản"); // Tạo 1 TaiKhoanPanel sau đó thay thế JPanel()
+			contentPanel.add(new JPanel(), "Quản lý ca làm");
 
 			contentPanel.add(pnlThongKe = new ThongKePanel(), "Thống Kê");
 		}
@@ -300,6 +302,7 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		if (isQL) {
 			sanPham.children.add(new MenuItem("Quản lý sản phẩm", null, true));
 			sanPham.children.add(new MenuItem("Quản lý lô", null, true));
+			sanPham.children.add(new MenuItem("Quản lý đơn thuốc", null, true));
 		}
 
 		menuStructure.add(sanPham);
@@ -312,6 +315,7 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 			MenuItem nhanVien = new MenuItem("Nhân viên", "staff.png");
 			nhanVien.children.add(new MenuItem("Quản lý Nhân Viên", null, true));
 			nhanVien.children.add(new MenuItem("Quản lý Tài Khoản", null, true));
+			nhanVien.children.add(new MenuItem("Quản lý ca làm", null, true));
 			menuStructure.add(nhanVien);
 
 			menuStructure.add(new MenuItem("Thống Kê", "chart.png"));
