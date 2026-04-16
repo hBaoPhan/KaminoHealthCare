@@ -1,4 +1,5 @@
 package com.example.gui.screens;
+
 import com.example.gui.components.*;
 
 import com.example.entity.ChucVu;
@@ -75,7 +76,7 @@ public class DangNhapPanel extends JFrame implements ActionListener {
 
         ImageIcon pharmacistIcon = loadIcon("/images/icon/logo.png");
         if (pharmacistIcon != null) {
-            Image scaledImage = pharmacistIcon.getImage().getScaledInstance(350, 350, Image.SCALE_SMOOTH);
+            Image scaledImage = pharmacistIcon.getImage().getScaledInstance(256, 256, Image.SCALE_SMOOTH);
             lblPharmacistImage = new JLabel(new ImageIcon(scaledImage));
             lblPharmacistImage.setAlignmentX(Component.CENTER_ALIGNMENT);
             panel.add(lblPharmacistImage);
@@ -93,83 +94,92 @@ public class DangNhapPanel extends JFrame implements ActionListener {
 
     /**
      * Tạo Panel bên phải với Form nhập liệu nền trắng.
+     * Dùng BoxLayout thay vì Null Layout để layout manager tự quản lý bounds,
+     * tránh lỗi clip góc trái của RoundedTextField.
      */
     private JPanel createRightPanel() {
-        JPanel panel = new JPanel();
-        panel.setBackground(Color.WHITE);
-        panel.setLayout(null); // Sử dụng Null Layout để đặt vị trí chính xác như Figma
-        panel.setBorder(new EmptyBorder(50, 60, 50, 60));
+        // Wrapper: căn giữa form theo chiều ngang và dọc
+        JPanel wrapper = new JPanel(new GridBagLayout());
+        wrapper.setBackground(Color.WHITE);
 
-        int currentY = 100; // Vị trí Y bắt đầu
+        // Form panel: BoxLayout Y_AXIS, giống cấu trúc BanHangPanel
+        JPanel form = new JPanel();
+        form.setLayout(new BoxLayout(form, BoxLayout.Y_AXIS));
+        form.setBackground(Color.WHITE);
+        form.setOpaque(false);
 
-        // Tiêu đề "Đăng Nhập"
+        // --- Tiêu đề "Đăng Nhập" ---
         JLabel lblTitle = new JLabel("Đăng Nhập");
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 32));
-        lblTitle.setBounds(60, currentY, 300, 40);
-        panel.add(lblTitle);
+        lblTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+        form.add(lblTitle);
 
-        currentY += 80;
+        form.add(Box.createVerticalStrut(30));
 
-        // --- Ô nhập Tài khoản (Bo góc) ---
-        txtUsername = new RoundedTextField("Tài khoản", 20); // Có chữ gợi ý (Hint)
-        txtUsername.setBounds(60, currentY, 400, 45);
+        // --- Ô nhập Tài khoản ---
+        txtUsername = new RoundedTextField("Tài khoản", 20);
         txtUsername.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        // Thêm Padding bên trái để chữ không sát viền
-        txtUsername.setBorder(new EmptyBorder(0, 15, 0, 10));
-        panel.add(txtUsername);
+        txtUsername.setMaximumSize(new Dimension(362, 40));
+        txtUsername.setPreferredSize(new Dimension(362, 40));
+        txtUsername.setAlignmentX(Component.LEFT_ALIGNMENT);
+        form.add(txtUsername);
 
-        currentY += 70;
+        form.add(Box.createVerticalStrut(15));
 
-        // --- Ô nhập Mật khẩu (Bo góc, ẩn ký tự) ---
+        // --- Ô nhập Mật khẩu + Icon mắt ---
+        JPanel passwordRow = new JPanel(new BorderLayout(8, 0));
+        passwordRow.setOpaque(false);
+        passwordRow.setMaximumSize(new Dimension(400, 38));
+        passwordRow.setPreferredSize(new Dimension(400, 38)); // Cố định chiều cao để tránh clip top
+        passwordRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+
         txtPassword = new RoundedPasswordField("Mật khẩu", 20);
-        txtPassword.setBounds(60, currentY, 400, 45);
         txtPassword.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        // Padding bên trái cho chữ, Padding bên phải cho Icon con mắt
-        txtPassword.setBorder(new EmptyBorder(0, 15, 0, 45));
-        panel.add(txtPassword);
+        passwordRow.add(txtPassword, BorderLayout.CENTER);
 
-        // Icon con mắt để ẩn/hiện mật khẩu
-        lblHidePassword = new JLabel(loadIcon("/images/icon/eye.jpg"));
-        lblHidePassword.setBounds(425, currentY + 10, 24, 24);
-        lblHidePassword.setCursor(new Cursor(Cursor.HAND_CURSOR)); // Con trỏ hình bàn tay
-        panel.add(lblHidePassword);
+        // Scale icon eye về 20x20
+        ImageIcon eyeIcon = loadIcon("/images/icon/hide.png");
+        if (eyeIcon != null) {
+            Image scaledEye = eyeIcon.getImage().getScaledInstance(25, 25, Image.SCALE_SMOOTH);
+            lblHidePassword = new JLabel(new ImageIcon(scaledEye));
+        } else {
+            lblHidePassword = new JLabel("👁");
+        }
+        lblHidePassword.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        lblHidePassword.setPreferredSize(new Dimension(30, 45)); // Width đủ rộng, height = row
+        passwordRow.add(lblHidePassword, BorderLayout.EAST);
 
-        currentY += 60;
+        form.add(passwordRow);
 
-        // --- Quên mật khẩu? (Liên kết màu xanh) ---
+        form.add(Box.createVerticalStrut(10));
+
+        // --- Quên mật khẩu? ---
+        JPanel forgotRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        forgotRow.setOpaque(false);
+        forgotRow.setMaximumSize(new Dimension(400, 25));
+        forgotRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+
         lblForgotPassword = new JLabel("Quên mật khẩu?");
         lblForgotPassword.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         lblForgotPassword.setForeground(COLOR_LINK);
         lblForgotPassword.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        lblForgotPassword.setBounds(340, currentY, 120, 20);
-        panel.add(lblForgotPassword);
+        forgotRow.add(lblForgotPassword);
+        form.add(forgotRow);
 
-        currentY += 50;
+        form.add(Box.createVerticalStrut(25));
 
-        // --- Nút Đăng Nhập (Lớn, nền xanh, chữ trắng) ---
+        // --- Nút Đăng Nhập ---
         btnLogin = new RoundedButton("Đăng Nhập");
         btnLogin.setFont(new Font("Segoe UI", Font.BOLD, 18));
         btnLogin.setBackground(COLOR_PRIMARY);
-        btnLogin.setBounds(60, currentY, 400, 50);
+        btnLogin.setMaximumSize(new Dimension(400, 50));
+        btnLogin.setPreferredSize(new Dimension(400, 50));
+        btnLogin.setAlignmentX(Component.LEFT_ALIGNMENT);
         btnLogin.addActionListener(this);
-        panel.add(btnLogin);
+        form.add(btnLogin);
 
-        currentY += 80;
-
-        // // --- Chưa có tài khoản? Đăng ký (Liên kết) ---
-        // JLabel lblNoAccount = new JLabel("Chưa có tài khoản?");
-        // lblNoAccount.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        // lblNoAccount.setBounds(150, currentY, 130, 20);
-        // panel.add(lblNoAccount);
-        //
-        // lblRegister = new JLabel("Đăng ký");
-        // lblRegister.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        // lblRegister.setForeground(COLOR_LINK);
-        // lblRegister.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        // lblRegister.setBounds(285, currentY, 70, 20);
-        // panel.add(lblRegister);
-
-        return panel;
+        wrapper.add(form);
+        return wrapper;
     }
 
     /**
@@ -181,14 +191,26 @@ public class DangNhapPanel extends JFrame implements ActionListener {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 if (isPasswordHidden) {
                     txtPassword.setEchoChar((char) 0); // Hiện mật khẩu thực
-                    lblHidePassword.setIcon(loadIcon("/com/resources/icons/eye_show.png")); // Đổi icon
+                    lblHidePassword.setIcon(loadScaledIcon("/images/icon/view.png", 25, 25));
                 } else {
-                    txtPassword.setEchoChar('•'); // Ẩn mật khẩu (dùng dấu chấm)
-                    lblHidePassword.setIcon(loadIcon("/com/resources/icons/eye_hide.png")); // Đổi icon
+                    txtPassword.setEchoChar('\u2022'); // Ẩn mật khẩu
+                    lblHidePassword.setIcon(loadScaledIcon("/images/icon/hide.png", 25, 25));
                 }
                 isPasswordHidden = !isPasswordHidden;
             }
         });
+    }
+
+    /**
+     * Load icon an toàn và scale về kích thước chỉ định.
+     */
+    private ImageIcon loadScaledIcon(String path, int w, int h) {
+        ImageIcon icon = loadIcon(path);
+        if (icon != null) {
+            Image scaled = icon.getImage().getScaledInstance(w, h, Image.SCALE_SMOOTH);
+            return new ImageIcon(scaled);
+        }
+        return null;
     }
 
     /**
@@ -199,7 +221,6 @@ public class DangNhapPanel extends JFrame implements ActionListener {
         if (imgUrl != null) {
             return new ImageIcon(imgUrl);
         } else {
-            // In lỗi ra console nếu không tìm thấy file, nhưng không làm hỏng giao diện
             System.err.println("Couldn't find file: " + path);
             return null;
         }
@@ -219,4 +240,3 @@ public class DangNhapPanel extends JFrame implements ActionListener {
         }
     }
 }
-

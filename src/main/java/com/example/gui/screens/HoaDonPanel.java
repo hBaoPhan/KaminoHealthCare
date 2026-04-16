@@ -1,4 +1,4 @@
-package com.example.gui.screens;
+﻿package com.example.gui.screens;
 
 import com.example.gui.components.*;
 
@@ -13,7 +13,7 @@ import com.github.lgooddatepicker.components.DatePickerSettings;
 
 public class HoaDonPanel extends JPanel {
 
-    private final Color COLOR_BG = new Color(245, 245, 245);
+    private final Color COLOR_BG = new Color(241, 246, 255); // #F1F6FF
     private final Color COLOR_CARD_BG = Color.WHITE;
     private final Color COLOR_PRIMARY = new Color(0, 200, 83);
     private final Color COLOR_BORDER = new Color(230, 230, 230);

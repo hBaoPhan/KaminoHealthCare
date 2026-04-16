@@ -1,4 +1,5 @@
 package com.example.gui.screens;
+
 import com.example.gui.screens.*;
 import com.example.gui.components.*;
 
@@ -66,9 +67,9 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 	private JPanel pLogout;
 
 	private Border menuPadding = BorderFactory.createEmptyBorder(10, 25, 10, 25);
-	private Color selectedBg = new Color(0xD8F0F9);
+	private Color selectedBg = Color.decode("#D2E3FC");
 	private Border selectedBorder = BorderFactory.createCompoundBorder(
-			BorderFactory.createMatteBorder(0, 5, 0, 0, Color.decode("#1A73E8")), // Blue accent line
+			BorderFactory.createMatteBorder(0, 5, 0, 0, Color.decode("#174EA6")), // Blue accent line
 			menuPadding);
 
 	public ThanhDieuHuongPanel(TaiKhoan taiKhoan) {
@@ -78,7 +79,7 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 
 		JPanel sidebar = new JPanel();
-		sidebar.setBackground(Color.WHITE);
+		sidebar.setBackground(sidebarColor);
 		sidebar.setOpaque(true);
 		sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
 		sidebar.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -96,7 +97,7 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		JLabel lblLogo = new JLabel(new HiDPIIcon(logoData.getImage(), 146, 146));
 		lblLogo.setAlignmentX(Component.CENTER_ALIGNMENT);
 		lblLogo.setBorder(BorderFactory.createEmptyBorder(20, 20, 0, 20));
-		// sidebar.add(lblLogo);
+		sidebar.add(lblLogo);
 
 		JLabel lblKAMINOCOFFEE = new JLabel("Kamino Healthcare");
 		lblKAMINOCOFFEE.setFont(new Font(lblKAMINOCOFFEE.getFont().getFontName(), Font.BOLD, 17));
@@ -130,20 +131,20 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 
 		contentPanel = new JPanel(cardLayout);
 		contentPanel.add(pnlTrangChu = new ManHinhChinhPanel(taiKhoan), "Màn hình chính");
-		contentPanel.add(pnlHoaDon = new HoaDonPanel(), "> QL hóa đơn");
-		contentPanel.add(new BanHangPanel(), "> Bán hàng");
-		contentPanel.add(new DoiHangPanel(), "> Đổi hàng");
-		contentPanel.add(new TraHangPanel(), "> Trả hàng");
+		contentPanel.add(pnlHoaDon = new HoaDonPanel(), "Quản lý hóa đơn");
+		contentPanel.add(new BanHangPanel(), "Bán hàng");
+		contentPanel.add(new DoiHangPanel(), "Đổi hàng");
+		contentPanel.add(new TraHangPanel(), "Trả hàng");
 		contentPanel.add(pnlKhachHang = new KhachHangPanel(), "Khách hàng");
 		isQuanLy = taiKhoan.getNhanVien().getChucVu() == ChucVu.NHANVIENQUANLY;
-		contentPanel.add(new SanPhamPanel(), "> QL sản phẩm");
+		contentPanel.add(new SanPhamPanel(), "Quản lý sản phẩm");
 		if (isQuanLy) {
 
-			contentPanel.add(new LoPanel(), "> QL lô");
+			contentPanel.add(new LoPanel(), "Quản lý lô");
 			contentPanel.add(new KhuyenMaiPanel(), "Khuyến Mãi"); // Tạo 1 KhuyenMaiPanel sau đó thay thế JPanel()
 
-			contentPanel.add(pnlNhanVien = new NhanVienPanel(), "> QL Nhân Viên");
-			contentPanel.add(new TaiKhoanPanel(), "> QL Tài Khoản"); // Tạo 1 TaiKhoanPanel sau đó thay thế JPanel()
+			contentPanel.add(pnlNhanVien = new NhanVienPanel(), "Quản lý Nhân Viên");
+			contentPanel.add(new TaiKhoanPanel(), "Quản lý Tài Khoản"); // Tạo 1 TaiKhoanPanel sau đó thay thế JPanel()
 
 			contentPanel.add(pnlThongKe = new ThongKePanel(), "Thống Kê");
 		}
@@ -208,7 +209,7 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 				ml.setBackground(selectedBg);
 			} else {
 				ml.setBorder(ml.getMenuItem().isChild ? BorderFactory.createEmptyBorder(10, 45, 10, 25) : menuPadding);
-				ml.setBackground(Color.WHITE);
+				ml.setBackground(sidebarColor);
 			}
 		}
 
@@ -288,17 +289,17 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		menuStructure.add(new MenuItem("Màn hình chính", "home.png"));
 
 		MenuItem hoaDon = new MenuItem("Hóa đơn", "invoice.png");
-		hoaDon.children.add(new MenuItem("> QL hóa đơn", null, true));
-		hoaDon.children.add(new MenuItem("> Bán hàng", null, true));
-		hoaDon.children.add(new MenuItem("> Đổi hàng", null, true));
-		hoaDon.children.add(new MenuItem("> Trả hàng", null, true));
+		hoaDon.children.add(new MenuItem("Quản lý hóa đơn", null, true));
+		hoaDon.children.add(new MenuItem("Bán hàng", null, true));
+		hoaDon.children.add(new MenuItem("Đổi hàng", null, true));
+		hoaDon.children.add(new MenuItem("Trả hàng", null, true));
 		menuStructure.add(hoaDon);
 
 		MenuItem sanPham = new MenuItem("Sản phẩm", "product.png");
 
 		if (isQL) {
-			sanPham.children.add(new MenuItem("> QL sản phẩm", null, true));
-			sanPham.children.add(new MenuItem("> QL lô", null, true));
+			sanPham.children.add(new MenuItem("Quản lý sản phẩm", null, true));
+			sanPham.children.add(new MenuItem("Quản lý lô", null, true));
 		}
 
 		menuStructure.add(sanPham);
@@ -309,8 +310,8 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		if (isQL) {
 
 			MenuItem nhanVien = new MenuItem("Nhân viên", "staff.png");
-			nhanVien.children.add(new MenuItem("> QL Nhân Viên", null, true));
-			nhanVien.children.add(new MenuItem("> QL Tài Khoản", null, true));
+			nhanVien.children.add(new MenuItem("Quản lý Nhân Viên", null, true));
+			nhanVien.children.add(new MenuItem("Quản lý Tài Khoản", null, true));
 			menuStructure.add(nhanVien);
 
 			menuStructure.add(new MenuItem("Thống Kê", "chart.png"));
@@ -361,10 +362,13 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		label.setAlignmentX(Component.CENTER_ALIGNMENT);
 		label.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
 		label.setOpaque(true);
-		label.setBackground(Color.WHITE);
+		label.setBackground(sidebarColor);
 
 		if (!item.children.isEmpty()) {
-			label.setText(item.name + (item.isExpanded ? "   >" : "   <"));
+			String arrow = item.isExpanded
+					? "    <span style='font-size:7px'>▲</span>"
+					: "    <span style='font-size:7px'>▼</span>";
+			label.setText("<html>" + item.name + arrow + "</html>");
 		}
 
 		sidebar.add(label);
@@ -482,5 +486,3 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		}
 	}
 }
-
-

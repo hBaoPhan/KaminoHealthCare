@@ -1,4 +1,4 @@
-package com.example.gui.screens;
+﻿package com.example.gui.screens;
 import com.example.gui.components.*;
 
 import com.example.entity.TaiKhoan;
@@ -16,7 +16,7 @@ import java.awt.*;
 
 public class ManHinhChinhPanel extends JPanel {
 
-    private final Color COLOR_BG = new Color(245, 245, 245);
+    private final Color COLOR_BG = new Color(241, 246, 255); // #F1F6FF
     private final Font FONT_TITLE = new Font("Segoe UI", Font.BOLD, 18);
     private final Font FONT_STATS = new Font("Segoe UI", Font.BOLD, 24);
 

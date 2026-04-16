@@ -20,7 +20,7 @@ public class RoundedPasswordField extends JPasswordField {
 
     private void init() {
         setOpaque(false);
-        setBorder(new javax.swing.border.EmptyBorder(5, 12, 5, 12));
+        setBorder(new javax.swing.border.EmptyBorder(5, 15, 5, 45));
         setForeground(new Color(150, 150, 150));
         setText(hint);
         setEchoChar((char) 0); // Hiện hint dạng text bình thường
@@ -50,10 +50,17 @@ public class RoundedPasswordField extends JPasswordField {
     protected void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // Clip vùng vẽ thành hình bo góc — ngăn FlatLaf vẽ nền chữ nhật đè lên góc
+        g2.clip(new java.awt.geom.RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), ARC, ARC));
+
+        // Vẽ nền bo góc
         g2.setColor(getBackground());
-        g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, ARC, ARC);
+        g2.fillRect(0, 0, getWidth(), getHeight());
+
+        // Truyền g2 đã clip cho super — FlatLaf sẽ bị giới hạn trong vùng bo góc
+        super.paintComponent(g2);
         g2.dispose();
-        super.paintComponent(g);
     }
 
     @Override

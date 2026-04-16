@@ -33,7 +33,7 @@ import javax.swing.table.DefaultTableModel;
 public class SanPhamPanel extends JPanel {
     public SanPhamPanel() {
         setLayout(new BorderLayout());
-        setBackground(new Color(245, 245, 245));
+        setBackground(new Color(241, 246, 255)); // #F1F6FF
 
         // Sử dụng JSplitPane để chia đôi màn hình (Trái: Danh sách, Phải: Chi tiết)
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, createLeftPanel(), createRightPanel());
@@ -49,12 +49,12 @@ public class SanPhamPanel extends JPanel {
     // ==========================================
     private JPanel createLeftPanel() {
         JPanel leftPanel = new JPanel(new BorderLayout(10, 10));
-        leftPanel.setBackground(new Color(245, 245, 245));
+        leftPanel.setBackground(new Color(241, 246, 255)); // #F1F6FF
         leftPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         // 1. Top Bar (Tìm kiếm & Danh mục)
         JPanel topBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
-        topBar.setBackground(new Color(245, 245, 245));
+        topBar.setBackground(new Color(241, 246, 255)); // #F1F6FF
 
         RoundedTextField txtSearch = new RoundedTextField("Tìm theo tên", 20);
         txtSearch.setPreferredSize(new Dimension(250, 35));
@@ -68,7 +68,7 @@ public class SanPhamPanel extends JPanel {
 
         // 2. Grid Sản phẩm
         JPanel gridPanel = new JPanel(new GridLayout(0, 4, 15, 15)); // 4 cột, khoảng cách 15px
-        gridPanel.setBackground(new Color(245, 245, 245));
+        gridPanel.setBackground(new Color(241, 246, 255)); // #F1F6FF
 
         // Thêm một số card sản phẩm mẫu giống trong hình
         gridPanel.add(createProductCard("Hoạt Huyết Trường Phúc", "99.000đ / Hộp", true));
@@ -85,11 +85,11 @@ public class SanPhamPanel extends JPanel {
         JScrollPane scrollPane = new JScrollPane(gridPanel);
         scrollPane.setBorder(null);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        scrollPane.setBackground(new Color(245, 245, 245));
+        scrollPane.setBackground(new Color(241, 246, 255)); // #F1F6FF
 
         // 3. Phân trang (Mockup đơn giản)
         JPanel paginationPanel = new JPanel();
-        paginationPanel.setBackground(new Color(245, 245, 245));
+        paginationPanel.setBackground(new Color(241, 246, 255)); // #F1F6FF
         paginationPanel.add(new JLabel("• • • •")); 
 
         leftPanel.add(topBar, BorderLayout.NORTH);

@@ -1,4 +1,4 @@
-package com.example.gui.screens;
+﻿package com.example.gui.screens;
 import com.example.gui.components.*;
 
 import javax.swing.*;
@@ -11,7 +11,7 @@ import com.github.lgooddatepicker.components.DatePickerSettings;
 
 public class BanHangPanel extends JPanel {
 
-    private final Color COLOR_BG = new Color(245, 245, 245);
+    private final Color COLOR_BG = new Color(241, 246, 255); // #F1F6FF
     private final Color COLOR_CARD_BG = Color.WHITE;
     private final Color COLOR_PRIMARY = new Color(0, 200, 83); // Green
     private final Color COLOR_SECONDARY = new Color(0, 123, 255); // Blue
