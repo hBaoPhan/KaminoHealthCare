@@ -6,10 +6,18 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
+import java.awt.RenderingHints;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.geom.RoundRectangle2D;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -17,7 +25,9 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -27,7 +37,11 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class SanPhamPanel extends JPanel {
     public SanPhamPanel() {
@@ -51,42 +65,159 @@ public class SanPhamPanel extends JPanel {
         leftPanel.setBackground(new Color(245, 245, 245));
         leftPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        // 1. Top Bar (Tìm kiếm & Danh mục)
-        JPanel topBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
+        // 1. Top Bar (Danh sách sản phẩm bên trái)
+        JPanel topBar = new JPanel(new BorderLayout(15, 0));
         topBar.setBackground(new Color(245, 245, 245));
 
-        JTextField txtSearch = new JTextField(20);
-        txtSearch.setPreferredSize(new Dimension(250, 35));
-        txtSearch.setText(" Tìm theo tên");
-        txtSearch.setForeground(Color.GRAY);
+        JPanel leftBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        leftBar.setBackground(new Color(245, 245, 245));
 
-        JComboBox<String> cbDanhMuc = new JComboBox<>(new String[]{"Danh mục","Thuốc", "Thực phẩm chức năng", "Dược mỹ phẩm", "Vật dụng y tế"});
+        JLabel lblTitle = new JLabel("Danh sách sản phẩm");
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblTitle.setForeground(new Color(50, 50, 50));
+        leftBar.add(lblTitle);
+
+        JComboBox<String> cbDanhMuc = new JComboBox<>(new String[]{"Tất cả","Thuốc ETC", "Thuốc OTC", "TPCN"});
         cbDanhMuc.setPreferredSize(new Dimension(150, 35));
         cbDanhMuc.setBackground(Color.WHITE);
+        cbDanhMuc.addActionListener(e -> JOptionPane.showMessageDialog(
+                SanPhamPanel.this,
+                "Danh mục đã chọn: " + cbDanhMuc.getSelectedItem(),
+                "Lọc theo danh mục",
+                JOptionPane.INFORMATION_MESSAGE
+        ));
+        leftBar.add(cbDanhMuc);
 
-        topBar.add(txtSearch);
-        topBar.add(cbDanhMuc);
+        JComboBox<String> cbSort = new JComboBox<>(new String[]{"Sắp xếp: Mặc định", "Giá tăng dần", "Giá giảm dần"});
+        cbSort.setPreferredSize(new Dimension(170, 35));
+        cbSort.setBackground(Color.WHITE);
+        cbSort.addActionListener(e -> JOptionPane.showMessageDialog(
+                SanPhamPanel.this,
+                "Sắp xếp: " + cbSort.getSelectedItem(),
+                "Sắp xếp theo giá",
+                JOptionPane.INFORMATION_MESSAGE
+        ));
+        leftBar.add(cbSort);
+
+        JPanel rightBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
+        rightBar.setBackground(new Color(245, 245, 245));
+
+        JTextField txtSearch = new JTextField("Tìm kiếm theo mã...");
+        txtSearch.setForeground(Color.GRAY);
+        txtSearch.setPreferredSize(new Dimension(220, 35));
+        txtSearch.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if ("Tìm kiếm theo mã...".equals(txtSearch.getText().trim())) {
+                    txtSearch.setText("");
+                    txtSearch.setForeground(Color.BLACK);
+                }
+            }
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (txtSearch.getText().trim().isEmpty()) {
+                    txtSearch.setText("Tìm kiếm theo mã...");
+                    txtSearch.setForeground(Color.GRAY);
+                }
+            }
+        });
+
+        JButton btnSearch = new RoundedButton("Tìm");
+        btnSearch.setPreferredSize(new Dimension(80, 35));
+        btnSearch.setBackground(new Color(0, 123, 255));
+        btnSearch.setForeground(Color.WHITE);
+        btnSearch.addActionListener(e -> JOptionPane.showMessageDialog(
+                SanPhamPanel.this,
+                "Tìm kiếm theo mã: " + txtSearch.getText().trim(),
+                "Tìm kiếm",
+                JOptionPane.INFORMATION_MESSAGE
+        ));
+
+        rightBar.add(txtSearch);
+        rightBar.add(btnSearch);
+
+        topBar.add(leftBar, BorderLayout.WEST);
+        topBar.add(rightBar, BorderLayout.EAST);
 
         // 2. Grid Sản phẩm
-        JPanel gridPanel = new JPanel(new GridLayout(0, 4, 15, 15)); // 4 cột, khoảng cách 15px
+        GridLayout gridLayout = new GridLayout(0, 5, 15, 15);
+        JPanel gridPanel = new JPanel(gridLayout);
         gridPanel.setBackground(new Color(245, 245, 245));
 
-        // Thêm một số card sản phẩm mẫu giống trong hình
+        // Thêm 50 card sản phẩm mẫu
         gridPanel.add(createProductCard("Hoạt Huyết Trường Phúc", "99.000đ / Hộp", true));
         gridPanel.add(createProductCard("Freezefast Ghiaccio Spray", "210.000đ / Chai", false));
         gridPanel.add(createProductCard("Natto Gold 3000FU", "295.000đ / Hộp", false));
         gridPanel.add(createProductCard("SVR Sebiaclear Moussant", "229.400đ / Hộp", true));
         gridPanel.add(createProductCard("Hoạt Huyết Trường Phúc", "4.800đ / Viên", true));
         gridPanel.add(createProductCard("Giloba 40mg MEGA", "38.333đ / Vỉ", true));
-        gridPanel.add(createProductCard("Hoạt Huyết Trường Phúc", "99.000đ / Hộp", true));
-        gridPanel.add(createProductCard("Giloba 40mg MEGA", "207.480đ / Vỉ", true));
-        gridPanel.add(createProductCard("Tanakan", "...", true));
-        gridPanel.add(createProductCard("Hoạt Huyết Trường Phúc", "...", true));
+        gridPanel.add(createProductCard("Tanakan", "120.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Panadol", "35.000đ / Vỉ", true));
+        gridPanel.add(createProductCard("Oresol", "22.000đ / Gói", true));
+        gridPanel.add(createProductCard("Hydrocortison", "150.000đ / Tuýp", true));
+        gridPanel.add(createProductCard("Vitamin C", "89.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Zincovit", "130.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Probiotics", "175.000đ / Hộp", false));
+        gridPanel.add(createProductCard("Efferalgan", "60.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Naproxen", "90.000đ / Hộp", false));
+        gridPanel.add(createProductCard("Cetirizine", "55.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Dạ dày", "120.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Blackmores", "250.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Aspirin", "45.000đ / Vỉ", true));
+        gridPanel.add(createProductCard("BioGaia", "165.000đ / Hộp", false));
+        gridPanel.add(createProductCard("Cefuroxime", "128.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Paracetamol", "28.000đ / Vỉ", true));
+        gridPanel.add(createProductCard("Pantoprazole", "140.000đ / Hộp", false));
+        gridPanel.add(createProductCard("Biotin", "175.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Magie", "95.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Glucosamine", "230.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Collagen", "310.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Omega 3", "220.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Astaxanthin", "320.000đ / Hộp", false));
+        gridPanel.add(createProductCard("Multivitamin", "180.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Bleach", "52.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Fluoxetine", "210.000đ / Hộp", false));
+        gridPanel.add(createProductCard("Vitamin D", "95.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Calcium", "138.000đ / Hộp", true));
+        gridPanel.add(createProductCard("CoQ10", "285.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Aloe Vera", "78.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Melatonin", "125.000đ / Hộp", false));
+        gridPanel.add(createProductCard("Red Clover", "145.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Cinnamon", "90.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Collagen", "200.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Lutein", "240.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Sữa ong chúa", "340.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Glutathione", "280.000đ / Hộp", false));
+        gridPanel.add(createProductCard("Hyaluronic", "260.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Arginine", "165.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Propolis", "185.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Echinacea", "155.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Siro ho", "47.000đ / Chai", true));
+        gridPanel.add(createProductCard("Xịt mũi", "58.000đ / Chai", true));
+        gridPanel.add(createProductCard("Kháng viêm", "210.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Men vi sinh", "198.000đ / Hộp", true));
+        gridPanel.add(createProductCard("Dầu gió", "23.000đ / Chai", true));
+        gridPanel.add(createProductCard("Vitamin B", "110.000đ / Hộp", true));
 
         JScrollPane scrollPane = new JScrollPane(gridPanel);
         scrollPane.setBorder(null);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         scrollPane.setBackground(new Color(245, 245, 245));
+        scrollPane.setPreferredSize(new Dimension(0, 700));
+
+        scrollPane.getViewport().addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                int viewportWidth = scrollPane.getViewport().getWidth();
+                if (viewportWidth > 0) {
+                    int minCardWidth = 180 + 15; // width + gap
+                    int cols = Math.max(1, Math.min(5, viewportWidth / minCardWidth));
+                    if (cols == 0) cols = 1;
+                    gridLayout.setColumns(cols);
+                    gridPanel.revalidate();
+                }
+            }
+        });
 
         // 3. Phân trang (Mockup đơn giản)
         JPanel paginationPanel = new JPanel();
@@ -109,29 +240,42 @@ public class SanPhamPanel extends JPanel {
                 new LineBorder(new Color(200, 200, 200), 1, true),
                 new EmptyBorder(10, 10, 10, 10)
         ));
+        card.setPreferredSize(new Dimension(180, 220));
+        card.setMaximumSize(new Dimension(180, 220));
+        card.setMinimumSize(new Dimension(180, 220));
+        card.setAlignmentY(Component.TOP_ALIGNMENT);
 
         // Ảnh (Mockup)
         JLabel lblImage = new JLabel("Ảnh SP", SwingConstants.CENTER);
         lblImage.setOpaque(true);
         lblImage.setBackground(new Color(230, 230, 230));
-        lblImage.setPreferredSize(new Dimension(100, 80));
-        lblImage.setMaximumSize(new Dimension(150, 80));
+        lblImage.setPreferredSize(new Dimension(160, 80));
+        lblImage.setMaximumSize(new Dimension(160, 80));
         lblImage.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         // Tên SP
         JLabel lblName = new JLabel("<html><div style='text-align: center;'>" + name + "</div></html>");
         lblName.setFont(new Font("Segoe UI", Font.BOLD, 12));
         lblName.setAlignmentX(Component.CENTER_ALIGNMENT);
-        lblName.setPreferredSize(new Dimension(120, 35));
+        lblName.setPreferredSize(new Dimension(160, 35));
+        lblName.setMaximumSize(new Dimension(160, 35));
 
         // Nút chọn Đơn vị (Hộp / Vỉ / Viên)
         JPanel unitPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
         unitPanel.setBackground(Color.WHITE);
+        unitPanel.setPreferredSize(new Dimension(160, 28));
+        unitPanel.setMaximumSize(new Dimension(160, 28));
         String[] units = {"Hộp", "Vỉ", "Viên"};
         for (String u : units) {
             JButton btnU = new JButton(u);
             btnU.setFont(new Font("Segoe UI", Font.PLAIN, 10));
             btnU.setMargin(new Insets(2, 5, 2, 5));
+            btnU.addActionListener(e -> JOptionPane.showMessageDialog(
+                    SanPhamPanel.this,
+                    "Đã chọn đơn vị: " + u,
+                    "Đơn vị tính",
+                    JOptionPane.INFORMATION_MESSAGE
+            ));
             unitPanel.add(btnU);
         }
 
@@ -145,6 +289,8 @@ public class SanPhamPanel extends JPanel {
 
         JPanel infoPanel = new JPanel(new GridLayout(2, 1));
         infoPanel.setBackground(Color.WHITE);
+        infoPanel.setPreferredSize(new Dimension(160, 40));
+        infoPanel.setMaximumSize(new Dimension(160, 40));
         infoPanel.add(lblPrice);
         infoPanel.add(lblStatus);
 
@@ -193,6 +339,19 @@ public class SanPhamPanel extends JPanel {
         imgBox.setBorder(new LineBorder(Color.LIGHT_GRAY));
         JButton btnSelectImage = new JButton("Chọn ảnh");
         btnSelectImage.setBackground(new Color(153, 225, 255));
+        btnSelectImage.addActionListener(e -> {
+            JFileChooser chooser = new JFileChooser();
+            chooser.setFileFilter(new FileNameExtensionFilter("Hình ảnh", "jpg", "jpeg", "png", "gif"));
+            int result = chooser.showOpenDialog(SanPhamPanel.this);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                JOptionPane.showMessageDialog(
+                        SanPhamPanel.this,
+                        "Đã chọn tệp: " + chooser.getSelectedFile().getName(),
+                        "Chọn ảnh",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+            }
+        });
         
         JPanel btnWrapper = new JPanel();
         btnWrapper.setBackground(Color.WHITE);
@@ -216,7 +375,7 @@ public class SanPhamPanel extends JPanel {
         addFormField(formPanel, gbc, row++, "Số lượng tồn:", new JTextField("200"), false);
         addFormField(formPanel, gbc, row++, "Đơn giá:", new JTextField("99.000"), true);
         
-        JComboBox<String> cbLoaiSP = new JComboBox<>(new String[]{"Thuốc", "Thực phẩm chức năng", "Vật tư y tế"});
+        JComboBox<String> cbLoaiSP = new JComboBox<>(new String[]{"Thuốc ETC", "Thuốc OTC", "TPCN"});
         addFormField(formPanel, gbc, row++, "Loại sản phẩm:", cbLoaiSP, true);
 
         // Mô tả (JTextArea)
@@ -252,10 +411,40 @@ public class SanPhamPanel extends JPanel {
         buttonPanel.setBackground(Color.WHITE);
         buttonPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        buttonPanel.add(createStyledButton("Thêm", new Color(0, 204, 204), Color.WHITE));
-        buttonPanel.add(createStyledButton("Sửa", new Color(255, 255, 102), Color.BLACK));
-        buttonPanel.add(createStyledButton("Xóa", new Color(255, 102, 102), Color.WHITE));
-        buttonPanel.add(createStyledButton("Làm mới", new Color(0, 204, 255), Color.WHITE));
+        JButton btnThem = createStyledButton("Thêm", new Color(0, 204, 204), Color.WHITE);
+        JButton btnSua = createStyledButton("Sửa", new Color(255, 255, 102), Color.BLACK);
+        JButton btnXoa = createStyledButton("Xóa", new Color(255, 102, 102), Color.WHITE);
+        JButton btnLamMoi = createStyledButton("Làm mới", new Color(0, 204, 255), Color.WHITE);
+
+        btnThem.addActionListener(e -> JOptionPane.showMessageDialog(
+                SanPhamPanel.this,
+                "Đã thêm sản phẩm mới.",
+                "Thêm sản phẩm",
+                JOptionPane.INFORMATION_MESSAGE
+        ));
+        btnSua.addActionListener(e -> JOptionPane.showMessageDialog(
+                SanPhamPanel.this,
+                "Đã cập nhật thông tin sản phẩm.",
+                "Sửa sản phẩm",
+                JOptionPane.INFORMATION_MESSAGE
+        ));
+        btnXoa.addActionListener(e -> JOptionPane.showMessageDialog(
+                SanPhamPanel.this,
+                "Đã xóa sản phẩm.",
+                "Xóa sản phẩm",
+                JOptionPane.INFORMATION_MESSAGE
+        ));
+        btnLamMoi.addActionListener(e -> JOptionPane.showMessageDialog(
+                SanPhamPanel.this,
+                "Đã làm mới form.",
+                "Làm mới",
+                JOptionPane.INFORMATION_MESSAGE
+        ));
+
+        buttonPanel.add(btnThem);
+        buttonPanel.add(btnSua);
+        buttonPanel.add(btnXoa);
+        buttonPanel.add(btnLamMoi);
 
         rightPanel.add(buttonPanel, BorderLayout.SOUTH);
 
@@ -288,5 +477,33 @@ public class SanPhamPanel extends JPanel {
         btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
         btn.setBorder(new EmptyBorder(8, 10, 8, 10));
         return btn;
+    }
+
+    private static class RoundedButton extends JButton {
+        public RoundedButton(String text) {
+            super(text);
+            setContentAreaFilled(false);
+            setFocusPainted(false);
+            setOpaque(false);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(getBackground());
+            g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 18, 18));
+            g2.dispose();
+            super.paintComponent(g);
+        }
+
+        @Override
+        protected void paintBorder(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(getForeground());
+            g2.draw(new RoundRectangle2D.Float(0.5f, 0.5f, getWidth() - 1, getHeight() - 1, 18, 18));
+            g2.dispose();
+        }
     }
 }
