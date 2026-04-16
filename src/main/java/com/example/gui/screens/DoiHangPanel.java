@@ -1,4 +1,4 @@
-package com.example.gui;
+package com.example.gui.screens;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -16,7 +16,7 @@ public class DoiHangPanel extends JPanel {
     private JTextArea txtGhiChu;
     private JButton btnThanhToan;
     private JRadioButton radTienMat, radChuyenKhoan;
-    private JPanel pnlPaymentDetail; 
+    private JPanel pnlPaymentDetail;
 
     public DoiHangPanel() {
         setLayout(new BorderLayout(15, 10));
@@ -59,10 +59,10 @@ public class DoiHangPanel extends JPanel {
         pnlHeader.add(pnlSearch, BorderLayout.EAST);
 
         // Bảng dữ liệu
-        String[] columns = {"Mã sản phẩm", "Tên sản phẩm", "Đơn vị", "Số lượng", "Đơn giá", "Thuế", "Thành tiền"};
+        String[] columns = { "Mã sản phẩm", "Tên sản phẩm", "Đơn vị", "Số lượng", "Đơn giá", "Thuế", "Thành tiền" };
         DefaultTableModel model = new DefaultTableModel(columns, 8);
         JTable table = new JTable(model);
-        
+
         // 1. In đậm tiêu đề bảng
         table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
         table.setRowHeight(30);
@@ -129,8 +129,10 @@ public class DoiHangPanel extends JPanel {
         radTienMat = new JRadioButton("Tiền mặt", true);
         radChuyenKhoan = new JRadioButton("Chuyển khoản");
         ButtonGroup bg = new ButtonGroup();
-        bg.add(radTienMat); bg.add(radChuyenKhoan);
-        pnlPaymentHeader.add(radTienMat); pnlPaymentHeader.add(radChuyenKhoan);
+        bg.add(radTienMat);
+        bg.add(radChuyenKhoan);
+        pnlPaymentHeader.add(radTienMat);
+        pnlPaymentHeader.add(radChuyenKhoan);
         pnlContent.add(pnlPaymentHeader, gbc);
 
         gbc.gridy = r++;
@@ -141,15 +143,15 @@ public class DoiHangPanel extends JPanel {
         pnlContent.add(pnlPaymentDetail, gbc);
 
         // Sự kiện chuyển đổi
-        radTienMat.addActionListener(e -> ((CardLayout)pnlPaymentDetail.getLayout()).show(pnlPaymentDetail, "CASH"));
-        radChuyenKhoan.addActionListener(e -> ((CardLayout)pnlPaymentDetail.getLayout()).show(pnlPaymentDetail, "QR"));
+        radTienMat.addActionListener(e -> ((CardLayout) pnlPaymentDetail.getLayout()).show(pnlPaymentDetail, "CASH"));
+        radChuyenKhoan.addActionListener(e -> ((CardLayout) pnlPaymentDetail.getLayout()).show(pnlPaymentDetail, "QR"));
 
         // Nút Thanh Toán
         btnThanhToan = new JButton("THANH TOÁN");
         btnThanhToan.setBackground(new Color(40, 167, 69));
         btnThanhToan.setForeground(Color.WHITE);
         btnThanhToan.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        
+
         JPanel pnlBottom = new JPanel(new BorderLayout());
         pnlBottom.setBorder(new EmptyBorder(10, 15, 20, 15));
         pnlBottom.setOpaque(false);
@@ -164,8 +166,9 @@ public class DoiHangPanel extends JPanel {
 
     private JPanel createCashPanel() {
         JPanel pnl = new JPanel(new GridLayout(3, 3, 5, 5));
-        String[] bills = {"1.000", "2.000", "5.000", "10.000", "20.000", "50.000", "100.000", "200.000", "500.000"};
-        for (String b : bills) pnl.add(new JButton(b));
+        String[] bills = { "1.000", "2.000", "5.000", "10.000", "20.000", "50.000", "100.000", "200.000", "500.000" };
+        for (String b : bills)
+            pnl.add(new JButton(b));
         return pnl;
     }
 
@@ -191,8 +194,8 @@ public class DoiHangPanel extends JPanel {
     private void setupReadOnlyFields() {
         // Danh sách đảm bảo không thiếu biến nào
         JTextField[] readonly = {
-            txtMaHoaGoc, txtMaHoaDon, txtNgayTao, txtNguoiTao, txtTenKhachHang, 
-            txtTienGoc, txtTienDoi, txtChenhLech, txtThue, txtThanhTien, txtTienThoi, txtKhachDua
+                txtMaHoaGoc, txtMaHoaDon, txtNgayTao, txtNguoiTao, txtTenKhachHang,
+                txtTienGoc, txtTienDoi, txtChenhLech, txtThue, txtThanhTien, txtTienThoi, txtKhachDua
         };
         for (JTextField f : readonly) {
             if (f != null) {
@@ -205,16 +208,26 @@ public class DoiHangPanel extends JPanel {
 
     // --- INNER CLASSES ---
     class SpinnerRenderer extends JSpinner implements TableCellRenderer {
-        public SpinnerRenderer() { setBorder(null); }
+        public SpinnerRenderer() {
+            setBorder(null);
+        }
+
         public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean h, int r, int c) {
-            setValue(v != null ? v : 0); return this;
+            setValue(v != null ? v : 0);
+            return this;
         }
     }
+
     class SpinnerEditor extends AbstractCellEditor implements TableCellEditor {
         private final JSpinner s = new JSpinner(new SpinnerNumberModel(0, 0, 1000, 1));
+
         public Component getTableCellEditorComponent(JTable t, Object v, boolean sel, int r, int c) {
-            s.setValue(v != null ? v : 0); return s;
+            s.setValue(v != null ? v : 0);
+            return s;
         }
-        public Object getCellEditorValue() { return s.getValue(); }
+
+        public Object getCellEditorValue() {
+            return s.getValue();
+        }
     }
 }

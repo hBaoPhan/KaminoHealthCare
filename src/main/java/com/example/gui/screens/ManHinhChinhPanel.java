@@ -1,4 +1,5 @@
-package com.example.gui;
+﻿package com.example.gui.screens;
+import com.example.gui.components.*;
 
 import com.example.entity.TaiKhoan;
 import org.jfree.chart.ChartFactory;
@@ -15,7 +16,7 @@ import java.awt.*;
 
 public class ManHinhChinhPanel extends JPanel {
 
-    private final Color COLOR_BG = new Color(245, 245, 245);
+    private final Color COLOR_BG = new Color(241, 246, 255); // #F1F6FF
     private final Font FONT_TITLE = new Font("Segoe UI", Font.BOLD, 18);
     private final Font FONT_STATS = new Font("Segoe UI", Font.BOLD, 24);
 
@@ -47,12 +48,10 @@ public class ManHinhChinhPanel extends JPanel {
     }
 
     private JPanel createStatCard(String title, String value, String subtext) {
-        JPanel card = new JPanel();
+        RoundedPanel card = new RoundedPanel(16, true);
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
         card.setBackground(Color.WHITE);
-        card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(230, 230, 230), 1),
-                new EmptyBorder(15, 15, 15, 15)));
+        card.setBorder(new EmptyBorder(15, 15, 15, 15));
 
         JLabel lblTitle = new JLabel(title);
         lblTitle.setFont(new Font("Segoe UI", Font.PLAIN, 14));
@@ -102,8 +101,9 @@ public class ManHinhChinhPanel extends JPanel {
         gbc.weighty = 0.5;
         panel.add(tablePanel, gbc);
 
-        JPanel chartContainer = new JPanel(new GridLayout(1, 2, 20, 0));
-        chartContainer.setOpaque(false);
+        RoundedPanel chartContainer = new RoundedPanel(16, true);
+        chartContainer.setLayout(new GridLayout(1, 2, 20, 0));
+        chartContainer.setBackground(Color.WHITE);
 
         chartContainer.add(createBarChartPanel());
         chartContainer.add(createDonutChartPanel());
@@ -116,7 +116,8 @@ public class ManHinhChinhPanel extends JPanel {
     }
 
     private JPanel createTableContainer(String title, String[] columns) {
-        JPanel panel = new JPanel(new BorderLayout(0, 10));
+        RoundedPanel panel = new RoundedPanel(16, true);
+        panel.setLayout(new BorderLayout(0, 10));
         panel.setBackground(Color.WHITE);
         panel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
@@ -185,11 +186,10 @@ public class ManHinhChinhPanel extends JPanel {
         return panel;
     }
 
-    private JButton createActionButton(String text, String shortcut, Color color) {
-        JButton btn = new JButton();
+    private RoundedButton createActionButton(String text, String shortcut, Color color) {
+        RoundedButton btn = new RoundedButton("");
         btn.setLayout(new BorderLayout());
         btn.setBackground(color);
-        btn.setForeground(Color.WHITE);
         btn.setFocusPainted(false);
         btn.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
@@ -215,3 +215,4 @@ public class ManHinhChinhPanel extends JPanel {
 
     }
 }
+

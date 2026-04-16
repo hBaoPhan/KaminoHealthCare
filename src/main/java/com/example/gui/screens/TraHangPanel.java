@@ -1,4 +1,4 @@
-package com.example.gui;
+package com.example.gui.screens;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -57,6 +57,7 @@ public class TraHangPanel extends JPanel {
                     txtSearch.setForeground(Color.BLACK);
                 }
             }
+
             public void focusLost(java.awt.event.FocusEvent evt) {
                 if (txtSearch.getText().isEmpty()) {
                     txtSearch.setForeground(Color.GRAY);
@@ -79,17 +80,18 @@ public class TraHangPanel extends JPanel {
         pnlHeader.add(pnlSearchAction, BorderLayout.EAST);
 
         // Bảng dữ liệu
-        String[] columns = {"Mã sản phẩm", "Tên sản phẩm", "Đơn vị", "Số lượng", "Đơn giá", "Thuế", "Thành tiền"};
-        // Dữ liệu mẫu 
+        String[] columns = { "Mã sản phẩm", "Tên sản phẩm", "Đơn vị", "Số lượng", "Đơn giá", "Thuế", "Thành tiền" };
+        // Dữ liệu mẫu
         Object[][] data = {
-            {"PAR-100MG-V", "Paracetamol 100mg", "Hộp", 2, 100000, "5%", 105000},
-            {"PAR-100MG-V", "Paracetamol 100mg", "Vỉ", 2, 10000, "5%", 10500}
+                { "PAR-100MG-V", "Paracetamol 100mg", "Hộp", 2, 100000, "5%", 105000 },
+                { "PAR-100MG-V", "Paracetamol 100mg", "Vỉ", 2, 10000, "5%", 10500 }
         };
         DefaultTableModel model = new DefaultTableModel(data, columns);
         JTable table = new JTable(model);
         table.setRowHeight(30);
-        
-        for(int i=0; i<20; i++) model.addRow(new Object[]{});
+
+        for (int i = 0; i < 20; i++)
+            model.addRow(new Object[] {});
 
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.getViewport().setBackground(Color.WHITE);
@@ -190,8 +192,8 @@ public class TraHangPanel extends JPanel {
     }
 
     private void setupStyles() {
-        JTextField[] readonly = {txtMaHoaGoc, txtMaHoaDon, txtNgayTao, txtNguoiTao, txtTenKhachHang, 
-                                 txtTienGoc, txtTienTra, txtChenhLech, txtThue, txtThanhTien, txtTienTraLai};
+        JTextField[] readonly = { txtMaHoaGoc, txtMaHoaDon, txtNgayTao, txtNguoiTao, txtTenKhachHang,
+                txtTienGoc, txtTienTra, txtChenhLech, txtThue, txtThanhTien, txtTienTraLai };
         for (JTextField f : readonly) {
             f.setEditable(false);
             f.setBackground(new Color(200, 200, 200));

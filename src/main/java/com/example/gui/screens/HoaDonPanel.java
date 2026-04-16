@@ -1,4 +1,6 @@
-package com.example.gui;
+﻿package com.example.gui.screens;
+
+import com.example.gui.components.*;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -11,7 +13,7 @@ import com.github.lgooddatepicker.components.DatePickerSettings;
 
 public class HoaDonPanel extends JPanel {
 
-    private final Color COLOR_BG = new Color(245, 245, 245);
+    private final Color COLOR_BG = new Color(241, 246, 255); // #F1F6FF
     private final Color COLOR_CARD_BG = Color.WHITE;
     private final Color COLOR_PRIMARY = new Color(0, 200, 83);
     private final Color COLOR_BORDER = new Color(230, 230, 230);
@@ -56,12 +58,10 @@ public class HoaDonPanel extends JPanel {
     }
 
     private JPanel createStatCard(String title, String value) {
-        JPanel card = new JPanel();
+        RoundedPanel card = new RoundedPanel(20, true);
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
         card.setBackground(COLOR_CARD_BG);
-        card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(COLOR_BORDER, 1, true),
-                new EmptyBorder(20, 20, 20, 20)));
+        card.setBorder(new EmptyBorder(20, 20, 20, 20));
 
         JLabel lblTitle = new JLabel(title);
         lblTitle.setFont(FONT_TEXT);
@@ -87,12 +87,9 @@ public class HoaDonPanel extends JPanel {
         JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
         leftPanel.setOpaque(false);
 
-        JTextField txtSearch = new JTextField("Mã");
+        RoundedTextField txtSearch = new RoundedTextField("Mã", 15);
         txtSearch.setPreferredSize(new Dimension(200, 35));
         txtSearch.setFont(FONT_TEXT);
-        txtSearch.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(COLOR_BORDER, 1, true),
-                new EmptyBorder(0, 10, 0, 10)));
 
         DatePickerSettings dateSettings = new DatePickerSettings();
         dateSettings.setFormatForDatesCommonEra("dd/MM/yyyy");
@@ -104,24 +101,20 @@ public class HoaDonPanel extends JPanel {
         datePicker.setBackground(Color.WHITE);
         datePicker.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1, true));
 
-        JButton btnView = new JButton("Xem  👁");
+        RoundedButton btnView = new RoundedButton("Xem  👁");
         btnView.setFont(FONT_TEXT);
-        btnView.setPreferredSize(new Dimension(80, 35));
+        btnView.setForeground(Color.DARK_GRAY);
         btnView.setBackground(Color.WHITE);
-        btnView.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1, true));
-        btnView.setFocusPainted(false);
+        btnView.setPreferredSize(new Dimension(80, 35));
 
         leftPanel.add(txtSearch);
         leftPanel.add(datePicker);
         leftPanel.add(btnView);
 
-        JButton btnPayment = new JButton("Thanh toán");
+        RoundedButton btnPayment = new RoundedButton("Thanh toán");
         btnPayment.setFont(FONT_LABEL);
-        btnPayment.setForeground(Color.WHITE);
         btnPayment.setBackground(COLOR_PRIMARY);
         btnPayment.setPreferredSize(new Dimension(120, 40));
-        btnPayment.setFocusPainted(false);
-        btnPayment.setBorder(BorderFactory.createEmptyBorder());
 
         panel.add(leftPanel, BorderLayout.WEST);
         panel.add(btnPayment, BorderLayout.EAST);
@@ -130,9 +123,9 @@ public class HoaDonPanel extends JPanel {
     }
 
     private JPanel createTablePanel() {
-        JPanel panel = new JPanel(new BorderLayout());
+        RoundedPanel panel = new RoundedPanel(16, true);
+        panel.setLayout(new BorderLayout());
         panel.setBackground(COLOR_CARD_BG);
-        panel.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1));
 
         String[] columns = { "", "", "", "", "", "", "", "", "" };
         DefaultTableModel model = new DefaultTableModel(columns, 15);
@@ -182,10 +175,9 @@ public class HoaDonPanel extends JPanel {
         lbl.setFont(FONT_LABEL);
         lbl.setPreferredSize(new Dimension(150, 30));
 
-        JTextField field = new JTextField();
+        RoundedTextField field = new RoundedTextField(1);
         field.setEditable(false);
-        field.setBackground(new Color(225, 225, 225));
-        field.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        field.setBackground(new Color(240, 240, 240));
 
         group.add(lbl, BorderLayout.WEST);
         group.add(field, BorderLayout.CENTER);

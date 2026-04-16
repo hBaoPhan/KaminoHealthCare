@@ -6,8 +6,8 @@ import javax.swing.UIManager;
 import com.example.entity.ChucVu;
 import com.example.entity.NhanVien;
 import com.example.entity.TaiKhoan;
-import com.example.gui.DangNhapPanel;
-import com.example.gui.ThanhDieuHuongPanel;
+import com.example.gui.screens.DangNhapPanel;
+import com.example.gui.screens.ThanhDieuHuongPanel;
 import com.formdev.flatlaf.FlatLightLaf;
 
 public class Main {
