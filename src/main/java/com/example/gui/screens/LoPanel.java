@@ -13,7 +13,6 @@ public class LoPanel extends JPanel {
 
     public LoPanel() {
         setLayout(new BorderLayout());
-<<<<<<< HEAD:src/main/java/com/example/gui/LoPanel.java
         setBackground(new Color(245, 245, 245));
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, createLeftPanel(), createRightPanel());
@@ -23,12 +22,6 @@ public class LoPanel extends JPanel {
         splitPane.setDividerSize(8);
 
         add(splitPane, BorderLayout.CENTER);
-=======
-        setBackground(new Color(241, 246, 255)); // #F1F6FF
-        JLabel label = new JLabel("Màn hình lô (Đang phát triển)", SwingConstants.CENTER);
-        label.setFont(new Font("Segoe UI", Font.BOLD, 24));
-        add(label, BorderLayout.CENTER);
->>>>>>> 206c2038d2eb152ffad3673f6e34d896dcdcddff:src/main/java/com/example/gui/screens/LoPanel.java
     }
 
     // ==========================================
@@ -59,6 +52,7 @@ public class LoPanel extends JPanel {
                     txtSearch.setForeground(Color.BLACK);
                 }
             }
+
             @Override
             public void focusLost(FocusEvent e) {
                 if (txtSearch.getText().trim().isEmpty()) {
@@ -79,8 +73,7 @@ public class LoPanel extends JPanel {
                 LoPanel.this,
                 "Tìm kiếm theo mã: " + txtSearch.getText().trim(),
                 "Tìm kiếm",
-                JOptionPane.INFORMATION_MESSAGE
-        ));
+                JOptionPane.INFORMATION_MESSAGE));
 
         JPanel searchWrapper = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
         searchWrapper.setBackground(new Color(245, 245, 245));
@@ -91,32 +84,32 @@ public class LoPanel extends JPanel {
         topBar.add(searchWrapper, BorderLayout.EAST);
 
         // 2. Bảng dữ liệu (JTable) được căn chỉnh cho đẹp
-        String[] columns = {"STT", "Mã lô", "Số lô", "Ngày hết hạn", "SL sản phẩm", "Giá nhập"};
+        String[] columns = { "STT", "Mã lô", "Số lô", "Ngày hết hạn", "SL sản phẩm", "Giá nhập" };
         Object[][] data = {
-            {"1", "LO001", "SL-A100", "20/12/2026", "500", "45.000"},
-            {"2", "LO002", "SL-B205", "15/01/2027", "1.200", "12.500"},
-            {"3", "LO003", "SL-C330", "01/05/2026", "300", "150.000"},
-            {"4", "LO004", "SL-D440", "10/10/2026", "850", "25.000"},
-            {"5", "LO004", "SL-D440", "10/10/2026", "850", "25.000"},
-            {"6", "LO004", "SL-D440", "10/10/2026", "850", "25.000"},
-            {"7", "LO004", "SL-D440", "10/10/2026", "850", "25.000"},
-            {"8", "LO004", "SL-D440", "10/10/2026", "850", "25.000"},
-            {"9", "LO004", "SL-D440", "10/10/2026", "850", "25.000"},
-            {"10", "LO004", "SL-D440", "10/10/2026", "850", "25.000"},
-            {"11", "LO004", "SL-D440", "10/10/2026", "850", "25.000"},
-            {"12", "LO004", "SL-D440", "10/10/2026", "850", "25.000"},
-            {"13", "LO004", "SL-D440", "10/10/2026", "850", "25.000"},
-            {"14", "LO004", "SL-D440", "10/10/2026", "850", "25.000"},
-            {"15", "LO004", "SL-D440", "10/10/2026", "850", "25.000"},
+                { "1", "LO001", "SL-A100", "20/12/2026", "500", "45.000" },
+                { "2", "LO002", "SL-B205", "15/01/2027", "1.200", "12.500" },
+                { "3", "LO003", "SL-C330", "01/05/2026", "300", "150.000" },
+                { "4", "LO004", "SL-D440", "10/10/2026", "850", "25.000" },
+                { "5", "LO004", "SL-D440", "10/10/2026", "850", "25.000" },
+                { "6", "LO004", "SL-D440", "10/10/2026", "850", "25.000" },
+                { "7", "LO004", "SL-D440", "10/10/2026", "850", "25.000" },
+                { "8", "LO004", "SL-D440", "10/10/2026", "850", "25.000" },
+                { "9", "LO004", "SL-D440", "10/10/2026", "850", "25.000" },
+                { "10", "LO004", "SL-D440", "10/10/2026", "850", "25.000" },
+                { "11", "LO004", "SL-D440", "10/10/2026", "850", "25.000" },
+                { "12", "LO004", "SL-D440", "10/10/2026", "850", "25.000" },
+                { "13", "LO004", "SL-D440", "10/10/2026", "850", "25.000" },
+                { "14", "LO004", "SL-D440", "10/10/2026", "850", "25.000" },
+                { "15", "LO004", "SL-D440", "10/10/2026", "850", "25.000" },
         };
 
         DefaultTableModel model = new DefaultTableModel(data, columns) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; 
+                return false;
             }
         };
-        
+
         // Custom JTable để đổi màu nền xen kẽ các dòng
         JTable table = new JTable(model) {
             @Override
@@ -138,21 +131,22 @@ public class LoPanel extends JPanel {
         table.setShowGrid(true); // Bật lưới
         table.setGridColor(new Color(230, 230, 230)); // Kẻ khung màu xám nhạt
         table.setIntercellSpacing(new Dimension(0, 0)); // Xóa khoảng trống thừa giữa các ô
-        
+
         // Header bảng
         table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
         table.getTableHeader().setBackground(new Color(240, 240, 240));
         table.getTableHeader().setPreferredSize(new Dimension(100, 40));
         table.getTableHeader().setReorderingAllowed(false);
-        
+
         // Renderers cho việc căn chỉnh nội dung
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-        
+
         // Renderer căn phải, có thêm padding phải 5px cho số không bị sát lề
         DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer() {
             @Override
-            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+                    boolean hasFocus, int row, int column) {
                 super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
                 return this;
@@ -167,9 +161,9 @@ public class LoPanel extends JPanel {
         table.getColumnModel().getColumn(3).setCellRenderer(centerRenderer); // Ngày hết hạn
 
         // Áp dụng căn phải cho số liệu
-        table.getColumnModel().getColumn(4).setCellRenderer(rightRenderer);  // SL sản phẩm
-        table.getColumnModel().getColumn(5).setCellRenderer(rightRenderer);  // Giá nhập
-        
+        table.getColumnModel().getColumn(4).setCellRenderer(rightRenderer); // SL sản phẩm
+        table.getColumnModel().getColumn(5).setCellRenderer(rightRenderer); // Giá nhập
+
         // Chỉnh độ rộng cột
         table.getColumnModel().getColumn(0).setPreferredWidth(40);
         table.getColumnModel().getColumn(1).setPreferredWidth(80);
@@ -193,8 +187,7 @@ public class LoPanel extends JPanel {
         rightPanel.setBackground(Color.WHITE);
         rightPanel.setBorder(BorderFactory.createCompoundBorder(
                 new EmptyBorder(10, 10, 10, 10),
-                BorderFactory.createLineBorder(new Color(220, 220, 220), 1, true)
-        ));
+                BorderFactory.createLineBorder(new Color(220, 220, 220), 1, true)));
 
         JLabel lblTitle = new JLabel("THÔNG TIN NHẬP LÔ", SwingConstants.CENTER);
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
@@ -205,20 +198,23 @@ public class LoPanel extends JPanel {
         formPanel.setBackground(Color.WHITE);
         formPanel.setBorder(new EmptyBorder(0, 15, 10, 15));
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 5, 10, 5); 
+        gbc.insets = new Insets(10, 5, 10, 5);
         int row = 0;
 
         addResponsiveFormField(formPanel, gbc, row++, "Mã lô:", new JTextField("Tự động tạo..."), false);
         addResponsiveFormField(formPanel, gbc, row++, "Số lô:", new JTextField(), true);
         addResponsiveFormField(formPanel, gbc, row++, "Ngày hết hạn:", new JTextField("dd/mm/yyyy"), true);
         addResponsiveFormField(formPanel, gbc, row++, "Số lượng SP:", new JTextField(), true);
-        
+
         addResponsiveFormField(formPanel, gbc, row++, "Giá nhập:", new JTextField(), true);
 
         JPanel spacer = new JPanel();
         spacer.setBackground(Color.WHITE);
-        gbc.gridx = 0; gbc.gridy = row++; 
-        gbc.gridwidth = 2; gbc.weighty = 1.0; gbc.fill = GridBagConstraints.BOTH;
+        gbc.gridx = 0;
+        gbc.gridy = row++;
+        gbc.gridwidth = 2;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.BOTH;
         formPanel.add(spacer, gbc);
 
         rightPanel.add(formPanel, BorderLayout.CENTER);
@@ -228,7 +224,7 @@ public class LoPanel extends JPanel {
 
         JButton btnThem = createStyledButton("Thêm lô hàng", new Color(95, 219, 221), Color.BLACK);
         btnThem.setPreferredSize(new Dimension(150, 40));
-        
+
         JButton btnLamMoi = createStyledButton("Làm mới", new Color(240, 240, 240), Color.BLACK);
         btnLamMoi.setPreferredSize(new Dimension(120, 40));
 
@@ -240,12 +236,15 @@ public class LoPanel extends JPanel {
         return rightPanel;
     }
 
-    private void addResponsiveFormField(JPanel panel, GridBagConstraints gbc, int row, String labelText, JComponent inputComp, boolean isEditable) {
-        gbc.gridwidth = 1; 
-        
-        gbc.gridx = 0; gbc.gridy = row; 
-        gbc.weightx = 0; gbc.weighty = 0; 
-        gbc.fill = GridBagConstraints.HORIZONTAL; 
+    private void addResponsiveFormField(JPanel panel, GridBagConstraints gbc, int row, String labelText,
+            JComponent inputComp, boolean isEditable) {
+        gbc.gridwidth = 1;
+
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.WEST;
         JLabel lbl = new JLabel(labelText);
         lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
@@ -263,8 +262,9 @@ public class LoPanel extends JPanel {
             inputComp.setPreferredSize(new Dimension(150, 32));
         }
 
-        gbc.gridx = 1; gbc.gridy = row; 
-        gbc.weightx = 1.0; 
+        gbc.gridx = 1;
+        gbc.gridy = row;
+        gbc.weightx = 1.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         panel.add(inputComp, gbc);
     }
