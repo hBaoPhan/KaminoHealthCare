@@ -11,102 +11,72 @@ import java.util.List;
 public class LoDAO {
 
     public List<Lo> layTatCa() {
-        List<Lo> danhSach = new ArrayList<>();
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "SELECT * FROM Lo";
-            Statement lenh = ketNoi.createStatement();
-            ResultSet ketQua = lenh.executeQuery(truyVan);
-
-            while (ketQua.next()) {
-                Lo lo = new Lo();
-                lo.setMaLo(ketQua.getString("maLo"));
-                lo.setSoLo(ketQua.getString("soLo"));
-                lo.setNgayHetHan(ketQua.getDate("ngayHetHan").toLocalDate());
-                lo.setSoLuongSanPham(ketQua.getInt("soLuongSanPham"));
-                lo.setSanPham(new SanPham(ketQua.getString("maSanPham")));
-                lo.setGiaNhap(ketQua.getDouble("giaNhap"));
-                danhSach.add(lo);
-            }
-        } catch (SQLException e) {
+        try (org.hibernate.Session session = ConnectDB.getSessionFactory().openSession()) {
+            return session.createQuery("from Lo", Lo.class).list();
+        } catch (Exception e) {
             e.printStackTrace();
+            return new java.util.ArrayList<>();
         }
-        return danhSach;
     }
 
     public Lo timTheoMa(String maLo) {
-        Lo lo = null;
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "SELECT * FROM Lo WHERE maLo = ?";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
-            lenh.setString(1, maLo);
-            ResultSet ketQua = lenh.executeQuery();
-
-            if (ketQua.next()) {
-                lo = new Lo();
-                lo.setMaLo(ketQua.getString("maLo"));
-                lo.setSoLo(ketQua.getString("soLo"));
-                lo.setNgayHetHan(ketQua.getDate("ngayHetHan").toLocalDate());
-                lo.setSoLuongSanPham(ketQua.getInt("soLuongSanPham"));
-                lo.setSanPham(new SanPham(ketQua.getString("maSanPham")));
-                lo.setGiaNhap(ketQua.getDouble("giaNhap"));
-            }
-        } catch (SQLException e) {
+        try (org.hibernate.Session session = ConnectDB.getSessionFactory().openSession()) {
+            return session.get(Lo.class, maLo);
+        } catch (Exception e) {
             e.printStackTrace();
+            return null;
         }
-        return lo;
     }
 
     public boolean them(Lo lo) {
-        int soDongThayDoi = 0;
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "INSERT INTO Lo VALUES (?, ?, ?, ?, ?, ?)";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
-            lenh.setString(1, lo.getMaLo());
-            lenh.setString(2, lo.getSoLo());
-            lenh.setDate(3, Date.valueOf(lo.getNgayHetHan()));
-            lenh.setInt(4, lo.getSoLuongSanPham());
-            lenh.setString(5, lo.getSanPham().getMaSanPham());
-            lenh.setDouble(6, lo.getGiaNhap());
-            soDongThayDoi = lenh.executeUpdate();
-        } catch (SQLException e) {
+        org.hibernate.Transaction transaction = null;
+        try (org.hibernate.Session session = ConnectDB.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+            session.persist(lo);
+            transaction.commit();
+            return true;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
             e.printStackTrace();
+            return false;
         }
-        return soDongThayDoi > 0;
     }
 
     public boolean capNhat(Lo lo) {
-        int soDongThayDoi = 0;
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "UPDATE Lo SET soLo = ?, ngayHetHan = ?, soLuongSanPham = ?, maSanPham = ?, giaNhap = ? WHERE maLo = ?";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
-            lenh.setString(1, lo.getSoLo());
-            lenh.setDate(2, Date.valueOf(lo.getNgayHetHan()));
-            lenh.setInt(3, lo.getSoLuongSanPham());
-            lenh.setString(4, lo.getSanPham().getMaSanPham());
-            lenh.setDouble(5, lo.getGiaNhap());
-            lenh.setString(6, lo.getMaLo());
-            soDongThayDoi = lenh.executeUpdate();
-        } catch (SQLException e) {
+        org.hibernate.Transaction transaction = null;
+        try (org.hibernate.Session session = ConnectDB.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+            session.merge(lo);
+            transaction.commit();
+            return true;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
             e.printStackTrace();
+            return false;
         }
-        return soDongThayDoi > 0;
     }
 
     public boolean xoa(String maLo) {
-        int soDongThayDoi = 0;
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "DELETE FROM Lo WHERE maLo = ?";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
-            lenh.setString(1, maLo);
-            soDongThayDoi = lenh.executeUpdate();
-        } catch (SQLException e) {
+        org.hibernate.Transaction transaction = null;
+        try (org.hibernate.Session session = ConnectDB.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+            Lo lo = session.get(Lo.class, maLo);
+            if (lo != null) {
+                session.remove(lo);
+                transaction.commit();
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
             e.printStackTrace();
+            return false;
         }
-        return soDongThayDoi > 0;
     }
 }

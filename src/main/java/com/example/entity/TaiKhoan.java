@@ -1,10 +1,20 @@
 package com.example.entity;
 
+import jakarta.persistence.*;
 import java.util.Objects;
 
+@Entity
+@Table(name = "TaiKhoan")
 public class TaiKhoan {
+    @Id
+    @Column(name = "tenDangNhap", length = 50)
     private String tenDangNhap;
+
+    @Column(name = "matKhau", columnDefinition = "nvarchar(255)")
     private String matKhau;
+
+    @ManyToOne
+    @JoinColumn(name = "maNhanVien")
     private NhanVien nhanVien;
 
     public TaiKhoan() {

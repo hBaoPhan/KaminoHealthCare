@@ -12,76 +12,60 @@ import java.util.List;
 public class QuaTangDAO {
 
     public List<QuaTang> layTatCa() {
-        List<QuaTang> danhSach = new ArrayList<>();
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "SELECT * FROM QuaTang";
-            Statement lenh = ketNoi.createStatement();
-            ResultSet ketQua = lenh.executeQuery(truyVan);
-
-            while (ketQua.next()) {
-                QuaTang qt = new QuaTang();
-                qt.setKhuyenMai(new KhuyenMai(ketQua.getString("maKhuyenMai")));
-                qt.setSanPham(new SanPham(ketQua.getString("maSanPham")));
-                qt.setSoLuongTang(ketQua.getInt("soLuongTang"));
-                danhSach.add(qt);
-            }
-        } catch (SQLException e) {
+        try (org.hibernate.Session session = ConnectDB.getSessionFactory().openSession()) {
+            return session.createQuery("from QuaTang", QuaTang.class).list();
+        } catch (Exception e) {
             e.printStackTrace();
+            return new ArrayList<>();
         }
-        return danhSach;
     }
 
     public List<QuaTang> timTheoKhuyenMai(String maKM) {
-        List<QuaTang> danhSach = new ArrayList<>();
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "SELECT * FROM QuaTang WHERE maKhuyenMai = ?";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
-            lenh.setString(1, maKM);
-            ResultSet ketQua = lenh.executeQuery();
-
-            while (ketQua.next()) {
-                QuaTang qt = new QuaTang();
-                qt.setKhuyenMai(new KhuyenMai(ketQua.getString("maKhuyenMai")));
-                qt.setSanPham(new SanPham(ketQua.getString("maSanPham")));
-                qt.setSoLuongTang(ketQua.getInt("soLuongTang"));
-                danhSach.add(qt);
-            }
-        } catch (SQLException e) {
+        try (org.hibernate.Session session = ConnectDB.getSessionFactory().openSession()) {
+            String hql = "from QuaTang q where q.khuyenMai.maKhuyenMai = :maKM";
+            return session.createQuery(hql, QuaTang.class)
+                          .setParameter("maKM", maKM)
+                          .list();
+        } catch (Exception e) {
             e.printStackTrace();
+            return new ArrayList<>();
         }
-        return danhSach;
     }
 
     public boolean them(QuaTang qt) {
-        int soDongThayDoi = 0;
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "INSERT INTO QuaTang VALUES (?, ?, ?)";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
-            lenh.setString(1, qt.getKhuyenMai().getMaKhuyenMai());
-            lenh.setString(2, qt.getSanPham().getMaSanPham());
-            lenh.setInt(3, qt.getSoLuongTang());
-            soDongThayDoi = lenh.executeUpdate();
-        } catch (SQLException e) {
+        org.hibernate.Transaction transaction = null;
+        try (org.hibernate.Session session = ConnectDB.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+            session.persist(qt);
+            transaction.commit();
+            return true;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
             e.printStackTrace();
+            return false;
         }
-        return soDongThayDoi > 0;
     }
 
     public boolean xoa(String maKM, String maSP) {
-        int soDongThayDoi = 0;
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "DELETE FROM QuaTang WHERE maKhuyenMai = ? AND maSanPham = ?";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
-            lenh.setString(1, maKM);
-            lenh.setString(2, maSP);
-            soDongThayDoi = lenh.executeUpdate();
-        } catch (SQLException e) {
+        org.hibernate.Transaction transaction = null;
+        try (org.hibernate.Session session = ConnectDB.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+            com.example.entity.QuaTangId id = new com.example.entity.QuaTangId(maKM, maSP);
+            QuaTang qt = session.get(QuaTang.class, id);
+            if (qt != null) {
+                session.remove(qt);
+                transaction.commit();
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
             e.printStackTrace();
+            return false;
         }
-        return soDongThayDoi > 0;
     }
 }

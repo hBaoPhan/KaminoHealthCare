@@ -1,16 +1,38 @@
 package com.example.entity;
 
+import jakarta.persistence.*;
 import java.util.Objects;
 
+@Entity
+@Table(name = "SanPham")
 public class SanPham {
+    @Id
+    @Column(name = "maSanPham", length = 50)
     private String maSanPham;
+
+    @Column(name = "tenSanPham", columnDefinition = "nvarchar(255)")
     private String tenSanPham;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "phanLoai")
     private PhanLoai phanLoai;
+
+    @Column(name = "soLuongTon")
     private int soLuongTon;
+
+    @Column(name = "moTa", columnDefinition = "nvarchar(MAX)")
     private String moTa;
+
+    @Column(name = "hoatChat", columnDefinition = "nvarchar(255)")
     private String hoatChat;
+
+    @Column(name = "donGiaCoBan")
     private double donGiaCoBan;
+
+    @Column(name = "trangThaiKinhDoanh")
     private boolean trangThaiKinhDoanh;
+
+    @Column(name = "thue")
     private double thue;
 
     public SanPham() {

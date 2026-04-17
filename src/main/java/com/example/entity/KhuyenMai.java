@@ -1,16 +1,37 @@
 package com.example.entity;
 
 import java.time.LocalDateTime;
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
+@Entity
+@Table(name = "KhuyenMai")
 public class KhuyenMai {
+    @Id
+    @Column(name = "maKhuyenMai", length = 50)
     private String maKhuyenMai;
+
+    @Column(name = "tenKhuyenMai", columnDefinition = "nvarchar(255)")
     private String tenKhuyenMai;
+
+    @Column(name = "thoiGianBatDau")
     private LocalDateTime thoiGianBatDau;
+
+    @Column(name = "thoiGianKetThuc")
     private LocalDateTime thoiGianKetThuc;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "loaiKhuyenMai")
     private LoaiKhuyenMai loaiKhuyenMai;
+
+    @Column(name = "khuyenMaiPhanTram")
     private double khuyenMaiPhanTram;
+
+    @Transient
     private QuaTang quaTangKem;
+
+    @Column(name = "giaTriDonHangToiThieu")
     private double giaTriDonHangToiThieu;
 
     public KhuyenMai() {

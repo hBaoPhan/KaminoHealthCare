@@ -1,5 +1,4 @@
 package com.example.gui.screens;
-
 import com.example.gui.components.*;
 
 import javax.swing.*;

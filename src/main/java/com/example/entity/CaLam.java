@@ -1,17 +1,41 @@
 package com.example.entity;
 
 import java.time.LocalDateTime;
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
+@Entity
+@Table(name = "CaLam")
 public class CaLam {
+    @Id
+    @Column(name = "maCa", length = 50)
     private String maCa;
+
+    @ManyToOne
+    @JoinColumn(name = "maNhanVien")
     private NhanVien nhanVien;
+
+    @Column(name = "gioBatDau")
     private LocalDateTime gioBatDau;
+
+    @Column(name = "gioKetThuc")
     private LocalDateTime gioKetThuc;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "trangThai")
     private TrangThaiCaLam trangThai;
+
+    @Column(name = "tienMoCa")
     private double tienMoCa;
+
+    @Column(name = "tienKetCa")
     private double tienKetCa;
+
+    @Column(name = "tienHeThong")
     private double tienHeThong;
+
+    @Column(name = "ghiChu", columnDefinition = "nvarchar(MAX)")
     private String ghiChu;
 
     public CaLam() {

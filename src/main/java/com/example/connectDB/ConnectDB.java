@@ -1,55 +1,44 @@
 package com.example.connectDB;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import org.hibernate.SessionFactory;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
 public class ConnectDB {
-	public static Connection con = null;
-	private static ConnectDB instance = new ConnectDB();
+    private static ConnectDB instance = new ConnectDB();
+    private static SessionFactory sessionFactory;
 
-	public static Connection getConnection() {
-		return con;
-	}
+    public static ConnectDB getInstance() {
+        return instance;
+    }
 
-	public static ConnectDB getInstance() {
-		return instance;
-	}
+    public static SessionFactory getSessionFactory() {
+        if (sessionFactory == null) {
+            instance.connectHibernate();
+        }
+        return sessionFactory;
+    }
 
-	public void connect() throws SQLException {
-		String url = "jdbc:sqlserver://localhost:1433;databasename=QUANLYKAMINOHEATHCARE";
-		String user = "sa";
-		String password = "sapassword";
-		con = DriverManager.getConnection(url, user, password);
-	}
+    public void connectHibernate() {
+        if (sessionFactory == null) {
+            try {
+                StandardServiceRegistry registry = new StandardServiceRegistryBuilder()
+                        .configure() // configures settings from hibernate.cfg.xml
+                        .build();
+                sessionFactory = new MetadataSources(registry).buildMetadata().buildSessionFactory();
+                System.out.println("✅ Kết nối Hibernate thành công!");
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println("❌ Lỗi kết nối Hibernate!");
+            }
+        }
+    }
 
-	public void disconnnect() {
-		if (con != null) {
-			try {
-				con.close();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-
-	}
-
-	public void connect1() throws SQLException {
-		String url = "jdbc:mysql://localhost:3306/QUANLYKAMINOHEATHCARE?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
-		String user = "root";
-		String pwd = "sapassword";
-
-		try {
-			Class.forName("com.mysql.cj.jdbc.Driver");
-			con = DriverManager.getConnection(url, user, pwd);
-			System.out.println("✅ Kết nối MySQL thành công!");
-		} catch (ClassNotFoundException e) {
-			System.out.println("❌ Không tìm thấy driver MySQL JDBC!");
-			e.printStackTrace();
-		} catch (SQLException e) {
-			System.out.println("❌ Lỗi kết nối MySQL!");
-			e.printStackTrace();
-		}
-	}
-
+    public void disconnect() {
+        if (sessionFactory != null && !sessionFactory.isClosed()) {
+            sessionFactory.close();
+            System.out.println("🔌 Đã đóng SessionFactory.");
+        }
+    }
 }
