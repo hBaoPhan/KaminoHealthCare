@@ -103,9 +103,6 @@ public class TraHangPanel extends JPanel {
         return pnl;
     }
 
-    /**
-     * Panel thông tin hóa đơn trả hàng bên phải
-     */
     private JPanel createInfoPanel() {
         JPanel pnlMain = new JPanel(new BorderLayout());
         pnlMain.setPreferredSize(new Dimension(380, 0));

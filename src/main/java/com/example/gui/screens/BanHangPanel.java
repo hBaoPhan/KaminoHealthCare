@@ -16,7 +16,6 @@ public class BanHangPanel extends JPanel {
     private final Color COLOR_PRIMARY = new Color(0, 200, 83); // Green
     private final Color COLOR_SECONDARY = new Color(0, 123, 255); // Blue
     private final Color COLOR_BORDER = new Color(230, 230, 230);
-    private final Color COLOR_TEXT_DIM = new Color(110, 110, 110);
 
     private final Font FONT_TITLE = new Font("Segoe UI", Font.BOLD, 18);
     private final Font FONT_LABEL = new Font("Segoe UI", Font.BOLD, 14);
@@ -99,23 +98,35 @@ public class BanHangPanel extends JPanel {
     }
 
     private JPanel createRightSidebar() {
-        RoundedPanel sidebar = new RoundedPanel(12, true);
+        RoundedPanel wrapper = new RoundedPanel(12, true);
+        wrapper.setLayout(new BorderLayout());
+        wrapper.setPreferredSize(new Dimension(340, 0));
+        wrapper.setBackground(COLOR_CARD_BG);
+        wrapper.setBorder(new EmptyBorder(10, 5, 10, 5));
+
+        JPanel sidebar = new ScrollableViewportPanel();
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
-        sidebar.setPreferredSize(new Dimension(320, 0));
-        sidebar.setBackground(COLOR_CARD_BG);
-        sidebar.setBorder(new EmptyBorder(20, 15, 20, 15));
+        sidebar.setOpaque(false);
+        sidebar.setBorder(new EmptyBorder(0, 5, 0, 5));
 
         sidebar.add(createSectionTitle("Thông tin khách hàng"));
-        sidebar.add(Box.createVerticalStrut(10));
         sidebar.add(createFieldGroup("Số điện thoại", new RoundedTextField(10)));
-        sidebar.add(Box.createVerticalStrut(25));
 
-        // Invoice Info
+        JCheckBox chkKhachLe = new JCheckBox("Khách lẻ");
+        chkKhachLe.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkKhachLe.setOpaque(false);
+
+        JPanel chkWrapper = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        chkWrapper.setOpaque(false);
+        chkWrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
+        chkWrapper.add(chkKhachLe);
+        chkWrapper.setMaximumSize(new Dimension(Integer.MAX_VALUE, chkKhachLe.getPreferredSize().height));
+
+        sidebar.add(chkWrapper);
+
         sidebar.add(createSectionTitle("Thông tin hóa đơn"));
-        sidebar.add(Box.createVerticalStrut(15));
         sidebar.add(createFieldGroup("Mã hóa đơn", createReadOnlyField("HD27032026001")));
 
-        // Date Picker for Ngay tao
         DatePickerSettings dateSettings = new DatePickerSettings();
         dateSettings.setFormatForDatesCommonEra("dd/MM/yyyy");
         dateSettings.setFontValidDate(FONT_TEXT);
@@ -129,43 +140,165 @@ public class BanHangPanel extends JPanel {
         sidebar.add(createFieldGroup("Khuyến mãi", new JComboBox<>(new String[] { "30/4 - 1/5" })));
         sidebar.add(createFieldGroup("Tên khách hàng", createReadOnlyField("")));
 
-        JTextArea areaNotes = new JTextArea(3, 20);
-        areaNotes.setBorder(BorderFactory.createLineBorder(COLOR_BORDER));
-        sidebar.add(createFieldGroup("Ghi chú", areaNotes));
+        JTextArea areaNotes = new JTextArea(5, 20);
+        areaNotes.setLineWrap(true);
+        areaNotes.setWrapStyleWord(true);
+        JScrollPane notesScroll = new JScrollPane(areaNotes);
+        notesScroll.setBorder(BorderFactory.createLineBorder(COLOR_BORDER));
+        sidebar.add(createFieldGroup("Ghi chú", notesScroll));
 
-        sidebar.add(Box.createVerticalGlue());
+        sidebar.add(createPaymentSection());
 
-        sidebar.add(createActionButton("Tạo / Lưu", COLOR_SECONDARY));
-        sidebar.add(Box.createVerticalStrut(10));
-        sidebar.add(createActionButton("Thanh Toán", COLOR_PRIMARY));
+        JScrollPane scrollPane = new JScrollPane(sidebar);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(false);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
-        return sidebar;
+        wrapper.add(scrollPane, BorderLayout.CENTER);
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
+        buttonPanel.setOpaque(false);
+        buttonPanel.setBorder(new EmptyBorder(8, 5, 0, 5));
+
+        RoundedButton btnSave = createActionButton("Tạo / Lưu", COLOR_SECONDARY);
+        RoundedButton btnPay = createActionButton("Thanh Toán", COLOR_PRIMARY);
+
+        buttonPanel.add(btnSave);
+        buttonPanel.add(Box.createVerticalStrut(8));
+        buttonPanel.add(btnPay);
+
+        wrapper.add(buttonPanel, BorderLayout.SOUTH);
+
+        return wrapper;
+    }
+
+    private JPanel createPaymentSection() {
+        JPanel container = new JPanel();
+        container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
+        container.setOpaque(false);
+        container.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(COLOR_BORDER, 1, true),
+                new EmptyBorder(5, 5, 5, 5)));
+        container.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        headerPanel.setOpaque(false);
+        JLabel lblThanhToan = new JLabel("Phương thức:");
+        lblThanhToan.setFont(new Font("Segoe UI", Font.BOLD, 12));
+
+        JRadioButton rdoTienMat = new JRadioButton("Tiền mặt", true);
+        rdoTienMat.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        rdoTienMat.setOpaque(false);
+
+        JRadioButton rdoChuyenKhoan = new JRadioButton("Chuyển khoản");
+        rdoChuyenKhoan.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        rdoChuyenKhoan.setOpaque(false);
+
+        ButtonGroup bg = new ButtonGroup();
+        bg.add(rdoTienMat);
+        bg.add(rdoChuyenKhoan);
+
+        headerPanel.add(lblThanhToan);
+        headerPanel.add(rdoTienMat);
+        headerPanel.add(rdoChuyenKhoan);
+
+        JPanel cards = new JPanel(new CardLayout());
+        cards.setOpaque(false);
+
+        JPanel pnlTienMat = new JPanel();
+        pnlTienMat.setLayout(new BoxLayout(pnlTienMat, BoxLayout.Y_AXIS));
+        pnlTienMat.setOpaque(false);
+        pnlTienMat.add(createHorizontalGroup("Tiền khách đưa:", new RoundedTextField("500.000Đ", 10)));
+        pnlTienMat.add(createHorizontalGroup("Tiền thối lại:", createReadOnlyField("289.500Đ")));
+
+        JPanel pnlChuyenKhoan = new JPanel(new BorderLayout());
+        pnlChuyenKhoan.setOpaque(false);
+        JLabel lblQR = new JLabel("Mã QR", SwingConstants.CENTER);
+        lblQR.setPreferredSize(new Dimension(80, 80));
+        lblQR.setBorder(BorderFactory.createLineBorder(COLOR_PRIMARY, 2, true));
+        lblQR.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblQR.setForeground(COLOR_PRIMARY);
+        JPanel qrContainer = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        qrContainer.setOpaque(false);
+        qrContainer.add(lblQR);
+        pnlChuyenKhoan.add(qrContainer, BorderLayout.CENTER);
+
+        cards.add(pnlTienMat, "TIEN_MAT");
+        cards.add(pnlChuyenKhoan, "CHUYEN_KHOAN");
+
+        container.add(headerPanel);
+        container.add(cards);
+
+        container.setMaximumSize(new Dimension(Integer.MAX_VALUE, container.getPreferredSize().height));
+
+        CardLayout cl = (CardLayout) cards.getLayout();
+        rdoTienMat.addActionListener(e -> {
+            cl.show(cards, "TIEN_MAT");
+            cards.revalidate();
+            cards.repaint();
+        });
+        rdoChuyenKhoan.addActionListener(e -> {
+            cl.show(cards, "CHUYEN_KHOAN");
+            cards.revalidate();
+            cards.repaint();
+        });
+
+        return container;
+    }
+
+    private JPanel createHorizontalGroup(String labelText, JComponent component) {
+        JPanel group = new JPanel(new BorderLayout(5, 0));
+        group.setOpaque(false);
+
+        JLabel lbl = new JLabel(labelText);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lbl.setPreferredSize(new Dimension(110, 28));
+
+        if (component instanceof JTextField) {
+            component.setPreferredSize(new Dimension(140, 28));
+            ((JTextField) component).setHorizontalAlignment(JTextField.LEFT);
+            ((JTextField) component).setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        }
+
+        JPanel pad = new JPanel(new BorderLayout());
+        pad.setOpaque(false);
+        pad.setBorder(new EmptyBorder(2, 5, 2, 5));
+        pad.add(lbl, BorderLayout.WEST);
+        pad.add(component, BorderLayout.CENTER);
+
+        group.add(pad, BorderLayout.CENTER);
+        group.setMaximumSize(new Dimension(Integer.MAX_VALUE, group.getPreferredSize().height));
+        return group;
     }
 
     private JPanel createSectionTitle(String title) {
         JPanel wrapper = new JPanel(new BorderLayout());
         wrapper.setOpaque(false);
         wrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
-        wrapper.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
 
         JLabel lbl = new JLabel(title);
         lbl.setFont(FONT_TITLE);
         wrapper.add(lbl, BorderLayout.WEST);
+        wrapper.setBorder(new EmptyBorder(5, 0, 2, 0));
+        wrapper.setMaximumSize(new Dimension(Integer.MAX_VALUE, wrapper.getPreferredSize().height));
 
         return wrapper;
     }
 
     private JPanel createFieldGroup(String labelText, JComponent component) {
-        JPanel group = new JPanel(new BorderLayout(0, 5));
+        JPanel group = new JPanel(new BorderLayout(0, 2));
         group.setOpaque(false);
-        group.setMaximumSize(new Dimension(Integer.MAX_VALUE, 75));
         group.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel lbl = new JLabel(labelText);
         lbl.setFont(FONT_LABEL);
 
         if (component instanceof JTextField || component instanceof JComboBox) {
-            component.setPreferredSize(new Dimension(component.getPreferredSize().width, 30));
+            component.setPreferredSize(new Dimension(component.getPreferredSize().width, 28));
             if (component instanceof JTextField) {
                 ((JTextField) component).setHorizontalAlignment(JTextField.CENTER);
             }
@@ -173,7 +306,8 @@ public class BanHangPanel extends JPanel {
 
         group.add(lbl, BorderLayout.NORTH);
         group.add(component, BorderLayout.CENTER);
-        group.add(Box.createVerticalStrut(10), BorderLayout.SOUTH);
+        group.setBorder(new EmptyBorder(0, 0, 5, 0));
+        group.setMaximumSize(new Dimension(Integer.MAX_VALUE, group.getPreferredSize().height));
 
         return group;
     }
@@ -196,9 +330,36 @@ public class BanHangPanel extends JPanel {
         RoundedButton btn = new RoundedButton(text);
         btn.setFont(FONT_LABEL);
         btn.setBackground(bg);
-        btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
+        btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        btn.setPreferredSize(new Dimension(btn.getPreferredSize().width, 40));
         btn.setAlignmentX(Component.LEFT_ALIGNMENT);
         return btn;
     }
-}
 
+    private class ScrollableViewportPanel extends JPanel implements Scrollable {
+        @Override
+        public Dimension getPreferredScrollableViewportSize() {
+            return super.getPreferredSize();
+        }
+
+        @Override
+        public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
+            return 16;
+        }
+
+        @Override
+        public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
+            return 16;
+        }
+
+        @Override
+        public boolean getScrollableTracksViewportWidth() {
+            return true;
+        }
+
+        @Override
+        public boolean getScrollableTracksViewportHeight() {
+            return false;
+        }
+    }
+}

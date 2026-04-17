@@ -5,7 +5,6 @@ import com.example.gui.components.*;
 import com.example.entity.ChucVu;
 import com.example.entity.NhanVien;
 import com.example.entity.TaiKhoan;
-import com.formdev.flatlaf.FlatLightLaf; // Thư viện tạo giao diện hiện đại
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -14,10 +13,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
 
-/**
- * Chỉ tạo Giao diện (UI) Form Đăng nhập Kamino Healthcare.
- * Thiết kế dựa trên hình ảnh Figma. Chưa có xử lý logic.
- */
 public class DangNhapPanel extends JFrame implements ActionListener {
 
     // --- Components để hiển thị ---
