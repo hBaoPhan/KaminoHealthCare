@@ -2,13 +2,12 @@ package com.example.dao;
 
 import com.example.connectDB.ConnectDB;
 import com.example.entity.KhachHang;
-import com.example.entity.TrangThaiKhachHang;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 
-import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 
 public class KhachHangDAO {
 
