@@ -12,94 +12,72 @@ import java.util.List;
 public class DonViQuyDoiDAO {
 
     public List<DonViQuyDoi> layTatCa() {
-        List<DonViQuyDoi> danhSach = new ArrayList<>();
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "SELECT * FROM DonViQuyDoi";
-            Statement lenh = ketNoi.createStatement();
-            ResultSet ketQua = lenh.executeQuery(truyVan);
-
-            while (ketQua.next()) {
-                DonViQuyDoi dv = new DonViQuyDoi();
-                dv.setMaDonVi(ketQua.getString("maDonVi"));
-                dv.setTenDonVi(DonVi.valueOf(ketQua.getString("tenDonVi")));
-                dv.setHeSoQuyDoi(ketQua.getInt("heSoQuyDoi"));
-                dv.setSanPham(new SanPham(ketQua.getString("maSanPham")));
-                danhSach.add(dv);
-            }
-        } catch (SQLException e) {
+        try (org.hibernate.Session session = ConnectDB.getSessionFactory().openSession()) {
+            return session.createQuery("from DonViQuyDoi", DonViQuyDoi.class).list();
+        } catch (Exception e) {
             e.printStackTrace();
+            return new java.util.ArrayList<>();
         }
-        return danhSach;
     }
 
     public DonViQuyDoi timTheoMa(String maDV) {
-        DonViQuyDoi dv = null;
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "SELECT * FROM DonViQuyDoi WHERE maDonVi = ?";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
-            lenh.setString(1, maDV);
-            ResultSet ketQua = lenh.executeQuery();
-
-            if (ketQua.next()) {
-                dv = new DonViQuyDoi();
-                dv.setMaDonVi(ketQua.getString("maDonVi"));
-                dv.setTenDonVi(DonVi.valueOf(ketQua.getString("tenDonVi")));
-                dv.setHeSoQuyDoi(ketQua.getInt("heSoQuyDoi"));
-                dv.setSanPham(new SanPham(ketQua.getString("maSanPham")));
-            }
-        } catch (SQLException e) {
+        try (org.hibernate.Session session = ConnectDB.getSessionFactory().openSession()) {
+            return session.get(DonViQuyDoi.class, maDV);
+        } catch (Exception e) {
             e.printStackTrace();
+            return null;
         }
-        return dv;
     }
 
     public boolean them(DonViQuyDoi dv) {
-        int soDongThayDoi = 0;
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "INSERT INTO DonViQuyDoi VALUES (?, ?, ?, ?)";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
-            lenh.setString(1, dv.getMaDonVi());
-            lenh.setString(2, dv.getTenDonVi().name());
-            lenh.setInt(3, dv.getHeSoQuyDoi());
-            lenh.setString(4, dv.getSanPham().getMaSanPham());
-            soDongThayDoi = lenh.executeUpdate();
-        } catch (SQLException e) {
+        org.hibernate.Transaction transaction = null;
+        try (org.hibernate.Session session = ConnectDB.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+            session.persist(dv);
+            transaction.commit();
+            return true;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
             e.printStackTrace();
+            return false;
         }
-        return soDongThayDoi > 0;
     }
 
     public boolean capNhat(DonViQuyDoi dv) {
-        int soDongThayDoi = 0;
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "UPDATE DonViQuyDoi SET tenDonVi = ?, heSoQuyDoi = ?, maSanPham = ? WHERE maDonVi = ?";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
-            lenh.setString(1, dv.getTenDonVi().name());
-            lenh.setInt(2, dv.getHeSoQuyDoi());
-            lenh.setString(3, dv.getSanPham().getMaSanPham());
-            lenh.setString(4, dv.getMaDonVi());
-            soDongThayDoi = lenh.executeUpdate();
-        } catch (SQLException e) {
+        org.hibernate.Transaction transaction = null;
+        try (org.hibernate.Session session = ConnectDB.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+            session.merge(dv);
+            transaction.commit();
+            return true;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
             e.printStackTrace();
+            return false;
         }
-        return soDongThayDoi > 0;
     }
 
     public boolean xoa(String maDV) {
-        int soDongThayDoi = 0;
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "DELETE FROM DonViQuyDoi WHERE maDonVi = ?";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
-            lenh.setString(1, maDV);
-            soDongThayDoi = lenh.executeUpdate();
-        } catch (SQLException e) {
+        org.hibernate.Transaction transaction = null;
+        try (org.hibernate.Session session = ConnectDB.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+            DonViQuyDoi dv = session.get(DonViQuyDoi.class, maDV);
+            if (dv != null) {
+                session.remove(dv);
+                transaction.commit();
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
             e.printStackTrace();
+            return false;
         }
-        return soDongThayDoi > 0;
     }
 }

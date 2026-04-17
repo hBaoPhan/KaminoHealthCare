@@ -1,10 +1,24 @@
 package com.example.entity;
 
+import jakarta.persistence.*;
 import java.util.Objects;
 
+@Entity
+@Table(name = "QuaTang")
+@IdClass(QuaTangId.class)
 public class QuaTang {
+
+    @Id
+    @ManyToOne
+    @JoinColumn(name = "maKhuyenMai")
     private KhuyenMai khuyenMai;
+
+    @Id
+    @ManyToOne
+    @JoinColumn(name = "maSanPham")
     private SanPham sanPham;
+
+    @Column(name = "soLuongTang")
     private int soLuongTang;
 
     public QuaTang() {

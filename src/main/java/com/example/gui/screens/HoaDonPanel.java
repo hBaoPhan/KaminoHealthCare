@@ -1,4 +1,4 @@
-﻿package com.example.gui.screens;
+package com.example.gui.screens;
 
 import com.example.gui.components.*;
 

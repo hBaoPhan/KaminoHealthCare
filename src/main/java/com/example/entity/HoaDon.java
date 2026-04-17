@@ -3,21 +3,61 @@ package com.example.entity;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
+@Entity
+@Table(name = "HoaDon")
 public class HoaDon {
+    @Id
+    @Column(name = "maHoaDon", length = 50)
     private String maHoaDon;
+
+    @Column(name = "thoiGianTao")
     private LocalDateTime thoiGianTao;
+
+    @ManyToOne
+    @JoinColumn(name = "maNhanVien")
     private NhanVien nhanVien;
+
+    @Column(name = "trangThaiThanhToan")
     private boolean trangThaiThanhToan;
+
+    @ManyToOne
+    @JoinColumn(name = "maKhachHang")
     private KhachHang khachHang;
+
+    @ManyToOne
+    @JoinColumn(name = "maKhuyenMai")
     private KhuyenMai khuyenMai;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "loaiHoaDon")
     private LoaiHoaDon loaiHoaDon;
+
+    @ManyToOne
+    @JoinColumn(name = "maCa")
     private CaLam ca;
+
+    @Column(name = "ghiChu", columnDefinition = "nvarchar(MAX)")
     private String ghiChu;
+
+    @ManyToOne
+    @JoinColumn(name = "maHoaDonDoiTra")
     private HoaDon hoaDonDoiTra;
+
+    @ManyToOne
+    @JoinColumn(name = "maDonThuoc")
     private DonThuoc donThuoc;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "phuongThucThanhToan")
     private PhuongThucThanhToan phuongThucThanhToan;
+
+    @Transient
     private List<ChiTietHoaDon> dsChiTiet;
 
     public HoaDon() {

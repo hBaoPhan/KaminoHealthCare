@@ -1,14 +1,31 @@
 package com.example.entity;
 
 import java.time.LocalDate;
+import jakarta.persistence.*;
+import java.time.LocalDate;
 import java.util.Objects;
 
+@Entity
+@Table(name = "Lo")
 public class Lo {
+    @Id
+    @Column(name = "maLo", length = 50)
     private String maLo;
+
+    @Column(name = "soLo", length = 50)
     private String soLo;
+
+    @Column(name = "ngayHetHan")
     private LocalDate ngayHetHan;
+
+    @Column(name = "soLuongSanPham")
     private int soLuongSanPham;
+
+    @ManyToOne
+    @JoinColumn(name = "maSanPham")
     private SanPham sanPham;
+
+    @Column(name = "giaNhap")
     private double giaNhap;
 
     public Lo() {

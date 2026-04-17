@@ -11,89 +11,72 @@ import java.util.List;
 public class TaiKhoanDAO {
 
     public List<TaiKhoan> layTatCa() {
-        List<TaiKhoan> danhSach = new ArrayList<>();
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "SELECT * FROM TaiKhoan";
-            Statement lenh = ketNoi.createStatement();
-            ResultSet ketQua = lenh.executeQuery(truyVan);
-
-            while (ketQua.next()) {
-                TaiKhoan tk = new TaiKhoan();
-                tk.setTenDangNhap(ketQua.getString("tenDangNhap"));
-                tk.setMatKhau(ketQua.getString("matKhau"));
-                tk.setNhanVien(new NhanVien(ketQua.getString("maNhanVien")));
-                danhSach.add(tk);
-            }
-        } catch (SQLException e) {
+        try (org.hibernate.Session session = ConnectDB.getSessionFactory().openSession()) {
+            return session.createQuery("from TaiKhoan", TaiKhoan.class).list();
+        } catch (Exception e) {
             e.printStackTrace();
+            return new java.util.ArrayList<>();
         }
-        return danhSach;
     }
 
     public TaiKhoan timTheoMa(String tenDN) {
-        TaiKhoan tk = null;
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "SELECT * FROM TaiKhoan WHERE tenDangNhap = ?";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
-            lenh.setString(1, tenDN);
-            ResultSet ketQua = lenh.executeQuery();
-
-            if (ketQua.next()) {
-                tk = new TaiKhoan();
-                tk.setTenDangNhap(ketQua.getString("tenDangNhap"));
-                tk.setMatKhau(ketQua.getString("matKhau"));
-                tk.setNhanVien(new NhanVien(ketQua.getString("maNhanVien")));
-            }
-        } catch (SQLException e) {
+        try (org.hibernate.Session session = ConnectDB.getSessionFactory().openSession()) {
+            return session.get(TaiKhoan.class, tenDN);
+        } catch (Exception e) {
             e.printStackTrace();
+            return null;
         }
-        return tk;
     }
 
     public boolean them(TaiKhoan tk) {
-        int soDongThayDoi = 0;
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "INSERT INTO TaiKhoan VALUES (?, ?, ?)";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
-            lenh.setString(1, tk.getTenDangNhap());
-            lenh.setString(2, tk.getMatKhau());
-            lenh.setString(3, tk.getNhanVien().getMaNhanVien());
-            soDongThayDoi = lenh.executeUpdate();
-        } catch (SQLException e) {
+        org.hibernate.Transaction transaction = null;
+        try (org.hibernate.Session session = ConnectDB.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+            session.persist(tk);
+            transaction.commit();
+            return true;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
             e.printStackTrace();
+            return false;
         }
-        return soDongThayDoi > 0;
     }
 
     public boolean capNhat(TaiKhoan tk) {
-        int soDongThayDoi = 0;
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "UPDATE TaiKhoan SET matKhau = ? WHERE tenDangNhap = ?";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
-            lenh.setString(1, tk.getMatKhau());
-            lenh.setString(2, tk.getTenDangNhap());
-            soDongThayDoi = lenh.executeUpdate();
-        } catch (SQLException e) {
+        org.hibernate.Transaction transaction = null;
+        try (org.hibernate.Session session = ConnectDB.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+            session.merge(tk);
+            transaction.commit();
+            return true;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
             e.printStackTrace();
+            return false;
         }
-        return soDongThayDoi > 0;
     }
 
     public boolean xoa(String tenDN) {
-        int soDongThayDoi = 0;
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "DELETE FROM TaiKhoan WHERE tenDangNhap = ?";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
-            lenh.setString(1, tenDN);
-            soDongThayDoi = lenh.executeUpdate();
-        } catch (SQLException e) {
+        org.hibernate.Transaction transaction = null;
+        try (org.hibernate.Session session = ConnectDB.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+            TaiKhoan tk = session.get(TaiKhoan.class, tenDN);
+            if (tk != null) {
+                session.remove(tk);
+                transaction.commit();
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
             e.printStackTrace();
+            return false;
         }
-        return soDongThayDoi > 0;
     }
 }

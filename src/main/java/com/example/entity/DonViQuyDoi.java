@@ -1,11 +1,24 @@
 package com.example.entity;
 
+import jakarta.persistence.*;
 import java.util.Objects;
 
+@Entity
+@Table(name = "DonViQuyDoi")
 public class DonViQuyDoi {
+    @Id
+    @Column(name = "maDonVi", length = 50)
     private String maDonVi;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tenDonVi")
     private DonVi tenDonVi;
+
+    @Column(name = "heSoQuyDoi")
     private int heSoQuyDoi;
+
+    @ManyToOne
+    @JoinColumn(name = "maSanPham")
     private SanPham sanPham;
 
     public DonViQuyDoi() {

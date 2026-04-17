@@ -1,12 +1,24 @@
 package com.example.entity;
 
 import java.time.LocalDate;
+import jakarta.persistence.*;
+import java.time.LocalDate;
 import java.util.Objects;
 
+@Entity
+@Table(name = "DonThuoc")
 public class DonThuoc {
+    @Id
+    @Column(name = "maDonThuoc", length = 50)
     private String maDonThuoc;
+
+    @Column(name = "tenBacSi", columnDefinition = "nvarchar(255)")
     private String tenBacSi;
+
+    @Column(name = "coSoKhamBenh", columnDefinition = "nvarchar(255)")
     private String coSoKhamBenh;
+
+    @Column(name = "ngayKeDon")
     private LocalDate ngayKeDon;
 
     public DonThuoc() {

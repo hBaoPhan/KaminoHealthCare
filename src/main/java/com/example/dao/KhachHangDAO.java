@@ -3,6 +3,8 @@ package com.example.dao;
 import com.example.connectDB.ConnectDB;
 import com.example.entity.KhachHang;
 import com.example.entity.TrangThaiKhachHang;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -11,94 +13,72 @@ import java.util.List;
 public class KhachHangDAO {
 
     public List<KhachHang> layTatCa() {
-        List<KhachHang> danhSach = new ArrayList<>();
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "SELECT * FROM KhachHang";
-            Statement lenh = ketNoi.createStatement();
-            ResultSet ketQua = lenh.executeQuery(truyVan);
-
-            while (ketQua.next()) {
-                KhachHang kh = new KhachHang();
-                kh.setMaKhachHang(ketQua.getString("maKhachHang"));
-                kh.setTenKhachHang(ketQua.getString("tenKhachHang"));
-                kh.setSdt(ketQua.getString("sdt"));
-                kh.setTrangThai(TrangThaiKhachHang.valueOf(ketQua.getString("trangThai")));
-                danhSach.add(kh);
-            }
-        } catch (SQLException e) {
+        try (Session session = ConnectDB.getSessionFactory().openSession()) {
+            return session.createQuery("from KhachHang", KhachHang.class).list();
+        } catch (Exception e) {
             e.printStackTrace();
+            return new ArrayList<>();
         }
-        return danhSach;
     }
 
     public KhachHang timTheoMa(String maKH) {
-        KhachHang kh = null;
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "SELECT * FROM KhachHang WHERE maKhachHang = ?";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
-            lenh.setString(1, maKH);
-            ResultSet ketQua = lenh.executeQuery();
-
-            if (ketQua.next()) {
-                kh = new KhachHang();
-                kh.setMaKhachHang(ketQua.getString("maKhachHang"));
-                kh.setTenKhachHang(ketQua.getString("tenKhachHang"));
-                kh.setSdt(ketQua.getString("sdt"));
-                kh.setTrangThai(TrangThaiKhachHang.valueOf(ketQua.getString("trangThai")));
-            }
-        } catch (SQLException e) {
+        try (Session session = ConnectDB.getSessionFactory().openSession()) {
+            return session.get(KhachHang.class, maKH);
+        } catch (Exception e) {
             e.printStackTrace();
+            return null;
         }
-        return kh;
     }
 
     public boolean them(KhachHang kh) {
-        int soDongThayDoi = 0;
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "INSERT INTO KhachHang VALUES (?, ?, ?, ?)";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
-            lenh.setString(1, kh.getMaKhachHang());
-            lenh.setString(2, kh.getTenKhachHang());
-            lenh.setString(3, kh.getSdt());
-            lenh.setString(4, kh.getTrangThai().name());
-            soDongThayDoi = lenh.executeUpdate();
-        } catch (SQLException e) {
+        Transaction transaction = null;
+        try (Session session = ConnectDB.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+            session.persist(kh);
+            transaction.commit();
+            return true;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
             e.printStackTrace();
+            return false;
         }
-        return soDongThayDoi > 0;
     }
 
     public boolean capNhat(KhachHang kh) {
-        int soDongThayDoi = 0;
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "UPDATE KhachHang SET tenKhachHang = ?, sdt = ?, trangThai = ? WHERE maKhachHang = ?";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
-            lenh.setString(1, kh.getTenKhachHang());
-            lenh.setString(2, kh.getSdt());
-            lenh.setString(3, kh.getTrangThai().name());
-            lenh.setString(4, kh.getMaKhachHang());
-            soDongThayDoi = lenh.executeUpdate();
-        } catch (SQLException e) {
+        Transaction transaction = null;
+        try (Session session = ConnectDB.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+            session.merge(kh);
+            transaction.commit();
+            return true;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
             e.printStackTrace();
+            return false;
         }
-        return soDongThayDoi > 0;
     }
 
     public boolean xoa(String maKH) {
-        int soDongThayDoi = 0;
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "DELETE FROM KhachHang WHERE maKhachHang = ?";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
-            lenh.setString(1, maKH);
-            soDongThayDoi = lenh.executeUpdate();
-        } catch (SQLException e) {
+        Transaction transaction = null;
+        try (Session session = ConnectDB.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+            KhachHang kh = session.get(KhachHang.class, maKH);
+            if (kh != null) {
+                session.remove(kh);
+                transaction.commit();
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
             e.printStackTrace();
+            return false;
         }
-        return soDongThayDoi > 0;
     }
 }

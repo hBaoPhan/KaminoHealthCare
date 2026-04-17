@@ -1,8 +1,26 @@
 package com.example.entity;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "SuPhanBoLo")
+@IdClass(SuPhanBoLoId.class)
 public class SuPhanBoLo {
+
+    @Id
+    @ManyToOne
+    @JoinColumns({
+        @JoinColumn(name = "maHoaDon", referencedColumnName = "maHoaDon"),
+        @JoinColumn(name = "maDonVi", referencedColumnName = "maDonVi")
+    })
     private ChiTietHoaDon chiTietHoaDon;
+
+    @Id
+    @ManyToOne
+    @JoinColumn(name = "maLo")
     private Lo lo;
+
+    @Column(name = "soLuong")
     private int soLuong;
 
     public SuPhanBoLo() {}

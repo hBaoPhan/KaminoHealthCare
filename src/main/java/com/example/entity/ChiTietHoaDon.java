@@ -1,14 +1,34 @@
 package com.example.entity;
 
+import jakarta.persistence.*;
 import java.util.List;
 import java.util.Objects;
 
+@Entity
+@Table(name = "ChiTietHoaDon")
+@IdClass(ChiTietHoaDonId.class)
 public class ChiTietHoaDon {
+
+    @Id
+    @ManyToOne
+    @JoinColumn(name = "maHoaDon")
     private HoaDon hoaDon;
+
+    @Id
+    @ManyToOne
+    @JoinColumn(name = "maDonVi")
     private DonViQuyDoi donViQuyDoi;
+
+    @Column(name = "soLuong")
     private int soLuong;
+
+    @Column(name = "donGia")
     private double donGia;
+
+    @Column(name = "laQuaTangKem")
     private boolean laQuaTangKem;
+
+    @Transient
     private List<SuPhanBoLo> dsPhanBoLo;
 
     public ChiTietHoaDon() {
