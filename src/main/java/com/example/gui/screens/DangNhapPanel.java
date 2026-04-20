@@ -5,6 +5,11 @@ import com.example.gui.components.*;
 import com.example.entity.ChucVu;
 import com.example.entity.NhanVien;
 import com.example.entity.TaiKhoan;
+import com.example.connectDB.ConnectDB;
+import com.example.dao.TaiKhoanDAO;
+
+import org.hibernate.SessionFactory;
+import org.mindrot.jbcrypt.BCrypt;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -46,6 +51,19 @@ public class DangNhapPanel extends JFrame implements ActionListener {
 
         // 4. (Tùy chọn) Thêm sự kiện cơ bản cho giao diện (như ẩn/hiện mật khẩu)
         setupBasicUIEvents();
+        System.out.println("Testing Hibernate...");
+        try {
+            SessionFactory sf = ConnectDB.getInstance().getSessionFactory();
+            if (sf != null) {
+                System.out.println("Hibernate loaded successfully.");
+            } else {
+                System.out.println("Hibernate load failed: SessionFactory is null");
+            }
+            System.exit(0);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 
     /**
@@ -225,13 +243,50 @@ public class DangNhapPanel extends JFrame implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         Object source = e.getSource();
         if (source.equals(btnLogin)) {
-            SwingUtilities.invokeLater(() -> {
-                NhanVien nv = new NhanVien("NV001", "Hoài Bảo", "123456789", "0987654321", ChucVu.NHANVIENQUANLY, true);
-                TaiKhoan tk = new TaiKhoan("admin", "admin", nv);
-                ThanhDieuHuongPanel mainFrame = new ThanhDieuHuongPanel(tk);
-                mainFrame.setVisible(true);
-            });
-            dispose();
+            String username = txtUsername.getText();
+            String password = new String(txtPassword.getPassword());
+
+            if (username.trim().isEmpty() || password.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ tài khoản và mật khẩu!", "Thông báo",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            TaiKhoanDAO dao = new TaiKhoanDAO();
+            TaiKhoan tk = dao.timTheoMa(username);
+
+            if (tk != null) {
+                String dbPassword = tk.getMatKhau();
+                boolean isMatch = false;
+
+                // Kiểm tra xem dbPassword có phải là chuỗi hash của BCrypt không
+                // BCrypt hash thường bắt đầu bằng $2a$, $2b$, hoặc $2y$ và có độ dài 60 ký
+
+                if (dbPassword != null && dbPassword.startsWith("$2") && dbPassword.length() == 60) {
+                    try {
+                        isMatch = BCrypt.checkpw(password, dbPassword);
+                    } catch (Exception ex) {
+                        isMatch = false;
+                    }
+                } else if (dbPassword != null) {
+                    // Fallback cho mật khẩu chưa hash trong quá trình phát triển
+                    isMatch = dbPassword.equals(password);
+                }
+
+                if (isMatch) {
+                    SwingUtilities.invokeLater(() -> {
+                        ThanhDieuHuongPanel mainFrame = new ThanhDieuHuongPanel(tk);
+                        mainFrame.setVisible(true);
+                    });
+                    dispose();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Tài khoản hoặc mật khẩu không chính xác!", "Lỗi đăng nhập",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Tài khoản hoặc mật khẩu không chính xác!", "Lỗi đăng nhập",
+                        JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 }
