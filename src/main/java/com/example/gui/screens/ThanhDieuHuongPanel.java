@@ -90,7 +90,7 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 
 		add(scrollPane, BorderLayout.WEST);
 
-		ImageIcon logoData = new ImageIcon("src/main/resources/images/icon/logo.png");
+		ImageIcon logoData = loadImageIcon("/images/icon/logo.png");
 		JLabel lblLogo = new JLabel(new HiDPIIcon(logoData.getImage(), 146, 146));
 		lblLogo.setAlignmentX(Component.CENTER_ALIGNMENT);
 		lblLogo.setBorder(BorderFactory.createEmptyBorder(20, 20, 0, 20));
@@ -423,8 +423,7 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 
 		if (fileName != null) {
 			try {
-				String path = "src/main/resources/images/icon/" + fileName;
-				Image img = new ImageIcon(path).getImage();
+				Image img = loadImageIcon("/images/icon/" + fileName).getImage();
 				return new HiDPIIcon(img, 26, 26);
 			} catch (Exception e) {
 				System.err.println("Could not load icon: " + fileName);
@@ -452,6 +451,16 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 				return 24;
 			}
 		};
+	}
+
+	private ImageIcon loadImageIcon(String classpathPath) {
+		java.net.URL url = getClass().getResource(classpathPath);
+		if (url != null) {
+			return new ImageIcon(url);
+		}
+		// Fallback: load from working directory (when running via mvn exec:java from project root)
+		String fsPath = "src/main/resources" + classpathPath;
+		return new ImageIcon(fsPath);
 	}
 
 	// Class to handle HiDPI sharp rendering for images

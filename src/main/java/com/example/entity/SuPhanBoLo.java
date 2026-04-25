@@ -10,14 +10,14 @@ public class SuPhanBoLo {
     @Id
     @ManyToOne
     @JoinColumns({
-        @JoinColumn(name = "maHoaDon", referencedColumnName = "maHoaDon"),
-        @JoinColumn(name = "maDonVi", referencedColumnName = "maDonVi")
+            @JoinColumn(name = "maHoaDon", referencedColumnName = "maHoaDon", columnDefinition = "nvarchar(50)"),
+            @JoinColumn(name = "maDonVi", referencedColumnName = "maDonVi", columnDefinition = "nvarchar(50)")
     })
     private ChiTietHoaDon chiTietHoaDon;
 
     @Id
     @ManyToOne
-    @JoinColumn(name = "maLo")
+    @JoinColumn(name = "maLo", columnDefinition = "nvarchar(50)")
     private Lo lo;
 
     @Column(name = "soLuong")

@@ -9,11 +9,11 @@ import java.util.Objects;
 @Table(name = "CaLam")
 public class CaLam {
     @Id
-    @Column(name = "maCa", length = 50)
+    @Column(name = "maCa", columnDefinition = "nvarchar(50)")
     private String maCa;
 
     @ManyToOne
-    @JoinColumn(name = "maNhanVien")
+    @JoinColumn(name = "maNhanVien", columnDefinition = "nvarchar(50)")
     private NhanVien nhanVien;
 
     @Column(name = "gioBatDau")

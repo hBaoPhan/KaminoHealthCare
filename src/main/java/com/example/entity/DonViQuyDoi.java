@@ -7,7 +7,7 @@ import java.util.Objects;
 @Table(name = "DonViQuyDoi")
 public class DonViQuyDoi {
     @Id
-    @Column(name = "maDonVi", length = 50)
+    @Column(name = "maDonVi", columnDefinition = "nvarchar(50)")
     private String maDonVi;
 
     @Enumerated(EnumType.STRING)
@@ -18,7 +18,7 @@ public class DonViQuyDoi {
     private int heSoQuyDoi;
 
     @ManyToOne
-    @JoinColumn(name = "maSanPham")
+    @JoinColumn(name = "maSanPham", columnDefinition = "nvarchar(50)")
     private SanPham sanPham;
 
     public DonViQuyDoi() {
