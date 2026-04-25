@@ -1,10 +1,6 @@
 package com.example.dao;
 
 import com.example.entity.KhuyenMai;
-import com.example.entity.QuaTang;
-import com.example.connectDB.ConnectDB;
-import org.hibernate.Session;
-
 import java.util.List;
 
 /**
@@ -26,7 +22,7 @@ public class KhuyenMaiDAO extends GenericDAO<KhuyenMai, String> {
     public List<KhuyenMai> layTatCaVoiQuaTang() {
         List<KhuyenMai> list = layTatCa();
         for (KhuyenMai km : list) {
-            List<QuaTang> dsQT = quaTangDAO.timTheoKhuyenMai(km.getMaKhuyenMai());
+            List<com.example.entity.QuaTang> dsQT = quaTangDAO.timTheoKhuyenMai(km.getMaKhuyenMai());
             if (!dsQT.isEmpty()) {
                 km.setQuaTangKem(dsQT.get(0));
             }

@@ -1,6 +1,5 @@
 package com.example.gui.screens;
 
-import com.example.gui.screens.*;
 import com.example.gui.components.*;
 
 import java.awt.BorderLayout;
@@ -458,7 +457,8 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		if (url != null) {
 			return new ImageIcon(url);
 		}
-		// Fallback: load from working directory (when running via mvn exec:java from project root)
+		// Fallback: load from working directory (when running via mvn exec:java from
+		// project root)
 		String fsPath = "src/main/resources" + classpathPath;
 		return new ImageIcon(fsPath);
 	}
