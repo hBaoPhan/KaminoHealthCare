@@ -3,7 +3,7 @@
 -- =====================================================================
 
 -- Bảng NhanVien
-INSERT INTO NhanVien (maNhanVien, tenNhanVien, cccd, sdt, chucVu, trangThai) VALUES
+INSERT INTO NhanVien (maNhanVien, tenNhanVien, cccd, sdt, chucVu, trangThaiHoatDong) VALUES
                                                                                  ('NV01', N'Phan Hoài Bảo', '079200000001', '0901234567', N'NHAN_VIEN_QUAN_LY', 1),
                                                                                  ('NV02', N'Nguyễn Văn An', '079200000002', '0901234568', N'DUOC_SI', 1),
                                                                                  ('NV03', N'Trần Thị Bích', '079200000003', '0901234569', N'DUOC_SI', 1),
@@ -11,7 +11,7 @@ INSERT INTO NhanVien (maNhanVien, tenNhanVien, cccd, sdt, chucVu, trangThai) VAL
                                                                                  ('NV05', N'Phạm Thị Dung', '079200000005', '0901234571', N'DUOC_SI', 0);
 
 -- Bảng KhachHang
-INSERT INTO KhachHang (maKhachHang, tenKhachHang, sdt, trangThai) VALUES
+INSERT INTO KhachHang (maKhachHang, tenKhachHang, sdt, trangThaiKhachHang) VALUES
                                                                       ('KH01', N'Khách vãng lai 1', '0911111111', N'KHACH_LE'),
                                                                       ('KH02', N'Ngô Thị Em', '0922222222', N'KHACH_HANG_THANH_VIEN'),
                                                                       ('KH03', N'Vũ Văn Phong', '0933333333', N'KHACH_HANG_THANH_VIEN'),
@@ -56,7 +56,7 @@ INSERT INTO TaiKhoan (tenDangNhap, matKhau, maNhanVien) VALUES
                                                             ('duocsi4', '123456', 'NV05');
 
 -- Bảng CaLam (Phụ thuộc NhanVien)
-INSERT INTO CaLam (maCa, maNhanVien, gioBatDau, gioKetThuc, trangThai, tienMoCa, tienKetCa, tienHeThong, ghiChu) VALUES
+INSERT INTO CaLam (maCa, maNhanVien, gioBatDau, gioKetThuc, trangThaiCaLam, tienMoCa, tienKetCa, tienHeThong, ghiChu) VALUES
                                                                                                                      ('CA01', 'NV01', '2026-04-20 08:00:00', '2026-04-20 16:00:00', N'DONG', 1000000, 5000000, 4000000, N'Ca bình thường'),
                                                                                                                      ('CA02', 'NV02', '2026-04-20 16:00:00', '2026-04-20 22:00:00', N'DONG', 5000000, 8000000, 3000000, N'Ca bình thường'),
                                                                                                                      ('CA03', 'NV03', '2026-04-21 08:00:00', '2026-04-21 16:00:00', N'DONG', 1000000, 6000000, 5000000, N'Ca bình thường'),
