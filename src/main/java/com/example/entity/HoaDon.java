@@ -13,25 +13,25 @@ import java.util.Objects;
 @Table(name = "HoaDon")
 public class HoaDon {
     @Id
-    @Column(name = "maHoaDon", length = 50)
+    @Column(name = "maHoaDon", columnDefinition = "nvarchar(50)")
     private String maHoaDon;
 
     @Column(name = "thoiGianTao")
     private LocalDateTime thoiGianTao;
 
     @ManyToOne
-    @JoinColumn(name = "maNhanVien")
+    @JoinColumn(name = "maNhanVien", columnDefinition = "nvarchar(50)")
     private NhanVien nhanVien;
 
     @Column(name = "trangThaiThanhToan")
     private boolean trangThaiThanhToan;
 
     @ManyToOne
-    @JoinColumn(name = "maKhachHang")
+    @JoinColumn(name = "maKhachHang", columnDefinition = "nvarchar(50)")
     private KhachHang khachHang;
 
     @ManyToOne
-    @JoinColumn(name = "maKhuyenMai")
+    @JoinColumn(name = "maKhuyenMai", columnDefinition = "nvarchar(50)")
     private KhuyenMai khuyenMai;
 
     @Enumerated(EnumType.STRING)
@@ -39,18 +39,18 @@ public class HoaDon {
     private LoaiHoaDon loaiHoaDon;
 
     @ManyToOne
-    @JoinColumn(name = "maCa")
+    @JoinColumn(name = "maCa", columnDefinition = "nvarchar(50)")
     private CaLam ca;
 
     @Column(name = "ghiChu", columnDefinition = "nvarchar(MAX)")
     private String ghiChu;
 
     @ManyToOne
-    @JoinColumn(name = "maHoaDonDoiTra")
+    @JoinColumn(name = "maHoaDonDoiTra", columnDefinition = "nvarchar(50)")
     private HoaDon hoaDonDoiTra;
 
     @ManyToOne
-    @JoinColumn(name = "maDonThuoc")
+    @JoinColumn(name = "maDonThuoc", columnDefinition = "nvarchar(50)")
     private DonThuoc donThuoc;
 
     @Enumerated(EnumType.STRING)

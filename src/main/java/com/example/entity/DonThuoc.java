@@ -9,7 +9,7 @@ import java.util.Objects;
 @Table(name = "DonThuoc")
 public class DonThuoc {
     @Id
-    @Column(name = "maDonThuoc", length = 50)
+    @Column(name = "maDonThuoc", columnDefinition = "nvarchar(50)")
     private String maDonThuoc;
 
     @Column(name = "tenBacSi", columnDefinition = "nvarchar(255)")

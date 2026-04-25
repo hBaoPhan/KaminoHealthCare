@@ -9,7 +9,6 @@ import com.formdev.flatlaf.FlatLightLaf;
 public class Main {
    public static void main(String[] args) {
       setupLookAndFeel();
-
       SwingUtilities.invokeLater(() -> {
          DangNhapPanel mainFrame = new DangNhapPanel();
          mainFrame.setVisible(true);

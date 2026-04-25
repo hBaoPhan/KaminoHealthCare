@@ -9,23 +9,23 @@ import java.util.Objects;
 @Table(name = "Lo")
 public class Lo {
     @Id
-    @Column(name = "maLo", length = 50)
+    @Column(name = "maLo", columnDefinition = "nvarchar(50)")
     private String maLo;
 
-    @Column(name = "soLo", length = 50)
+    @Column(name = "soLo", columnDefinition = "nvarchar(50)")
     private String soLo;
 
-    @Column(name = "ngayHetHan")
+    @Column(name = "ngayHetHan", columnDefinition = "date")
     private LocalDate ngayHetHan;
 
     @Column(name = "soLuongSanPham")
     private int soLuongSanPham;
 
     @ManyToOne
-    @JoinColumn(name = "maSanPham")
+    @JoinColumn(name = "maSanPham", columnDefinition = "nvarchar(50)")
     private SanPham sanPham;
 
-    @Column(name = "giaNhap")
+    @Column(name = "giaNhap", columnDefinition = "")
     private double giaNhap;
 
     public Lo() {

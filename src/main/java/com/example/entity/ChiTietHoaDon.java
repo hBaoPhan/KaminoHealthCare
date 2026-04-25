@@ -11,12 +11,12 @@ public class ChiTietHoaDon {
 
     @Id
     @ManyToOne
-    @JoinColumn(name = "maHoaDon")
+    @JoinColumn(name = "maHoaDon", columnDefinition = "nvarchar(50)")
     private HoaDon hoaDon;
 
     @Id
     @ManyToOne
-    @JoinColumn(name = "maDonVi")
+    @JoinColumn(name = "maDonVi", columnDefinition = "nvarchar(50)")
     private DonViQuyDoi donViQuyDoi;
 
     @Column(name = "soLuong")

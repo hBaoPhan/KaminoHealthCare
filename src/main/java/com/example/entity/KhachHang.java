@@ -8,7 +8,7 @@ import java.util.Objects;
 public class KhachHang {
     
     @Id
-    @Column(name = "maKhachHang", length = 50)
+    @Column(name = "maKhachHang", columnDefinition = "nvarchar(50)")
     private String maKhachHang;
     
     @Column(name = "tenKhachHang", columnDefinition = "nvarchar(255)")
