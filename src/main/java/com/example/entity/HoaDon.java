@@ -211,7 +211,7 @@ public class HoaDon {
         double tongTienHang = tinhTongTienTamThoi();
         double soTienGiam = 0.0;
         
-        if (this.khuyenMai != null && this.khuyenMai.getLoaiKhuyenMai() == LoaiKhuyenMai.PHANTRAM) {
+        if (this.khuyenMai != null && this.khuyenMai.getLoaiKhuyenMai() == LoaiKhuyenMai.PHAN_TRAM) {
             soTienGiam = tongTienHang * (this.khuyenMai.getKhuyenMaiPhanTram() / 100.0);
         }
         

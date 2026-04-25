@@ -361,8 +361,8 @@ public class KhuyenMaiPanel extends JPanel {
 
     private void updateFormFieldsByLoai() {
         LoaiKhuyenMai loai = (LoaiKhuyenMai) cboLoaiKhuyenMai.getSelectedItem();
-        boolean isPhanTram = loai == LoaiKhuyenMai.PHANTRAM;
-        boolean isTangKem = loai == LoaiKhuyenMai.TANGKEM;
+        boolean isPhanTram = loai == LoaiKhuyenMai.PHAN_TRAM;
+        boolean isTangKem = loai == LoaiKhuyenMai.TANG_KEM;
 
         txtKhuyenMaiPhanTram.setEnabled(isPhanTram);
         txtSanPhamQuaTang.setEnabled(isTangKem);
@@ -392,7 +392,7 @@ public class KhuyenMaiPanel extends JPanel {
         String ma = generateNextMaKhuyenMai();
 
         double phanTram = 0;
-        if (loai == LoaiKhuyenMai.PHANTRAM) {
+        if (loai == LoaiKhuyenMai.PHAN_TRAM) {
             try {
                 phanTram = Double.parseDouble(txtKhuyenMaiPhanTram.getText().trim());
                 if (phanTram < 0) throw new NumberFormatException();
@@ -414,7 +414,7 @@ public class KhuyenMaiPanel extends JPanel {
         }
 
         QuaTang quaTang = null;
-        if (loai == LoaiKhuyenMai.TANGKEM) {
+        if (loai == LoaiKhuyenMai.TANG_KEM) {
             String sanPham = txtSanPhamQuaTang.getText().trim();
             String soLuong = txtSoLuongTang.getText().trim();
             if (sanPham.isEmpty() || soLuong.isEmpty()) {
@@ -497,7 +497,7 @@ public class KhuyenMaiPanel extends JPanel {
         km1.setTenKhuyenMai("Giảm mùa hè");
         km1.setThoiGianBatDau(LocalDateTime.now().minusDays(1));
         km1.setThoiGianKetThuc(LocalDateTime.now().plusDays(10));
-        km1.setLoaiKhuyenMai(LoaiKhuyenMai.PHANTRAM);
+        km1.setLoaiKhuyenMai(LoaiKhuyenMai.PHAN_TRAM);
         km1.setKhuyenMaiPhanTram(10);
         km1.setGiaTriDonHangToiThieu(150000);
         danhSachKhuyenMai.add(km1);
@@ -508,7 +508,7 @@ public class KhuyenMaiPanel extends JPanel {
         km2.setTenKhuyenMai("Tặng ly sứ cao cấp");
         km2.setThoiGianBatDau(LocalDateTime.now());
         km2.setThoiGianKetThuc(LocalDateTime.now().plusDays(15));
-        km2.setLoaiKhuyenMai(LoaiKhuyenMai.TANGKEM);
+        km2.setLoaiKhuyenMai(LoaiKhuyenMai.TANG_KEM);
         km2.setGiaTriDonHangToiThieu(200000);
         QuaTang qt2 = new QuaTang();
         SanPham sp2 = new SanPham();
@@ -524,7 +524,7 @@ public class KhuyenMaiPanel extends JPanel {
         km3.setTenKhuyenMai("Giảm 15% đơn cao");
         km3.setThoiGianBatDau(LocalDateTime.now().minusDays(3));
         km3.setThoiGianKetThuc(LocalDateTime.now().plusDays(20));
-        km3.setLoaiKhuyenMai(LoaiKhuyenMai.PHANTRAM);
+        km3.setLoaiKhuyenMai(LoaiKhuyenMai.PHAN_TRAM);
         km3.setKhuyenMaiPhanTram(15);
         km3.setGiaTriDonHangToiThieu(300000);
         danhSachKhuyenMai.add(km3);
@@ -535,7 +535,7 @@ public class KhuyenMaiPanel extends JPanel {
         km4.setTenKhuyenMai("Giảm 20% viên uống");
         km4.setThoiGianBatDau(LocalDateTime.now().minusDays(5));
         km4.setThoiGianKetThuc(LocalDateTime.now().plusDays(25));
-        km4.setLoaiKhuyenMai(LoaiKhuyenMai.PHANTRAM);
+        km4.setLoaiKhuyenMai(LoaiKhuyenMai.PHAN_TRAM);
         km4.setKhuyenMaiPhanTram(20);
         km4.setGiaTriDonHangToiThieu(250000);
         danhSachKhuyenMai.add(km4);
@@ -546,7 +546,7 @@ public class KhuyenMaiPanel extends JPanel {
         km5.setTenKhuyenMai("Tặng khăn microfiber");
         km5.setThoiGianBatDau(LocalDateTime.now().minusDays(2));
         km5.setThoiGianKetThuc(LocalDateTime.now().plusDays(30));
-        km5.setLoaiKhuyenMai(LoaiKhuyenMai.TANGKEM);
+        km5.setLoaiKhuyenMai(LoaiKhuyenMai.TANG_KEM);
         km5.setGiaTriDonHangToiThieu(180000);
         QuaTang qt5 = new QuaTang();
         SanPham sp5 = new SanPham();
@@ -562,7 +562,7 @@ public class KhuyenMaiPanel extends JPanel {
         km6.setTenKhuyenMai("Giảm 25% sản phẩm chọn lọc");
         km6.setThoiGianBatDau(LocalDateTime.now().plusDays(1));
         km6.setThoiGianKetThuc(LocalDateTime.now().plusDays(35));
-        km6.setLoaiKhuyenMai(LoaiKhuyenMai.PHANTRAM);
+        km6.setLoaiKhuyenMai(LoaiKhuyenMai.PHAN_TRAM);
         km6.setKhuyenMaiPhanTram(25);
         km6.setGiaTriDonHangToiThieu(400000);
         danhSachKhuyenMai.add(km6);
@@ -573,7 +573,7 @@ public class KhuyenMaiPanel extends JPanel {
         km7.setTenKhuyenMai("Tặng mặt nạ dưỡng da");
         km7.setThoiGianBatDau(LocalDateTime.now());
         km7.setThoiGianKetThuc(LocalDateTime.now().plusDays(12));
-        km7.setLoaiKhuyenMai(LoaiKhuyenMai.TANGKEM);
+        km7.setLoaiKhuyenMai(LoaiKhuyenMai.TANG_KEM);
         km7.setGiaTriDonHangToiThieu(220000);
         QuaTang qt7 = new QuaTang();
         SanPham sp7 = new SanPham();
@@ -589,7 +589,7 @@ public class KhuyenMaiPanel extends JPanel {
         km8.setTenKhuyenMai("Giảm 30% thuốc đặc biệt");
         km8.setThoiGianBatDau(LocalDateTime.now().minusDays(7));
         km8.setThoiGianKetThuc(LocalDateTime.now().plusDays(40));
-        km8.setLoaiKhuyenMai(LoaiKhuyenMai.PHANTRAM);
+        km8.setLoaiKhuyenMai(LoaiKhuyenMai.PHAN_TRAM);
         km8.setKhuyenMaiPhanTram(30);
         km8.setGiaTriDonHangToiThieu(500000);
         danhSachKhuyenMai.add(km8);
@@ -600,7 +600,7 @@ public class KhuyenMaiPanel extends JPanel {
         km9.setTenKhuyenMai("Tặng hộp vitamin bổ sung");
         km9.setThoiGianBatDau(LocalDateTime.now().minusDays(4));
         km9.setThoiGianKetThuc(LocalDateTime.now().plusDays(45));
-        km9.setLoaiKhuyenMai(LoaiKhuyenMai.TANGKEM);
+        km9.setLoaiKhuyenMai(LoaiKhuyenMai.TANG_KEM);
         km9.setGiaTriDonHangToiThieu(350000);
         QuaTang qt9 = new QuaTang();
         SanPham sp9 = new SanPham();
@@ -616,7 +616,7 @@ public class KhuyenMaiPanel extends JPanel {
         km10.setTenKhuyenMai("Giảm 12% tất cả sản phẩm");
         km10.setThoiGianBatDau(LocalDateTime.now().minusDays(6));
         km10.setThoiGianKetThuc(LocalDateTime.now().plusDays(50));
-        km10.setLoaiKhuyenMai(LoaiKhuyenMai.PHANTRAM);
+        km10.setLoaiKhuyenMai(LoaiKhuyenMai.PHAN_TRAM);
         km10.setKhuyenMaiPhanTram(12);
         km10.setGiaTriDonHangToiThieu(100000);
         danhSachKhuyenMai.add(km10);
@@ -638,17 +638,17 @@ public class KhuyenMaiPanel extends JPanel {
             }
 
             if (selectedFilter != null && !selectedFilter.equals("Tất cả")) {
-                if (selectedFilter.equals("Phần trăm") && km.getLoaiKhuyenMai() != LoaiKhuyenMai.PHANTRAM) {
+                if (selectedFilter.equals("Phần trăm") && km.getLoaiKhuyenMai() != LoaiKhuyenMai.PHAN_TRAM) {
                     continue;
                 }
-                if (selectedFilter.equals("Tặng kèm") && km.getLoaiKhuyenMai() != LoaiKhuyenMai.TANGKEM) {
+                if (selectedFilter.equals("Tặng kèm") && km.getLoaiKhuyenMai() != LoaiKhuyenMai.TANG_KEM) {
                     continue;
                 }
             }
 
             String loaiText = km.getLoaiKhuyenMai() != null ? km.getLoaiKhuyenMai().getMoTa() : "";
-            String phanTram = km.getLoaiKhuyenMai() == LoaiKhuyenMai.PHANTRAM ? String.format("%.0f%%", km.getKhuyenMaiPhanTram()) : "";
-            String quaTangText = km.getLoaiKhuyenMai() == LoaiKhuyenMai.TANGKEM && km.getQuaTangKem() != null ?
+            String phanTram = km.getLoaiKhuyenMai() == LoaiKhuyenMai.PHAN_TRAM ? String.format("%.0f%%", km.getKhuyenMaiPhanTram()) : "";
+            String quaTangText = km.getLoaiKhuyenMai() == LoaiKhuyenMai.TANG_KEM && km.getQuaTangKem() != null ?
                     km.getQuaTangKem().getSanPham().getTenSanPham() + " x" + km.getQuaTangKem().getSoLuongTang() : "";
             String giaTriToiThieu = km.getGiaTriDonHangToiThieu() > 0 ? String.format("%.0f", km.getGiaTriDonHangToiThieu()) : "";
             String batDau = km.getThoiGianBatDau() != null ? km.getThoiGianBatDau().toLocalDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "";
@@ -700,10 +700,10 @@ public class KhuyenMaiPanel extends JPanel {
                 if (km.getLoaiKhuyenMai() != null) {
                     cboLoaiKhuyenMai.setSelectedItem(km.getLoaiKhuyenMai());
                 }
-                if (km.getLoaiKhuyenMai() == LoaiKhuyenMai.PHANTRAM) {
+                if (km.getLoaiKhuyenMai() == LoaiKhuyenMai.PHAN_TRAM) {
                     txtKhuyenMaiPhanTram.setText(String.valueOf((int) km.getKhuyenMaiPhanTram()));
                 }
-                if (km.getLoaiKhuyenMai() == LoaiKhuyenMai.TANGKEM && km.getQuaTangKem() != null) {
+                if (km.getLoaiKhuyenMai() == LoaiKhuyenMai.TANG_KEM && km.getQuaTangKem() != null) {
                     txtSanPhamQuaTang.setText(km.getQuaTangKem().getSanPham().getTenSanPham());
                     txtSoLuongTang.setText(String.valueOf(km.getQuaTangKem().getSoLuongTang()));
                 }
@@ -749,7 +749,7 @@ public class KhuyenMaiPanel extends JPanel {
         }
 
         double phanTram = 0;
-        if (loai == LoaiKhuyenMai.PHANTRAM) {
+        if (loai == LoaiKhuyenMai.PHAN_TRAM) {
             try {
                 phanTram = Double.parseDouble(txtKhuyenMaiPhanTram.getText().trim());
                 if (phanTram < 0) throw new NumberFormatException();
@@ -771,7 +771,7 @@ public class KhuyenMaiPanel extends JPanel {
         }
 
         QuaTang quaTang = null;
-        if (loai == LoaiKhuyenMai.TANGKEM) {
+        if (loai == LoaiKhuyenMai.TANG_KEM) {
             String sanPham = txtSanPhamQuaTang.getText().trim();
             String soLuong = txtSoLuongTang.getText().trim();
             if (sanPham.isEmpty() || soLuong.isEmpty()) {

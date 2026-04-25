@@ -1,8 +1,8 @@
 package com.example.entity;
 
 public enum LoaiKhuyenMai {
-    PHANTRAM("Phần trăm"),
-    TANGKEM("Tặng kèm");
+    PHAN_TRAM("Phần trăm"),
+    TANG_KEM("Tặng kèm");
 
     private final String moTa;
 

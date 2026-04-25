@@ -100,7 +100,7 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		lblKAMINOCOFFEE.setFont(new Font(lblKAMINOCOFFEE.getFont().getFontName(), Font.BOLD, 17));
 
 		lblTenTaiKhoan = new JLabel("Xin chào, " + taiKhoan.getNhanVien().getTenNhanVien());
-		lblChucVu = new JLabel(taiKhoan.getNhanVien().getChucVu() == ChucVu.NHANVIENQUANLY ? "Quản Lý" : "Dược Sĩ");
+		lblChucVu = new JLabel(taiKhoan.getNhanVien().getChucVu() == ChucVu.NHAN_VIEN_QUAN_LY ? "Quản Lý" : "Dược Sĩ");
 		lblChucVu.setForeground(Color.decode("#00A651"));
 
 		lblKAMINOCOFFEE.setBorder(BorderFactory.createEmptyBorder(10, 10, 7, 10));
@@ -133,7 +133,7 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		contentPanel.add(new DoiHangPanel(), "Đổi Hàng");
 		contentPanel.add(new TraHangPanel(), "Trả Hàng");
 		contentPanel.add(pnlKhachHang = new KhachHangPanel(), "Khách Hàng");
-		isQuanLy = taiKhoan.getNhanVien().getChucVu() == ChucVu.NHANVIENQUANLY;
+		isQuanLy = taiKhoan.getNhanVien().getChucVu() == ChucVu.NHAN_VIEN_QUAN_LY;
 		contentPanel.add(new SanPhamPanel(), "Quản Lý Sản Phẩm");
 		if (isQuanLy) {
 
@@ -283,7 +283,7 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 	}
 
 	private void initMenuStructure(TaiKhoan taiKhoan) {
-		boolean isQL = taiKhoan.getNhanVien().getChucVu() == ChucVu.NHANVIENQUANLY;
+		boolean isQL = taiKhoan.getNhanVien().getChucVu() == ChucVu.NHAN_VIEN_QUAN_LY;
 
 		menuStructure.add(new MenuItem("Màn Hình Chính", "home.png"));
 

@@ -1,8 +1,8 @@
 package com.example.entity;
 
 public enum TrangThaiKhachHang {
-    KHACHHANGTHANHVIEN("Khách hàng thành viên"),
-    KHACHLE("Khách lẻ");
+    KHACH_HANG_THANH_VIEN("Khách hàng thành viên"),
+    KHACH_LE("Khách lẻ");
 
     private final String moTa;
 

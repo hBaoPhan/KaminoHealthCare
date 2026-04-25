@@ -1,8 +1,8 @@
 package com.example.entity;
 
 public enum PhuongThucThanhToan {
-    TIENMAT("Tiền mặt"),
-    CHUYENKHOAN("Chuyển khoản");
+    TIEN_MAT("Tiền mặt"),
+    CHUYEN_KHOAN("Chuyển khoản");
 
     private final String moTa;
 

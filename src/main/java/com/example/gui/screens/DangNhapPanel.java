@@ -178,6 +178,8 @@ public class DangNhapPanel extends JFrame implements ActionListener {
         btnLogin.addActionListener(this);
         form.add(btnLogin);
 
+        ConnectDB.getInstance().connectHibernate();
+
         wrapper.add(form);
         return wrapper;
     }
@@ -240,7 +242,7 @@ public class DangNhapPanel extends JFrame implements ActionListener {
 //            }
 //
               TaiKhoanDAO dao = new TaiKhoanDAO();
-              TaiKhoan tk = dao.timTheoMa("baoph");
+              TaiKhoan tk = dao.timTheoMa("admin");
 
 //
 //            if (tk != null) {

@@ -1,8 +1,8 @@
 package com.example.entity;
 
 public enum ChucVu {
-    DUOCSI("Dược sĩ"),
-    NHANVIENQUANLY("Nhân viên quản lý");
+    DUOC_SI("Dược sĩ"),
+    NHAN_VIEN_QUAN_LY("Nhân viên quản lý");
 
     private final String moTa;
 
