@@ -165,6 +165,7 @@ public class HoaDonPanel extends JPanel {
 
         datePicker.addDateChangeListener(event -> taiLaiDanhSach());
         btnView.addActionListener(e -> xemChiTietHoaDon());
+        btnPayment.addActionListener(e -> thanhToanHoaDon());
 
         return panel;
     }
@@ -366,5 +367,117 @@ public class HoaDonPanel extends JPanel {
 
         dialog.add(new JScrollPane(ctTable), BorderLayout.CENTER);
         dialog.setVisible(true);
+    }
+
+    private void thanhToanHoaDon() {
+        int row = table.getSelectedRow();
+        if (row < 0) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn một hóa đơn để thanh toán.");
+            return;
+        }
+        
+        String trangThai = model.getValueAt(row, 7).toString();
+        if ("Đã thanh toán".equals(trangThai)) {
+            JOptionPane.showMessageDialog(this, "Hóa đơn này đã được thanh toán.");
+            return;
+        }
+
+        String maHD = model.getValueAt(row, 0).toString();
+        ChiTietHoaDonDAO ctDAO = new ChiTietHoaDonDAO();
+        List<ChiTietHoaDon> dsChiTiet = ctDAO.layTheoMaHoaDon(maHD);
+
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Xác nhận thanh toán: " + maHD, true);
+        dialog.setSize(850, 550);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout(10, 10));
+
+        // Thông tin hóa đơn
+        JPanel infoPanel = new JPanel(new GridLayout(3, 2, 10, 10));
+        infoPanel.setBorder(new EmptyBorder(15, 20, 10, 20));
+        infoPanel.setBackground(COLOR_CARD_BG);
+        
+        infoPanel.add(createLabelInfo("Khách hàng: ", model.getValueAt(row, 4).toString()));
+        infoPanel.add(createLabelInfo("Người tạo: ", model.getValueAt(row, 1).toString()));
+        infoPanel.add(createLabelInfo("Ngày tạo: ", model.getValueAt(row, 2).toString()));
+        infoPanel.add(createLabelInfo("Loại hóa đơn: ", model.getValueAt(row, 3).toString()));
+        infoPanel.add(createLabelInfo("Khuyến mãi: ", model.getValueAt(row, 6).toString()));
+        
+        JLabel lblTongTien = new JLabel("Tổng tiền: " + model.getValueAt(row, 5).toString());
+        lblTongTien.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        lblTongTien.setForeground(new Color(220, 53, 69)); // Màu đỏ cho nổi bật
+        infoPanel.add(lblTongTien);
+
+        // Bảng chi tiết sản phẩm
+        String[] cols = { "Tên sản phẩm", "Đơn vị tính", "Số lượng", "Đơn giá", "Thành tiền", "Quà tặng" };
+        DefaultTableModel ctModel = new DefaultTableModel(cols, 0);
+        java.text.NumberFormat nf = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("vi", "VN"));
+
+        for (ChiTietHoaDon ct : dsChiTiet) {
+            String tenSP = ct.getDonViQuyDoi() != null && ct.getDonViQuyDoi().getSanPham() != null
+                    ? ct.getDonViQuyDoi().getSanPham().getTenSanPham()
+                    : "";
+            String dvt = ct.getDonViQuyDoi() != null && ct.getDonViQuyDoi().getTenDonVi() != null
+                    ? ct.getDonViQuyDoi().getTenDonVi().toString()
+                    : "";
+            int sl = ct.getSoLuong();
+            String donGia = nf.format(ct.getDonGia());
+            String thanhTien = nf.format(ct.tinhThanhTien());
+            String quaTang = ct.isLaQuaTangKem() ? "Có" : "Không";
+
+            ctModel.addRow(new Object[] { tenSP, dvt, sl, donGia, thanhTien, quaTang });
+        }
+
+        JTable ctTable = new JTable(ctModel);
+        ctTable.setRowHeight(35);
+        ctTable.setFont(FONT_TEXT);
+        ctTable.getTableHeader().setFont(FONT_LABEL);
+        ctTable.getTableHeader().setBackground(new Color(240, 240, 240));
+
+        JScrollPane scrollPane = new JScrollPane(ctTable);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
+
+        // Nút bấm
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 15));
+        
+        RoundedButton btnHuy = new RoundedButton("Hủy");
+        btnHuy.setPreferredSize(new Dimension(100, 40));
+        btnHuy.setBackground(Color.WHITE);
+        btnHuy.setFont(FONT_LABEL);
+        btnHuy.addActionListener(e -> dialog.dispose());
+
+        RoundedButton btnXacNhan = new RoundedButton("Xác nhận thanh toán");
+        btnXacNhan.setBackground(COLOR_PRIMARY);
+        btnXacNhan.setForeground(Color.BLACK);
+        btnXacNhan.setPreferredSize(new Dimension(180, 40));
+        btnXacNhan.setFont(FONT_LABEL);
+        
+        btnXacNhan.addActionListener(e -> {
+            HoaDon hd = hoaDonDAO.timTheoMa(maHD);
+            if (hd != null) {
+                hd.setTrangThaiThanhToan(true);
+                if (hoaDonDAO.capNhat(hd)) {
+                    JOptionPane.showMessageDialog(dialog, "Thanh toán thành công!");
+                    dialog.dispose();
+                    taiLaiDanhSach();
+                } else {
+                    JOptionPane.showMessageDialog(dialog, "Lỗi: Không thể cập nhật trạng thái hóa đơn trên cơ sở dữ liệu.");
+                }
+            }
+        });
+
+        btnPanel.add(btnHuy);
+        btnPanel.add(btnXacNhan);
+
+        dialog.add(infoPanel, BorderLayout.NORTH);
+        dialog.add(scrollPane, BorderLayout.CENTER);
+        dialog.add(btnPanel, BorderLayout.SOUTH);
+
+        dialog.setVisible(true);
+    }
+
+    private JLabel createLabelInfo(String title, String value) {
+        JLabel label = new JLabel("<html><b>" + title + "</b> " + value + "</html>");
+        label.setFont(FONT_TEXT);
+        return label;
     }
 }

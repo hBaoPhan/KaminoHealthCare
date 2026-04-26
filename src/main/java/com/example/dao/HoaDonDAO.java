@@ -39,10 +39,34 @@ public class HoaDonDAO extends GenericDAO<HoaDon, String> {
                 query.setParameter("startOfNextDay", ngayTao.plusDays(1).atStartOfDay());
             }
 
-            return query.list();
+            List<HoaDon> list = query.list();
+            ChiTietHoaDonDAO ctDAO = new ChiTietHoaDonDAO();
+            for (HoaDon h : list) {
+                h.setDsChiTiet(ctDAO.layTheoMaHoaDon(h.getMaHoaDon()));
+            }
+            return list;
         } catch (Exception e) {
             e.printStackTrace();
             return new ArrayList<>();
         }
+    }
+
+    @Override
+    public List<HoaDon> layTatCa() {
+        List<HoaDon> list = super.layTatCa();
+        ChiTietHoaDonDAO ctDAO = new ChiTietHoaDonDAO();
+        for (HoaDon h : list) {
+            h.setDsChiTiet(ctDAO.layTheoMaHoaDon(h.getMaHoaDon()));
+        }
+        return list;
+    }
+
+    @Override
+    public HoaDon timTheoMa(String id) {
+        HoaDon h = super.timTheoMa(id);
+        if (h != null) {
+            h.setDsChiTiet(new ChiTietHoaDonDAO().layTheoMaHoaDon(h.getMaHoaDon()));
+        }
+        return h;
     }
 }
