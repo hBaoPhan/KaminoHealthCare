@@ -30,7 +30,7 @@ public class KhuyenMai {
     @Column(name = "loaiKhuyenMai")
     private LoaiKhuyenMai loaiKhuyenMai;
 
-    @Column(name = "khuyenMaiPhanTram")
+    @Column(name = "khuyenMaiPhanTram",nullable = true)
     private double khuyenMaiPhanTram;
 
     @Transient
