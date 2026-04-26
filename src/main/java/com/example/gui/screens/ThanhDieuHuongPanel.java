@@ -68,6 +68,7 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 	private Border selectedBorder = BorderFactory.createCompoundBorder(
 			BorderFactory.createMatteBorder(0, 5, 0, 0, Color.decode("#174EA6")), // Blue accent line
 			menuPadding);
+	private TroGiupPanel pnlTroGiup;
 
 	public ThanhDieuHuongPanel(TaiKhoan taiKhoan) {
 		setTitle("Kamino Healthcare - Hệ Thống Quản Lý Nhà Thuốc");
@@ -147,7 +148,7 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 
 			contentPanel.add(pnlThongKe = new ThongKePanel(), "Thống Kê");
 		}
-		contentPanel.add(new JPanel(), "Trợ Giúp");
+		contentPanel.add(pnlTroGiup = new TroGiupPanel(), "Trợ Giúp");
 
 		add(contentPanel, BorderLayout.CENTER);
 	}
