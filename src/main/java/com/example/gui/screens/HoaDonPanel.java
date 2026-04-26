@@ -1,5 +1,7 @@
 package com.example.gui.screens;
 
+import com.example.dao.HoaDonDAO;
+import com.example.entity.HoaDon;
 import com.example.gui.components.*;
 
 import javax.swing.*;
@@ -7,6 +9,8 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
+import java.util.List;
+
 import com.github.lgooddatepicker.components.DatePicker;
 import com.github.lgooddatepicker.components.DatePickerSettings;
 
@@ -22,6 +26,13 @@ public class HoaDonPanel extends JPanel {
     private final Font FONT_STATS = new Font("Segoe UI", Font.BOLD, 22);
     private final Font FONT_LABEL = new Font("Segoe UI", Font.BOLD, 14);
     private final Font FONT_TEXT = new Font("Segoe UI", Font.PLAIN, 14);
+    private final HoaDonDAO hoaDonDAO;
+    private DefaultTableModel model;
+
+    private JLabel lblHoaDonHomNay;
+    private JLabel lblHoaDonBanHang;
+    private JLabel lblHoaDonDoiHang;
+    private JLabel lblHoaDonTraHang;
 
     public HoaDonPanel() {
         setLayout(new BorderLayout(20, 20));
@@ -42,21 +53,29 @@ public class HoaDonPanel extends JPanel {
 
         add(centerPanel, BorderLayout.CENTER);
         add(createDetailPanel(), BorderLayout.SOUTH);
+
+        hoaDonDAO = new HoaDonDAO();
+        taiLaiDanhSach();
     }
 
     private JPanel createStatsPanel() {
         JPanel panel = new JPanel(new GridLayout(1, 4, 20, 0));
         panel.setOpaque(false);
 
-        panel.add(createStatCard("Hóa đơn hôm nay", "10"));
-        panel.add(createStatCard("Hóa đơn bán hàng", "6"));
-        panel.add(createStatCard("Hóa đơn đổi hàng", "2"));
-        panel.add(createStatCard("Hóa đơn trả hàng", "2"));
+        lblHoaDonHomNay = new JLabel("0");
+        lblHoaDonBanHang = new JLabel("0");
+        lblHoaDonDoiHang = new JLabel("0");
+        lblHoaDonTraHang = new JLabel("0");
+
+        panel.add(createStatCard("Hóa đơn hôm nay", lblHoaDonHomNay));
+        panel.add(createStatCard("Hóa đơn bán hàng", lblHoaDonBanHang));
+        panel.add(createStatCard("Hóa đơn đổi hàng", lblHoaDonDoiHang));
+        panel.add(createStatCard("Hóa đơn trả hàng", lblHoaDonTraHang));
 
         return panel;
     }
 
-    private JPanel createStatCard(String title, String value) {
+    private JPanel createStatCard(String title, JLabel lblValue) {
         RoundedPanel card = new RoundedPanel(20, true);
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
         card.setBackground(COLOR_CARD_BG);
@@ -67,7 +86,6 @@ public class HoaDonPanel extends JPanel {
         lblTitle.setForeground(COLOR_TEXT_DIM);
         lblTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel lblValue = new JLabel(value);
         lblValue.setFont(FONT_STATS);
         lblValue.setForeground(Color.BLACK);
         lblValue.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -126,8 +144,8 @@ public class HoaDonPanel extends JPanel {
         panel.setLayout(new BorderLayout());
         panel.setBackground(COLOR_CARD_BG);
 
-        String[] columns = { "", "", "", "", "", "", "", "", "" };
-        DefaultTableModel model = new DefaultTableModel(columns, 15);
+        String[] columns = { "Mã hóa đơn", "Người tạo", "Ngày tạo", "Loại hóa đơn", "Khách hàng", "Tổng tiền", "Khuyến mãi", "Trạng thái" };
+        model = new DefaultTableModel(columns, 15);
         JTable table = new JTable(model);
         table.setRowHeight(35);
         table.setShowGrid(true);
@@ -185,6 +203,57 @@ public class HoaDonPanel extends JPanel {
     }
 
     public void taiLaiDanhSach() {
+        if (model == null) return;
+        model.setRowCount(0); // Xóa dữ liệu cũ
+        List<HoaDon> ds = hoaDonDAO.layTatCa();
+        
+        int homNay = 0;
+        int banHang = 0;
+        int doiHang = 0;
+        int traHang = 0;
+        
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        java.text.NumberFormat nf = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("vi", "VN"));
 
+        for (HoaDon h : ds) {
+            String ngayTao = h.getThoiGianTao() != null ? h.getThoiGianTao().format(dtf) : "";
+            String nguoiTao = h.getNhanVien() != null ? h.getNhanVien().getTenNhanVien() : "";
+            String loaiHoaDon = h.getLoaiHoaDon() != null ? h.getLoaiHoaDon().getMoTa() : "";
+            String khachHang = h.getKhachHang() != null ? h.getKhachHang().getTenKhachHang() : "";
+            String tongTien = nf.format(h.tinhTongTienThanhToan());
+            String khuyenMai = h.getKhuyenMai() != null ? h.getKhuyenMai().getTenKhuyenMai() : "Không có";
+            String trangThai = h.isTrangThaiThanhToan() ? "Đã thanh toán" : "Chưa thanh toán";
+            
+            model.addRow(new Object[] {
+                h.getMaHoaDon(),
+                nguoiTao,
+                ngayTao,
+                loaiHoaDon,
+                khachHang,
+                tongTien,
+                khuyenMai,
+                trangThai
+            });
+            
+            if (h.getThoiGianTao() != null && h.getThoiGianTao().toLocalDate().isEqual(today)) {
+                homNay++;
+            }
+            
+            if (h.getLoaiHoaDon() == com.example.entity.LoaiHoaDon.BAN_HANG) {
+                banHang++;
+            } else if (h.getLoaiHoaDon() == com.example.entity.LoaiHoaDon.DOI_HANG) {
+                doiHang++;
+            } else if (h.getLoaiHoaDon() == com.example.entity.LoaiHoaDon.TRA_HANG) {
+                traHang++;
+            }
+        }
+        
+        if (lblHoaDonHomNay != null) {
+            lblHoaDonHomNay.setText(String.valueOf(homNay));
+            lblHoaDonBanHang.setText(String.valueOf(banHang));
+            lblHoaDonDoiHang.setText(String.valueOf(doiHang));
+            lblHoaDonTraHang.setText(String.valueOf(traHang));
+        }
     }
 }
