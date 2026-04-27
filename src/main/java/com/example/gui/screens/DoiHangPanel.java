@@ -2,6 +2,7 @@ package com.example.gui.screens;
 
 import com.example.dao.*;
 import com.example.entity.*;
+import com.example.entity.enums.*;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;

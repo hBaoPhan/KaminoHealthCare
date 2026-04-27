@@ -115,19 +115,29 @@ public class LoDAO {
      * còn hạn sử dụng và số lượng > 0, sắp xếp theo Hạn sử dụng tăng dần (FEFO)
      */
     public List<Lo> layDanhSachLoKhaDung(String maDonViQuyDoi) {
-        try (Session session = ConnectDB.getSessionFactory().openSession()) {
-            // Giả định entity Lo có map khóa ngoại donViQuyDoi và thuộc tính hanSuDung
-            String hql = "from Lo l " +
-                         "where l.donViQuyDoi.maDonVi = :maDV " +
-                         "and l.soLuong > 0 " +
-                         "and l.hanSuDung > current_date() " +
-                         "order by l.hanSuDung ASC";
-            return session.createQuery(hql, Lo.class)
-                          .setParameter("maDV", maDonViQuyDoi)
-                          .list();
-        } catch (Exception e) {
+        List<Lo> danhSach = new ArrayList<>();
+        try {
+            Connection ketNoi = ConnectDB.getConnection();
+            String truyVan = "SELECT l.* FROM Lo l INNER JOIN DonViQuyDoi dv ON l.maSanPham = dv.maSanPham " +
+                             "WHERE dv.maDonVi = ? AND l.soLuongSanPham > 0 AND l.ngayHetHan > GETDATE() " +
+                             "ORDER BY l.ngayHetHan ASC";
+            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
+            lenh.setString(1, maDonViQuyDoi);
+            ResultSet ketQua = lenh.executeQuery();
+
+            while (ketQua.next()) {
+                Lo lo = new Lo();
+                lo.setMaLo(ketQua.getString("maLo"));
+                lo.setSoLo(ketQua.getString("soLo"));
+                lo.setNgayHetHan(ketQua.getDate("ngayHetHan").toLocalDate());
+                lo.setSoLuongSanPham(ketQua.getInt("soLuongSanPham"));
+                lo.setSanPham(new SanPham(ketQua.getString("maSanPham")));
+                lo.setGiaNhap(ketQua.getDouble("giaNhap"));
+                danhSach.add(lo);
+            }
+        } catch (SQLException e) {
             e.printStackTrace();
-            return new ArrayList<>();
         }
+        return danhSach;
     }
 }
