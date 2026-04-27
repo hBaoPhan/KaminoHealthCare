@@ -3,7 +3,7 @@ package com.example.dao;
 import com.example.connectDB.ConnectDB;
 import com.example.entity.CaLam;
 import com.example.entity.NhanVien;
-import com.example.entity.TrangThaiCaLam;
+import com.example.entity.enums.TrangThaiCaLam;
 
 import java.sql.*;
 import java.util.ArrayList;

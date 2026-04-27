@@ -1,5 +1,6 @@
 package com.example.entity;
 
+import com.example.entity.enums.*;
 public class SuPhanBoLo {
     private ChiTietHoaDon chiTietHoaDon;
     private Lo lo;

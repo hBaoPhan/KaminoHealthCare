@@ -28,7 +28,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-import com.example.entity.ChucVu;
+import com.example.entity.enums.ChucVu;
 import com.example.entity.TaiKhoan;
 import javax.swing.border.Border;
 import javax.swing.Icon;

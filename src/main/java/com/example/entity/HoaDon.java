@@ -1,5 +1,6 @@
 package com.example.entity;
 
+import com.example.entity.enums.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -171,7 +172,7 @@ public class HoaDon {
         double tongTienHang = tinhTongTienTamThoi();
         double soTienGiam = 0.0;
         
-        if (this.khuyenMai != null && this.khuyenMai.getLoaiKhuyenMai() == LoaiKhuyenMai.PHANTRAM) {
+        if (this.khuyenMai != null && this.khuyenMai.getLoaiKhuyenMai() == LoaiKhuyenMai.PHAN_TRAM) {
             soTienGiam = tongTienHang * (this.khuyenMai.getKhuyenMaiPhanTram() / 100.0);
         }
         

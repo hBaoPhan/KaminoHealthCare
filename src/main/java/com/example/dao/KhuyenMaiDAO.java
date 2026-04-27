@@ -2,7 +2,7 @@ package com.example.dao;
 
 import com.example.connectDB.ConnectDB;
 import com.example.entity.KhuyenMai;
-import com.example.entity.LoaiKhuyenMai;
+import com.example.entity.enums.LoaiKhuyenMai;
 import com.example.entity.QuaTang;
 
 import java.sql.*;

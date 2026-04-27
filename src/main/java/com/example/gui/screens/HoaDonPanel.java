@@ -4,7 +4,7 @@ import com.example.dao.ChiTietHoaDonDAO;
 import com.example.dao.HoaDonDAO;
 import com.example.entity.ChiTietHoaDon;
 import com.example.entity.HoaDon;
-import com.example.entity.LoaiHoaDon;
+import com.example.entity.enums.LoaiHoaDon;
 import com.example.gui.components.*;
 
 import javax.swing.*;

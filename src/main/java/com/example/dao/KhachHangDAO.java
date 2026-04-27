@@ -2,7 +2,7 @@ package com.example.dao;
 
 import com.example.connectDB.ConnectDB;
 import com.example.entity.KhachHang;
-import com.example.entity.TrangThaiKhachHang;
+import com.example.entity.enums.TrangThaiKhachHang;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -23,7 +23,7 @@ public class KhachHangDAO {
                 kh.setMaKhachHang(ketQua.getString("maKhachHang"));
                 kh.setTenKhachHang(ketQua.getString("tenKhachHang"));
                 kh.setSdt(ketQua.getString("sdt"));
-                kh.setTrangThai(TrangThaiKhachHang.valueOf(ketQua.getString("trangThai")));
+                kh.setTrangThai(TrangThaiKhachHang.valueOf(ketQua.getString("trangThaiKhachHang")));
                 danhSach.add(kh);
             }
         } catch (SQLException e) {
@@ -46,7 +46,7 @@ public class KhachHangDAO {
                 kh.setMaKhachHang(ketQua.getString("maKhachHang"));
                 kh.setTenKhachHang(ketQua.getString("tenKhachHang"));
                 kh.setSdt(ketQua.getString("sdt"));
-                kh.setTrangThai(TrangThaiKhachHang.valueOf(ketQua.getString("trangThai")));
+                kh.setTrangThai(TrangThaiKhachHang.valueOf(ketQua.getString("trangThaiKhachHang")));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -75,7 +75,7 @@ public class KhachHangDAO {
         int soDongThayDoi = 0;
         try {
             Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "UPDATE KhachHang SET tenKhachHang = ?, sdt = ?, trangThai = ? WHERE maKhachHang = ?";
+            String truyVan = "UPDATE KhachHang SET tenKhachHang = ?, sdt = ?, trangThaiKhachHang = ? WHERE maKhachHang = ?";
             PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
             lenh.setString(1, kh.getTenKhachHang());
             lenh.setString(2, kh.getSdt());

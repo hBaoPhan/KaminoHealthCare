@@ -1,5 +1,6 @@
 package com.example.entity;
 
+import com.example.entity.enums.*;
 import java.util.List;
 import java.util.Objects;
 

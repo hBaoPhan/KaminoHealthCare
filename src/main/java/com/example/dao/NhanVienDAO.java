@@ -1,7 +1,7 @@
 package com.example.dao;
 
 import com.example.connectDB.ConnectDB;
-import com.example.entity.ChucVu;
+import com.example.entity.enums.ChucVu;
 import com.example.entity.NhanVien;
 
 import java.sql.*;
@@ -25,7 +25,7 @@ public class NhanVienDAO {
                 nv.setCccd(ketQua.getString("cccd"));
                 nv.setSdt(ketQua.getString("sdt"));
                 nv.setChucVu(ChucVu.valueOf(ketQua.getString("chucVu")));
-                nv.setTrangThai(ketQua.getBoolean("trangThai"));
+                nv.setTrangThai(ketQua.getBoolean("trangThaiHoatDong"));
                 danhSach.add(nv);
             }
         } catch (SQLException e) {
@@ -50,7 +50,7 @@ public class NhanVienDAO {
                 nv.setCccd(ketQua.getString("cccd"));
                 nv.setSdt(ketQua.getString("sdt"));
                 nv.setChucVu(ChucVu.valueOf(ketQua.getString("chucVu")));
-                nv.setTrangThai(ketQua.getBoolean("trangThai"));
+                nv.setTrangThai(ketQua.getBoolean("trangThaiHoatDong"));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -81,7 +81,7 @@ public class NhanVienDAO {
         int soDongThayDoi = 0;
         try {
             Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "UPDATE NhanVien SET tenNhanVien = ?, cccd = ?, sdt = ?, chucVu = ?, trangThai = ? WHERE maNhanVien = ?";
+            String truyVan = "UPDATE NhanVien SET tenNhanVien = ?, cccd = ?, sdt = ?, chucVu = ?, trangThaiHoatDong = ? WHERE maNhanVien = ?";
             PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
             lenh.setString(1, nv.getTenNhanVien());
             lenh.setString(2, nv.getCccd());

@@ -1,7 +1,7 @@
 package com.example.dao;
 
 import com.example.connectDB.ConnectDB;
-import com.example.entity.DonVi;
+import com.example.entity.enums.DonVi;
 import com.example.entity.DonViQuyDoi;
 import com.example.entity.SanPham;
 
@@ -19,12 +19,13 @@ public class DonViQuyDoiDAO {
             Statement lenh = ketNoi.createStatement();
             ResultSet ketQua = lenh.executeQuery(truyVan);
 
+            SanPhamDAO spDAO = new SanPhamDAO();
             while (ketQua.next()) {
                 DonViQuyDoi dv = new DonViQuyDoi();
                 dv.setMaDonVi(ketQua.getString("maDonVi"));
                 dv.setTenDonVi(DonVi.valueOf(ketQua.getString("tenDonVi")));
                 dv.setHeSoQuyDoi(ketQua.getInt("heSoQuyDoi"));
-                dv.setSanPham(new SanPham(ketQua.getString("maSanPham")));
+                dv.setSanPham(spDAO.timTheoMa(ketQua.getString("maSanPham")));
                 danhSach.add(dv);
             }
         } catch (SQLException e) {
@@ -42,12 +43,13 @@ public class DonViQuyDoiDAO {
             lenh.setString(1, maDV);
             ResultSet ketQua = lenh.executeQuery();
 
+            SanPhamDAO spDAO = new SanPhamDAO();
             if (ketQua.next()) {
                 dv = new DonViQuyDoi();
                 dv.setMaDonVi(ketQua.getString("maDonVi"));
                 dv.setTenDonVi(DonVi.valueOf(ketQua.getString("tenDonVi")));
                 dv.setHeSoQuyDoi(ketQua.getInt("heSoQuyDoi"));
-                dv.setSanPham(new SanPham(ketQua.getString("maSanPham")));
+                dv.setSanPham(spDAO.timTheoMa(ketQua.getString("maSanPham")));
             }
         } catch (SQLException e) {
             e.printStackTrace();

@@ -1,4 +1,4 @@
-package com.example.entity;
+package com.example.entity.enums;
 
 public enum TrangThaiCaLam {
     DANG_MO("Đang mở"),

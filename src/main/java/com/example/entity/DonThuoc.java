@@ -1,5 +1,6 @@
 package com.example.entity;
 
+import com.example.entity.enums.*;
 import java.time.LocalDate;
 import java.util.Objects;
 

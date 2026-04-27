@@ -18,11 +18,12 @@ public class TaiKhoanDAO {
             Statement lenh = ketNoi.createStatement();
             ResultSet ketQua = lenh.executeQuery(truyVan);
 
+            NhanVienDAO nvDAO = new NhanVienDAO();
             while (ketQua.next()) {
                 TaiKhoan tk = new TaiKhoan();
                 tk.setTenDangNhap(ketQua.getString("tenDangNhap"));
                 tk.setMatKhau(ketQua.getString("matKhau"));
-                tk.setNhanVien(new NhanVien(ketQua.getString("maNhanVien")));
+                tk.setNhanVien(nvDAO.timTheoMa(ketQua.getString("maNhanVien")));
                 danhSach.add(tk);
             }
         } catch (SQLException e) {
@@ -40,11 +41,12 @@ public class TaiKhoanDAO {
             lenh.setString(1, tenDN);
             ResultSet ketQua = lenh.executeQuery();
 
+            NhanVienDAO nvDAO = new NhanVienDAO();
             if (ketQua.next()) {
                 tk = new TaiKhoan();
                 tk.setTenDangNhap(ketQua.getString("tenDangNhap"));
                 tk.setMatKhau(ketQua.getString("matKhau"));
-                tk.setNhanVien(new NhanVien(ketQua.getString("maNhanVien")));
+                tk.setNhanVien(nvDAO.timTheoMa(ketQua.getString("maNhanVien")));
             }
         } catch (SQLException e) {
             e.printStackTrace();

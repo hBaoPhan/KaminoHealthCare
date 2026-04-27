@@ -2,6 +2,7 @@ package com.example.dao;
 
 import com.example.connectDB.ConnectDB;
 import com.example.entity.*;
+import com.example.entity.enums.*;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -15,8 +16,9 @@ public class ChiTietHoaDonDAO {
         List<ChiTietHoaDon> danhSach = new ArrayList<>();
         String truyVan = "SELECT * FROM ChiTietHoaDon WHERE maHoaDon = ?";
         
-        try (Connection ketNoi = ConnectDB.getConnection();
-             PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
+        DonViQuyDoiDAO dvqdDAO = new DonViQuyDoiDAO();
+        Connection ketNoi = ConnectDB.getConnection();
+        try (PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
             
             lenh.setString(1, maHD);
             ResultSet ketQua = lenh.executeQuery();
@@ -29,7 +31,7 @@ public class ChiTietHoaDonDAO {
                 
                 // Lưu ý: Cột trong DB của bạn theo sơ đồ là maDonVi (có thể đổi lại thành maDonViQuyDoi nếu bạn tạo bảng như vậy)
                 String maDV = ketQua.getString("maDonVi"); 
-                ct.setDonViQuyDoi(new DonViQuyDoi(maDV));
+                ct.setDonViQuyDoi(dvqdDAO.timTheoMa(maDV));
                 
                 ct.setSoLuong(ketQua.getInt("soLuong"));
                 ct.setDonGia(ketQua.getDouble("donGia"));
@@ -51,8 +53,8 @@ public class ChiTietHoaDonDAO {
         int soDongThayDoi = 0;
         String truyVan = "INSERT INTO ChiTietHoaDon (maHoaDon, maDonVi, soLuong, donGia, laQuaTangKem) VALUES (?, ?, ?, ?, ?)";
         
-        try (Connection ketNoi = ConnectDB.getConnection();
-             PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
+        Connection ketNoi = ConnectDB.getConnection();
+        try (PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
             
             lenh.setString(1, ct.getHoaDon().getMaHoaDon());
             lenh.setString(2, ct.getDonViQuyDoi().getMaDonVi());
@@ -71,8 +73,8 @@ public class ChiTietHoaDonDAO {
         int soDongThayDoi = 0;
         String truyVan = "UPDATE ChiTietHoaDon SET soLuong = ?, donGia = ?, laQuaTangKem = ? WHERE maHoaDon = ? AND maDonVi = ?";
         
-        try (Connection ketNoi = ConnectDB.getConnection();
-             PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
+        Connection ketNoi = ConnectDB.getConnection();
+        try (PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
             
             lenh.setInt(1, ct.getSoLuong());
             lenh.setDouble(2, ct.getDonGia());
@@ -91,8 +93,8 @@ public class ChiTietHoaDonDAO {
         int soDongThayDoi = 0;
         String truyVan = "DELETE FROM ChiTietHoaDon WHERE maHoaDon = ? AND maDonVi = ?";
         
-        try (Connection ketNoi = ConnectDB.getConnection();
-             PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
+        Connection ketNoi = ConnectDB.getConnection();
+        try (PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
             
             lenh.setString(1, maHD);
             lenh.setString(2, maDV);

@@ -1,7 +1,7 @@
 package com.example.dao;
 
 import com.example.connectDB.ConnectDB;
-import com.example.entity.PhanLoai;
+import com.example.entity.enums.PhanLoai;
 import com.example.entity.SanPham;
 
 import java.sql.*;
