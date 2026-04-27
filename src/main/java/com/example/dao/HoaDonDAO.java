@@ -28,7 +28,13 @@ public class HoaDonDAO {
                 hd.setThoiGianTao(ketQua.getTimestamp("thoiGianTao").toLocalDateTime());
                 hd.setNhanVien(nvDAO.timTheoMa(ketQua.getString("maNhanVien")));
                 hd.setTrangThaiThanhToan(ketQua.getBoolean("trangThaiThanhToan"));
-                hd.setKhachHang(khDAO.timTheoMa(ketQua.getString("maKhachHang")));
+                
+                // CẬP NHẬT: Kiểm tra null trước khi tìm khách hàng
+                String maKH = ketQua.getString("maKhachHang");
+                if (maKH != null && !maKH.trim().isEmpty()) {
+                    hd.setKhachHang(khDAO.timTheoMa(maKH));
+                }
+
                 String maKM = ketQua.getString("maKhuyenMai");
                 if (maKM != null) hd.setKhuyenMai(kmDAO.timTheoMa(maKM));
                 hd.setLoaiHoaDon(LoaiHoaDon.valueOf(ketQua.getString("loaiHoaDon")));
@@ -67,7 +73,13 @@ public class HoaDonDAO {
                 hd.setThoiGianTao(ketQua.getTimestamp("thoiGianTao").toLocalDateTime());
                 hd.setNhanVien(nvDAO.timTheoMa(ketQua.getString("maNhanVien")));
                 hd.setTrangThaiThanhToan(ketQua.getBoolean("trangThaiThanhToan"));
-                hd.setKhachHang(khDAO.timTheoMa(ketQua.getString("maKhachHang")));
+                
+                // CẬP NHẬT: Kiểm tra null trước khi tìm khách hàng
+                String maKH = ketQua.getString("maKhachHang");
+                if (maKH != null && !maKH.trim().isEmpty()) {
+                    hd.setKhachHang(khDAO.timTheoMa(maKH));
+                }
+
                 String maKM = ketQua.getString("maKhuyenMai");
                 if (maKM != null) hd.setKhuyenMai(kmDAO.timTheoMa(maKM));
                 hd.setLoaiHoaDon(LoaiHoaDon.valueOf(ketQua.getString("loaiHoaDon")));
@@ -96,7 +108,10 @@ public class HoaDonDAO {
             lenh.setTimestamp(2, Timestamp.valueOf(hd.getThoiGianTao()));
             lenh.setString(3, hd.getNhanVien().getMaNhanVien());
             lenh.setBoolean(4, hd.isTrangThaiThanhToan());
-            lenh.setString(5, hd.getKhachHang().getMaKhachHang());
+            
+            // Đảm bảo không bị lỗi NullPointer khi getKhachHang() bị null
+            lenh.setString(5, hd.getKhachHang() != null ? hd.getKhachHang().getMaKhachHang() : null);
+            
             lenh.setString(6, hd.getKhuyenMai() != null ? hd.getKhuyenMai().getMaKhuyenMai() : null);
             lenh.setString(7, hd.getLoaiHoaDon().name());
             lenh.setString(8, hd.getCa().getMaCa());
@@ -120,7 +135,10 @@ public class HoaDonDAO {
             lenh.setTimestamp(1, Timestamp.valueOf(hd.getThoiGianTao()));
             lenh.setString(2, hd.getNhanVien().getMaNhanVien());
             lenh.setBoolean(3, hd.isTrangThaiThanhToan());
-            lenh.setString(4, hd.getKhachHang().getMaKhachHang());
+            
+            // Đảm bảo không bị lỗi NullPointer khi getKhachHang() bị null
+            lenh.setString(4, hd.getKhachHang() != null ? hd.getKhachHang().getMaKhachHang() : null);
+            
             lenh.setString(5, hd.getKhuyenMai() != null ? hd.getKhuyenMai().getMaKhuyenMai() : null);
             lenh.setString(6, hd.getLoaiHoaDon().name());
             lenh.setString(7, hd.getCa().getMaCa());
@@ -183,7 +201,13 @@ public class HoaDonDAO {
                 hd.setThoiGianTao(ketQua.getTimestamp("thoiGianTao").toLocalDateTime());
                 hd.setNhanVien(nvDAO.timTheoMa(ketQua.getString("maNhanVien")));
                 hd.setTrangThaiThanhToan(ketQua.getBoolean("trangThaiThanhToan"));
-                hd.setKhachHang(khDAO.timTheoMa(ketQua.getString("maKhachHang")));
+                
+                // CẬP NHẬT: Kiểm tra null trước khi tìm khách hàng
+                String maKH = ketQua.getString("maKhachHang");
+                if (maKH != null && !maKH.trim().isEmpty()) {
+                    hd.setKhachHang(khDAO.timTheoMa(maKH));
+                }
+
                 String maKM = ketQua.getString("maKhuyenMai");
                 if (maKM != null) hd.setKhuyenMai(kmDAO.timTheoMa(maKM));
                 hd.setLoaiHoaDon(LoaiHoaDon.valueOf(ketQua.getString("loaiHoaDon")));

@@ -46,7 +46,13 @@ public class KhachHangDAO {
                 kh.setMaKhachHang(ketQua.getString("maKhachHang"));
                 kh.setTenKhachHang(ketQua.getString("tenKhachHang"));
                 kh.setSdt(ketQua.getString("sdt"));
-                kh.setTrangThai(TrangThaiKhachHang.valueOf(ketQua.getString("trangThaiKhachHang")));
+                String trangThaiStr = ketQua.getString("trangThaiKhachHang");
+                if (trangThaiStr != null) {
+                    kh.setTrangThai(TrangThaiKhachHang.valueOf(trangThaiStr));
+                } else {
+                    // Gán giá trị mặc định nếu cần
+                    kh.setTrangThai(TrangThaiKhachHang.KHACH_LE); 
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
