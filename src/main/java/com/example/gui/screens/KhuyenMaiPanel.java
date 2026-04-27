@@ -1,7 +1,7 @@
 package com.example.gui.screens;
 
 import com.example.entity.KhuyenMai;
-import com.example.entity.LoaiKhuyenMai;
+import com.example.entity.enums.LoaiKhuyenMai;
 import com.example.entity.QuaTang;
 import com.example.entity.SanPham;
 import com.github.lgooddatepicker.components.DatePicker;

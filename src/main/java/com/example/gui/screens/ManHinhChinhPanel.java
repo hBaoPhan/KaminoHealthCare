@@ -1,7 +1,15 @@
 package com.example.gui.screens;
+
 import com.example.gui.components.*;
 
 import com.example.entity.TaiKhoan;
+import com.example.entity.ChiTietHoaDon;
+import com.example.entity.HoaDon;
+import com.example.entity.Lo;
+import com.example.entity.enums.PhanLoai;
+import com.example.dao.HoaDonDAO;
+import com.example.dao.LoDAO;
+
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -13,6 +21,11 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.text.DecimalFormat;
+import java.util.List;
 
 public class ManHinhChinhPanel extends JPanel {
 
@@ -20,7 +33,29 @@ public class ManHinhChinhPanel extends JPanel {
     private final Font FONT_TITLE = new Font("Segoe UI", Font.BOLD, 18);
     private final Font FONT_STATS = new Font("Segoe UI", Font.BOLD, 24);
 
+    private JLabel lblHoaDonHomNay;
+    private JLabel lblDoanhThuHomNay;
+    private JLabel lblLoiNhuan;
+    private JLabel lblCanhBao;
+
+    private DefaultTableModel modelHoaDon;
+    private DefaultTableModel modelLoThuoc;
+
+    private DefaultCategoryDataset barDataset;
+    private DefaultPieDataset<String> donutDataset;
+
+    private RoundedButton btnBanHang;
+    private RoundedButton btnTimThuoc;
+    private RoundedButton btnTimKhachHang;
+    private RoundedButton btnThanhToan;
+
+    private HoaDonDAO hoaDonDAO;
+    private LoDAO loDAO;
+
     public ManHinhChinhPanel(TaiKhoan taiKhoan) {
+        hoaDonDAO = new HoaDonDAO();
+        loDAO = new LoDAO();
+
         setLayout(new BorderLayout(20, 20));
         setBackground(COLOR_BG);
         setBorder(new EmptyBorder(20, 20, 20, 20));
@@ -33,21 +68,29 @@ public class ManHinhChinhPanel extends JPanel {
 
         JPanel bottomPanel = createBottomPanel();
         add(bottomPanel, BorderLayout.SOUTH);
+
+        loadThongKeData();
+        layDuLieuChoHoatDongGanDay();
     }
 
     private JPanel createTopPanel() {
         JPanel panel = new JPanel(new GridLayout(1, 4, 20, 0));
         panel.setOpaque(false);
 
-        panel.add(createStatCard("Hóa đơn hôm nay", "12", ""));
-        panel.add(createStatCard("Doanh thu hôm nay", "666, 777 VND", ""));
-        panel.add(createStatCard("Lợi Nhuận", "666, 777 VND", ""));
-        panel.add(createStatCard("Cảnh báo", "6 lô thuốc gần hết hạn", ""));
+        lblHoaDonHomNay = new JLabel("0");
+        lblDoanhThuHomNay = new JLabel("0 VND");
+        lblLoiNhuan = new JLabel("0 VND");
+        lblCanhBao = new JLabel("0 lô thuốc gần hết hạn");
+
+        panel.add(createStatCard("Hóa đơn hôm nay", lblHoaDonHomNay));
+        panel.add(createStatCard("Doanh thu hôm nay", lblDoanhThuHomNay));
+        panel.add(createStatCard("Lợi Nhuận", lblLoiNhuan));
+        panel.add(createStatCard("Cảnh báo", lblCanhBao));
 
         return panel;
     }
 
-    private JPanel createStatCard(String title, String value, String subtext) {
+    private JPanel createStatCard(String title, JLabel lblValue) {
         RoundedPanel card = new RoundedPanel(16, true);
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
         card.setBackground(Color.WHITE);
@@ -57,7 +100,6 @@ public class ManHinhChinhPanel extends JPanel {
         lblTitle.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         lblTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel lblValue = new JLabel(value);
         lblValue.setFont(FONT_STATS);
         lblValue.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -81,15 +123,16 @@ public class ManHinhChinhPanel extends JPanel {
         tgbc.fill = GridBagConstraints.BOTH;
         tgbc.weighty = 1.0;
 
-        JPanel leftTablePanel = createTableContainer("Hóa đơn hôm nay", new String[] { "Mã Hóa đơn", "Tên KH",
-                "Ngày tạo", "Khuyến mãi", "Người tạo", "Loại hóa đơn", "Tổng tiền", "Trạng thái" });
+        modelHoaDon = new DefaultTableModel(new String[] { "Mã Hóa đơn", "Tên KH",
+                "Ngày tạo", "Khuyến mãi", "Người tạo", "Loại hóa đơn", "Tổng tiền", "Trạng thái" }, 0);
+        JPanel leftTablePanel = createTableContainer("Hóa đơn hôm nay", modelHoaDon);
         tgbc.weightx = 0.7;
         tgbc.gridx = 0;
         tgbc.insets = new Insets(0, 0, 0, 10);
         tablePanel.add(leftTablePanel, tgbc);
 
-        JPanel rightTablePanel = createTableContainer("Lô thuốc hết hạn hôm nay",
-                new String[] { "Mã Lô", "Tên thuốc", "HSD" });
+        modelLoThuoc = new DefaultTableModel(new String[] { "Mã Lô", "Tên thuốc", "HSD" }, 0);
+        JPanel rightTablePanel = createTableContainer("Cảnh báo lô thuốc gần hết hạn", modelLoThuoc);
         tgbc.weightx = 0.3;
         tgbc.gridx = 1;
         tgbc.insets = new Insets(0, 10, 0, 0);
@@ -101,12 +144,24 @@ public class ManHinhChinhPanel extends JPanel {
         gbc.weighty = 0.5;
         panel.add(tablePanel, gbc);
 
-        RoundedPanel chartContainer = new RoundedPanel(16, true);
+        JPanel chartContainer = new JPanel();
+        chartContainer.setOpaque(false);
         chartContainer.setLayout(new GridLayout(1, 2, 20, 0));
-        chartContainer.setBackground(Color.WHITE);
 
-        chartContainer.add(createBarChartPanel());
-        chartContainer.add(createDonutChartPanel());
+        RoundedPanel barChartWrapper = new RoundedPanel(16, true);
+        barChartWrapper.setLayout(new BorderLayout());
+        barChartWrapper.setBackground(Color.WHITE);
+        barChartWrapper.setBorder(new EmptyBorder(10, 10, 10, 10));
+        barChartWrapper.add(createBarChartPanel(), BorderLayout.CENTER);
+
+        RoundedPanel donutChartWrapper = new RoundedPanel(16, true);
+        donutChartWrapper.setLayout(new BorderLayout());
+        donutChartWrapper.setBackground(Color.WHITE);
+        donutChartWrapper.setBorder(new EmptyBorder(10, 10, 10, 10));
+        donutChartWrapper.add(createDonutChartPanel(), BorderLayout.CENTER);
+
+        chartContainer.add(barChartWrapper);
+        chartContainer.add(donutChartWrapper);
 
         gbc.gridy = 1;
         gbc.weighty = 0.5;
@@ -115,7 +170,7 @@ public class ManHinhChinhPanel extends JPanel {
         return panel;
     }
 
-    private JPanel createTableContainer(String title, String[] columns) {
+    private JPanel createTableContainer(String title, DefaultTableModel model) {
         RoundedPanel panel = new RoundedPanel(16, true);
         panel.setLayout(new BorderLayout(0, 10));
         panel.setBackground(Color.WHITE);
@@ -124,11 +179,6 @@ public class ManHinhChinhPanel extends JPanel {
         JLabel lblTitle = new JLabel(title);
         lblTitle.setFont(FONT_TITLE);
         panel.add(lblTitle, BorderLayout.NORTH);
-
-        DefaultTableModel model = new DefaultTableModel(columns, 0);
-
-        for (int i = 0; i < 5; i++)
-            model.addRow(new Object[columns.length]);
 
         JTable table = new JTable(model);
         table.setRowHeight(30);
@@ -139,36 +189,48 @@ public class ManHinhChinhPanel extends JPanel {
     }
 
     private JPanel createBarChartPanel() {
-        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-        dataset.addValue(120, "Doanh thu", "08:00");
-        dataset.addValue(200, "Doanh thu", "09:00");
-        dataset.addValue(150, "Doanh thu", "10:00");
-        dataset.addValue(80, "Doanh thu", "11:00");
-        dataset.addValue(70, "Doanh thu", "12:00");
-        dataset.addValue(110, "Doanh thu", "13:00");
-        dataset.addValue(130, "Doanh thu", "14:00");
+        barDataset = new DefaultCategoryDataset();
 
         JFreeChart chart = ChartFactory.createBarChart(
-                "Doanh thu theo giờ",
+                "Doanh thu theo giờ trong ngày",
                 null, null,
-                dataset, PlotOrientation.VERTICAL,
+                barDataset, PlotOrientation.VERTICAL,
                 false, true, false);
         chart.setBackgroundPaint(Color.WHITE);
+
+        org.jfree.chart.plot.CategoryPlot plot = chart.getCategoryPlot();
+        plot.setBackgroundPaint(Color.WHITE);
+        plot.setOutlineVisible(false);
+        plot.setRangeGridlinePaint(new Color(220, 220, 220));
+
+        org.jfree.chart.axis.CategoryAxis domainAxis = plot.getDomainAxis();
+        domainAxis.setCategoryLabelPositions(org.jfree.chart.axis.CategoryLabelPositions.UP_45);
+
+        org.jfree.chart.renderer.category.BarRenderer renderer = (org.jfree.chart.renderer.category.BarRenderer) plot
+                .getRenderer();
+        renderer.setSeriesPaint(0, new Color(56, 182, 255));
+        renderer.setBarPainter(new org.jfree.chart.renderer.category.StandardBarPainter());
 
         return new ChartPanel(chart);
     }
 
     private JPanel createDonutChartPanel() {
-        DefaultPieDataset<String> dataset = new DefaultPieDataset<>();
-        dataset.setValue("Thuốc kháng sinh", 40);
-        dataset.setValue("Thực phẩm chức năng", 30);
-        dataset.setValue("Dụng cụ y tế", 20);
-        dataset.setValue("Khác", 10);
+        donutDataset = new DefaultPieDataset<>();
 
         JFreeChart chart = ChartFactory.createRingChart(
                 "Cơ cấu doanh thu theo Nhóm hàng",
-                dataset, true, true, false);
+                donutDataset, true, true, false);
         chart.setBackgroundPaint(Color.WHITE);
+
+        org.jfree.chart.plot.RingPlot plot = (org.jfree.chart.plot.RingPlot) chart.getPlot();
+        plot.setBackgroundPaint(Color.WHITE);
+        plot.setOutlineVisible(false);
+
+        plot.setLabelGenerator(new org.jfree.chart.labels.StandardPieSectionLabelGenerator(
+                "{0}: {1} ({2})",
+                new java.text.DecimalFormat("###,### VND"),
+                new java.text.DecimalFormat("0.0%")));
+        plot.setLabelBackgroundPaint(Color.WHITE);
 
         return new ChartPanel(chart);
     }
@@ -178,10 +240,22 @@ public class ManHinhChinhPanel extends JPanel {
         panel.setOpaque(false);
         panel.setPreferredSize(new Dimension(panel.getPreferredSize().width, 80));
 
-        panel.add(createActionButton("Thêm hóa đơn mới", "F1", new Color(0x20C997)));
-        panel.add(createActionButton("Tìm kiếm thuốc", "F3", new Color(0x38D9A9)));
-        panel.add(createActionButton("Tìm kiếm khách hàng", "F4", new Color(0x3DB5E0)));
-        panel.add(createActionButton("Thanh toán", "F9", new Color(0x00C4EC)));
+        btnBanHang = createActionButton("Thêm hóa đơn mới", "F1", new Color(0x20C997));
+        btnTimThuoc = createActionButton("Tìm kiếm thuốc", "F3", new Color(0x38D9A9));
+        btnTimKhachHang = createActionButton("Tìm kiếm khách hàng", "F4", new Color(0x3DB5E0));
+        btnThanhToan = createActionButton("Thanh toán", "F9", new Color(0x00C4EC));
+
+        btnBanHang.addActionListener(e -> navigateTo("Bán Hàng"));
+        btnTimThuoc.addActionListener(e -> navigateTo("Quản Lý Sản Phẩm"));
+        btnTimKhachHang.addActionListener(e -> navigateTo("Khách Hàng"));
+        btnThanhToan.addActionListener(e -> navigateTo("Quản Lý Hóa Đơn"));
+
+        panel.add(btnBanHang);
+        panel.add(btnTimThuoc);
+        panel.add(btnTimKhachHang);
+        panel.add(btnThanhToan);
+
+        setupShortcuts();
 
         return panel;
     }
@@ -207,12 +281,174 @@ public class ManHinhChinhPanel extends JPanel {
         return btn;
     }
 
-    public void loadThongKeData() {
+    private void setupShortcuts() {
+        InputMap inputMap = getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap actionMap = getActionMap();
 
+        inputMap.put(KeyStroke.getKeyStroke("F1"), "F1_Action");
+        actionMap.put("F1_Action", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                btnBanHang.doClick();
+            }
+        });
+
+        inputMap.put(KeyStroke.getKeyStroke("F3"), "F3_Action");
+        actionMap.put("F3_Action", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                btnTimThuoc.doClick();
+            }
+        });
+
+        inputMap.put(KeyStroke.getKeyStroke("F4"), "F4_Action");
+        actionMap.put("F4_Action", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                btnTimKhachHang.doClick();
+            }
+        });
+
+        inputMap.put(KeyStroke.getKeyStroke("F9"), "F9_Action");
+        actionMap.put("F9_Action", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                btnThanhToan.doClick();
+            }
+        });
+    }
+
+    private void navigateTo(String tabName) {
+        Window window = SwingUtilities.getWindowAncestor(this);
+        if (window instanceof JFrame) {
+            Component[] comps = ((JFrame) window).getContentPane().getComponents();
+            for (Component c : comps) {
+                if (c instanceof JPanel && ((JPanel) c).getLayout() instanceof CardLayout) {
+                    ((CardLayout) ((JPanel) c).getLayout()).show((JPanel) c, tabName);
+                    break;
+                }
+            }
+        }
+    }
+
+    public void loadThongKeData() {
+        LocalDate today = LocalDate.now();
+        List<HoaDon> dsHoaDon = hoaDonDAO.timKiem(null, today);
+
+        int soHoaDon = dsHoaDon.size();
+        double doanhThu = 0;
+
+        double[] doanhThuTheoGio = new double[24];
+        double dtETC = 0;
+        double dtOTC = 0;
+        double dtTPCN = 0;
+
+        for (HoaDon hd : dsHoaDon) {
+            // Chỉ tính doanh thu cho các hóa đơn ĐÃ THANH TOÁN
+            if (!hd.isTrangThaiThanhToan())
+                continue;
+
+            double tienHD = hd.tinhTongTienThanhToan();
+            doanhThu += tienHD;
+
+            if (hd.getThoiGianTao() != null) {
+                int gio = hd.getThoiGianTao().getHour();
+                doanhThuTheoGio[gio] += tienHD;
+            }
+
+            if (hd.getDsChiTiet() != null) {
+                for (ChiTietHoaDon ct : hd.getDsChiTiet()) {
+                    if (ct.getDonViQuyDoi() != null && ct.getDonViQuyDoi().getSanPham() != null) {
+                        double tienCT = ct.tinhThanhTien();
+                        PhanLoai pl = ct.getDonViQuyDoi().getSanPham().getPhanLoai();
+                        if (pl == PhanLoai.ETC)
+                            dtETC += tienCT;
+                        else if (pl == PhanLoai.OTC)
+                            dtOTC += tienCT;
+                        else if (pl == PhanLoai.TPCN)
+                            dtTPCN += tienCT;
+                    }
+                }
+            }
+        }
+
+        // Tạm tính lợi nhuận bằng 20% doanh thu
+        double loiNhuan = doanhThu * 0.2;
+
+        lblHoaDonHomNay.setText(String.valueOf(soHoaDon));
+
+        DecimalFormat df = new DecimalFormat("###,###,### VND");
+        lblDoanhThuHomNay.setText(doanhThu == 0 ? "0 VND" : df.format(doanhThu));
+        lblLoiNhuan.setText(loiNhuan == 0 ? "0 VND" : df.format(loiNhuan));
+
+        List<Lo> dsLo = loDAO.layTatCa();
+        int loGanHetHan = 0;
+        LocalDate nextMonth = today.plusMonths(1);
+        for (Lo lo : dsLo) {
+            if (lo.getNgayHetHan() != null && lo.getNgayHetHan().isBefore(nextMonth)
+                    && lo.getNgayHetHan().isAfter(today)) {
+                loGanHetHan++;
+            }
+        }
+        lblCanhBao.setText(loGanHetHan + " lô thuốc gần hết hạn");
+
+        // Update charts
+        if (barDataset != null) {
+            barDataset.clear();
+            for (int i = 6; i <= 23; i++) {
+                barDataset.addValue(doanhThuTheoGio[i], "Doanh thu", String.format("%02d:00", i));
+            }
+        }
+
+        if (donutDataset != null) {
+            donutDataset.clear();
+            if (dtETC > 0)
+                donutDataset.setValue("Thuốc kê đơn", dtETC);
+            if (dtOTC > 0)
+                donutDataset.setValue("Thuốc không kê đơn", dtOTC);
+            if (dtTPCN > 0)
+                donutDataset.setValue("Thực phẩm chức năng", dtTPCN);
+
+            if (dtETC == 0 && dtOTC == 0 && dtTPCN == 0) {
+                donutDataset.setValue("Chưa có dữ liệu", 1);
+            }
+        }
     }
 
     public void layDuLieuChoHoatDongGanDay() {
+        LocalDate today = LocalDate.now();
+        List<HoaDon> dsHoaDon = hoaDonDAO.timKiem(null, today);
 
+        modelHoaDon.setRowCount(0);
+        DecimalFormat df = new DecimalFormat("###,###,### VND");
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+        for (HoaDon hd : dsHoaDon) {
+            modelHoaDon.addRow(new Object[] {
+                    hd.getMaHoaDon(),
+                    hd.getKhachHang() != null ? hd.getKhachHang().getTenKhachHang() : "Khách lẻ",
+                    hd.getThoiGianTao() != null ? hd.getThoiGianTao().format(dtf) : "",
+                    hd.getKhuyenMai() != null ? hd.getKhuyenMai().getTenKhuyenMai() : "Không có",
+                    hd.getNhanVien() != null ? hd.getNhanVien().getTenNhanVien() : "",
+                    hd.getLoaiHoaDon() != null ? hd.getLoaiHoaDon().getMoTa() : "",
+                    df.format(hd.tinhTongTienThanhToan()),
+                    hd.isTrangThaiThanhToan() ? "Đã thanh toán" : "Chưa thanh toán"
+            });
+        }
+
+        List<Lo> dsLo = loDAO.layTatCa();
+        modelLoThuoc.setRowCount(0);
+        DateTimeFormatter dtfDate = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        LocalDate nextMonth = today.plusMonths(1);
+
+        for (Lo lo : dsLo) {
+            if (lo.getNgayHetHan() != null && lo.getNgayHetHan().isBefore(nextMonth)) {
+                modelLoThuoc.addRow(new Object[] {
+                        lo.getSoLo(),
+                        lo.getSanPham() != null ? lo.getSanPham().getTenSanPham() : "",
+                        lo.getNgayHetHan().format(dtfDate)
+                });
+            }
+        }
     }
 }
-
