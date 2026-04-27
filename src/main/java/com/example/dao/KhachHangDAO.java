@@ -88,6 +88,28 @@ public class KhachHangDAO {
         return soDongThayDoi > 0;
     }
 
+    public KhachHang timTheoSdt(String sdt) {
+        KhachHang kh = null;
+        try {
+            Connection ketNoi = ConnectDB.getConnection();
+            String truyVan = "SELECT * FROM KhachHang WHERE sdt = ?";
+            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
+            lenh.setString(1, sdt);
+            ResultSet ketQua = lenh.executeQuery();
+
+            if (ketQua.next()) {
+                kh = new KhachHang();
+                kh.setMaKhachHang(ketQua.getString("maKhachHang"));
+                kh.setTenKhachHang(ketQua.getString("tenKhachHang"));
+                kh.setSdt(ketQua.getString("sdt"));
+                kh.setTrangThai(TrangThaiKhachHang.valueOf(ketQua.getString("trangThaiKhachHang")));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return kh;
+    }
+
     public boolean xoa(String maKH) {
         int soDongThayDoi = 0;
         try {

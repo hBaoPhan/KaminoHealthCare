@@ -25,7 +25,7 @@ public class CaLamDAO {
                 cl.setNhanVien(new NhanVien(ketQua.getString("maNhanVien")));
                 cl.setGioBatDau(ketQua.getTimestamp("gioBatDau").toLocalDateTime());
                 cl.setGioKetThuc(ketQua.getTimestamp("gioKetThuc").toLocalDateTime());
-                cl.setTrangThai(TrangThaiCaLam.valueOf(ketQua.getString("trangThai")));
+                cl.setTrangThai(TrangThaiCaLam.valueOf(ketQua.getString("trangThaiCaLam")));
                 cl.setTienMoCa(ketQua.getDouble("tienMoCa"));
                 cl.setTienKetCa(ketQua.getDouble("tienKetCa"));
                 cl.setTienHeThong(ketQua.getDouble("tienHeThong"));
@@ -53,7 +53,7 @@ public class CaLamDAO {
                 cl.setNhanVien(new NhanVien(ketQua.getString("maNhanVien")));
                 cl.setGioBatDau(ketQua.getTimestamp("gioBatDau").toLocalDateTime());
                 cl.setGioKetThuc(ketQua.getTimestamp("gioKetThuc").toLocalDateTime());
-                cl.setTrangThai(TrangThaiCaLam.valueOf(ketQua.getString("trangThai")));
+                cl.setTrangThai(TrangThaiCaLam.valueOf(ketQua.getString("trangThaiCaLam")));
                 cl.setTienMoCa(ketQua.getDouble("tienMoCa"));
                 cl.setTienKetCa(ketQua.getDouble("tienKetCa"));
                 cl.setTienHeThong(ketQua.getDouble("tienHeThong"));
@@ -91,7 +91,7 @@ public class CaLamDAO {
         int soDongThayDoi = 0;
         try {
             Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "UPDATE CaLam SET maNhanVien = ?, gioBatDau = ?, gioKetThuc = ?, trangThai = ?, tienMoCa = ?, tienKetCa = ?, tienHeThong = ?, ghiChu = ? WHERE maCa = ?";
+            String truyVan = "UPDATE CaLam SET maNhanVien = ?, gioBatDau = ?, gioKetThuc = ?, trangThaiCaLam = ?, tienMoCa = ?, tienKetCa = ?, tienHeThong = ?, ghiChu = ? WHERE maCa = ?";
             PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
             lenh.setString(1, cl.getNhanVien().getMaNhanVien());
             lenh.setTimestamp(2, Timestamp.valueOf(cl.getGioBatDau()));

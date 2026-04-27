@@ -286,7 +286,7 @@ public class HoaDonDAO {
             if (dsPhanBoMoi != null && !dsPhanBoMoi.isEmpty()) {
                 String ktLo = "SELECT soLuongSanPham FROM Lo WHERE maLo = ?";
                 String capNhatLoMoi = "UPDATE Lo SET soLuongSanPham = soLuongSanPham - ? WHERE maLo = ?";
-                String themPhanBo = "INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong) VALUES (?, ?, ?, ?)";
+                String themPhanBo = "INSERT INTO SuPhanBoLo (maChiTietHoaDon_HD, maChiTietHoaDon_DV, maLo, soLuong) VALUES (?, ?, ?, ?)";
                 
                 try (PreparedStatement psKtLo = ketNoi.prepareStatement(ktLo);
                      PreparedStatement psLoMoi = ketNoi.prepareStatement(capNhatLoMoi);

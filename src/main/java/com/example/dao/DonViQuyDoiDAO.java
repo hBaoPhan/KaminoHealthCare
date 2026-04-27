@@ -104,4 +104,28 @@ public class DonViQuyDoiDAO {
         }
         return soDongThayDoi > 0;
     }
+
+    public List<DonViQuyDoi> timTheoMaSanPham(String maSanPham) {
+        List<DonViQuyDoi> danhSach = new ArrayList<>();
+        try {
+            Connection ketNoi = ConnectDB.getConnection();
+            String truyVan = "SELECT * FROM DonViQuyDoi WHERE maSanPham = ?";
+            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
+            lenh.setString(1, maSanPham);
+            ResultSet ketQua = lenh.executeQuery();
+
+            SanPhamDAO spDAO = new SanPhamDAO();
+            while (ketQua.next()) {
+                DonViQuyDoi dv = new DonViQuyDoi();
+                dv.setMaDonVi(ketQua.getString("maDonVi"));
+                dv.setTenDonVi(DonVi.valueOf(ketQua.getString("tenDonVi")));
+                dv.setHeSoQuyDoi(ketQua.getInt("heSoQuyDoi"));
+                dv.setSanPham(spDAO.timTheoMa(ketQua.getString("maSanPham")));
+                danhSach.add(dv);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return danhSach;
+    }
 }

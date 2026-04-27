@@ -21,9 +21,9 @@ INSERT INTO KhachHang (maKhachHang, tenKhachHang, sdt, trangThaiKhachHang) VALUE
 -- Bảng KhuyenMai
 INSERT INTO KhuyenMai (maKhuyenMai, tenKhuyenMai, thoiGianBatDau, thoiGianKetThuc, loaiKhuyenMai, khuyenMaiPhanTram, giaTriDonHangToiThieu) VALUES
                                                                                                                                                 ('KM01', N'Giảm 10% đơn từ 500k', '2026-04-01', '2026-05-01', N'PHAN_TRAM', 10, 500000),
-                                                                                                                                                ('KM02', N'Mua 1 tặng 1 Vitamin C', '2026-04-15', '2026-04-30', N'TANG_KEM', NULL, 0),
+                                                                                                                                                ('KM02', N'Mua 1 tặng 1 Vitamin C', '2026-04-15', '2026-04-30', N'TANG_KEM', 0, 0),
                                                                                                                                                 ('KM03', N'Giảm giá 5% Lễ 30/4', '2026-04-25', '2026-05-05', N'PHAN_TRAM', 5, 0),
-                                                                                                                                                ('KM04', N'Tặng khẩu trang đơn 100k', '2026-04-01', '2026-12-31', N'TANG_KEM', NULL, 100000),
+                                                                                                                                                ('KM04', N'Tặng khẩu trang đơn 100k', '2026-04-01', '2026-12-31', N'TANG_KEM', 0, 100000),
                                                                                                                                                 ('KM05', N'Sale sinh nhật 20%', '2026-10-01', '2026-10-31', N'PHAN_TRAM', 20, 1000000);
 
 -- Bảng SanPham
@@ -61,7 +61,7 @@ INSERT INTO CaLam (maCa, maNhanVien, gioBatDau, gioKetThuc, trangThaiCaLam, tien
                                                                                                                      ('CA02', 'NV02', '2026-04-20 16:00:00', '2026-04-20 22:00:00', N'DONG', 5000000, 8000000, 3000000, N'Ca bình thường'),
                                                                                                                      ('CA03', 'NV03', '2026-04-21 08:00:00', '2026-04-21 16:00:00', N'DONG', 1000000, 6000000, 5000000, N'Ca bình thường'),
                                                                                                                      ('CA04', 'NV04', '2026-04-21 16:00:00', '2026-04-21 22:00:00', N'DONG', 6000000, 9000000, 3000000, N'Ca bình thường'),
-                                                                                                                     ('CA05', 'NV02', '2026-04-22 08:00:00', NULL, N'DANG_MO', 1000000, NULL, 0, N'Đang trực');
+                                                                                                                     ('CA05', 'NV02', '2026-04-22 08:00:00','2026-04-22 08:00:00', N'DONG', 1000000, 1000000, 0, N'Đang trực');
 
 -- Bảng DonViQuyDoi (Phụ thuộc SanPham)
 INSERT INTO DonViQuyDoi (maDonVi, tenDonVi, heSoQuyDoi, maSanPham) VALUES
@@ -107,11 +107,3 @@ INSERT INTO ChiTietHoaDon (maHoaDon, maDonVi, soLuong, donGia, laQuaTangKem) VAL
                                                                                  ('HD02', 'DV04', 10, 20000, 0),
                                                                                  ('HD03', 'DV03', 2, 50000, 0),
                                                                                  ('HD04', 'DV05', 5, 5000, 0);
-
--- Bảng SuPhanBoLo (Phụ thuộc ChiTietHoaDon, Lo)
-INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong) VALUES
-                                                              ('HD01', 'DV01', 'LO01', 2),
-                                                              ('HD01', 'DV03', 'LO03', 1),
-                                                              ('HD02', 'DV04', 'LO04', 10),
-                                                              ('HD03', 'DV03', 'LO03', 2),
-                                                              ('HD04', 'DV05', 'LO05', 5);

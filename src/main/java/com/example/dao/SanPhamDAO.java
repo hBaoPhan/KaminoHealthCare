@@ -121,4 +121,33 @@ public class SanPhamDAO {
         }
         return soDongThayDoi > 0;
     }
+
+    public List<SanPham> timTheoMaHoacTen(String tuKhoa) {
+        List<SanPham> danhSach = new ArrayList<>();
+        try {
+            Connection ketNoi = ConnectDB.getConnection();
+            String truyVan = "SELECT * FROM SanPham WHERE maSanPham LIKE ? OR tenSanPham LIKE ?";
+            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
+            lenh.setString(1, "%" + tuKhoa + "%");
+            lenh.setString(2, "%" + tuKhoa + "%");
+            ResultSet ketQua = lenh.executeQuery();
+
+            while (ketQua.next()) {
+                SanPham sp = new SanPham();
+                sp.setMaSanPham(ketQua.getString("maSanPham"));
+                sp.setTenSanPham(ketQua.getString("tenSanPham"));
+                sp.setPhanLoai(PhanLoai.valueOf(ketQua.getString("phanLoai")));
+                sp.setSoLuongTon(ketQua.getInt("soLuongTon"));
+                sp.setMoTa(ketQua.getString("moTa"));
+                sp.setHoatChat(ketQua.getString("hoatChat"));
+                sp.setDonGiaCoBan(ketQua.getDouble("donGiaCoBan"));
+                sp.setTrangThaiKinhDoanh(ketQua.getBoolean("trangThaiKinhDoanh"));
+                sp.setThue(ketQua.getDouble("thue"));
+                danhSach.add(sp);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return danhSach;
+    }
 }
