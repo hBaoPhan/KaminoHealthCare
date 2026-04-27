@@ -1,8 +1,10 @@
 package com.example.dao;
 
 import com.example.connectDB.ConnectDB;
-import com.example.entity.*;
-import com.example.entity.enums.*;
+import com.example.entity.ChiTietHoaDon;
+import com.example.entity.HoaDon;
+import com.example.entity.Lo;
+import com.example.entity.SuPhanBoLo;
 
 import java.sql.*;
 import java.time.LocalDate;
@@ -203,5 +205,68 @@ public class HoaDonDAO {
             e.printStackTrace();
         }
         return danhSach;
+    }
+
+    /**
+     * Hàm thực thi toàn bộ luồng đổi hàng trong 1 Transaction duy nhất
+     */
+    public boolean luuGiaoDichDoiHang(HoaDon hoaDonMoi, 
+                                      List<SuPhanBoLo> dsTraLai, 
+                                      List<ChiTietHoaDon> dsChiTietMoi, 
+                                      List<SuPhanBoLo> dsPhanBoMoi) {
+        Transaction transaction = null;
+        try (Session session = ConnectDB.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+
+            // 1. XỬ LÝ HÀNG TRẢ: Cộng lại số lượng tồn kho cho các Lô cũ
+            if (dsTraLai != null) {
+                for (SuPhanBoLo spTra : dsTraLai) {
+                    Lo lo = session.get(Lo.class, spTra.getLo().getMaLo());
+                    if (lo != null) {
+                        // SỬA: Dùng đúng thuộc tính soLuongSanPham của class Lo
+                        lo.setSoLuongSanPham(lo.getSoLuongSanPham() + spTra.getSoLuong());
+                        session.merge(lo); 
+                    }
+                }
+            }
+
+            // 2. LƯU HÓA ĐƠN MỚI
+            session.persist(hoaDonMoi);
+
+            // 3. LƯU CHI TIẾT HÓA ĐƠN MỚI
+            if (dsChiTietMoi != null) {
+                for (ChiTietHoaDon ct : dsChiTietMoi) {
+                    ct.setHoaDon(hoaDonMoi); 
+                    session.persist(ct);
+                }
+            }
+
+            // 4. XỬ LÝ HÀNG MỚI: Trừ tồn kho và lưu Sự Phân Bổ Lô
+            if (dsPhanBoMoi != null) {
+                for (SuPhanBoLo spMoi : dsPhanBoMoi) {
+                    Lo lo = session.get(Lo.class, spMoi.getLo().getMaLo());
+                    if (lo != null) {
+                        // SỬA: Dùng đúng thuộc tính soLuongSanPham của class Lo
+                        int soLuongConLai = lo.getSoLuongSanPham() - spMoi.getSoLuong();
+                        if (soLuongConLai < 0) {
+                            throw new RuntimeException("Lô " + lo.getMaLo() + " không đủ số lượng để đổi!");
+                        }
+                        lo.setSoLuongSanPham(soLuongConLai);
+                        session.merge(lo);
+                    }
+                    session.persist(spMoi);
+                }
+            }
+
+            transaction.commit();
+            return true;
+
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            e.printStackTrace();
+            return false;
+        }
     }
 }
