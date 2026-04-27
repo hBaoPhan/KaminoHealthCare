@@ -1,4 +1,4 @@
-package com.example.entity;
+package com.example.entity.enums;
 
 public enum TrangThaiKhachHang {
     KHACH_HANG_THANH_VIEN("Khách hàng thành viên"),

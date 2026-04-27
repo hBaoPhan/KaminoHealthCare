@@ -1,4 +1,4 @@
-package com.example.entity;
+package com.example.entity.enums;
 
 public enum LoaiHoaDon {
     BAN_HANG("Bán hàng"),

@@ -1,4 +1,4 @@
-package com.example.entity;
+package com.example.entity.enums;
 
 public enum PhanLoai {
     ETC("Thuốc kê đơn"),

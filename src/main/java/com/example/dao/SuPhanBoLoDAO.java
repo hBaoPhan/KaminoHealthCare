@@ -1,37 +1,57 @@
 package com.example.dao;
 
-import com.example.connectDB.ConnectDB;
 import com.example.entity.SuPhanBoLo;
-import com.example.entity.SuPhanBoLoId;
-import org.hibernate.Session;
-
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * DAO cho SuPhanBoLo (composite key: chiTietHoaDon + lo).
- * Kế thừa them() từ GenericDAO.
- */
-public class SuPhanBoLoDAO extends GenericDAO<SuPhanBoLo, SuPhanBoLoId> {
+import com.example.connectDB.ConnectDB;
 
-    @Override
-    protected Class<SuPhanBoLo> getEntityClass() {
-        return SuPhanBoLo.class;
-    }
+public class SuPhanBoLoDAO {
 
-    /** Lấy tất cả phân bổ lô của một dòng chi tiết hóa đơn. */
-    public List<SuPhanBoLo> layPhanBoLoCuaChiTiet(String maHoaDon, String maDonVi) {
-        try (Session session = ConnectDB.getSessionFactory().openSession()) {
-            String hql = "from SuPhanBoLo s " +
-                         "where s.chiTietHoaDon.hoaDon.maHoaDon = :maHD " +
-                         "and s.chiTietHoaDon.donViQuyDoi.maDonVi = :maDV";
-            return session.createQuery(hql, SuPhanBoLo.class)
-                          .setParameter("maHD", maHoaDon)
-                          .setParameter("maDV", maDonVi)
-                          .list();
+    public boolean themSuPhanBoLo(SuPhanBoLo spbl) {
+        String sql = "INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong) VALUES (?, ?, ?, ?)";
+        Connection con = ConnectDB.getConnection();
+        try (PreparedStatement pst = con.prepareStatement(sql)) {
+
+            pst.setString(1, spbl.getChiTietHoaDon().getHoaDon().getMaHoaDon());
+            pst.setString(2, spbl.getChiTietHoaDon().getDonViQuyDoi().getMaDonVi());
+            pst.setString(3, spbl.getLo().getMaLo());
+            pst.setInt(4, spbl.getSoLuong());
+
+            return pst.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
-            return new ArrayList<>();
         }
+        return false;
+    }
+
+    // (Tùy chọn) Lấy danh sách các lô đã dùng cho một dòng chi tiết hóa đơn
+    public List<SuPhanBoLo> layPhanBoLoCuaChiTiet(String maHoaDon, String maDonVi) {
+        List<SuPhanBoLo> list = new ArrayList<>();
+        String sql = "SELECT * FROM suphanbolo WHERE maHoaDon = ? AND maDonVi = ?";
+
+        Connection con = ConnectDB.getConnection();
+        try (PreparedStatement pst = con.prepareStatement(sql)) {
+
+            pst.setString(1, maHoaDon);
+            pst.setString(2, maDonVi);
+            ResultSet rs = pst.executeQuery();
+
+            LoDAO loDAO = new LoDAO();
+
+            while (rs.next()) {
+                SuPhanBoLo spbl = new SuPhanBoLo();
+                spbl.setLo(loDAO.timTheoMa(rs.getString("maLo")));
+                spbl.setSoLuong(rs.getInt("soLuong"));
+                // (Set thêm ChiTietHoaDon nếu cần thiết)
+                list.add(spbl);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 }

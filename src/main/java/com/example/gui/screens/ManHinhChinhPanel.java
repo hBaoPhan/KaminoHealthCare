@@ -6,7 +6,7 @@ import com.example.entity.TaiKhoan;
 import com.example.entity.ChiTietHoaDon;
 import com.example.entity.HoaDon;
 import com.example.entity.Lo;
-import com.example.entity.PhanLoai;
+import com.example.entity.enums.PhanLoai;
 import com.example.dao.HoaDonDAO;
 import com.example.dao.LoDAO;
 
