@@ -58,6 +58,8 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 	private ThongKePanel pnlThongKe;
 	private boolean isQuanLy;
 	private List<MenuLabel> menuLabels = new ArrayList<>();
+	private MoCaPanel pnlMoCa;
+	private DongCaPanel pnlDongCa;
 	private List<MenuItem> menuStructure = new ArrayList<>();
 	private JPanel sidebar;
 	private JPanel pLogout;
@@ -147,8 +149,8 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 
 			contentPanel.add(pnlThongKe = new ThongKePanel(), "Thống Kê");
 		}
-		contentPanel.add(new MoCaPanel(taiKhoan), "Mở Ca");
-		contentPanel.add(new DongCaPanel(taiKhoan), "Kết Ca");
+		contentPanel.add(pnlMoCa = new MoCaPanel(taiKhoan), "Mở Ca");
+		contentPanel.add(pnlDongCa = new DongCaPanel(taiKhoan), "Kết Ca");
 		contentPanel.add(pnlTroGiup = new TroGiupPanel(), "Trợ Giúp");
 
 		add(contentPanel, BorderLayout.CENTER);
@@ -187,6 +189,8 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		pnlHoaDon.taiLaiDanhSach();
 		pnlTrangChu.loadThongKeData();
 		pnlTrangChu.layDuLieuChoHoatDongGanDay();
+		pnlMoCa.loadDuLieuCa();
+		pnlDongCa.loadDuLieuCa();
 		if (isQuanLy) {
 			pnlNhanVien.taiLaiDanhSach();
 			pnlThongKe.capNhatDuLieuThongKe();

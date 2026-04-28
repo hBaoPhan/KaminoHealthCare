@@ -50,7 +50,21 @@ public class MoCaPanel extends JPanel implements ActionListener {
         setBorder(new EmptyBorder(20, 50, 20, 50));
 
         initUI();
+        loadDuLieuCa();
         updateThoiGian();
+    }
+
+    public void loadDuLieuCa() {
+        CaLam cl = caLamDAO.layCaHienTai(nhanVien.getMaNhanVien());
+        if (cl != null) {
+            txtTienMatDauCa.setText(df.format(cl.getTienMoCa()));
+            btnMoCa.setEnabled(false);
+            btnMoCa.setToolTipText("Bạn đang có ca làm việc chưa đóng");
+        } else {
+            txtTienMatDauCa.setText("");
+            btnMoCa.setEnabled(true);
+            btnMoCa.setToolTipText(null);
+        }
     }
 
     private void initUI() {
@@ -169,7 +183,7 @@ public class MoCaPanel extends JPanel implements ActionListener {
         gbc.gridy = 2;
         btnNhap = new RoundedButton("Nhập");
         btnNhap.setBackground(new Color(0x2ECC71));
-        btnNhap.setForeground(Color.BLACK);
+        btnNhap.setForeground(Color.WHITE);
         btnNhap.addActionListener(this);
         pnlInputs.add(btnNhap, gbc);
 
@@ -263,8 +277,9 @@ public class MoCaPanel extends JPanel implements ActionListener {
 
     private void handleMoCa() {
         if (caLamDAO.layCaHienTai(nhanVien.getMaNhanVien()) != null) {
-            JOptionPane.showMessageDialog(this, "Bạn đang có một ca làm việc chưa đóng. Vui lòng kết ca trước khi mở ca mới!", 
-                "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Bạn đang có một ca làm việc chưa đóng. Vui lòng kết ca trước khi mở ca mới!",
+                    "Cảnh báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
