@@ -120,12 +120,12 @@ CREATE TABLE ChiTietHoaDon (
 );
 
 CREATE TABLE SuPhanBoLo (
-    maChiTietHoaDon_HD VARCHAR(20),
-    maChiTietHoaDon_DV VARCHAR(20),
+    maHoaDon VARCHAR(20),
+    maDonVi VARCHAR(20),
     maLo VARCHAR(20) FOREIGN KEY REFERENCES Lo(maLo),
     soLuong INT,
     CONSTRAINT FK_SuPhanBoLo_ChiTiet 
-        FOREIGN KEY (maChiTietHoaDon_HD, maChiTietHoaDon_DV) 
+        FOREIGN KEY (maHoaDon, maDonVi) 
         REFERENCES ChiTietHoaDon(maHoaDon, maDonVi),
-    PRIMARY KEY (maChiTietHoaDon_HD, maChiTietHoaDon_DV, maLo)
+    PRIMARY KEY (maHoaDon, maDonVi, maLo)
 );

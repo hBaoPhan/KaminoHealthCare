@@ -1,7 +1,8 @@
 -- =====================================================================
 -- 1. THÊM DỮ LIỆU CÁC BẢNG DANH MỤC ĐỘC LẬP (BẢNG CHA)
 -- =====================================================================
-
+USE QUANLYKAMINOHEALTHCARE;
+GO
 -- Bảng NhanVien
 INSERT INTO NhanVien (maNhanVien, tenNhanVien, cccd, sdt, chucVu, trangThaiHoatDong) VALUES
                                                                                  ('NV01', N'Phan Hoài Bảo', '079200000001', '0901234567', N'NHAN_VIEN_QUAN_LY', 1),
