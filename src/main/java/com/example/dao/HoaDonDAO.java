@@ -246,4 +246,148 @@ public class HoaDonDAO {
         }
         return danhSach;
     }
+
+    /**
+     * Hàm thực thi toàn bộ luồng đổi hàng trong 1 Transaction duy nhất
+     */
+    public boolean luuGiaoDichDoiHang(HoaDon hoaDonMoi,
+            List<SuPhanBoLo> dsTraLai,
+            List<ChiTietHoaDon> dsChiTietMoi,
+            List<SuPhanBoLo> dsPhanBoMoi) {
+        Connection ketNoi = null;
+        try {
+            ketNoi = ConnectDB.getConnection();
+            ketNoi.setAutoCommit(false);
+
+            // 1. XỬ LÝ HÀNG TRẢ: Cộng lại số lượng tồn kho cho các Lô cũ
+            if (dsTraLai != null && !dsTraLai.isEmpty()) {
+                String capNhatLoTra = "UPDATE Lo SET soLuongSanPham = soLuongSanPham + ? WHERE maLo = ?";
+                try (PreparedStatement psLoTra = ketNoi.prepareStatement(capNhatLoTra)) {
+                    for (SuPhanBoLo spTra : dsTraLai) {
+                        psLoTra.setInt(1, spTra.getSoLuong());
+                        psLoTra.setString(2, spTra.getLo().getMaLo());
+                        psLoTra.addBatch();
+                    }
+                    psLoTra.executeBatch();
+                }
+            }
+
+            // 2. LƯU HÓA ĐƠN MỚI
+            String themHoaDon = "INSERT INTO HoaDon (maHoaDon, thoiGianTao, maNhanVien, trangThaiThanhToan, maKhachHang, maKhuyenMai, loaiHoaDon, maCa, ghiChu, maHoaDonDoiTra, maDonThuoc, phuongThucThanhToan) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            try (PreparedStatement psHoaDon = ketNoi.prepareStatement(themHoaDon)) {
+                psHoaDon.setString(1, hoaDonMoi.getMaHoaDon());
+                psHoaDon.setTimestamp(2, Timestamp.valueOf(hoaDonMoi.getThoiGianTao()));
+                psHoaDon.setString(3, hoaDonMoi.getNhanVien().getMaNhanVien());
+                psHoaDon.setBoolean(4, hoaDonMoi.isTrangThaiThanhToan());
+                psHoaDon.setString(5, hoaDonMoi.getKhachHang().getMaKhachHang());
+                psHoaDon.setString(6, hoaDonMoi.getKhuyenMai() != null ? hoaDonMoi.getKhuyenMai().getMaKhuyenMai() : null);
+                psHoaDon.setString(7, hoaDonMoi.getLoaiHoaDon().name());
+                psHoaDon.setString(8, hoaDonMoi.getCa().getMaCa());
+                psHoaDon.setString(9, hoaDonMoi.getGhiChu());
+                psHoaDon.setString(10, hoaDonMoi.getHoaDonDoiTra() != null ? hoaDonMoi.getHoaDonDoiTra().getMaHoaDon() : null);
+                psHoaDon.setString(11, hoaDonMoi.getDonThuoc() != null ? hoaDonMoi.getDonThuoc().getMaDonThuoc() : null);
+                psHoaDon.setString(12, hoaDonMoi.getPhuongThucThanhToan() != null ? hoaDonMoi.getPhuongThucThanhToan().name() : null);
+                psHoaDon.executeUpdate();
+            }
+
+            // 3. LƯU CHI TIẾT HÓA ĐƠN MỚI
+            if (dsChiTietMoi != null && !dsChiTietMoi.isEmpty()) {
+                String themChiTiet = "INSERT INTO ChiTietHoaDon (maHoaDon, maDonVi, soLuong, donGia, laQuaTangKem) VALUES (?, ?, ?, ?, ?)";
+                try (PreparedStatement psChiTiet = ketNoi.prepareStatement(themChiTiet)) {
+                    for (ChiTietHoaDon ct : dsChiTietMoi) {
+                        psChiTiet.setString(1, hoaDonMoi.getMaHoaDon());
+                        psChiTiet.setString(2, ct.getDonViQuyDoi().getMaDonVi());
+                        psChiTiet.setInt(3, ct.getSoLuong());
+                        psChiTiet.setDouble(4, ct.getDonGia());
+                        psChiTiet.setBoolean(5, ct.isLaQuaTangKem());
+                        psChiTiet.addBatch();
+                    }
+                    psChiTiet.executeBatch();
+                }
+            }
+
+            // 4. XỬ LÝ HÀNG MỚI: Trừ tồn kho và lưu Sự Phân Bổ Lô
+            if (dsPhanBoMoi != null && !dsPhanBoMoi.isEmpty()) {
+                String ktLo = "SELECT soLuongSanPham FROM Lo WHERE maLo = ?";
+                String capNhatLoMoi = "UPDATE Lo SET soLuongSanPham = soLuongSanPham - ? WHERE maLo = ?";
+                String themPhanBo = "INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong) VALUES (?, ?, ?, ?)";
+                
+                try (PreparedStatement psKtLo = ketNoi.prepareStatement(ktLo);
+                     PreparedStatement psLoMoi = ketNoi.prepareStatement(capNhatLoMoi);
+                     PreparedStatement psPhanBo = ketNoi.prepareStatement(themPhanBo)) {
+                     
+                    for (SuPhanBoLo spMoi : dsPhanBoMoi) {
+                        psKtLo.setString(1, spMoi.getLo().getMaLo());
+                        try (ResultSet rsKt = psKtLo.executeQuery()) {
+                            if (rsKt.next()) {
+                                int soLuongHienTai = rsKt.getInt("soLuongSanPham");
+                                if (soLuongHienTai < spMoi.getSoLuong()) {
+                                    throw new RuntimeException("Lô " + spMoi.getLo().getMaLo() + " không đủ số lượng để đổi!");
+                                }
+                            } else {
+                                throw new RuntimeException("Không tìm thấy Lô " + spMoi.getLo().getMaLo());
+                            }
+                        }
+
+                        psLoMoi.setInt(1, spMoi.getSoLuong());
+                        psLoMoi.setString(2, spMoi.getLo().getMaLo());
+                        psLoMoi.addBatch();
+
+                        psPhanBo.setString(1, hoaDonMoi.getMaHoaDon());
+                        psPhanBo.setString(2, spMoi.getChiTietHoaDon().getDonViQuyDoi().getMaDonVi());
+                        psPhanBo.setString(3, spMoi.getLo().getMaLo());
+                        psPhanBo.setInt(4, spMoi.getSoLuong());
+                        psPhanBo.addBatch();
+                    }
+                    psLoMoi.executeBatch();
+                    psPhanBo.executeBatch();
+                }
+            }
+
+            ketNoi.commit();
+            return true;
+
+        } catch (Exception e) {
+            if (ketNoi != null) {
+                try {
+                    ketNoi.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (ketNoi != null) {
+                try {
+                    ketNoi.setAutoCommit(true);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public double tinhTongDoanhThuCa(String maCa) {
+        double tong = 0;
+        String sql = "SELECT SUM(ct.soLuong * ct.donGia * (1 + sp.thue/100)) as tong " +
+                     "FROM ChiTietHoaDon ct " +
+                     "JOIN HoaDon hd ON ct.maHoaDon = hd.maHoaDon " +
+                     "JOIN DonViQuyDoi dv ON ct.maDonVi = dv.maDonVi " +
+                     "JOIN SanPham sp ON dv.maSanPham = sp.maSanPham " +
+                     "WHERE hd.maCa = ? AND hd.trangThaiThanhToan = 1";
+        
+        try {
+            Connection con = ConnectDB.getConnection();
+            PreparedStatement pst = con.prepareStatement(sql);
+            pst.setString(1, maCa);
+            ResultSet rs = pst.executeQuery();
+            if (rs.next()) {
+                tong = rs.getDouble("tong");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return tong;
+    }
 }

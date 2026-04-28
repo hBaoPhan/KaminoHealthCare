@@ -12,9 +12,9 @@ import com.example.connectDB.ConnectDB;
 
 public class SuPhanBoLoDAO {
 
-	public boolean themSuPhanBoLo(SuPhanBoLo spbl, Connection con) throws SQLException {
-        // Sử dụng maHoaDon và maDonVi làm khóa ngoại ánh xạ với ChiTietHoaDon
+    public boolean themSuPhanBoLo(SuPhanBoLo spbl) {
         String sql = "INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong) VALUES (?, ?, ?, ?)";
+        Connection con = ConnectDB.getConnection();
         try (PreparedStatement pst = con.prepareStatement(sql)) {
             // Lấy maHoaDon và maDonVi thông qua đối tượng ChiTietHoaDon
             pst.setString(1, spbl.getChiTietHoaDon().getHoaDon().getMaHoaDon());
@@ -29,7 +29,7 @@ public class SuPhanBoLoDAO {
     // (Tùy chọn) Lấy danh sách các lô đã dùng cho một dòng chi tiết hóa đơn
     public List<SuPhanBoLo> layPhanBoLoCuaChiTiet(String maHoaDon, String maDonVi) {
         List<SuPhanBoLo> list = new ArrayList<>();
-        String sql = "SELECT * FROM SuPhanBoLo WHERE maChiTietHoaDon_HD = ? AND maChiTietHoaDon_DV = ?";
+        String sql = "SELECT * FROM SuPhanBoLo WHERE maHoaDon = ? AND maDonVi = ?";
 
         Connection con = ConnectDB.getConnection();
         try (PreparedStatement pst = con.prepareStatement(sql)) {

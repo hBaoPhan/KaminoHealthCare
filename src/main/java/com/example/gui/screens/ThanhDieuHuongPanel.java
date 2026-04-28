@@ -58,6 +58,8 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 	private ThongKePanel pnlThongKe;
 	private boolean isQuanLy;
 	private List<MenuLabel> menuLabels = new ArrayList<>();
+	private MoCaPanel pnlMoCa;
+	private DongCaPanel pnlDongCa;
 	private List<MenuItem> menuStructure = new ArrayList<>();
 	private JPanel sidebar;
 	private JPanel pLogout;
@@ -147,6 +149,8 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 
 			contentPanel.add(pnlThongKe = new ThongKePanel(), "Thống Kê");
 		}
+		contentPanel.add(pnlMoCa = new MoCaPanel(taiKhoan), "Mở Ca");
+		contentPanel.add(pnlDongCa = new DongCaPanel(taiKhoan), "Kết Ca");
 		contentPanel.add(pnlTroGiup = new TroGiupPanel(), "Trợ Giúp");
 
 		add(contentPanel, BorderLayout.CENTER);
@@ -185,6 +189,8 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		pnlHoaDon.taiLaiDanhSach();
 		pnlTrangChu.loadThongKeData();
 		pnlTrangChu.layDuLieuChoHoatDongGanDay();
+		pnlMoCa.loadDuLieuCa();
+		pnlDongCa.loadDuLieuCa();
 		if (isQuanLy) {
 			pnlNhanVien.taiLaiDanhSach();
 			pnlThongKe.capNhatDuLieuThongKe();
@@ -259,15 +265,9 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 				this.dispose();
 			}
 		} else if (o.equals(btnMoCa)) {
-			JOptionPane.showMessageDialog(this,
-					"Chức năng Mở ca đang được phát triển.",
-					"Mở ca",
-					JOptionPane.INFORMATION_MESSAGE);
+			cardLayout.show(contentPanel, "Mở Ca");
 		} else if (o.equals(btnKetCa)) {
-			JOptionPane.showMessageDialog(this,
-					"Chức năng Kết ca đang được phát triển.",
-					"Kết ca",
-					JOptionPane.INFORMATION_MESSAGE);
+			cardLayout.show(contentPanel, "Kết Ca");
 		}
 	}
 
