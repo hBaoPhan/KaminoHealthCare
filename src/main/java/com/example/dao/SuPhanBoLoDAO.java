@@ -4,6 +4,7 @@ import com.example.entity.SuPhanBoLo;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,21 +12,18 @@ import com.example.connectDB.ConnectDB;
 
 public class SuPhanBoLoDAO {
 
-    public boolean themSuPhanBoLo(SuPhanBoLo spbl) {
-        String sql = "INSERT INTO SuPhanBoLo (maChiTietHoaDon_HD, maChiTietHoaDon_DV, maLo, soLuong) VALUES (?, ?, ?, ?)";
-        Connection con = ConnectDB.getConnection();
+	public boolean themSuPhanBoLo(SuPhanBoLo spbl, Connection con) throws SQLException {
+        // Sử dụng maHoaDon và maDonVi làm khóa ngoại ánh xạ với ChiTietHoaDon
+        String sql = "INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong) VALUES (?, ?, ?, ?)";
         try (PreparedStatement pst = con.prepareStatement(sql)) {
-
+            // Lấy maHoaDon và maDonVi thông qua đối tượng ChiTietHoaDon
             pst.setString(1, spbl.getChiTietHoaDon().getHoaDon().getMaHoaDon());
             pst.setString(2, spbl.getChiTietHoaDon().getDonViQuyDoi().getMaDonVi());
             pst.setString(3, spbl.getLo().getMaLo());
             pst.setInt(4, spbl.getSoLuong());
-
+            
             return pst.executeUpdate() > 0;
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-        return false;
     }
 
     // (Tùy chọn) Lấy danh sách các lô đã dùng cho một dòng chi tiết hóa đơn
