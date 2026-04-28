@@ -12,7 +12,7 @@ import com.example.connectDB.ConnectDB;
 
 public class SuPhanBoLoDAO {
 
-    public boolean themSuPhanBoLo(SuPhanBoLo spbl) {
+    public boolean themSuPhanBoLo(SuPhanBoLo spbl) throws SQLException {
         String sql = "INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong) VALUES (?, ?, ?, ?)";
         Connection con = ConnectDB.getConnection();
         try (PreparedStatement pst = con.prepareStatement(sql)) {
@@ -21,7 +21,7 @@ public class SuPhanBoLoDAO {
             pst.setString(2, spbl.getChiTietHoaDon().getDonViQuyDoi().getMaDonVi());
             pst.setString(3, spbl.getLo().getMaLo());
             pst.setInt(4, spbl.getSoLuong());
-            
+
             return pst.executeUpdate() > 0;
         }
     }
