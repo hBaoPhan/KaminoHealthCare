@@ -20,42 +20,38 @@ public class ChiTietHoaDonDAO {
             PreparedStatement stmt = con.prepareStatement(sql);
             stmt.setString(1, maHD);
             ResultSet rs = stmt.executeQuery();
+            
+            DonViQuyDoiDAO dvDAO = new DonViQuyDoiDAO();
+            
             while (rs.next()) {
                 ChiTietHoaDon ct = new ChiTietHoaDon();
-                String maDV = rs.getString("maDonVi");
                 ct.setSoLuong(rs.getInt("soLuong"));
                 ct.setDonGia(rs.getDouble("donGia"));
+                ct.setLaQuaTangKem(rs.getBoolean("laQuaTangKem"));
                 
-                // Gọi DAO phân bổ lô với 2 khóa
+                String maDV = rs.getString("maDonVi");
+                ct.setDonViQuyDoi(dvDAO.timTheoMa(maDV));
+                
                 SuPhanBoLoDAO spbDAO = new SuPhanBoLoDAO();
                 ct.setDsPhanBoLo(spbDAO.layPhanBoLoCuaChiTiet(maHD, maDV));
                 
                 ds.add(ct);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) { e.printStackTrace(); }
         return ds;
     }
 
-    public boolean them(ChiTietHoaDon ct) {
-        int soDongThayDoi = 0;
+    public boolean them(ChiTietHoaDon ct, Connection con) throws SQLException {
         String truyVan = "INSERT INTO ChiTietHoaDon (maHoaDon, maDonVi, soLuong, donGia, laQuaTangKem) VALUES (?, ?, ?, ?, ?)";
+       
+        PreparedStatement lenh = con.prepareStatement(truyVan);
+        lenh.setString(1, ct.getHoaDon().getMaHoaDon());
+        lenh.setString(2, ct.getDonViQuyDoi().getMaDonVi());
+        lenh.setInt(3, ct.getSoLuong());
+        lenh.setDouble(4, ct.getDonGia());
+        lenh.setBoolean(5, ct.isLaQuaTangKem());
         
-        Connection ketNoi = ConnectDB.getConnection();
-        try (PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
-            
-            lenh.setString(1, ct.getHoaDon().getMaHoaDon());
-            lenh.setString(2, ct.getDonViQuyDoi().getMaDonVi());
-            lenh.setInt(3, ct.getSoLuong());
-            lenh.setDouble(4, ct.getDonGia());
-            lenh.setBoolean(5, ct.isLaQuaTangKem());
-            
-            soDongThayDoi = lenh.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return soDongThayDoi > 0;
+        return lenh.executeUpdate() > 0;
     }
 
     public boolean capNhat(ChiTietHoaDon ct) {

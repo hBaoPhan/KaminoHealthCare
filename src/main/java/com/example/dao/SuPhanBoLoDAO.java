@@ -13,19 +13,16 @@ import com.example.connectDB.ConnectDB;
 public class SuPhanBoLoDAO {
 
 	public boolean themSuPhanBoLo(SuPhanBoLo spbl, Connection con) throws SQLException {
-        // Sử dụng maHoaDon và maDonVi làm khóa ngoại ánh xạ với ChiTietHoaDon
-        String sql = "INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong) VALUES (?, ?, ?, ?)";
-        try (PreparedStatement pst = con.prepareStatement(sql)) {
-            // Lấy maHoaDon và maDonVi thông qua đối tượng ChiTietHoaDon
-            pst.setString(1, spbl.getChiTietHoaDon().getHoaDon().getMaHoaDon());
-            pst.setString(2, spbl.getChiTietHoaDon().getDonViQuyDoi().getMaDonVi());
-            pst.setString(3, spbl.getLo().getMaLo());
-            pst.setInt(4, spbl.getSoLuong());
-            
-            return pst.executeUpdate() > 0;
-        }
-    }
-
+	    String sql = "INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong) VALUES (?, ?, ?, ?)";
+	    PreparedStatement pst = con.prepareStatement(sql);
+	    
+	    pst.setString(1, spbl.getChiTietHoaDon().getHoaDon().getMaHoaDon());
+	    pst.setString(2, spbl.getChiTietHoaDon().getDonViQuyDoi().getMaDonVi());
+	    pst.setString(3, spbl.getLo().getMaLo());
+	    pst.setInt(4, spbl.getSoLuong());
+	    
+	    return pst.executeUpdate() > 0;
+	}
     // (Tùy chọn) Lấy danh sách các lô đã dùng cho một dòng chi tiết hóa đơn
 	public List<SuPhanBoLo> layPhanBoLoCuaChiTiet(String maHD, String maDV) {
 	    List<SuPhanBoLo> ds = new ArrayList<>();
