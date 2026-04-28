@@ -109,4 +109,35 @@ public class LoDAO {
         }
         return soDongThayDoi > 0;
     }
+
+    /**
+     * Lấy danh sách các Lô của một Đơn vị quy đổi (hoặc Sản phẩm)
+     * còn hạn sử dụng và số lượng > 0, sắp xếp theo Hạn sử dụng tăng dần (FEFO)
+     */
+    public List<Lo> layDanhSachLoKhaDung(String maDonViQuyDoi) {
+        List<Lo> danhSach = new ArrayList<>();
+        try {
+            Connection ketNoi = ConnectDB.getConnection();
+            String truyVan = "SELECT l.* FROM Lo l INNER JOIN DonViQuyDoi dv ON l.maSanPham = dv.maSanPham " +
+                             "WHERE dv.maDonVi = ? AND l.soLuongSanPham > 0 AND l.ngayHetHan > GETDATE() " +
+                             "ORDER BY l.ngayHetHan ASC";
+            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
+            lenh.setString(1, maDonViQuyDoi);
+            ResultSet ketQua = lenh.executeQuery();
+
+            while (ketQua.next()) {
+                Lo lo = new Lo();
+                lo.setMaLo(ketQua.getString("maLo"));
+                lo.setSoLo(ketQua.getString("soLo"));
+                lo.setNgayHetHan(ketQua.getDate("ngayHetHan").toLocalDate());
+                lo.setSoLuongSanPham(ketQua.getInt("soLuongSanPham"));
+                lo.setSanPham(new SanPham(ketQua.getString("maSanPham")));
+                lo.setGiaNhap(ketQua.getDouble("giaNhap"));
+                danhSach.add(lo);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return danhSach;
+    }
 }

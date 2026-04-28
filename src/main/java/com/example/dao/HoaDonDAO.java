@@ -1,8 +1,14 @@
 package com.example.dao;
 
 import com.example.connectDB.ConnectDB;
-import com.example.entity.*;
-import com.example.entity.enums.*;
+import com.example.entity.CaLam;
+import com.example.entity.ChiTietHoaDon;
+import com.example.entity.DonThuoc;
+import com.example.entity.HoaDon;
+import com.example.entity.Lo;
+import com.example.entity.SuPhanBoLo;
+import com.example.entity.enums.LoaiHoaDon;
+import com.example.entity.enums.PhuongThucThanhToan;
 
 import java.sql.*;
 import java.time.LocalDate;
@@ -36,17 +42,21 @@ public class HoaDonDAO {
                 }
 
                 String maKM = ketQua.getString("maKhuyenMai");
-                if (maKM != null) hd.setKhuyenMai(kmDAO.timTheoMa(maKM));
+                if (maKM != null)
+                    hd.setKhuyenMai(kmDAO.timTheoMa(maKM));
                 hd.setLoaiHoaDon(LoaiHoaDon.valueOf(ketQua.getString("loaiHoaDon")));
                 hd.setCa(new CaLam(ketQua.getString("maCa")));
                 hd.setGhiChu(ketQua.getString("ghiChu"));
                 String maHDDT = ketQua.getString("maHoaDonDoiTra");
-                if (maHDDT != null) hd.setHoaDonDoiTra(new HoaDon(maHDDT));
+                if (maHDDT != null)
+                    hd.setHoaDonDoiTra(new HoaDon(maHDDT));
                 String maDT = ketQua.getString("maDonThuoc");
-                if (maDT != null) hd.setDonThuoc(new DonThuoc(maDT));
+                if (maDT != null)
+                    hd.setDonThuoc(new DonThuoc(maDT));
                 String pttt = ketQua.getString("phuongThucThanhToan");
-                if (pttt != null) hd.setPhuongThucThanhToan(PhuongThucThanhToan.valueOf(pttt));
-                
+                if (pttt != null)
+                    hd.setPhuongThucThanhToan(PhuongThucThanhToan.valueOf(pttt));
+
                 danhSach.add(hd);
             }
         } catch (SQLException e) {
@@ -81,16 +91,20 @@ public class HoaDonDAO {
                 }
 
                 String maKM = ketQua.getString("maKhuyenMai");
-                if (maKM != null) hd.setKhuyenMai(kmDAO.timTheoMa(maKM));
+                if (maKM != null)
+                    hd.setKhuyenMai(kmDAO.timTheoMa(maKM));
                 hd.setLoaiHoaDon(LoaiHoaDon.valueOf(ketQua.getString("loaiHoaDon")));
                 hd.setCa(new CaLam(ketQua.getString("maCa")));
                 hd.setGhiChu(ketQua.getString("ghiChu"));
                 String maHDDT = ketQua.getString("maHoaDonDoiTra");
-                if (maHDDT != null) hd.setHoaDonDoiTra(new HoaDon(maHDDT));
+                if (maHDDT != null)
+                    hd.setHoaDonDoiTra(new HoaDon(maHDDT));
                 String maDT = ketQua.getString("maDonThuoc");
-                if (maDT != null) hd.setDonThuoc(new DonThuoc(maDT));
+                if (maDT != null)
+                    hd.setDonThuoc(new DonThuoc(maDT));
                 String pttt = ketQua.getString("phuongThucThanhToan");
-                if (pttt != null) hd.setPhuongThucThanhToan(PhuongThucThanhToan.valueOf(pttt));
+                if (pttt != null)
+                    hd.setPhuongThucThanhToan(PhuongThucThanhToan.valueOf(pttt));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -167,7 +181,7 @@ public class HoaDonDAO {
         }
         return soDongThayDoi > 0;
     }
-    
+
     public List<HoaDon> timKiem(String maHD, LocalDate ngayTao) {
         List<HoaDon> danhSach = new ArrayList<>();
         try {
@@ -179,7 +193,7 @@ public class HoaDonDAO {
             if (ngayTao != null) {
                 truyVan.append(" AND thoiGianTao >= ? AND thoiGianTao < ?");
             }
-            
+
             PreparedStatement lenh = ketNoi.prepareStatement(truyVan.toString());
             int paramIndex = 1;
             if (maHD != null && !maHD.trim().isEmpty()) {
@@ -189,7 +203,7 @@ public class HoaDonDAO {
                 lenh.setTimestamp(paramIndex++, Timestamp.valueOf(ngayTao.atStartOfDay()));
                 lenh.setTimestamp(paramIndex++, Timestamp.valueOf(ngayTao.plusDays(1).atStartOfDay()));
             }
-            
+
             ResultSet ketQua = lenh.executeQuery();
             ChiTietHoaDonDAO ctDAO = new ChiTietHoaDonDAO();
             NhanVienDAO nvDAO = new NhanVienDAO();
@@ -209,17 +223,21 @@ public class HoaDonDAO {
                 }
 
                 String maKM = ketQua.getString("maKhuyenMai");
-                if (maKM != null) hd.setKhuyenMai(kmDAO.timTheoMa(maKM));
+                if (maKM != null)
+                    hd.setKhuyenMai(kmDAO.timTheoMa(maKM));
                 hd.setLoaiHoaDon(LoaiHoaDon.valueOf(ketQua.getString("loaiHoaDon")));
                 hd.setCa(new CaLam(ketQua.getString("maCa")));
                 hd.setGhiChu(ketQua.getString("ghiChu"));
                 String maHDDT = ketQua.getString("maHoaDonDoiTra");
-                if (maHDDT != null) hd.setHoaDonDoiTra(new HoaDon(maHDDT));
+                if (maHDDT != null)
+                    hd.setHoaDonDoiTra(new HoaDon(maHDDT));
                 String maDT = ketQua.getString("maDonThuoc");
-                if (maDT != null) hd.setDonThuoc(new DonThuoc(maDT));
+                if (maDT != null)
+                    hd.setDonThuoc(new DonThuoc(maDT));
                 String pttt = ketQua.getString("phuongThucThanhToan");
-                if (pttt != null) hd.setPhuongThucThanhToan(PhuongThucThanhToan.valueOf(pttt));
-                
+                if (pttt != null)
+                    hd.setPhuongThucThanhToan(PhuongThucThanhToan.valueOf(pttt));
+
                 hd.setDsChiTiet(ctDAO.layTheoMaHoaDon(hd.getMaHoaDon()));
                 danhSach.add(hd);
             }

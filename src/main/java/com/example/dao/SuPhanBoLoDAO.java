@@ -29,7 +29,7 @@ public class SuPhanBoLoDAO {
     // (Tùy chọn) Lấy danh sách các lô đã dùng cho một dòng chi tiết hóa đơn
     public List<SuPhanBoLo> layPhanBoLoCuaChiTiet(String maHoaDon, String maDonVi) {
         List<SuPhanBoLo> list = new ArrayList<>();
-        String sql = "SELECT * FROM suphanbolo WHERE maHoaDon = ? AND maDonVi = ?";
+        String sql = "SELECT * FROM SuPhanBoLo WHERE maChiTietHoaDon_HD = ? AND maChiTietHoaDon_DV = ?";
 
         Connection con = ConnectDB.getConnection();
         try (PreparedStatement pst = con.prepareStatement(sql)) {

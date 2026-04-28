@@ -129,7 +129,7 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		contentPanel = new JPanel(cardLayout);
 		contentPanel.add(pnlTrangChu = new ManHinhChinhPanel(taiKhoan), "Màn Hình Chính");
 		contentPanel.add(pnlHoaDon = new HoaDonPanel(), "Quản Lý Hóa Đơn");
-		contentPanel.add(new BanHangPanel(), "Bán Hàng");
+		contentPanel.add(new BanHangPanel(taiKhoan), "Bán Hàng");
 		contentPanel.add(new DoiHangPanel(), "Đổi Hàng");
 		contentPanel.add(new TraHangPanel(), "Trả Hàng");
 		contentPanel.add(pnlKhachHang = new KhachHangPanel(), "Khách Hàng");
