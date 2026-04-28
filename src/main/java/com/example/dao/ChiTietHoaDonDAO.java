@@ -13,40 +13,29 @@ public class ChiTietHoaDonDAO {
     private SuPhanBoLoDAO suPhanBoLoDAO = new SuPhanBoLoDAO();
 
     public List<ChiTietHoaDon> layTheoMaHoaDon(String maHD) {
-        List<ChiTietHoaDon> danhSach = new ArrayList<>();
-        String truyVan = "SELECT * FROM ChiTietHoaDon WHERE maHoaDon = ?";
-        
-        DonViQuyDoiDAO dvqdDAO = new DonViQuyDoiDAO();
-        Connection ketNoi = ConnectDB.getConnection();
-        try (PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
-            
-            lenh.setString(1, maHD);
-            ResultSet ketQua = lenh.executeQuery();
-
-            while (ketQua.next()) {
+        List<ChiTietHoaDon> ds = new ArrayList<>();
+        try {
+            Connection con = ConnectDB.getConnection();
+            String sql = "SELECT * FROM ChiTietHoaDon WHERE maHoaDon = ?";
+            PreparedStatement stmt = con.prepareStatement(sql);
+            stmt.setString(1, maHD);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
                 ChiTietHoaDon ct = new ChiTietHoaDon();
+                String maDV = rs.getString("maDonVi");
+                ct.setSoLuong(rs.getInt("soLuong"));
+                ct.setDonGia(rs.getDouble("donGia"));
                 
-                // Set Hóa Đơn và Đơn Vị Quy Đổi (Ở mức cơ bản lấy mã)
-                ct.setHoaDon(new HoaDon(ketQua.getString("maHoaDon")));
+                // Gọi DAO phân bổ lô với 2 khóa
+                SuPhanBoLoDAO spbDAO = new SuPhanBoLoDAO();
+                ct.setDsPhanBoLo(spbDAO.layPhanBoLoCuaChiTiet(maHD, maDV));
                 
-                // Lưu ý: Cột trong DB của bạn theo sơ đồ là maDonVi (có thể đổi lại thành maDonViQuyDoi nếu bạn tạo bảng như vậy)
-                String maDV = ketQua.getString("maDonVi"); 
-                ct.setDonViQuyDoi(dvqdDAO.timTheoMa(maDV));
-                
-                ct.setSoLuong(ketQua.getInt("soLuong"));
-                ct.setDonGia(ketQua.getDouble("donGia"));
-                ct.setLaQuaTangKem(ketQua.getBoolean("laQuaTangKem"));
-                
-                // Lấy danh sách Phân bổ lô từ SuPhanBoLoDAO nạp vào Entity
-                List<SuPhanBoLo> dsLô = suPhanBoLoDAO.layPhanBoLoCuaChiTiet(maHD, maDV);
-                ct.setDsPhanBoLo(dsLô);
-                
-                danhSach.add(ct);
+                ds.add(ct);
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        return danhSach;
+        return ds;
     }
 
     public boolean them(ChiTietHoaDon ct) {

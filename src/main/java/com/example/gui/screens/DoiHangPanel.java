@@ -308,14 +308,14 @@ public class DoiHangPanel extends JPanel {
             }
 
             // 4. Lưu CSDL
-            boolean ketQua = hoaDonDAO.luuGiaoDichDoiHang(hdDoi, dsTraLai, dsChiTietMoi, dsPhanBoMoi);
-
-            if (ketQua) {
-                JOptionPane.showMessageDialog(this, "Đổi hàng và Thanh toán thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-                resetForm();
-            } else {
-                JOptionPane.showMessageDialog(this, "Lưu giao dịch thất bại! Đã khôi phục dữ liệu.", "Lỗi", JOptionPane.ERROR_MESSAGE);
-            }
+//            boolean ketQua = hoaDonDAO.luuGiaoDichDoiHang(hdDoi, dsTraLai, dsChiTietMoi, dsPhanBoMoi);
+//
+//            if (ketQua) {
+//                JOptionPane.showMessageDialog(this, "Đổi hàng và Thanh toán thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+//                resetForm();
+//            } else {
+//                JOptionPane.showMessageDialog(this, "Lưu giao dịch thất bại! Đã khôi phục dữ liệu.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+//            }
 
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Lỗi khi xử lý: " + e.getMessage(), "Lỗi Hệ Thống", JOptionPane.ERROR_MESSAGE);
