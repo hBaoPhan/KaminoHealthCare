@@ -286,7 +286,7 @@ public class HoaDonDAO {
             if (dsPhanBoMoi != null && !dsPhanBoMoi.isEmpty()) {
                 String ktLo = "SELECT soLuongSanPham FROM Lo WHERE maLo = ?";
                 String capNhatLoMoi = "UPDATE Lo SET soLuongSanPham = soLuongSanPham - ? WHERE maLo = ?";
-                String themPhanBo = "INSERT INTO SuPhanBoLo (maChiTietHoaDon_HD, maChiTietHoaDon_DV, maLo, soLuong) VALUES (?, ?, ?, ?)";
+                String themPhanBo = "INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong) VALUES (?, ?, ?, ?)";
                 
                 try (PreparedStatement psKtLo = ketNoi.prepareStatement(ktLo);
                      PreparedStatement psLoMoi = ketNoi.prepareStatement(capNhatLoMoi);
@@ -342,5 +342,28 @@ public class HoaDonDAO {
                 }
             }
         }
+    }
+
+    public double tinhTongDoanhThuCa(String maCa) {
+        double tong = 0;
+        String sql = "SELECT SUM(ct.soLuong * ct.donGia * (1 + sp.thue/100)) as tong " +
+                     "FROM ChiTietHoaDon ct " +
+                     "JOIN HoaDon hd ON ct.maHoaDon = hd.maHoaDon " +
+                     "JOIN DonViQuyDoi dv ON ct.maDonVi = dv.maDonVi " +
+                     "JOIN SanPham sp ON dv.maSanPham = sp.maSanPham " +
+                     "WHERE hd.maCa = ? AND hd.trangThaiThanhToan = 1";
+        
+        try {
+            Connection con = ConnectDB.getConnection();
+            PreparedStatement pst = con.prepareStatement(sql);
+            pst.setString(1, maCa);
+            ResultSet rs = pst.executeQuery();
+            if (rs.next()) {
+                tong = rs.getDouble("tong");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return tong;
     }
 }

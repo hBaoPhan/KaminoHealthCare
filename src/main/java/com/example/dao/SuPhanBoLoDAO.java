@@ -12,7 +12,7 @@ import com.example.connectDB.ConnectDB;
 public class SuPhanBoLoDAO {
 
     public boolean themSuPhanBoLo(SuPhanBoLo spbl) {
-        String sql = "INSERT INTO SuPhanBoLo (maChiTietHoaDon_HD, maChiTietHoaDon_DV, maLo, soLuong) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong) VALUES (?, ?, ?, ?)";
         Connection con = ConnectDB.getConnection();
         try (PreparedStatement pst = con.prepareStatement(sql)) {
 
@@ -31,7 +31,7 @@ public class SuPhanBoLoDAO {
     // (Tùy chọn) Lấy danh sách các lô đã dùng cho một dòng chi tiết hóa đơn
     public List<SuPhanBoLo> layPhanBoLoCuaChiTiet(String maHoaDon, String maDonVi) {
         List<SuPhanBoLo> list = new ArrayList<>();
-        String sql = "SELECT * FROM SuPhanBoLo WHERE maChiTietHoaDon_HD = ? AND maChiTietHoaDon_DV = ?";
+        String sql = "SELECT * FROM SuPhanBoLo WHERE maHoaDon = ? AND maDonVi = ?";
 
         Connection con = ConnectDB.getConnection();
         try (PreparedStatement pst = con.prepareStatement(sql)) {

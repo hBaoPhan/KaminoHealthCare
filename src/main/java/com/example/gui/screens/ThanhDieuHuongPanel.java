@@ -147,6 +147,8 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 
 			contentPanel.add(pnlThongKe = new ThongKePanel(), "Thống Kê");
 		}
+		contentPanel.add(new MoCaPanel(taiKhoan), "Mở Ca");
+		contentPanel.add(new DongCaPanel(taiKhoan), "Kết Ca");
 		contentPanel.add(pnlTroGiup = new TroGiupPanel(), "Trợ Giúp");
 
 		add(contentPanel, BorderLayout.CENTER);
@@ -259,15 +261,9 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 				this.dispose();
 			}
 		} else if (o.equals(btnMoCa)) {
-			JOptionPane.showMessageDialog(this,
-					"Chức năng Mở ca đang được phát triển.",
-					"Mở ca",
-					JOptionPane.INFORMATION_MESSAGE);
+			cardLayout.show(contentPanel, "Mở Ca");
 		} else if (o.equals(btnKetCa)) {
-			JOptionPane.showMessageDialog(this,
-					"Chức năng Kết ca đang được phát triển.",
-					"Kết ca",
-					JOptionPane.INFORMATION_MESSAGE);
+			cardLayout.show(contentPanel, "Kết Ca");
 		}
 	}
 
