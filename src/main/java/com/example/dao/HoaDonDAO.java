@@ -629,4 +629,24 @@ public class HoaDonDAO {
         }
         return danhSach;
     }
+
+    /** Đếm số lượng hóa đơn trong ngày theo loại để sinh mã tuần tự */
+    public int demHoaDonTrongNgay(LoaiHoaDon loaiHoaDon) {
+        int count = 0;
+        String sql = "SELECT COUNT(*) FROM HoaDon WHERE CAST(thoiGianTao as DATE) = CAST(GETDATE() as DATE) AND loaiHoaDon = ?";
+        try {
+            Connection con = ConnectDB.getConnection();
+            try (PreparedStatement pst = con.prepareStatement(sql)) {
+                pst.setString(1, loaiHoaDon.name());
+                try (ResultSet rs = pst.executeQuery()) {
+                    if (rs.next()) {
+                        count = rs.getInt(1);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return count;
+    }
 }
