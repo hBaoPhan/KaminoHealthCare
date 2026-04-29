@@ -50,7 +50,105 @@ public class TraHangPanel extends JPanel {
         lamMoiGiaoDien();
     }
 
-    // ... (Các hàm createTablePanel giữ nguyên như bản cũ) ...
+    private JPanel createTablePanel(String title, String placeholder) {
+        JPanel pnl = new JPanel(new BorderLayout(5, 5));
+        pnl.setBackground(Color.WHITE);
+        pnl.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220), 1, true));
+
+        JPanel pnlHeader = new JPanel(new BorderLayout());
+        pnlHeader.setOpaque(false);
+        pnlHeader.setBorder(new EmptyBorder(10, 10, 5, 10));
+
+        JLabel lblTitle = new JLabel(title);
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
+
+        JPanel pnlSearchAction = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
+        pnlSearchAction.setOpaque(false);
+
+        txtSearch = new JTextField(15);
+        txtSearch.setPreferredSize(new Dimension(180, 30));
+        txtSearch.setText(placeholder);
+        txtSearch.setForeground(Color.GRAY);
+
+        txtSearch.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    String ma = txtSearch.getText().trim();
+                    if (!ma.isEmpty() && !ma.equals(placeholder)) hienThiSanPhamHoaDon(ma);
+                }
+            }
+        });
+
+        txtSearch.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                if (txtSearch.getText().equals(placeholder)) {
+                    txtSearch.setText("");
+                    txtSearch.setForeground(Color.BLACK);
+                }
+            }
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                if (txtSearch.getText().isEmpty()) {
+                    txtSearch.setForeground(Color.GRAY);
+                    txtSearch.setText(placeholder);
+                }
+            }
+        });
+
+        JButton btnSearch = new JButton("Tìm");
+        btnSearch.setBackground(new Color(0, 123, 255));
+        btnSearch.setForeground(Color.WHITE);
+        btnSearch.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnSearch.addActionListener(e -> {
+            String ma = txtSearch.getText().trim();
+            if (!ma.isEmpty() && !ma.equals(placeholder)) hienThiSanPhamHoaDon(ma);
+        });
+
+        pnlSearchAction.add(txtSearch);
+        pnlSearchAction.add(btnSearch);
+        pnlHeader.add(lblTitle, BorderLayout.WEST);
+        pnlHeader.add(pnlSearchAction, BorderLayout.EAST);
+
+        String[] columns = { "Mã sản phẩm", "Tên sản phẩm", "Đơn vị", "Số lượng", "Đơn giá", "Thuế", "Thành tiền" };
+        model = new DefaultTableModel(new Object[][]{}, columns) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return column == 3; }
+        };
+        JTable table = new JTable(model);
+        table.setRowHeight(30);
+
+        model.addTableModelListener(new TableModelListener() {
+            @Override
+            public void tableChanged(TableModelEvent e) {
+                if (e.getType() == TableModelEvent.UPDATE && e.getColumn() == 3) {
+                    int row = e.getFirstRow();
+                    try {
+                        int soLuongMoi = Integer.parseInt(model.getValueAt(row, 3).toString());
+                        String maSP = model.getValueAt(row, 0).toString();
+                        int soLuongGoc = 0;
+                        for (ChiTietHoaDon ct : dsChiTietGoc) {
+                            if (ct.getDonViQuyDoi().getSanPham().getMaSanPham().equals(maSP)) {
+                                soLuongGoc = ct.getSoLuong();
+                                break;
+                            }
+                        }
+                        if (soLuongMoi <= 0 || soLuongMoi > soLuongGoc) {
+                            JOptionPane.showMessageDialog(null, "Số lượng trả tối đa là " + soLuongGoc);
+                            model.setValueAt(soLuongGoc, row, 3);
+                            return;
+                        }
+                        tinhToanTienHoanTra();
+                    } catch (NumberFormatException ex) {
+                        JOptionPane.showMessageDialog(null, "Vui lòng nhập số nguyên!");
+                    }
+                }
+            }
+        });
+
+        pnl.add(pnlHeader, BorderLayout.NORTH);
+        pnl.add(new JScrollPane(table), BorderLayout.CENTER);
+        return pnl;
+    }
 
     private JPanel createInfoPanel() {
         JPanel pnlMain = new JPanel(new BorderLayout());
