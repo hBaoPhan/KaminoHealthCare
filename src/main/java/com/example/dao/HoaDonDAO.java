@@ -369,25 +369,30 @@ public class HoaDonDAO {
     }
 
     public boolean luuHoaDonTraHang(HoaDon hoaDonTra) {
-    Connection con = ConnectDB.getConnection();
+    Connection con = null;
     try {
-        con.setAutoCommit(false); // Bắt đầu Transaction để bảo vệ dữ liệu
+        con = ConnectDB.getConnection();
+        con.setAutoCommit(false); 
 
-        // 1. Lưu hóa đơn trả (Đã sửa đúng 6 tham số, loaiHoaDon gán trực tiếp)
-        String sqlHD = "INSERT INTO HoaDon (maHoaDon, thoiGianTao, maNhanVien, maKhachHang, loaiHoaDon, maHoaDonDoiTra, ghiChu) "
-                     + "VALUES (?, ?, ?, ?, N'TRA_HANG', ?, ?)";
+        // 1. CẬP NHẬT CÂU LỆNH SQL: Thêm trangThaiThanhToan, maCa, phuongThucThanhToan
+        String sqlHD = "INSERT INTO HoaDon (maHoaDon, thoiGianTao, maNhanVien, trangThaiThanhToan, maKhachHang, loaiHoaDon, maCa, ghiChu, maHoaDonDoiTra, phuongThucThanhToan) "
+                     + "VALUES (?, ?, ?, ?, ?, N'TRA_HANG', ?, ?, ?, ?)";
+                     
         PreparedStatement pstmHD = con.prepareStatement(sqlHD);
         pstmHD.setString(1, hoaDonTra.getMaHoaDon());
-        pstmHD.setTimestamp(2, new Timestamp(System.currentTimeMillis())); // Lấy giờ hệ thống hiện tại
+        pstmHD.setTimestamp(2, new java.sql.Timestamp(System.currentTimeMillis()));
         pstmHD.setString(3, hoaDonTra.getNhanVien().getMaNhanVien());
-        pstmHD.setString(4, hoaDonTra.getKhachHang() != null ? hoaDonTra.getKhachHang().getMaKhachHang() : null);
-        pstmHD.setString(5, hoaDonTra.getHoaDonDoiTra().getMaHoaDon());
-        pstmHD.setString(6, hoaDonTra.getGhiChu());
+        pstmHD.setBoolean(4, hoaDonTra.isTrangThaiThanhToan()); 
+        pstmHD.setString(5, hoaDonTra.getKhachHang() != null ? hoaDonTra.getKhachHang().getMaKhachHang() : null);
+        pstmHD.setString(6, hoaDonTra.getCa() != null ? hoaDonTra.getCa().getMaCa() : "CA01");
+        pstmHD.setString(7, hoaDonTra.getGhiChu());
+        pstmHD.setString(8, hoaDonTra.getHoaDonDoiTra().getMaHoaDon());
+        pstmHD.setString(9, hoaDonTra.getPhuongThucThanhToan() != null ? hoaDonTra.getPhuongThucThanhToan().name() : "TIEN_MAT");
+        
         pstmHD.executeUpdate();
 
-        // 2. Lưu chi tiết và cập nhật kho
+        // 2. Lưu chi tiết hóa đơn và cập nhật kho (Giữ nguyên đoạn code cũ của bạn)
         for (ChiTietHoaDon ct : hoaDonTra.getDsChiTiet()) {
-            // A. Lưu ChiTietHoaDon (Bỏ cột 'thue' vì DB của bạn không có)
             String sqlCT = "INSERT INTO ChiTietHoaDon (maHoaDon, maDonVi, soLuong, donGia, laQuaTangKem) VALUES (?, ?, ?, ?, 0)";
             PreparedStatement pstmCT = con.prepareStatement(sqlCT);
             pstmCT.setString(1, hoaDonTra.getMaHoaDon());
@@ -396,7 +401,6 @@ public class HoaDonDAO {
             pstmCT.setDouble(4, ct.getDonGia());
             pstmCT.executeUpdate();
 
-            // B. Cập nhật tồn kho (Cộng lại số lượng vào bảng SanPham)
             String sqlUpdateKho = "UPDATE SanPham SET soLuongTon = soLuongTon + ? WHERE maSanPham = ?";
             PreparedStatement pstmKho = con.prepareStatement(sqlUpdateKho);
             int soLuongGoc = ct.getSoLuong() * ct.getDonViQuyDoi().getHeSoQuyDoi();
@@ -405,14 +409,18 @@ public class HoaDonDAO {
             pstmKho.executeUpdate();
         }
 
-        con.commit(); // Chốt dữ liệu xuống database
+        con.commit(); 
         return true;
     } catch (SQLException e) {
-        try { if (con != null) con.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
-        e.printStackTrace();
+        e.printStackTrace(); // LUÔN ĐỂ DÒNG NÀY ĐỂ XEM LỖI TRONG CONSOLE
+        if (con != null) {
+            try { con.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+        }
         return false;
     } finally {
-        try { if (con != null) con.setAutoCommit(true); } catch (SQLException e) { e.printStackTrace(); }
+        if (con != null) {
+            try { con.setAutoCommit(true); } catch (SQLException e) { e.printStackTrace(); }
+        }
     }
 }
 
@@ -441,7 +449,30 @@ public int laySoLuongHoaDonTrongNgay() {
     }
     return count;
 }
-
+public boolean kiemTraHoaDonDaDoiTra(String maHDGoc) {
+    boolean daTonTai = false;
+    // Tìm trong bảng HoaDon xem có dòng nào mà maHoaDonDoiTra trùng với mã đang tìm không
+    String sql = "SELECT COUNT(*) FROM HoaDon WHERE maHoaDonDoiTra = ?";
+    
+    try {
+        Connection con = ConnectDB.getConnection();
+        PreparedStatement pst = con.prepareStatement(sql);
+        pst.setString(1, maHDGoc);
+        
+        ResultSet rs = pst.executeQuery();
+        if (rs.next()) {
+            // Nếu số lượng > 0 nghĩa là mã này đã được dùng để trả hàng rồi
+            daTonTai = rs.getInt(1) > 0;
+        }
+        
+        // Giải phóng tài nguyên
+        rs.close();
+        pst.close();
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+    return daTonTai;
+}
     public double tinhTongDoanhThuCa(String maCa) {
         double tong = 0;
         String sql = "SELECT SUM(ct.soLuong * ct.donGia * (1 + sp.thue/100)) as tong " +
