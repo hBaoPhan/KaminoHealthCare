@@ -231,55 +231,52 @@ public class DangNhapPanel extends JFrame implements ActionListener {
     }
 
     @Override
-    public void actionPerformed(ActionEvent e) {
-        Object source = e.getSource();
-        if (source.equals(btnLogin)) {
-            // String username = txtUsername.getText();
-            // String password = new String(txtPassword.getPassword());
-            //
-            // if (username.trim().isEmpty() || password.isEmpty()) {
-            // JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ tài khoản và mật
-            // khẩu!", "Thông báo",
-            // JOptionPane.WARNING_MESSAGE);
-            // return;
-            // }
-            //
-            TaiKhoanDAO dao = new TaiKhoanDAO();
-            TaiKhoan tk = dao.timTheoMa("admin");
+public void actionPerformed(ActionEvent e) {
+    Object source = e.getSource();
+    if (source.equals(btnLogin)) {
+        // 1. Lấy dữ liệu thật từ ô nhập liệu
+        String username = txtUsername.getText();
+        String password = new String(txtPassword.getPassword());
 
-            //
-            // if (tk != null) {
-            // String dbPassword = tk.getMatKhau();
-            // boolean isMatch = false;
-            //
-            // // Kiểm tra xem dbPassword có phải là chuỗi hash của BCrypt không
-            // // BCrypt hash thường bắt đầu bằng $2a$, $2b$, hoặc $2y$ và có độ dài 60 ký
-            //
-            // if (dbPassword != null && dbPassword.startsWith("$2") && dbPassword.length()
-            // == 60) {
-            // try {
-            // isMatch = BCrypt.checkpw(password, dbPassword);
-            // } catch (Exception ex) {
-            // isMatch = false;
-            // }
-            // } else if (dbPassword != null) {
-            // // Fallback cho mật khẩu chưa hash trong quá trình phát triển
-            // isMatch = dbPassword.equals(password);
-            // }
-            boolean isMatch = true;
+        // 2. Kiểm tra rỗng
+        if (username.trim().isEmpty() || password.isEmpty() || username.equals("Tài khoản") || password.equals("Mật khẩu")) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ tài khoản và mật khẩu!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // 3. Tìm tài khoản trong Database
+        TaiKhoanDAO dao = new TaiKhoanDAO();
+        TaiKhoan tk = dao.timTheoMa(username);
+
+        boolean isMatch = false;
+
+        // 4. Nếu tìm thấy tài khoản, bắt đầu kiểm tra mật khẩu
+        if (tk != null) {
+            String dbPassword = tk.getMatKhau();
+
+            if (dbPassword != null && dbPassword.startsWith("$2") && dbPassword.length() == 60) {
+                try {
+                    isMatch = BCrypt.checkpw(password, dbPassword);
+                } catch (Exception ex) {
+                    isMatch = false;
+                }
+            } else if (dbPassword != null) {
+                isMatch = dbPassword.equals(password);
+            }
+
+            // 5. Xử lý kết quả
             if (isMatch) {
                 SwingUtilities.invokeLater(() -> {
                     ThanhDieuHuongPanel mainFrame = new ThanhDieuHuongPanel(tk);
                     mainFrame.setVisible(true);
                 });
-                dispose();
+                dispose(); 
             } else {
-                JOptionPane.showMessageDialog(this, "Tài khoản hoặc mật khẩu không chính xác!", "Lỗi đăng nhập",
-                        JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Tài khoản hoặc mật khẩu không chính xác!", "Lỗi đăng nhập", JOptionPane.ERROR_MESSAGE);
             }
         } else {
-            JOptionPane.showMessageDialog(this, "Tài khoản hoặc mật khẩu không chính xác!", "Lỗi đăng nhập",
-                    JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Tài khoản hoặc mật khẩu không chính xác!", "Lỗi đăng nhập", JOptionPane.ERROR_MESSAGE);
         }
-    }
+    } 
+}
 }
