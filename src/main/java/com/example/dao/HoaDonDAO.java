@@ -272,8 +272,8 @@ public class HoaDonDAO {
         try {
             Connection con = ConnectDB.getConnection();
             
-            // 1. Query lấy hóa đơn kèm tính số ngày chênh lệch (DATEDIFF)
-            // Chỉ lấy hóa đơn đã thanh toán thành công
+            // 1. Truy vấn hóa đơn kèm tính số ngày chênh lệch để kiểm tra quy định 7 ngày
+            // Chỉ lấy hóa đơn đã thanh toán thành công (trangThaiThanhToan = 1)
             String sql = "SELECT *, DATEDIFF(DAY, thoiGianTao, GETDATE()) as SoNgay " +
                          "FROM HoaDon WHERE maHoaDon = ? AND trangThaiThanhToan = 1";
             
@@ -285,17 +285,15 @@ public class HoaDonDAO {
                 // Kiểm tra quy định thời hạn 7 ngày
                 int soNgay = rs.getInt("SoNgay");
                 if (soNgay > 7) {
-                    // Bạn có thể ném một Exception hoặc xử lý thông báo "Quá hạn 7 ngày" ở GUI
-                    return null; 
+                    return null; // Hóa đơn quá hạn đổi trả
                 }
 
                 // Kiểm tra quy định đổi 1 lần duy nhất (maHoaDonDoiTra trỏ về HD này)
                 if (daTungDoiTra(maHD)) {
-                    // Hóa đơn này đã từng được dùng để đổi/trả trước đó
-                    return null;
+                    return null; // Hóa đơn này đã được dùng để đổi/trả trước đó
                 }
 
-                // 2. Mapping dữ liệu vào Entity
+                // 2. Mapping dữ liệu vào thực thể HoaDon
                 hd = new HoaDon();
                 hd.setMaHoaDon(rs.getString("maHoaDon"));
                 
@@ -305,7 +303,21 @@ public class HoaDonDAO {
                 }
                 
                 hd.setGhiChu(rs.getString("ghiChu"));
-                // Lưu ý: Cần set thêm NhanVien, KhachHang nếu GUI cần hiển thị tên
+
+                // --- QUAN TRỌNG: Nạp đầy đủ thông tin Nhân viên và Khách hàng ---
+                // Lấy thông tin Nhân viên đã tạo hóa đơn gốc
+                String maNV = rs.getString("maNhanVien");
+                if (maNV != null) {
+                    NhanVienDAO nvDAO = new NhanVienDAO();
+                    hd.setNhanVien(nvDAO.timTheoMa(maNV)); 
+                }
+
+                // Lấy thông tin Khách hàng đã mua đơn hàng này
+                String maKH = rs.getString("maKhachHang");
+                if (maKH != null) {
+                    KhachHangDAO khDAO = new KhachHangDAO();
+                    hd.setKhachHang(khDAO.timTheoMa(maKH)); 
+                }
                 
                 // 3. Load danh sách chi tiết sản phẩm để hiển thị lên bảng "Hàng đã mua"
                 ChiTietHoaDonDAO ctDAO = new ChiTietHoaDonDAO();
@@ -364,4 +376,23 @@ public class HoaDonDAO {
         } finally {
             if (ketNoi != null) try { ketNoi.setAutoCommit(true); } catch (SQLException e) { e.printStackTrace(); }
         }
-    }}
+    }
+
+    public int laySoLuongHoaDonTrongNgay(String loaiPrefix, String ngayThangNam) {
+        int count = 0;
+        try {
+            Connection con = ConnectDB.getConnection();
+            // Tìm các mã hóa đơn bắt đầu bằng Prefix (vd: HDD290426)
+            String sql = "SELECT COUNT(*) FROM HoaDon WHERE maHoaDon LIKE ?";
+            PreparedStatement stmt = con.prepareStatement(sql);
+            stmt.setString(1, loaiPrefix + ngayThangNam + "%");
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                count = rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return count;
+    }
+}

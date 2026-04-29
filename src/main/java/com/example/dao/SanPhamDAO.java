@@ -150,4 +150,25 @@ public class SanPhamDAO {
         }
         return danhSach;
     }
+    
+    public List<SanPham> timKiemGoiY(String tuKhoa) {
+        List<SanPham> ds = new ArrayList<>();
+        try {
+            Connection con = ConnectDB.getConnection();
+            String sql = "SELECT TOP 10 * FROM SanPham WHERE maSanPham LIKE ? OR tenSanPham LIKE ?";
+            PreparedStatement stmt = con.prepareStatement(sql);
+            stmt.setString(1, "%" + tuKhoa + "%");
+            stmt.setString(2, "%" + tuKhoa + "%");
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                SanPham sp = new SanPham();
+                sp.setMaSanPham(rs.getString("maSanPham"));
+                sp.setTenSanPham(rs.getString("tenSanPham"));
+                sp.setDonGiaCoBan(rs.getDouble("donGiaCoBan"));
+                sp.setThue(rs.getDouble("thue"));
+                ds.add(sp);
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return ds;
+    }
 }

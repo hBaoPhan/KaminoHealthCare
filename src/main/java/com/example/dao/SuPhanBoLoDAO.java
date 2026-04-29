@@ -1,5 +1,6 @@
 package com.example.dao;
 
+import com.example.entity.Lo;
 import com.example.entity.SuPhanBoLo;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -27,7 +28,6 @@ public class SuPhanBoLoDAO {
 	public List<SuPhanBoLo> layPhanBoLoCuaChiTiet(String maHD, String maDV) {
 	    List<SuPhanBoLo> ds = new ArrayList<>();
 	    try {
-	        ConnectDB.getInstance().connect();
 	        Connection con = ConnectDB.getConnection();
 	        String sql = "SELECT * FROM SuPhanBoLo WHERE maHoaDon = ? AND maDonVi = ?";
 	        PreparedStatement stmt = con.prepareStatement(sql);
@@ -36,13 +36,17 @@ public class SuPhanBoLoDAO {
 	        ResultSet rs = stmt.executeQuery();
 	        while (rs.next()) {
 	            SuPhanBoLo spb = new SuPhanBoLo();
-	            spb.getLo().setMaLo(rs.getString("maLo"));
+	            Lo lo = new Lo(); 
+	            lo.setMaLo(rs.getString("maLo"));
+	            
+	            // Gán đối tượng lo vào spb
+	            spb.setLo(lo); 
 	            spb.setSoLuong(rs.getInt("soLuong"));
+	            
 	            ds.add(spb);
 	        }
 	    } catch (SQLException e) {
 	        e.printStackTrace();
 	    }
 	    return ds;
-	}
-}
+	}}

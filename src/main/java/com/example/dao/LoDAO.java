@@ -84,10 +84,9 @@ public class LoDAO {
         List<Lo> danhSach = new ArrayList<>();
         try {
             Connection ketNoi = ConnectDB.getConnection();
-            // Sử dụng GETDATE() của SQL Server để kiểm tra hạn sử dụng 
             String truyVan = "SELECT l.* FROM Lo l " +
                              "INNER JOIN DonViQuyDoi dv ON l.maSanPham = dv.maSanPham " +
-                             "WHERE dv.maDonVi = ? AND l.soLuongTon > 0 AND l.ngayHetHan > GETDATE() " +
+                             "WHERE dv.maDonVi = ? AND l.soLuongSanPham > 0 AND l.ngayHetHan > GETDATE() " +
                              "ORDER BY l.ngayHetHan ASC";
             
             PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
@@ -99,7 +98,8 @@ public class LoDAO {
                 lo.setMaLo(ketQua.getString("maLo"));
                 lo.setSoLo(ketQua.getString("soLo"));
                 lo.setNgayHetHan(ketQua.getDate("ngayHetHan").toLocalDate());
-                lo.setSoLuongSanPham(ketQua.getInt("soLuongTon"));
+                // Đảm bảo tên cột ở đây cũng là soLuongSanPham
+                lo.setSoLuongSanPham(ketQua.getInt("soLuongSanPham")); 
                 lo.setSanPham(new SanPham(ketQua.getString("maSanPham")));
                 lo.setGiaNhap(ketQua.getDouble("giaNhap"));
                 danhSach.add(lo);
