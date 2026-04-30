@@ -263,16 +263,31 @@ public class DoiHangPanel extends JPanel {
     private void xuLyThanhToan() {
         DefaultTableModel modelDoi = (DefaultTableModel) tblSanPham.getModel();
         if (modelDoi.getRowCount() == 0) {
-            JOptionPane.showMessageDialog(this, "Chưa có sản phẩm mới!", "Cảnh báo", JOptionPane.WARNING_MESSAGE); return;
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn sản phẩm mới để đổi!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            return;
         }
+
         try {
+            // 1. Lấy và kiểm tra các giá trị tiền tệ
+            double chenhLech = Double.parseDouble(txtChenhLech.getText());
+            double thanhTienPhaiTra = Double.parseDouble(txtThanhTienLamTron.getText());
+            double khachDua = txtKhachDua.getText().trim().isEmpty() ? 0 : Double.parseDouble(txtKhachDua.getText().trim());
+
+            if (chenhLech > 0 && khachDua < thanhTienPhaiTra) {
+                JOptionPane.showMessageDialog(this, "Tiền khách đưa không đủ để thanh toán phần chênh lệch!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // 2. Tự động sinh mã hóa đơn theo quy ước: HDD + DDMMYY + STT
             LocalDateTime now = LocalDateTime.now();
             String ngayThangNam = now.format(DateTimeFormatter.ofPattern("ddMMyy"));
             String prefix = "HDD";
-            int stt = hoaDonDAO.laySoLuongHoaDonTrongNgay(prefix, ngayThangNam) + 1;
-            String maHDD = String.format("%s%s%03d", prefix, ngayThangNam, stt);
+            int sttTiepTheo = hoaDonDAO.laySoLuongHoaDonTrongNgay(prefix, ngayThangNam) + 1;
+            String maHoaDonMoi = String.format("%s%s%03d", prefix, ngayThangNam, sttTiepTheo);
 
-            HoaDon hdMoi = new HoaDon(maHDD);
+            // 3. Khởi tạo đối tượng Hóa đơn mới
+            HoaDon hdMoi = new HoaDon();
+            hdMoi.setMaHoaDon(maHoaDonMoi);
             hdMoi.setThoiGianTao(now);
             hdMoi.setNhanVien(taiKhoanDangNhap.getNhanVien());
             hdMoi.setKhachHang(hoaDonGocHienTai.getKhachHang());
@@ -281,47 +296,102 @@ public class DoiHangPanel extends JPanel {
             hdMoi.setTrangThaiThanhToan(true);
             hdMoi.setPhuongThucThanhToan(radTienMat.isSelected() ? PhuongThucThanhToan.TIEN_MAT : PhuongThucThanhToan.CHUYEN_KHOAN);
             hdMoi.setGhiChu(txtGhiChu.getText());
-            hdMoi.setCa(hoaDonGocHienTai.getCa() != null ? hoaDonGocHienTai.getCa() : new CaLam("CA29042601"));
 
-            List<ChiTietHoaDon> dsTra = new ArrayList<>();
+            // Sử dụng mã ca thực tế từ hóa đơn gốc để tránh lỗi FK__HoaDon__maCa
+            if (hoaDonGocHienTai != null && hoaDonGocHienTai.getCa() != null) {
+                hdMoi.setCa(hoaDonGocHienTai.getCa());
+            } else {
+                hdMoi.setCa(new CaLam("CA29042601")); 
+            }
+
+            // 4. Xử lý Hàng trả về (Cộng lại kho)
+            List<ChiTietHoaDon> dsHangTraVe = new ArrayList<>();
             DefaultTableModel modelGoc = (DefaultTableModel) tblHoaDonGoc.getModel();
+            
             for (int i = 0; i < modelGoc.getRowCount(); i++) {
-                int slHienTai = Integer.parseInt(modelGoc.getValueAt(i, 3).toString());
-                ChiTietHoaDon ctB = chiTietHoaDonGocList.get(i);
-                int slT = ctB.getSoLuong() - slHienTai;
-                if (slT > 0) {
+                // Sử dụng .toString() và parse để tránh ClassCastException
+                int slHienTaiTrenBang = Integer.parseInt(modelGoc.getValueAt(i, 3).toString());
+                ChiTietHoaDon ctBanDau = chiTietHoaDonGocList.get(i);
+                int slKhachTraLai = ctBanDau.getSoLuong() - slHienTaiTrenBang;
+
+                if (slKhachTraLai > 0) {
                     ChiTietHoaDon ctTra = new ChiTietHoaDon();
-                    ctTra.setDonViQuyDoi(ctB.getDonViQuyDoi()); ctTra.setSoLuong(slT); ctTra.setDonGia(ctB.getDonGia());
-                    List<SuPhanBoLo> pb = suPhanBoLoDAO.layPhanBoLoCuaChiTiet(hoaDonGocHienTai.getMaHoaDon(), ctB.getDonViQuyDoi().getMaDonVi());
-                    if (!pb.isEmpty()) { pb.get(0).setSoLuong(slT); ctTra.setDsPhanBoLo(List.of(pb.get(0))); }
-                    dsTra.add(ctTra);
+                    ctTra.setHoaDon(ctBanDau.getHoaDon());
+                    ctTra.setDonViQuyDoi(ctBanDau.getDonViQuyDoi()); 
+                    ctTra.setSoLuong(slKhachTraLai);
+                    ctTra.setDonGia(ctBanDau.getDonGia());
+                    
+                    List<SuPhanBoLo> phanBoCu = suPhanBoLoDAO.layPhanBoLoCuaChiTiet(
+                        hoaDonGocHienTai.getMaHoaDon(), ctBanDau.getDonViQuyDoi().getMaDonVi());
+                    
+                    List<SuPhanBoLo> dsPBTra = new ArrayList<>();
+                    if (!phanBoCu.isEmpty()) {
+                        SuPhanBoLo spbTra = phanBoCu.get(0); 
+                        spbTra.setSoLuong(slKhachTraLai);
+                        dsPBTra.add(spbTra);
+                    }
+                    ctTra.setDsPhanBoLo(dsPBTra);
+                    dsHangTraVe.add(ctTra);
                 }
             }
 
-            List<ChiTietHoaDon> dsMoi = new ArrayList<>();
+            // 5. Xử lý Hàng mua mới (Trừ kho FEFO)
+            List<ChiTietHoaDon> dsChiTietMoi = new ArrayList<>();
             for (int i = 0; i < modelDoi.getRowCount(); i++) {
-                String ma = modelDoi.getValueAt(i, 0).toString();
-                DonViQuyDoi dv = donViQuyDoiDAO.timTheoTenVaMaSP(modelDoi.getValueAt(i, 2).toString(), ma);
-                ChiTietHoaDon ctM = new ChiTietHoaDon();
-                ctM.setHoaDon(hdMoi); ctM.setDonViQuyDoi(dv); ctM.setSoLuong((int)modelDoi.getValueAt(i, 3)); 
-                ctM.setDonGia((double)modelDoi.getValueAt(i, 4));
-                List<Lo> loK = loDAO.layDanhSachLoKhaDung(dv.getMaDonVi());
-                int con = ctM.getSoLuong(); List<SuPhanBoLo> pbs = new ArrayList<>();
-                for (Lo l : loK) {
-                    if (con <= 0) break;
-                    int lay = Math.min(l.getSoLuongSanPham(), con);
-                    SuPhanBoLo p = new SuPhanBoLo(); p.setChiTietHoaDon(ctM); p.setLo(l); p.setSoLuong(lay);
-                    pbs.add(p); con -= lay;
-                }
-                if (con > 0) throw new Exception("Không đủ kho cho SP: " + ma);
-                ctM.setDsPhanBoLo(pbs); dsMoi.add(ctM);
-            }
-            hdMoi.setDsChiTiet(dsMoi);
+                String maSP = modelDoi.getValueAt(i, 0).toString();
+                String tenDV = modelDoi.getValueAt(i, 2).toString();
+                int slMua = Integer.parseInt(modelDoi.getValueAt(i, 3).toString());
+                double donGia = Double.parseDouble(modelDoi.getValueAt(i, 4).toString());
 
-            if (hoaDonDAO.luuHoaDon(hdMoi, dsTra)) {
-                JOptionPane.showMessageDialog(this, "Thành công! Mã: " + maHDD); resetForm();
-            } else { JOptionPane.showMessageDialog(this, "Lưu thất bại!", "Lỗi", JOptionPane.ERROR_MESSAGE); }
-        } catch (Exception ex) { JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage()); ex.printStackTrace(); }
+                // Tìm đơn vị quy đổi và kiểm tra null để tránh NullPointerException
+                DonViQuyDoi dv = donViQuyDoiDAO.timTheoTenVaMaSP(tenDV, maSP);
+                if (dv == null) {
+                    throw new Exception("Đơn vị '" + tenDV + "' không hợp lệ cho sản phẩm " + maSP);
+                }
+
+                ChiTietHoaDon ctMoi = new ChiTietHoaDon();
+                ctMoi.setHoaDon(hdMoi);
+                ctMoi.setDonViQuyDoi(dv); 
+                ctMoi.setSoLuong(slMua);
+                ctMoi.setDonGia(donGia);
+
+                // Tìm lô khả dụng và trừ kho (Sửa lỗi tên cột soLuongSanPham trong DAO)
+                List<Lo> dsLoKhaDung = loDAO.layDanhSachLoKhaDung(dv.getMaDonVi());
+                List<SuPhanBoLo> dsPhanBoXuat = new ArrayList<>();
+                int slCanTru = slMua;
+
+                for (Lo lo : dsLoKhaDung) {
+                    if (slCanTru <= 0) break;
+                    int layTuLo = Math.min(lo.getSoLuongSanPham(), slCanTru);
+                    
+                    SuPhanBoLo spb = new SuPhanBoLo();
+                    spb.setChiTietHoaDon(ctMoi);
+                    spb.setLo(lo);
+                    spb.setSoLuong(layTuLo);
+                    dsPhanBoXuat.add(spb);
+                    slCanTru -= layTuLo;
+                }
+
+                if (slCanTru > 0) {
+                    throw new Exception("Sản phẩm " + maSP + " (" + tenDV + ") không đủ tồn kho trong hệ thống lô hàng!");
+                }
+                ctMoi.setDsPhanBoLo(dsPhanBoXuat);
+                dsChiTietMoi.add(ctMoi);
+            }
+            hdMoi.setDsChiTiet(dsChiTietMoi);
+
+            // 6. Lưu vào Cơ sở dữ liệu thông qua Transaction
+            if (hoaDonDAO.luuHoaDon(hdMoi, dsHangTraVe)) {
+                JOptionPane.showMessageDialog(this, "Thanh toán đổi hàng thành công!\nMã hóa đơn: " + hdMoi.getMaHoaDon(), "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                resetForm();
+            } else {
+                JOptionPane.showMessageDialog(this, "Giao dịch thất bại! Vui lòng kiểm tra lại kết nối CSDL.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage(), "Lỗi Hệ Thống", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
     }
 
     private void resetForm() {
