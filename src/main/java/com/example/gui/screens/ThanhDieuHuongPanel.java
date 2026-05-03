@@ -106,7 +106,7 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		
 		contentPanel.add(pnlTrangChu = new ManHinhChinhPanel(taiKhoan), "Màn Hình Chính");
 		contentPanel.add(pnlHoaDon = new HoaDonPanel(), "Quản Lý Hóa Đơn");
-		contentPanel.add(new BanHangPanel(taiKhoan), "Bán Hàng");
+		contentPanel.add(pnlBanHang=new  BanHangPanel(taiKhoan), "Bán Hàng");
 		contentPanel.add(new DoiHangPanel(taiKhoan), "Đổi Hàng");
 		contentPanel.add(new TraHangPanel(), "Trả Hàng");
 		contentPanel.add(pnlKhachHang = new KhachHangPanel(), "Khách Hàng");
@@ -209,7 +209,7 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 			pnlTrangChu.loadThongKeData();
 			pnlTrangChu.layDuLieuChoHoatDongGanDay();
 		}
-    pnlMoCa.loadDuLieuCa();
+    	pnlMoCa.loadDuLieuCa();
 		pnlDongCa.loadDuLieuCa();
 		pnlBanHang.loadHoaDonChuaThanhToan();
 		if (isQuanLy && pnlNhanVien != null) {

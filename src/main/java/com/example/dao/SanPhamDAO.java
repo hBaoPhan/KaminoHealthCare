@@ -31,7 +31,7 @@ public class SanPhamDAO {
     public SanPham timTheoMa(String maSP) {
         Connection ketNoi = ConnectDB.getConnection();
         try (PreparedStatement lenh = ketNoi.prepareStatement("SELECT * FROM SanPham WHERE maSanPham = ?")) {
-            
+
             lenh.setString(1, maSP);
             try (ResultSet ketQua = lenh.executeQuery()) {
                 if (ketQua.next()) {
@@ -48,7 +48,7 @@ public class SanPhamDAO {
         Connection ketNoi = ConnectDB.getConnection();
         try (PreparedStatement lenh = ketNoi.prepareStatement(
                 "INSERT INTO SanPham (maSanPham, tenSanPham, phanLoai, soLuongTon, moTa, hoatChat, donGiaCoBan, trangThaiKinhDoanh, thue) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
 
             setParameters(lenh, sp);
             return lenh.executeUpdate() > 0;
@@ -62,7 +62,7 @@ public class SanPhamDAO {
         Connection ketNoi = ConnectDB.getConnection();
         try (PreparedStatement lenh = ketNoi.prepareStatement(
                 "UPDATE SanPham SET tenSanPham = ?, phanLoai = ?, soLuongTon = ?, moTa = ?, hoatChat = ?, " +
-                "donGiaCoBan = ?, trangThaiKinhDoanh = ?, thue = ? WHERE maSanPham = ?")) {
+                        "donGiaCoBan = ?, trangThaiKinhDoanh = ?, thue = ? WHERE maSanPham = ?")) {
 
             lenh.setString(1, sp.getTenSanPham());
             lenh.setString(2, sp.getPhanLoai().name());
@@ -84,7 +84,7 @@ public class SanPhamDAO {
     public boolean xoa(String maSP) {
         Connection ketNoi = ConnectDB.getConnection();
         try (PreparedStatement lenh = ketNoi.prepareStatement("DELETE FROM SanPham WHERE maSanPham = ?")) {
-            
+
             lenh.setString(1, maSP);
             return lenh.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -113,7 +113,7 @@ public class SanPhamDAO {
         }
         return danhSach;
     }
-    
+
     public List<SanPham> timKiemGoiY(String tuKhoa) {
         List<SanPham> ds = new ArrayList<>();
         try {
@@ -131,14 +131,18 @@ public class SanPhamDAO {
                 sp.setThue(rs.getDouble("thue"));
                 ds.add(sp);
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return ds;
     }
-}
+
 
     // ================== CÁC PHƯƠNG THỨC MỚI ĐƯỢC THÊM ==================
 
-    /** Lọc theo phân loại (ETC, OTC, TPCN) */
+    /**
+     * Lọc theo phân loại (ETC, OTC, TPCN)
+     */
     public List<SanPham> timTheoPhanLoai(PhanLoai phanLoai) {
         List<SanPham> danhSach = new ArrayList<>();
         Connection ketNoi = ConnectDB.getConnection();
@@ -156,7 +160,9 @@ public class SanPhamDAO {
         return danhSach;
     }
 
-    /** Lấy tất cả sản phẩm đang kinh doanh */
+    /**
+     * Lấy tất cả sản phẩm đang kinh doanh
+     */
     public List<SanPham> laySanPhamDangKinhDoanh() {
         List<SanPham> danhSach = new ArrayList<>();
         Connection ketNoi = ConnectDB.getConnection();
@@ -174,7 +180,9 @@ public class SanPhamDAO {
         return danhSach;
     }
 
-    /** Kiểm tra mã sản phẩm đã tồn tại chưa */
+    /**
+     * Kiểm tra mã sản phẩm đã tồn tại chưa
+     */
     public boolean tonTaiMaSanPham(String maSP) {
         Connection ketNoi = ConnectDB.getConnection();
         try (PreparedStatement lenh = ketNoi.prepareStatement(
@@ -192,7 +200,9 @@ public class SanPhamDAO {
         return false;
     }
 
-    /** Cập nhật số lượng tồn (dùng khi bán hàng) */
+    /**
+     * Cập nhật số lượng tồn (dùng khi bán hàng)
+     */
     public boolean capNhatSoLuongTon(String maSP, int soLuongMoi) {
         Connection ketNoi = ConnectDB.getConnection();
         try (PreparedStatement lenh = ketNoi.prepareStatement(
@@ -210,10 +220,10 @@ public class SanPhamDAO {
     /**
      * Tạo mã sản phẩm theo quy tắc:
      * [PhanLoai]-[Viết tắt 3 chữ]-[Số thứ tự 3 chữ số]
-     *
+     * <p>
      * - Tên 1 từ: lấy 3 chữ cái đầu
      * - Tên >= 2 từ: lấy chữ cái đầu của tối đa 3 từ
-     *
+     * <p>
      * Ví dụ: Panadol (OTC) -> OTC-PAN-001
      */
     public String taoMaSanPhamTuDong(PhanLoai phanLoai, String tenSanPham) {
@@ -248,7 +258,9 @@ public class SanPhamDAO {
         return prefix + "001";
     }
 
-    /** Tìm kiếm nâng cao (kết hợp từ khóa + phân loại) */
+    /**
+     * Tìm kiếm nâng cao (kết hợp từ khóa + phân loại)
+     */
     public List<SanPham> timKiemNangCao(String tuKhoa, PhanLoai phanLoai) {
         List<SanPham> danhSach = new ArrayList<>();
         StringBuilder sql = new StringBuilder("SELECT * FROM SanPham WHERE 1=1");
@@ -343,4 +355,5 @@ public class SanPhamDAO {
         }
         return sb.toString();
     }
+
 }

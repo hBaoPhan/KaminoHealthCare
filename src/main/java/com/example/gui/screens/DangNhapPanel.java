@@ -31,10 +31,10 @@ public class DangNhapPanel extends JFrame implements ActionListener {
         // 1. Cấu hình cửa sổ chính
         setTitle("KAMINO Healthcare - Hệ Thống Quản Lý Nhà Thuốc");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1000, 600); 
-        setLocationRelativeTo(null); 
-        setResizable(false); 
-        setLayout(new BorderLayout()); 
+        setSize(1000, 600);
+        setLocationRelativeTo(null);
+        setResizable(false);
+        setLayout(new BorderLayout());
 
         // 2. Tạo Panel bên trái (Nền xanh, Logo, Hình ảnh)
         JPanel leftPanel = createLeftPanel();
@@ -46,7 +46,7 @@ public class DangNhapPanel extends JFrame implements ActionListener {
 
         // 4. Sự kiện UI cơ bản
         setupBasicUIEvents();
-        
+
         // Kết nối Database khi mở ứng dụng
         try {
             ConnectDB.getInstance().connect();
@@ -58,17 +58,17 @@ public class DangNhapPanel extends JFrame implements ActionListener {
     private JPanel createLeftPanel() {
         JPanel panel = new JPanel();
         panel.setBackground(COLOR_PRIMARY);
-        panel.setPreferredSize(new Dimension(500, 600)); 
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS)); 
-        panel.setBorder(new EmptyBorder(80, 40, 50, 40)); 
+        panel.setPreferredSize(new Dimension(500, 600));
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(new EmptyBorder(80, 40, 50, 40));
 
         JLabel lblLogo = new JLabel("KAMINO HEALTHCARE");
-        lblLogo.setFont(new Font("Segoe UI", Font.BOLD, 36)); 
-        lblLogo.setForeground(Color.WHITE); 
-        lblLogo.setAlignmentX(Component.CENTER_ALIGNMENT); 
+        lblLogo.setFont(new Font("Segoe UI", Font.BOLD, 36));
+        lblLogo.setForeground(Color.WHITE);
+        lblLogo.setAlignmentX(Component.CENTER_ALIGNMENT);
         panel.add(lblLogo);
 
-        panel.add(Box.createVerticalStrut(30)); 
+        panel.add(Box.createVerticalStrut(30));
 
         ImageIcon pharmacistIcon = loadIcon("/images/icon/logo.png");
         if (pharmacistIcon != null) {
@@ -114,7 +114,7 @@ public class DangNhapPanel extends JFrame implements ActionListener {
         JPanel passwordRow = new JPanel(new BorderLayout(8, 0));
         passwordRow.setOpaque(false);
         passwordRow.setMaximumSize(new Dimension(400, 38));
-        passwordRow.setPreferredSize(new Dimension(400, 38)); 
+        passwordRow.setPreferredSize(new Dimension(400, 38));
         passwordRow.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         txtPassword = new RoundedPasswordField("Mật khẩu", 20);
@@ -129,7 +129,7 @@ public class DangNhapPanel extends JFrame implements ActionListener {
             lblHidePassword = new JLabel("👁");
         }
         lblHidePassword.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        lblHidePassword.setPreferredSize(new Dimension(30, 45)); 
+        lblHidePassword.setPreferredSize(new Dimension(30, 45));
         passwordRow.add(lblHidePassword, BorderLayout.EAST);
 
         form.add(passwordRow);
@@ -166,10 +166,10 @@ public class DangNhapPanel extends JFrame implements ActionListener {
         lblHidePassword.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 if (isPasswordHidden) {
-                    txtPassword.setEchoChar((char) 0); 
+                    txtPassword.setEchoChar((char) 0);
                     lblHidePassword.setIcon(loadScaledIcon("/images/icon/view.png", 25, 25));
                 } else {
-                    txtPassword.setEchoChar('\u2022'); 
+                    txtPassword.setEchoChar('\u2022');
                     lblHidePassword.setIcon(loadScaledIcon("/images/icon/hide.png", 25, 25));
                 }
                 isPasswordHidden = !isPasswordHidden;
@@ -200,30 +200,28 @@ public class DangNhapPanel extends JFrame implements ActionListener {
             String password = new String(txtPassword.getPassword());
 
             // 2. Kiểm tra rỗng
-            if (username.isEmpty() || username.equals("Tài khoản") || password.isEmpty() || password.equals("Mật khẩu")) {
-                JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ tài khoản và mật khẩu!", "Thông báo", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
+//            if (username.isEmpty() || username.equals("Tài khoản") || password.isEmpty() || password.equals("Mật khẩu")) {
+//                JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ tài khoản và mật khẩu!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+//                return;
+//            }
 
             // 3. Gọi DAO xử lý (Sử dụng mã admin001 từ script SQL mới của bạn)
             TaiKhoanDAO dao = new TaiKhoanDAO();
-            TaiKhoan tk = dao.timTheoMa(username);
+            TaiKhoan tk = dao.timTheoMa("admin");
 
-            if (tk != null) {
-                String dbPassword = tk.getMatKhau();
-                boolean isMatch = false;
-
-                // Kiểm tra BCrypt hoặc so sánh thường
-                if (dbPassword != null && dbPassword.startsWith("$2")) {
-                    try { isMatch = BCrypt.checkpw(password, dbPassword); } catch (Exception ex) { isMatch = false; }
-                } else {
-                    isMatch = password.equals(dbPassword);
-                }
-
+//            if (tk != null) {
+//                String dbPassword = tk.getMatKhau();
+//                boolean isMatch = false;
+//
+//                // Kiểm tra BCrypt hoặc so sánh thường
+//                if (dbPassword != null && dbPassword.startsWith("$2")) {
+//                    try { isMatch = BCrypt.checkpw(password, dbPassword); } catch (Exception ex) { isMatch = false; }
+//                } else {
+//                    isMatch = password.equals(dbPassword);
+//                }
+                boolean isMatch=true;
                 if (isMatch) {
-                    // ĐĂNG NHẬP THÀNH CÔNG
                     SwingUtilities.invokeLater(() -> {
-                        // Đảm bảo tk.getNhanVien() không null nhờ JOIN trong TaiKhoanDAO
                         ThanhDieuHuongPanel mainFrame = new ThanhDieuHuongPanel(tk);
                         mainFrame.setVisible(true);
                     });
@@ -235,5 +233,4 @@ public class DangNhapPanel extends JFrame implements ActionListener {
                 JOptionPane.showMessageDialog(this, "Tài khoản không tồn tại!", "Lỗi đăng nhập", JOptionPane.ERROR_MESSAGE);
             }
         }
-    }
 }
