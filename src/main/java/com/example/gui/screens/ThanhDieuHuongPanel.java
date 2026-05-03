@@ -29,6 +29,9 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 	private ThongKePanel pnlThongKe;
 	private boolean isQuanLy;
 	private List<MenuLabel> menuLabels = new ArrayList<>();
+	private MoCaPanel pnlMoCa;
+	private DongCaPanel pnlDongCa;
+	private BanHangPanel pnlBanHang;
 	private List<MenuItem> menuStructure = new ArrayList<>();
 	private JPanel sidebar;
 	private JPanel pLogout;
@@ -118,6 +121,8 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 			contentPanel.add(new CaLamPanel(), "Quản Lý Ca Làm");
 			contentPanel.add(pnlThongKe = new ThongKePanel(), "Thống Kê");
 		}
+		contentPanel.add(pnlMoCa = new MoCaPanel(taiKhoan), "Mở Ca");
+		contentPanel.add(pnlDongCa = new DongCaPanel(taiKhoan), "Kết Ca");
 		contentPanel.add(pnlTroGiup = new TroGiupPanel(), "Trợ Giúp");
 
 		add(contentPanel, BorderLayout.CENTER);
@@ -204,6 +209,9 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 			pnlTrangChu.loadThongKeData();
 			pnlTrangChu.layDuLieuChoHoatDongGanDay();
 		}
+    pnlMoCa.loadDuLieuCa();
+		pnlDongCa.loadDuLieuCa();
+		pnlBanHang.loadHoaDonChuaThanhToan();
 		if (isQuanLy && pnlNhanVien != null) {
 			pnlNhanVien.taiLaiDanhSach();
 			pnlThongKe.capNhatDuLieuThongKe();
@@ -245,9 +253,20 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 				this.dispose();
 			}
 		} else if (o.equals(btnMoCa)) {
-			JOptionPane.showMessageDialog(this, "Chức năng Mở ca đang được phát triển.");
+			cardLayout.show(contentPanel, "Mở Ca");
 		} else if (o.equals(btnKetCa)) {
-			JOptionPane.showMessageDialog(this, "Chức năng Kết ca đang được phát triển.");
+			cardLayout.show(contentPanel, "Kết Ca");
+		}
+	}
+
+	public void switchTo(String action) {
+		CardLayout layout = (CardLayout) contentPanel.getLayout();
+		capNhatDuLieuKhiDoiThe();
+		switch (action) {
+			case "Màn hình chính" -> layout.show(contentPanel, "Màn Hình Chính");
+			case "Quản lý hóa đơn" -> layout.show(contentPanel, "Hóa Đơn");
+			case "Quản lý khách hàng" -> layout.show(contentPanel, "Khách Hàng");
+			case "Xem thống kê" -> layout.show(contentPanel, "Thống Kê");
 		}
 	}
 
