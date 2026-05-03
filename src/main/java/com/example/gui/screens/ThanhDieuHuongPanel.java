@@ -185,7 +185,6 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 	}
 
 	private void capNhatDuLieuKhiDoiThe() {
-
 		pnlKhachHang.taiLaiDanhSach();
 		pnlHoaDon.taiLaiDanhSach();
 		pnlTrangChu.loadThongKeData();
