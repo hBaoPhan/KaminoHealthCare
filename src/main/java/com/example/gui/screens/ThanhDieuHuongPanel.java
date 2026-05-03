@@ -1,41 +1,14 @@
 package com.example.gui.screens;
 
 import com.example.gui.components.*;
-
-import java.awt.BorderLayout;
-import java.awt.CardLayout;
-import java.awt.GridLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.EventQueue;
-import java.awt.Font;
-import java.awt.Image;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.*;
+import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
+import javax.swing.*;
+import javax.swing.border.*;
 import com.example.entity.enums.ChucVu;
 import com.example.entity.TaiKhoan;
-import javax.swing.border.Border;
-import javax.swing.Icon;
-import javax.swing.JScrollPane;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
 
 @SuppressWarnings("serial")
 public class ThanhDieuHuongPanel extends JFrame implements MouseListener, ActionListener {
@@ -47,9 +20,7 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 	private Color textHoverColor = Color.decode("#1A73E8");
 	private Color textDefaultColor = Color.BLACK;
 	private Font customFont = new Font("Segoe UI", Font.BOLD, 12);
-	private RoundedButton btnDangXuat;
-	private RoundedButton btnMoCa;
-	private RoundedButton btnKetCa;
+	private RoundedButton btnDangXuat, btnMoCa, btnKetCa;
 	private KhachHangPanel pnlKhachHang;
 	private NhanVienPanel pnlNhanVien;
 	private Color sidebarColor = Color.WHITE;
@@ -68,86 +39,86 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 	private Border menuPadding = BorderFactory.createEmptyBorder(10, 25, 10, 25);
 	private Color selectedBg = Color.decode("#D2E3FC");
 	private Border selectedBorder = BorderFactory.createCompoundBorder(
-			BorderFactory.createMatteBorder(0, 5, 0, 0, Color.decode("#174EA6")), // Blue accent line
+			BorderFactory.createMatteBorder(0, 5, 0, 0, Color.decode("#174EA6")),
 			menuPadding);
 	private TroGiupPanel pnlTroGiup;
 
 	public ThanhDieuHuongPanel(TaiKhoan taiKhoan) {
+		// KIỂM TRA DỮ LIỆU ĐẦU VÀO ĐỂ TRÁNH LỖI NULL POINTER
+		if (taiKhoan == null || taiKhoan.getNhanVien() == null) {
+			JOptionPane.showMessageDialog(null, "Lỗi dữ liệu đăng nhập!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
 		setTitle("Kamino Healthcare - Hệ Thống Quản Lý Nhà Thuốc");
 		setExtendedState(JFrame.MAXIMIZED_BOTH);
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 
-		JPanel sidebar = new JPanel();
+		sidebar = new JPanel();
 		sidebar.setBackground(sidebarColor);
 		sidebar.setOpaque(true);
 		sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
-		sidebar.setAlignmentX(Component.CENTER_ALIGNMENT);
 
 		JScrollPane scrollPane = new JScrollPane(sidebar);
 		scrollPane.setBorder(null);
 		scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-		scrollPane.getVerticalScrollBar().setUnitIncrement(16); // Faster scrolling
-		scrollPane.setPreferredSize(new Dimension(200, getHeight()));
+		scrollPane.setPreferredSize(new Dimension(220, getHeight()));
 
 		add(scrollPane, BorderLayout.WEST);
 
+		// --- PHẦN HEADER SIDEBAR (LOGO + USER INFO) ---
 		ImageIcon logoData = loadImageIcon("/images/icon/logo.png");
-		JLabel lblLogo = new JLabel(new HiDPIIcon(logoData.getImage(), 146, 146));
+		JLabel lblLogo = new JLabel(new HiDPIIcon(logoData.getImage(), 130, 130));
 		lblLogo.setAlignmentX(Component.CENTER_ALIGNMENT);
-		lblLogo.setBorder(BorderFactory.createEmptyBorder(20, 20, 0, 20));
+		lblLogo.setBorder(BorderFactory.createEmptyBorder(20, 10, 0, 10));
 		sidebar.add(lblLogo);
 
-		JLabel lblKAMINOCOFFEE = new JLabel("Kamino Healthcare");
-		lblKAMINOCOFFEE.setFont(new Font(lblKAMINOCOFFEE.getFont().getFontName(), Font.BOLD, 17));
+		JLabel lblKAMINO = new JLabel("Kamino Healthcare");
+		lblKAMINO.setFont(new Font("Segoe UI", Font.BOLD, 17));
+		lblKAMINO.setAlignmentX(Component.CENTER_ALIGNMENT);
+		lblKAMINO.setBorder(BorderFactory.createEmptyBorder(10, 10, 7, 10));
+		sidebar.add(lblKAMINO);
 
 		lblTenTaiKhoan = new JLabel("Xin chào, " + taiKhoan.getNhanVien().getTenNhanVien());
-		lblChucVu = new JLabel(taiKhoan.getNhanVien().getChucVu() == ChucVu.NHAN_VIEN_QUAN_LY ? "Quản Lý" : "Dược Sĩ");
-		lblChucVu.setForeground(Color.decode("#00A651"));
-
-		lblKAMINOCOFFEE.setBorder(BorderFactory.createEmptyBorder(10, 10, 7, 10));
-
-		lblTenTaiKhoan.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
-		lblChucVu.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
-		lblKAMINOCOFFEE.setAlignmentX(Component.CENTER_ALIGNMENT);
-
+		lblTenTaiKhoan.setFont(new Font("Segoe UI", Font.PLAIN, 13));
 		lblTenTaiKhoan.setAlignmentX(Component.CENTER_ALIGNMENT);
-		lblChucVu.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-		sidebar.add(lblKAMINOCOFFEE);
-		sidebar.add(Box.createVerticalStrut(5));
 		sidebar.add(lblTenTaiKhoan);
+
+		isQuanLy = taiKhoan.getNhanVien().getChucVu() == ChucVu.NHAN_VIEN_QUAN_LY;
+		lblChucVu = new JLabel(isQuanLy ? "Quản Lý" : "Dược Sĩ");
+		lblChucVu.setForeground(Color.decode("#00A651"));
+		lblChucVu.setFont(new Font("Segoe UI", Font.BOLD, 12));
+		lblChucVu.setAlignmentX(Component.CENTER_ALIGNMENT);
+		lblChucVu.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
 		sidebar.add(lblChucVu);
-		sidebar.add(Box.createVerticalStrut(5));
+
 		sidebar.add(Box.createVerticalStrut(10));
 
-		this.sidebar = sidebar;
+		// --- KHỞI TẠO CẤU TRÚC MENU ---
 		initMenuStructure(taiKhoan);
 		initLogoutPanel();
 		renderSidebar();
 
+		// --- PHẦN NỘI DUNG CHÍNH (CARD LAYOUT) ---
 		cardLayout = new CardLayout();
-
 		contentPanel = new JPanel(cardLayout);
+		
 		contentPanel.add(pnlTrangChu = new ManHinhChinhPanel(taiKhoan), "Màn Hình Chính");
 		contentPanel.add(pnlHoaDon = new HoaDonPanel(), "Quản Lý Hóa Đơn");
-		contentPanel.add(pnlBanHang = new BanHangPanel(taiKhoan), "Bán Hàng");
-		contentPanel.add(new DoiHangPanel(), "Đổi Hàng");
+		contentPanel.add(new BanHangPanel(taiKhoan), "Bán Hàng");
+		contentPanel.add(new DoiHangPanel(taiKhoan), "Đổi Hàng");
 		contentPanel.add(new TraHangPanel(), "Trả Hàng");
 		contentPanel.add(pnlKhachHang = new KhachHangPanel(), "Khách Hàng");
-		isQuanLy = taiKhoan.getNhanVien().getChucVu() == ChucVu.NHAN_VIEN_QUAN_LY;
 		contentPanel.add(new SanPhamPanel(), "Quản Lý Sản Phẩm");
+		
 		if (isQuanLy) {
-
 			contentPanel.add(new LoPanel(), "Quản Lý Lô");
-			contentPanel.add(new KhuyenMaiPanel(), "Khuyến Mãi"); // Tạo 1 KhuyenMaiPanel sau đó thay thế JPanel()
+			contentPanel.add(new KhuyenMaiPanel(), "Khuyến Mãi");
 			contentPanel.add(new DonThuocPanel(), "Quản Lý Đơn Thuốc");
-
 			contentPanel.add(pnlNhanVien = new NhanVienPanel(), "Quản Lý Nhân Viên");
-			contentPanel.add(new TaiKhoanPanel(), "Quản Lý Tài Khoản"); // Tạo 1 TaiKhoanPanel sau đó thay thế JPanel()
+			contentPanel.add(new TaiKhoanPanel(), "Quản Lý Tài Khoản");
 			contentPanel.add(new CaLamPanel(), "Quản Lý Ca Làm");
-
 			contentPanel.add(pnlThongKe = new ThongKePanel(), "Thống Kê");
 		}
 		contentPanel.add(pnlMoCa = new MoCaPanel(taiKhoan), "Mở Ca");
@@ -158,25 +129,21 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 	}
 
 	private void initLogoutPanel() {
-		// --- Nút Mở ca (xanh lá) ---
 		btnMoCa = new RoundedButton("Mở Ca");
 		btnMoCa.setBackground(Color.decode("#28A745"));
 		btnMoCa.addActionListener(this);
 
-		// --- Nút Kết ca (cam) ---
 		btnKetCa = new RoundedButton("Kết Ca");
 		btnKetCa.setBackground(Color.decode("#FD7E14"));
 		btnKetCa.addActionListener(this);
 
-		// --- Nút Đăng xuất (đỏ) ---
 		btnDangXuat = new RoundedButton("Đăng Xuất");
 		btnDangXuat.setBackground(Color.decode("#DC3545"));
 		btnDangXuat.addActionListener(this);
 
-		// --- Panel chứa 3 nút theo chiều dọc, tự căng full-width ---
 		pLogout = new JPanel(new GridLayout(3, 1, 0, 6));
 		pLogout.setBackground(sidebarColor);
-		pLogout.setMaximumSize(new Dimension(Integer.MAX_VALUE, 150));
+		pLogout.setMaximumSize(new Dimension(Integer.MAX_VALUE, 140));
 		pLogout.setBorder(new EmptyBorder(5, 20, 10, 20));
 
 		pLogout.add(btnMoCa);
@@ -184,15 +151,68 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		pLogout.add(btnDangXuat);
 	}
 
+	private void renderSidebar() {
+		// GIỮ LẠI HEADER (LOGO + INFO), XÓA CÁC MỤC MENU CŨ
+		// Index 0: Logo, 1: Name, 2: Welcome, 3: ChucVu, 4: Spacer
+		for (int i = sidebar.getComponentCount() - 1; i >= 5; i--) {
+			sidebar.remove(i);
+		}
+		menuLabels.clear();
+
+		for (MenuItem item : menuStructure) {
+			addMenuItemToSidebar(item);
+			if (item.isExpanded) {
+				for (MenuItem child : item.children) {
+					addMenuItemToSidebar(child);
+				}
+			}
+		}
+
+		sidebar.add(Box.createVerticalGlue());
+		sidebar.add(pLogout);
+		sidebar.add(Box.createVerticalStrut(10));
+
+		sidebar.revalidate();
+		sidebar.repaint();
+	}
+
+	private void addMenuItemToSidebar(MenuItem item) {
+		MenuLabel label = new MenuLabel(item);
+		label.setFont(customFont);
+		if (item.iconPath != null) {
+			label.setIcon(getIconForTab(item.name));
+		}
+		label.setIconTextGap(15);
+		int leftPad = item.isChild ? 50 : 25;
+		label.setBorder(BorderFactory.createEmptyBorder(10, leftPad, 10, 25));
+		label.addMouseListener(this);
+		label.setCursor(new Cursor(Cursor.HAND_CURSOR));
+		label.setAlignmentX(Component.CENTER_ALIGNMENT);
+		label.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
+		label.setOpaque(true);
+		label.setBackground(sidebarColor);
+
+		if (!item.children.isEmpty()) {
+			String arrow = item.isExpanded ? "   ▲" : "   ▼";
+			label.setText("<html>" + item.name + "<span style='font-size:8px;'>" + arrow + "</span></html>");
+		}
+
+		sidebar.add(label);
+		sidebar.add(Box.createVerticalStrut(2));
+		menuLabels.add(label);
+	}
+
 	private void capNhatDuLieuKhiDoiThe() {
-		pnlKhachHang.taiLaiDanhSach();
-		pnlHoaDon.taiLaiDanhSach();
-		pnlTrangChu.loadThongKeData();
-		pnlTrangChu.layDuLieuChoHoatDongGanDay();
-		pnlMoCa.loadDuLieuCa();
+		if (pnlKhachHang != null) pnlKhachHang.taiLaiDanhSach();
+		if (pnlHoaDon != null) pnlHoaDon.taiLaiDanhSach();
+		if (pnlTrangChu != null) {
+			pnlTrangChu.loadThongKeData();
+			pnlTrangChu.layDuLieuChoHoatDongGanDay();
+		}
+    pnlMoCa.loadDuLieuCa();
 		pnlDongCa.loadDuLieuCa();
 		pnlBanHang.loadHoaDonChuaThanhToan();
-		if (isQuanLy) {
+		if (isQuanLy && pnlNhanVien != null) {
 			pnlNhanVien.taiLaiDanhSach();
 			pnlThongKe.capNhatDuLieuThongKe();
 		}
@@ -214,7 +234,8 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 				ml.setBorder(selectedBorder);
 				ml.setBackground(selectedBg);
 			} else {
-				ml.setBorder(ml.getMenuItem().isChild ? BorderFactory.createEmptyBorder(10, 45, 10, 25) : menuPadding);
+				int pad = ml.getMenuItem().isChild ? 50 : 25;
+				ml.setBorder(BorderFactory.createEmptyBorder(10, pad, 10, 25));
 				ml.setBackground(sidebarColor);
 			}
 		}
@@ -224,45 +245,11 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 	}
 
 	@Override
-	public void mousePressed(MouseEvent e) {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public void mouseReleased(MouseEvent e) {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public void mouseEntered(MouseEvent e) {
-		Component c = e.getComponent();
-		if (c instanceof JLabel) {
-			JLabel label = (JLabel) c;
-			label.setForeground(textHoverColor);
-		}
-	}
-
-	@Override
-	public void mouseExited(MouseEvent e) {
-		Component c = e.getComponent();
-		if (c instanceof JLabel) {
-			JLabel label = (JLabel) c;
-			label.setForeground(textDefaultColor);
-		}
-	}
-
-	@Override
 	public void actionPerformed(ActionEvent e) {
 		Object o = e.getSource();
 		if (o.equals(btnDangXuat)) {
-			int xacNhan = JOptionPane.showConfirmDialog(null,
-					"Bạn có chắc chắn muốn đăng xuất?",
-					"Xác nhận đăng xuất",
-					JOptionPane.YES_NO_OPTION);
-			if (xacNhan == JOptionPane.YES_OPTION) {
-				EventQueue.invokeLater(() -> {
-					new DangNhapPanel().setVisible(true);
-				});
+			if (JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn đăng xuất?", "Xác nhận", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+				new DangNhapPanel().setVisible(true);
 				this.dispose();
 			}
 		} else if (o.equals(btnMoCa)) {
@@ -284,8 +271,6 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 	}
 
 	private void initMenuStructure(TaiKhoan taiKhoan) {
-		boolean isQL = taiKhoan.getNhanVien().getChucVu() == ChucVu.NHAN_VIEN_QUAN_LY;
-
 		menuStructure.add(new MenuItem("Màn Hình Chính", "home.png"));
 
 		MenuItem hoaDon = new MenuItem("Hóa Đơn", "invoice.png");
@@ -296,119 +281,28 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		menuStructure.add(hoaDon);
 
 		MenuItem sanPham = new MenuItem("Sản Phẩm", "product.png");
-
-		if (isQL) {
-			sanPham.children.add(new MenuItem("Quản Lý Sản Phẩm", null, true));
+		sanPham.children.add(new MenuItem("Quản Lý Sản Phẩm", null, true));
+		if (isQuanLy) {
 			sanPham.children.add(new MenuItem("Quản Lý Lô", null, true));
 			sanPham.children.add(new MenuItem("Quản Lý Đơn Thuốc", null, true));
 		}
-
 		menuStructure.add(sanPham);
-		menuStructure.add(new MenuItem("Khuyến Mãi", "coupon.png"));
 
+		menuStructure.add(new MenuItem("Khuyến Mãi", "coupon.png"));
 		menuStructure.add(new MenuItem("Khách Hàng", "customer.png"));
 
-		if (isQL) {
-
+		if (isQuanLy) {
 			MenuItem nhanVien = new MenuItem("Nhân Viên", "staff.png");
 			nhanVien.children.add(new MenuItem("Quản Lý Nhân Viên", null, true));
 			nhanVien.children.add(new MenuItem("Quản Lý Tài Khoản", null, true));
 			nhanVien.children.add(new MenuItem("Quản Lý Ca Làm", null, true));
 			menuStructure.add(nhanVien);
-
 			menuStructure.add(new MenuItem("Thống Kê", "chart.png"));
 		}
-
 		menuStructure.add(new MenuItem("Trợ Giúp", "help.png"));
 	}
 
-	private void renderSidebar() {
-		// Cleanly remove all components after the header (logo, names, etc.)
-		// Header items are at indices 0 to 6 (logo, name, chucVu, 4 spacers)
-		Component[] components = sidebar.getComponents();
-		for (int i = components.length - 1; i >= 6; i--) {
-			sidebar.remove(i);
-		}
-		menuLabels.clear();
-
-		for (MenuItem item : menuStructure) {
-			addMenuItemToSidebar(item);
-			if (item.isExpanded) {
-				for (MenuItem child : item.children) {
-					addMenuItemToSidebar(child);
-				}
-			}
-		}
-
-		// Re-add vertical glue and fixed logout section at the bottom
-		sidebar.add(Box.createVerticalGlue());
-		sidebar.add(pLogout);
-		sidebar.add(Box.createVerticalStrut(10));
-
-		sidebar.revalidate();
-		sidebar.repaint();
-	}
-
-	private void addMenuItemToSidebar(MenuItem item) {
-		MenuLabel label = new MenuLabel(item);
-		label.setFont(customFont);
-		if (item.iconPath != null) {
-			label.setIcon(getIconForTab(item.name));
-		}
-		label.setIconTextGap(15);
-		// Indent children
-		int leftPad = item.isChild ? 45 : 25;
-		label.setBorder(BorderFactory.createEmptyBorder(10, leftPad, 10, 25));
-		label.addMouseListener(this);
-		label.setCursor(new Cursor(Cursor.HAND_CURSOR));
-		label.setAlignmentX(Component.CENTER_ALIGNMENT);
-		label.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
-		label.setOpaque(true);
-		label.setBackground(sidebarColor);
-
-		if (!item.children.isEmpty()) {
-			String arrow = item.isExpanded
-					? "    <span style='font-size:7px'>▲</span>"
-					: "    <span style='font-size:7px'>▼</span>";
-			label.setText("<html>" + item.name + arrow + "</html>");
-		}
-
-		sidebar.add(label);
-		sidebar.add(Box.createVerticalStrut(2));
-		menuLabels.add(label);
-	}
-
-	private static class MenuItem {
-		String name;
-		String iconPath;
-		boolean isChild;
-		boolean isExpanded = false;
-		List<MenuItem> children = new ArrayList<>();
-
-		MenuItem(String name, String iconPath) {
-			this(name, iconPath, false);
-		}
-
-		MenuItem(String name, String iconPath, boolean isChild) {
-			this.name = name;
-			this.iconPath = iconPath;
-			this.isChild = isChild;
-		}
-	}
-
-	private static class MenuLabel extends JLabel {
-		private final MenuItem menuItem;
-
-		MenuLabel(MenuItem item) {
-			super(item.name);
-			this.menuItem = item;
-		}
-
-		public MenuItem getMenuItem() {
-			return menuItem;
-		}
-	}
-
+	// --- GIỮ NGUYÊN CÁC LỚP HELPER ICON VÀ RENDERING CỦA BẠN ---
 	private Icon getIconForTab(String tabName) {
 		String fileName = switch (tabName) {
 			case "Màn Hình Chính" -> "home.png";
@@ -419,82 +313,54 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 			case "Thống Kê" -> "chart.png";
 			case "Trợ Giúp" -> "help.png";
 			case "Khuyến Mãi" -> "coupon.png";
-			default -> null;
+			default -> "dot.png";
 		};
 
-		if (fileName != null) {
-			try {
-				Image img = loadImageIcon("/images/icon/" + fileName).getImage();
-				return new HiDPIIcon(img, 26, 26);
-			} catch (Exception e) {
-				System.err.println("Could not load icon: " + fileName);
-			}
-		}
-
-		// Fallback to mock icons if file is missing
-		return new Icon() {
-			@Override
-			public void paintIcon(Component c, Graphics g, int x, int y) {
-				Graphics2D g2 = (Graphics2D) g.create();
-				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-				g2.setColor(Color.GRAY);
-				g2.fillRoundRect(x, y, 16, 16, 5, 5);
-				g2.dispose();
-			}
-
-			@Override
-			public int getIconWidth() {
-				return 24;
-			}
-
-			@Override
-			public int getIconHeight() {
-				return 24;
-			}
-		};
+		ImageIcon icon = loadImageIcon("/images/icon/" + fileName);
+		return (icon != null) ? new HiDPIIcon(icon.getImage(), 24, 24) : null;
 	}
 
 	private ImageIcon loadImageIcon(String classpathPath) {
 		java.net.URL url = getClass().getResource(classpathPath);
-		if (url != null) {
-			return new ImageIcon(url);
-		}
-		// Fallback: load from working directory (when running via mvn exec:java from
-		// project root)
-		String fsPath = "src/main/resources" + classpathPath;
-		return new ImageIcon(fsPath);
+		return (url != null) ? new ImageIcon(url) : new ImageIcon("src/main/resources" + classpathPath);
 	}
 
-	// Class to handle HiDPI sharp rendering for images
+	private static class MenuItem {
+		String name, iconPath;
+		boolean isChild, isExpanded = false;
+		List<MenuItem> children = new ArrayList<>();
+		MenuItem(String name, String iconPath) { this(name, iconPath, false); }
+		MenuItem(String name, String iconPath, boolean isChild) {
+			this.name = name; this.iconPath = iconPath; this.isChild = isChild;
+		}
+	}
+
+	private static class MenuLabel extends JLabel {
+		private final MenuItem menuItem;
+		MenuLabel(MenuItem item) { super(item.name); this.menuItem = item; }
+		public MenuItem getMenuItem() { return menuItem; }
+	}
+
 	private static class HiDPIIcon implements Icon {
 		private final Image image;
-		private final int width;
-		private final int height;
-
+		private final int width, height;
 		public HiDPIIcon(Image image, int width, int height) {
-			this.image = image;
-			this.width = width;
-			this.height = height;
+			this.image = image; this.width = width; this.height = height;
 		}
-
 		@Override
 		public void paintIcon(Component c, Graphics g, int x, int y) {
 			Graphics2D g2 = (Graphics2D) g.create();
-			g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-			g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
 			g2.drawImage(image, x, y, width, height, null);
 			g2.dispose();
 		}
-
-		@Override
-		public int getIconWidth() {
-			return width;
-		}
-
-		@Override
-		public int getIconHeight() {
-			return height;
-		}
+		@Override public int getIconWidth() { return width; }
+		@Override public int getIconHeight() { return height; }
 	}
+
+	@Override public void mousePressed(MouseEvent e) {}
+	@Override public void mouseReleased(MouseEvent e) {}
+	@Override public void mouseEntered(MouseEvent e) { if (e.getSource() instanceof JLabel) ((JLabel)e.getSource()).setForeground(textHoverColor); }
+	@Override public void mouseExited(MouseEvent e) { if (e.getSource() instanceof JLabel) ((JLabel)e.getSource()).setForeground(textDefaultColor); }
 }

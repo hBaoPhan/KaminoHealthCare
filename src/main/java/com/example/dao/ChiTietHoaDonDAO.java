@@ -13,60 +13,45 @@ public class ChiTietHoaDonDAO {
     private SuPhanBoLoDAO suPhanBoLoDAO = new SuPhanBoLoDAO();
 
     public List<ChiTietHoaDon> layTheoMaHoaDon(String maHD) {
-        List<ChiTietHoaDon> danhSach = new ArrayList<>();
-        String truyVan = "SELECT * FROM ChiTietHoaDon WHERE maHoaDon = ?";
-        
-        DonViQuyDoiDAO dvqdDAO = new DonViQuyDoiDAO();
-        Connection ketNoi = ConnectDB.getConnection();
-        try (PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
+        List<ChiTietHoaDon> ds = new ArrayList<>();
+        try {
+            Connection con = ConnectDB.getConnection();
+            String sql = "SELECT * FROM ChiTietHoaDon WHERE maHoaDon = ?";
+            PreparedStatement stmt = con.prepareStatement(sql);
+            stmt.setString(1, maHD);
+            ResultSet rs = stmt.executeQuery();
             
-            lenh.setString(1, maHD);
-            ResultSet ketQua = lenh.executeQuery();
-
-            while (ketQua.next()) {
+            DonViQuyDoiDAO dvDAO = new DonViQuyDoiDAO();
+            
+            while (rs.next()) {
                 ChiTietHoaDon ct = new ChiTietHoaDon();
+                ct.setSoLuong(rs.getInt("soLuong"));
+                ct.setDonGia(rs.getDouble("donGia"));
+                ct.setLaQuaTangKem(rs.getBoolean("laQuaTangKem"));
                 
-                // Set Hóa Đơn và Đơn Vị Quy Đổi (Ở mức cơ bản lấy mã)
-                ct.setHoaDon(new HoaDon(ketQua.getString("maHoaDon")));
+                String maDV = rs.getString("maDonVi");
+                ct.setDonViQuyDoi(dvDAO.timTheoMa(maDV));
                 
-                // Lưu ý: Cột trong DB của bạn theo sơ đồ là maDonVi (có thể đổi lại thành maDonViQuyDoi nếu bạn tạo bảng như vậy)
-                String maDV = ketQua.getString("maDonVi"); 
-                ct.setDonViQuyDoi(dvqdDAO.timTheoMa(maDV));
+                SuPhanBoLoDAO spbDAO = new SuPhanBoLoDAO();
+                ct.setDsPhanBoLo(spbDAO.layPhanBoLoCuaChiTiet(maHD, maDV));
                 
-                ct.setSoLuong(ketQua.getInt("soLuong"));
-                ct.setDonGia(ketQua.getDouble("donGia"));
-                ct.setLaQuaTangKem(ketQua.getBoolean("laQuaTangKem"));
-                
-                // Lấy danh sách Phân bổ lô từ SuPhanBoLoDAO nạp vào Entity
-                List<SuPhanBoLo> dsLô = suPhanBoLoDAO.layPhanBoLoCuaChiTiet(maHD, maDV);
-                ct.setDsPhanBoLo(dsLô);
-                
-                danhSach.add(ct);
+                ds.add(ct);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return danhSach;
+        } catch (Exception e) { e.printStackTrace(); }
+        return ds;
     }
 
-    public boolean them(ChiTietHoaDon ct) {
-        int soDongThayDoi = 0;
+    public boolean them(ChiTietHoaDon ct, Connection con) throws SQLException {
         String truyVan = "INSERT INTO ChiTietHoaDon (maHoaDon, maDonVi, soLuong, donGia, laQuaTangKem) VALUES (?, ?, ?, ?, ?)";
+       
+        PreparedStatement lenh = con.prepareStatement(truyVan);
+        lenh.setString(1, ct.getHoaDon().getMaHoaDon());
+        lenh.setString(2, ct.getDonViQuyDoi().getMaDonVi());
+        lenh.setInt(3, ct.getSoLuong());
+        lenh.setDouble(4, ct.getDonGia());
+        lenh.setBoolean(5, ct.isLaQuaTangKem());
         
-        Connection ketNoi = ConnectDB.getConnection();
-        try (PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
-            
-            lenh.setString(1, ct.getHoaDon().getMaHoaDon());
-            lenh.setString(2, ct.getDonViQuyDoi().getMaDonVi());
-            lenh.setInt(3, ct.getSoLuong());
-            lenh.setDouble(4, ct.getDonGia());
-            lenh.setBoolean(5, ct.isLaQuaTangKem());
-            
-            soDongThayDoi = lenh.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return soDongThayDoi > 0;
+        return lenh.executeUpdate() > 0;
     }
 
     public boolean capNhat(ChiTietHoaDon ct) {

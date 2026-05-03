@@ -3,17 +3,20 @@ package com.example.dao;
 import com.example.connectDB.ConnectDB;
 import com.example.entity.Lo;
 import com.example.entity.SanPham;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class LoDAO {
 
+    /**
+     * Lấy tất cả danh sách lô hàng từ cơ sở dữ liệu
+     */
     public List<Lo> layTatCa() {
         List<Lo> danhSach = new ArrayList<>();
         try {
             Connection ketNoi = ConnectDB.getConnection();
+            // Sửa tên cột soLuongTon cho khớp với file QuanLyHieuThuoc.sql 
             String truyVan = "SELECT * FROM Lo";
             Statement lenh = ketNoi.createStatement();
             ResultSet ketQua = lenh.executeQuery(truyVan);
@@ -34,6 +37,22 @@ public class LoDAO {
         return danhSach;
     }
 
+    /**
+     * Cập nhật số lượng tồn kho (Dùng chung cho Bán hàng & Đổi hàng)
+     * soLuongThayDoi > 0: Cộng thêm (khi khách TRẢ hàng)
+     * soLuongThayDoi < 0: Trừ đi (khi khách LẤY hàng mới hoặc BÁN hàng)
+     */
+    public boolean capNhatSoLuongTon(String maLo, int soLuongThayDoi, Connection con) throws SQLException {
+        String sql = "UPDATE Lo SET soLuongSanPham = soLuongSanPham + ? WHERE maLo = ?";
+        PreparedStatement stmt = con.prepareStatement(sql);
+        stmt.setInt(1, soLuongThayDoi);
+        stmt.setString(2, maLo);
+        return stmt.executeUpdate() > 0;
+    }
+
+    /**
+     * Tìm kiếm lô hàng theo mã
+     */
     public Lo timTheoMa(String maLo) {
         Lo lo = null;
         try {
@@ -58,69 +77,18 @@ public class LoDAO {
         return lo;
     }
 
-    public boolean them(Lo lo) {
-        int soDongThayDoi = 0;
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "INSERT INTO Lo VALUES (?, ?, ?, ?, ?, ?)";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
-            lenh.setString(1, lo.getMaLo());
-            lenh.setString(2, lo.getSoLo());
-            lenh.setDate(3, Date.valueOf(lo.getNgayHetHan()));
-            lenh.setInt(4, lo.getSoLuongSanPham());
-            lenh.setString(5, lo.getSanPham().getMaSanPham());
-            lenh.setDouble(6, lo.getGiaNhap());
-            soDongThayDoi = lenh.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return soDongThayDoi > 0;
-    }
-
-    public boolean capNhat(Lo lo) {
-        int soDongThayDoi = 0;
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "UPDATE Lo SET soLo = ?, ngayHetHan = ?, soLuongSanPham = ?, maSanPham = ?, giaNhap = ? WHERE maLo = ?";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
-            lenh.setString(1, lo.getSoLo());
-            lenh.setDate(2, Date.valueOf(lo.getNgayHetHan()));
-            lenh.setInt(3, lo.getSoLuongSanPham());
-            lenh.setString(4, lo.getSanPham().getMaSanPham());
-            lenh.setDouble(5, lo.getGiaNhap());
-            lenh.setString(6, lo.getMaLo());
-            soDongThayDoi = lenh.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return soDongThayDoi > 0;
-    }
-
-    public boolean xoa(String maLo) {
-        int soDongThayDoi = 0;
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "DELETE FROM Lo WHERE maLo = ?";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
-            lenh.setString(1, maLo);
-            soDongThayDoi = lenh.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return soDongThayDoi > 0;
-    }
-
     /**
-     * Lấy danh sách các Lô của một Đơn vị quy đổi (hoặc Sản phẩm)
-     * còn hạn sử dụng và số lượng > 0, sắp xếp theo Hạn sử dụng tăng dần (FEFO)
+     * Lấy danh sách lô khả dụng theo nguyên tắc FEFO (Hết hạn trước xuất trước)
      */
     public List<Lo> layDanhSachLoKhaDung(String maDonViQuyDoi) {
         List<Lo> danhSach = new ArrayList<>();
         try {
             Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "SELECT l.* FROM Lo l INNER JOIN DonViQuyDoi dv ON l.maSanPham = dv.maSanPham " +
+            String truyVan = "SELECT l.* FROM Lo l " +
+                             "INNER JOIN DonViQuyDoi dv ON l.maSanPham = dv.maSanPham " +
                              "WHERE dv.maDonVi = ? AND l.soLuongSanPham > 0 AND l.ngayHetHan > GETDATE() " +
                              "ORDER BY l.ngayHetHan ASC";
+            
             PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
             lenh.setString(1, maDonViQuyDoi);
             ResultSet ketQua = lenh.executeQuery();
@@ -130,7 +98,8 @@ public class LoDAO {
                 lo.setMaLo(ketQua.getString("maLo"));
                 lo.setSoLo(ketQua.getString("soLo"));
                 lo.setNgayHetHan(ketQua.getDate("ngayHetHan").toLocalDate());
-                lo.setSoLuongSanPham(ketQua.getInt("soLuongSanPham"));
+                // Đảm bảo tên cột ở đây cũng là soLuongSanPham
+                lo.setSoLuongSanPham(ketQua.getInt("soLuongSanPham")); 
                 lo.setSanPham(new SanPham(ketQua.getString("maSanPham")));
                 lo.setGiaNhap(ketQua.getDouble("giaNhap"));
                 danhSach.add(lo);
@@ -139,5 +108,16 @@ public class LoDAO {
             e.printStackTrace();
         }
         return danhSach;
+    }
+
+    // Overload để dùng trong trường hợp đơn lẻ không transaction
+    public boolean capNhatSoLuongTon(String maLo, int soLuongThayDoi) {
+        try {
+            Connection con = ConnectDB.getConnection();
+            return capNhatSoLuongTon(maLo, soLuongThayDoi, con);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

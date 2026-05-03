@@ -339,6 +339,149 @@ public class HoaDonDAO {
         }
         return danhSach;
     }
+    
+ // Kiểm tra hóa đơn đã từng được đổi/trả chưa
+    public boolean daTungDoiTra(String maHDGoc) {
+        boolean check = false;
+        try {
+            Connection con = ConnectDB.getConnection();
+            // Tìm các hóa đơn có maHoaDonDoiTra trỏ về HD gốc này
+            String sql = "SELECT COUNT(*) FROM HoaDon WHERE maHoaDonDoiTra = ?";
+            PreparedStatement stmt = con.prepareStatement(sql);
+            stmt.setString(1, maHDGoc);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                check = rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return check;
+    }
+
+    // Tìm kiếm hóa đơn gốc để đổi hàng (kèm kiểm tra điều kiện)
+    public HoaDon layHoaDonDeDoi(String maHD) {
+        HoaDon hd = null;
+        try {
+            Connection con = ConnectDB.getConnection();
+            
+            // 1. Truy vấn hóa đơn kèm tính số ngày chênh lệch để kiểm tra quy định 7 ngày
+            // Chỉ lấy hóa đơn đã thanh toán thành công (trangThaiThanhToan = 1)
+            String sql = "SELECT *, DATEDIFF(DAY, thoiGianTao, GETDATE()) as SoNgay " +
+                         "FROM HoaDon WHERE maHoaDon = ? AND trangThaiThanhToan = 1";
+            
+            PreparedStatement stmt = con.prepareStatement(sql);
+            stmt.setString(1, maHD);
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                // Kiểm tra quy định thời hạn 7 ngày
+                int soNgay = rs.getInt("SoNgay");
+                if (soNgay > 7) {
+                    return null; // Hóa đơn quá hạn đổi trả
+                }
+
+                // Kiểm tra quy định đổi 1 lần duy nhất (maHoaDonDoiTra trỏ về HD này)
+                if (daTungDoiTra(maHD)) {
+                    return null; // Hóa đơn này đã được dùng để đổi/trả trước đó
+                }
+
+                // 2. Mapping dữ liệu vào thực thể HoaDon
+                hd = new HoaDon();
+                hd.setMaHoaDon(rs.getString("maHoaDon"));
+                
+                Timestamp timestamp = rs.getTimestamp("thoiGianTao");
+                if (timestamp != null) {
+                    hd.setThoiGianTao(timestamp.toLocalDateTime());
+                }
+                
+                hd.setGhiChu(rs.getString("ghiChu"));
+
+                // --- QUAN TRỌNG: Nạp đầy đủ thông tin Nhân viên và Khách hàng ---
+                // Lấy thông tin Nhân viên đã tạo hóa đơn gốc
+                String maNV = rs.getString("maNhanVien");
+                if (maNV != null) {
+                    NhanVienDAO nvDAO = new NhanVienDAO();
+                    hd.setNhanVien(nvDAO.timTheoMa(maNV)); 
+                }
+
+                // Lấy thông tin Khách hàng đã mua đơn hàng này
+                String maKH = rs.getString("maKhachHang");
+                if (maKH != null) {
+                    KhachHangDAO khDAO = new KhachHangDAO();
+                    hd.setKhachHang(khDAO.timTheoMa(maKH)); 
+                }
+                
+                // 3. Load danh sách chi tiết sản phẩm để hiển thị lên bảng "Hàng đã mua"
+                ChiTietHoaDonDAO ctDAO = new ChiTietHoaDonDAO();
+                hd.setDsChiTiet(ctDAO.layTheoMaHoaDon(maHD));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return hd;
+    }
+//    Bán hàng: gọi luuHoaDon(hdMoi, null). Hệ thống sẽ lưu hóa đơn và trừ kho sản phẩm bán ra.  
+//    Đổi hàng: gọi luuHoaDon(hdDoi, dsHangTra). Hệ thống vừa trừ kho hàng mới, vừa cộng lại kho cho những lô hàng khách trả về.
+    public boolean luuHoaDon(HoaDon hd, List<ChiTietHoaDon> dsHangTraVe) {
+        Connection ketNoi = null;
+        try {
+            ketNoi = ConnectDB.getConnection();
+            ketNoi.setAutoCommit(false); // Bắt đầu giao dịch 
+
+            // 1. Lưu hóa đơn (Dùng được cho cả BAN_HANG và DOI_HANG)
+            if (!them(hd)) throw new SQLException("Lỗi lưu hóa đơn");
+
+            ChiTietHoaDonDAO ctDAO = new ChiTietHoaDonDAO();
+            SuPhanBoLoDAO spbDAO = new SuPhanBoLoDAO();
+            LoDAO loDAO = new LoDAO();
+
+            // 2. Xử lý hàng xuất đi (Hàng mới trong hóa đơn)
+            for (ChiTietHoaDon ct : hd.getDsChiTiet()) {
+                if (!ctDAO.them(ct, ketNoi)) throw new SQLException("Lỗi lưu chi tiết");
+                
+                for (SuPhanBoLo spb : ct.getDsPhanBoLo()) {
+                    // Trừ kho: truyền số âm 
+                    if (!loDAO.capNhatSoLuongTon(spb.getLo().getMaLo(), -spb.getSoLuong())) 
+                        throw new SQLException("Lỗi trừ kho lô: " + spb.getLo().getMaLo());
+                    
+                    if (!spbDAO.themSuPhanBoLo(spb, ketNoi)) throw new SQLException("Lỗi lưu phân bổ lô");
+                }
+            }
+
+            // 3. Xử lý hàng trả về (Chỉ dành cho DOI_HANG / TRA_HANG)
+            if (dsHangTraVe != null) {
+                for (ChiTietHoaDon ctTra : dsHangTraVe) {
+                    for (SuPhanBoLo spbTra : ctTra.getDsPhanBoLo()) {
+                        // Cộng lại kho: truyền số dương 
+                        if (!loDAO.capNhatSoLuongTon(spbTra.getLo().getMaLo(), spbTra.getSoLuong()))
+                            throw new SQLException("Lỗi cộng kho lô: " + spbTra.getLo().getMaLo());
+                    }
+                }
+            }
+
+            ketNoi.commit(); // Thành công toàn bộ 
+            return true;
+        } catch (SQLException e) {
+            if (ketNoi != null) try { ketNoi.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (ketNoi != null) try { ketNoi.setAutoCommit(true); } catch (SQLException e) { e.printStackTrace(); }
+        }
+    }
+
+    public int laySoLuongHoaDonTrongNgay(String loaiPrefix, String ngayThangNam) {
+        int count = 0;
+        try {
+            Connection con = ConnectDB.getConnection();
+            // Tìm các mã hóa đơn bắt đầu bằng Prefix (vd: HDD290426)
+            String sql = "SELECT COUNT(*) FROM HoaDon WHERE maHoaDon LIKE ?";
+            PreparedStatement stmt = con.prepareStatement(sql);
+            stmt.setString(1, loaiPrefix + ngayThangNam + "%");
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                count = rs.getInt(1);
 
     /**
      * Hàm thực thi toàn bộ luồng đổi hàng trong 1 Transaction duy nhất
