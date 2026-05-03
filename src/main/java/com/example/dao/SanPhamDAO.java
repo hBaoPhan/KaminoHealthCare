@@ -15,8 +15,8 @@ public class SanPhamDAO {
     // ================== CÁC PHƯƠNG THỨC ĐÃ CÓ ==================
     public List<SanPham> layTatCa() {
         List<SanPham> danhSach = new ArrayList<>();
-        try (Connection ketNoi = ConnectDB.getConnection();
-             Statement lenh = ketNoi.createStatement();
+        Connection ketNoi = ConnectDB.getConnection();
+        try (Statement lenh = ketNoi.createStatement();
              ResultSet ketQua = lenh.executeQuery("SELECT * FROM SanPham")) {
 
             while (ketQua.next()) {
@@ -29,8 +29,8 @@ public class SanPhamDAO {
     }
 
     public SanPham timTheoMa(String maSP) {
-        try (Connection ketNoi = ConnectDB.getConnection();
-             PreparedStatement lenh = ketNoi.prepareStatement("SELECT * FROM SanPham WHERE maSanPham = ?")) {
+        Connection ketNoi = ConnectDB.getConnection();
+        try (PreparedStatement lenh = ketNoi.prepareStatement("SELECT * FROM SanPham WHERE maSanPham = ?")) {
             
             lenh.setString(1, maSP);
             try (ResultSet ketQua = lenh.executeQuery()) {
@@ -45,8 +45,8 @@ public class SanPhamDAO {
     }
 
     public boolean them(SanPham sp) {
-        try (Connection ketNoi = ConnectDB.getConnection();
-             PreparedStatement lenh = ketNoi.prepareStatement(
+        Connection ketNoi = ConnectDB.getConnection();
+        try (PreparedStatement lenh = ketNoi.prepareStatement(
                 "INSERT INTO SanPham (maSanPham, tenSanPham, phanLoai, soLuongTon, moTa, hoatChat, donGiaCoBan, trangThaiKinhDoanh, thue) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
 
@@ -59,8 +59,8 @@ public class SanPhamDAO {
     }
 
     public boolean capNhat(SanPham sp) {
-        try (Connection ketNoi = ConnectDB.getConnection();
-             PreparedStatement lenh = ketNoi.prepareStatement(
+        Connection ketNoi = ConnectDB.getConnection();
+        try (PreparedStatement lenh = ketNoi.prepareStatement(
                 "UPDATE SanPham SET tenSanPham = ?, phanLoai = ?, soLuongTon = ?, moTa = ?, hoatChat = ?, " +
                 "donGiaCoBan = ?, trangThaiKinhDoanh = ?, thue = ? WHERE maSanPham = ?")) {
 
@@ -82,8 +82,8 @@ public class SanPhamDAO {
     }
 
     public boolean xoa(String maSP) {
-        try (Connection ketNoi = ConnectDB.getConnection();
-             PreparedStatement lenh = ketNoi.prepareStatement("DELETE FROM SanPham WHERE maSanPham = ?")) {
+        Connection ketNoi = ConnectDB.getConnection();
+        try (PreparedStatement lenh = ketNoi.prepareStatement("DELETE FROM SanPham WHERE maSanPham = ?")) {
             
             lenh.setString(1, maSP);
             return lenh.executeUpdate() > 0;
@@ -95,8 +95,8 @@ public class SanPhamDAO {
 
     public List<SanPham> timTheoMaHoacTen(String tuKhoa) {
         List<SanPham> danhSach = new ArrayList<>();
-        try (Connection ketNoi = ConnectDB.getConnection();
-             PreparedStatement lenh = ketNoi.prepareStatement(
+        Connection ketNoi = ConnectDB.getConnection();
+        try (PreparedStatement lenh = ketNoi.prepareStatement(
                 "SELECT * FROM SanPham WHERE maSanPham LIKE ? OR tenSanPham LIKE ?")) {
 
             String keyword = "%" + tuKhoa + "%";
@@ -119,8 +119,8 @@ public class SanPhamDAO {
     /** Lọc theo phân loại (ETC, OTC, TPCN) */
     public List<SanPham> timTheoPhanLoai(PhanLoai phanLoai) {
         List<SanPham> danhSach = new ArrayList<>();
-        try (Connection ketNoi = ConnectDB.getConnection();
-             PreparedStatement lenh = ketNoi.prepareStatement("SELECT * FROM SanPham WHERE phanLoai = ?")) {
+        Connection ketNoi = ConnectDB.getConnection();
+        try (PreparedStatement lenh = ketNoi.prepareStatement("SELECT * FROM SanPham WHERE phanLoai = ?")) {
 
             lenh.setString(1, phanLoai.name());
             try (ResultSet rs = lenh.executeQuery()) {
@@ -137,8 +137,8 @@ public class SanPhamDAO {
     /** Lấy tất cả sản phẩm đang kinh doanh */
     public List<SanPham> laySanPhamDangKinhDoanh() {
         List<SanPham> danhSach = new ArrayList<>();
-        try (Connection ketNoi = ConnectDB.getConnection();
-             PreparedStatement lenh = ketNoi.prepareStatement(
+        Connection ketNoi = ConnectDB.getConnection();
+        try (PreparedStatement lenh = ketNoi.prepareStatement(
                 "SELECT * FROM SanPham WHERE trangThaiKinhDoanh = 1")) {
 
             try (ResultSet rs = lenh.executeQuery()) {
@@ -154,8 +154,8 @@ public class SanPhamDAO {
 
     /** Kiểm tra mã sản phẩm đã tồn tại chưa */
     public boolean tonTaiMaSanPham(String maSP) {
-        try (Connection ketNoi = ConnectDB.getConnection();
-             PreparedStatement lenh = ketNoi.prepareStatement(
+        Connection ketNoi = ConnectDB.getConnection();
+        try (PreparedStatement lenh = ketNoi.prepareStatement(
                 "SELECT COUNT(*) FROM SanPham WHERE maSanPham = ?")) {
 
             lenh.setString(1, maSP);
@@ -172,8 +172,8 @@ public class SanPhamDAO {
 
     /** Cập nhật số lượng tồn (dùng khi bán hàng) */
     public boolean capNhatSoLuongTon(String maSP, int soLuongMoi) {
-        try (Connection ketNoi = ConnectDB.getConnection();
-             PreparedStatement lenh = ketNoi.prepareStatement(
+        Connection ketNoi = ConnectDB.getConnection();
+        try (PreparedStatement lenh = ketNoi.prepareStatement(
                 "UPDATE SanPham SET soLuongTon = ? WHERE maSanPham = ?")) {
 
             lenh.setInt(1, soLuongMoi);
@@ -199,8 +199,8 @@ public class SanPhamDAO {
         String prefix = phanLoai.name() + "-" + vietTat + "-";
 
         String sql = "SELECT MAX(maSanPham) FROM SanPham WHERE maSanPham LIKE ?";
-        try (Connection ketNoi = ConnectDB.getConnection();
-             PreparedStatement ps = ketNoi.prepareStatement(sql)) {
+        Connection ketNoi = ConnectDB.getConnection();
+        try (PreparedStatement ps = ketNoi.prepareStatement(sql)) {
 
             ps.setString(1, prefix + "%");
             try (ResultSet rs = ps.executeQuery()) {
@@ -238,8 +238,8 @@ public class SanPhamDAO {
             sql.append(" AND phanLoai = ?");
         }
 
-        try (Connection ketNoi = ConnectDB.getConnection();
-             PreparedStatement lenh = ketNoi.prepareStatement(sql.toString())) {
+        Connection ketNoi = ConnectDB.getConnection();
+        try (PreparedStatement lenh = ketNoi.prepareStatement(sql.toString())) {
 
             int paramIndex = 1;
             if (tuKhoa != null && !tuKhoa.trim().isEmpty()) {
