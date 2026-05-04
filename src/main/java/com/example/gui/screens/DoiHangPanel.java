@@ -297,12 +297,13 @@ public class DoiHangPanel extends JPanel {
             hdMoi.setPhuongThucThanhToan(radTienMat.isSelected() ? PhuongThucThanhToan.TIEN_MAT : PhuongThucThanhToan.CHUYEN_KHOAN);
             hdMoi.setGhiChu(txtGhiChu.getText());
 
-            // Sử dụng mã ca thực tế từ hóa đơn gốc để tránh lỗi FK__HoaDon__maCa
-            if (hoaDonGocHienTai != null && hoaDonGocHienTai.getCa() != null) {
-                hdMoi.setCa(hoaDonGocHienTai.getCa());
-            } else {
-                hdMoi.setCa(new CaLam("CA29042601")); 
+            CaLamDAO caLamDAO = new CaLamDAO();
+            CaLam caHienTai = caLamDAO.layCaHienTai(taiKhoanDangNhap.getNhanVien().getMaNhanVien());
+            if (caHienTai == null) {
+                JOptionPane.showMessageDialog(this, "Bạn chưa mở ca làm việc!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
             }
+            hdMoi.setCa(caHienTai);
 
             // 4. Xử lý Hàng trả về (Cộng lại kho)
             List<ChiTietHoaDon> dsHangTraVe = new ArrayList<>();

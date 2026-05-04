@@ -333,12 +333,35 @@ public class HoaDonPanel extends JPanel {
         }
         String maHD = model.getValueAt(row, 0).toString();
 
-        ChiTietHoaDonDAO ctDAO = new ChiTietHoaDonDAO();
-        List<ChiTietHoaDon> dsChiTiet = ctDAO.layTheoMaHoaDon(maHD);
+        HoaDon hd = hoaDonDAO.timTheoMa(maHD);
+        if (hd == null) return;
 
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Chi tiết hóa đơn: " + maHD, true);
-        dialog.setSize(800, 400);
+        dialog.setSize(850, 450);
         dialog.setLocationRelativeTo(this);
+
+        if (hd.getLoaiHoaDon() == LoaiHoaDon.DOI_HANG || hd.getLoaiHoaDon() == LoaiHoaDon.TRA_HANG) {
+            JTabbedPane tabbedPane = new JTabbedPane();
+            tabbedPane.setFont(FONT_LABEL);
+            
+            tabbedPane.addTab("Hóa đơn hiện tại (" + maHD + ")", createChiTietTablePanel(maHD));
+            
+            if (hd.getHoaDonDoiTra() != null && hd.getHoaDonDoiTra().getMaHoaDon() != null) {
+                String maHDGoc = hd.getHoaDonDoiTra().getMaHoaDon();
+                tabbedPane.addTab("Hóa đơn gốc (" + maHDGoc + ")", createChiTietTablePanel(maHDGoc));
+            }
+            
+            dialog.add(tabbedPane, BorderLayout.CENTER);
+        } else {
+            dialog.add(createChiTietTablePanel(maHD), BorderLayout.CENTER);
+        }
+
+        dialog.setVisible(true);
+    }
+
+    private JScrollPane createChiTietTablePanel(String maHD) {
+        ChiTietHoaDonDAO ctDAO = new ChiTietHoaDonDAO();
+        List<ChiTietHoaDon> dsChiTiet = ctDAO.layTheoMaHoaDon(maHD);
 
         String[] cols = { "Tên sản phẩm", "Đơn vị tính", "Số lượng", "Đơn giá", "Thành tiền", "Quà tặng" };
         DefaultTableModel ctModel = new DefaultTableModel(cols, 0);
@@ -365,8 +388,9 @@ public class HoaDonPanel extends JPanel {
         ctTable.getTableHeader().setFont(FONT_LABEL);
         ctTable.getTableHeader().setBackground(new Color(240, 240, 240));
 
-        dialog.add(new JScrollPane(ctTable), BorderLayout.CENTER);
-        dialog.setVisible(true);
+        JScrollPane scrollPane = new JScrollPane(ctTable);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        return scrollPane;
     }
 
     private void thanhToanHoaDon() {
