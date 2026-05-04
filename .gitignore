@@ -63,3 +63,5 @@ Thumbs.db
 flying_shoes/
 jetpack_configs/
 .vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json

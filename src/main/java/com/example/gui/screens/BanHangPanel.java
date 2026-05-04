@@ -38,6 +38,7 @@ public class BanHangPanel extends JPanel {
     private DonViQuyDoiDAO donViQuyDoiDAO = new DonViQuyDoiDAO();
     private KhachHangDAO khachHangDAO = new KhachHangDAO();
     private KhuyenMaiDAO khuyenMaiDAO = new KhuyenMaiDAO();
+    private DonThuocDAO donThuocDAO = new DonThuocDAO();
     private HoaDonDAO hoaDonDAO = new HoaDonDAO();
     private ChiTietHoaDonDAO chiTietDAO = new ChiTietHoaDonDAO();
     private DefaultTableModel model;
@@ -54,6 +55,7 @@ public class BanHangPanel extends JPanel {
     private RoundedTextField txtTenKhachHang;
     private JLabel lblMaHoaDon;
     private JComboBox<String> cboKhuyenMai;
+    private JComboBox<String> cboDonThuoc;
     private RoundedTextField txtTienKhachDua;
     private RoundedTextField txtTienThoiLai;
     private JRadioButton rdoTienMat;
@@ -63,6 +65,7 @@ public class BanHangPanel extends JPanel {
 
     private KhachHang khachHangHienTai = null;
     private List<KhuyenMai> dsKhuyenMai = new java.util.ArrayList<>();
+    private List<DonThuoc> dsDonThuoc = new java.util.ArrayList<>();
     private String maHoaDonHienTai = "";
     private NhanVien nhanVienHienTai;
 
@@ -136,6 +139,15 @@ public class BanHangPanel extends JPanel {
                         dv,
                         ct.isLaQuaTangKem()
                 });
+            }
+        }
+
+        if (hd.getDonThuoc() != null && cboDonThuoc != null) {
+            for (int i = 0; i < dsDonThuoc.size(); i++) {
+                if (dsDonThuoc.get(i).getMaDonThuoc().equals(hd.getDonThuoc().getMaDonThuoc())) {
+                    cboDonThuoc.setSelectedIndex(i + 1);
+                    break;
+                }
             }
         }
     }
@@ -227,7 +239,7 @@ public class BanHangPanel extends JPanel {
         rightTopPanel.setOpaque(false);
 
         RoundedButton btnXoaDong = new RoundedButton("Xóa dòng");
-        btnXoaDong.setBackground(new Color(220, 53, 69));
+        btnXoaDong.setBackground(new Color(108, 117, 125));
         btnXoaDong.setForeground(Color.WHITE);
         btnXoaDong.setFont(new Font("Segoe UI", Font.BOLD, 12));
         btnXoaDong.setPreferredSize(new Dimension(110, 35));
@@ -243,7 +255,7 @@ public class BanHangPanel extends JPanel {
         });
 
         RoundedButton btnXoaHet = new RoundedButton("Xóa hết");
-        btnXoaHet.setBackground(new Color(108, 117, 125));
+        btnXoaHet.setBackground(new Color(220, 53, 69));
         btnXoaHet.setForeground(Color.WHITE);
         btnXoaHet.setFont(new Font("Segoe UI", Font.BOLD, 12));
         btnXoaHet.setPreferredSize(new Dimension(105, 35));
@@ -495,6 +507,15 @@ public class BanHangPanel extends JPanel {
                 false // NOT a gift
         };
         model.addRow(row);
+
+        if (sp.getPhanLoai() != null && sp.getPhanLoai() == PhanLoai.ETC) {
+            if (cboDonThuoc != null && cboDonThuoc.getSelectedIndex() == 0) {
+                JOptionPane.showMessageDialog(this,
+                        "Sản phẩm [" + sp.getTenSanPham()
+                                + "] là thuốc kê đơn (ETC).\nVui lòng chọn Đơn thuốc cho hóa đơn này!",
+                        "Yêu cầu Đơn thuốc", JOptionPane.INFORMATION_MESSAGE);
+            }
+        }
     }
 
     private void updateRowTotal(int row) {
@@ -509,6 +530,7 @@ public class BanHangPanel extends JPanel {
         double tongTien = 0;
         double thue = 0;
 
+        boolean hasETC = false;
         for (int i = 0; i < model.getRowCount(); i++) {
             int qty = Integer.parseInt(model.getValueAt(i, 3).toString());
             double price = Double.parseDouble(model.getValueAt(i, 4).toString());
@@ -519,21 +541,33 @@ public class BanHangPanel extends JPanel {
 
             tongTien += tienSanPham;
             thue += tienThue;
+
+            DonViQuyDoi dv = (DonViQuyDoi) model.getValueAt(i, 7);
+            if (dv != null && dv.getSanPham() != null && dv.getSanPham().getPhanLoai() == PhanLoai.ETC) {
+                hasETC = true;
+            }
+        }
+
+        if (cboDonThuoc != null) {
+            cboDonThuoc.setEnabled(hasETC);
+            if (!hasETC && cboDonThuoc.getSelectedIndex() != 0) {
+                cboDonThuoc.setSelectedIndex(0);
+            }
         }
 
         double soTienGiam = 0;
         int idx = (cboKhuyenMai != null) ? cboKhuyenMai.getSelectedIndex() - 1 : -1;
         if (idx >= 0 && idx < dsKhuyenMai.size()) {
             KhuyenMai km = dsKhuyenMai.get(idx);
-            
+
             // Kiểm tra giá trị đơn hàng tối thiểu
             if (tongTien < km.getGiaTriDonHangToiThieu()) {
                 final double minVal = km.getGiaTriDonHangToiThieu();
                 SwingUtilities.invokeLater(() -> {
                     if (cboKhuyenMai.getSelectedIndex() != 0) {
                         cboKhuyenMai.setSelectedIndex(0);
-                        JOptionPane.showMessageDialog(this, "Đơn hàng chưa đạt giá trị tối thiểu (" + 
-                            new DecimalFormat("#,### đ").format(minVal) + ") để áp dụng khuyến mãi!");
+                        JOptionPane.showMessageDialog(this, "Đơn hàng chưa đạt giá trị tối thiểu (" +
+                                new DecimalFormat("#,### đ").format(minVal) + ") để áp dụng khuyến mãi!");
                     }
                 });
             } else {
@@ -582,7 +616,7 @@ public class BanHangPanel extends JPanel {
         wrapper.setBackground(COLOR_CARD_BG);
         wrapper.setBorder(new EmptyBorder(10, 5, 10, 5));
 
-        JPanel sidebar = new ScrollableViewportPanel();
+        JPanel sidebar = new JPanel();
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
         sidebar.setOpaque(false);
         sidebar.setBorder(new EmptyBorder(0, 5, 0, 5));
@@ -652,6 +686,7 @@ public class BanHangPanel extends JPanel {
         datePicker.setDate(LocalDate.now());
         datePicker.getComponentDateTextField().setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
         dateFinderStyle(datePicker);
+        datePicker.setEnabled(false);
         sidebar.add(createFieldGroup("Ngày tạo", datePicker));
         sidebar.add(createFieldGroup("Người tạo", createReadOnlyField(nhanVienHienTai.getTenNhanVien())));
 
@@ -665,8 +700,18 @@ public class BanHangPanel extends JPanel {
         cboKhuyenMai.addActionListener(e -> capNhatQuaTang());
         sidebar.add(createFieldGroup("Khuyến mãi", cboKhuyenMai));
 
+        // Đơn thuốc
+        cboDonThuoc = new JComboBox<>();
+        cboDonThuoc.addItem("-- Không có --");
+        cboDonThuoc.setEnabled(false);
+        dsDonThuoc = donThuocDAO.layTatCa();
+        for (DonThuoc dt : dsDonThuoc) {
+            cboDonThuoc.addItem(dt.getMaDonThuoc() + " - BS. " + dt.getTenBacSi());
+        }
+        sidebar.add(createFieldGroup("Đơn thuốc", cboDonThuoc));
+
         // Ghi chú
-        areaNotes = new JTextArea(4, 20);
+        areaNotes = new JTextArea(2, 20);
         areaNotes.setLineWrap(true);
         areaNotes.setWrapStyleWord(true);
         JScrollPane notesScroll = new JScrollPane(areaNotes);
@@ -675,14 +720,7 @@ public class BanHangPanel extends JPanel {
 
         sidebar.add(createPaymentSection());
 
-        JScrollPane scrollPane = new JScrollPane(sidebar);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder());
-        scrollPane.setOpaque(false);
-        scrollPane.getViewport().setOpaque(false);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        wrapper.add(scrollPane, BorderLayout.CENTER);
+        wrapper.add(sidebar, BorderLayout.CENTER);
 
         // Buttons
         JPanel buttonPanel = new JPanel();
@@ -857,8 +895,9 @@ public class BanHangPanel extends JPanel {
         if (idx >= 0 && idx < dsKhuyenMai.size()) {
             KhuyenMai km = dsKhuyenMai.get(idx);
             if (tongTienHang < km.getGiaTriDonHangToiThieu()) {
-                JOptionPane.showMessageDialog(this, "Đơn hàng chưa đạt giá trị tối thiểu (" + 
-                    new DecimalFormat("#,### đ").format(km.getGiaTriDonHangToiThieu()) + ") để áp dụng khuyến mãi này!");
+                JOptionPane.showMessageDialog(this, "Đơn hàng chưa đạt giá trị tối thiểu (" +
+                        new DecimalFormat("#,### đ").format(km.getGiaTriDonHangToiThieu())
+                        + ") để áp dụng khuyến mãi này!");
                 cboKhuyenMai.setSelectedIndex(0);
                 return;
             }
@@ -879,7 +918,7 @@ public class BanHangPanel extends JPanel {
             if (km.getLoaiKhuyenMai() == LoaiKhuyenMai.TANG_KEM && km.getQuaTangKem() != null) {
                 QuaTang qt = km.getQuaTangKem();
                 SanPham sp = sanPhamDAO.timTheoMa(qt.getSanPham().getMaSanPham());
-                
+
                 // Lấy đơn vị quy đổi có hệ số 1 (đơn vị cơ bản)
                 List<DonViQuyDoi> dsDV = donViQuyDoiDAO.timTheoMaSanPham(sp.getMaSanPham());
                 DonViQuyDoi dvCoBan = dsDV.stream()
@@ -916,6 +955,25 @@ public class BanHangPanel extends JPanel {
             return null;
         }
 
+        // Kiểm tra ETC
+        boolean hasETC = false;
+        for (int i = 0; i < model.getRowCount(); i++) {
+            DonViQuyDoi dv = (DonViQuyDoi) model.getValueAt(i, 7);
+            if (dv != null && dv.getSanPham() != null && dv.getSanPham().getPhanLoai() == PhanLoai.ETC) {
+                hasETC = true;
+                break;
+            }
+        }
+
+        if (hasETC && cboDonThuoc != null && cboDonThuoc.getSelectedIndex() <= 0) {
+            if (hienThongBao) {
+                JOptionPane.showMessageDialog(this,
+                        "Hóa đơn chứa thuốc kê đơn (ETC). Vui lòng chọn Đơn thuốc trước khi tiếp tục!",
+                        "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            }
+            return null;
+        }
+
         CaLamDAO caLamDAO = new CaLamDAO();
         CaLam caHienTai = caLamDAO.layCaHienTai(nhanVienHienTai.getMaNhanVien());
         if (caHienTai == null) {
@@ -938,6 +996,11 @@ public class BanHangPanel extends JPanel {
         int idx = cboKhuyenMai.getSelectedIndex() - 1;
         if (idx >= 0 && idx < dsKhuyenMai.size()) {
             hd.setKhuyenMai(dsKhuyenMai.get(idx));
+        }
+
+        int idxDT = (cboDonThuoc != null) ? cboDonThuoc.getSelectedIndex() - 1 : -1;
+        if (idxDT >= 0 && idxDT < dsDonThuoc.size()) {
+            hd.setDonThuoc(dsDonThuoc.get(idxDT));
         }
 
         if (khachHangHienTai != null) {
@@ -994,6 +1057,8 @@ public class BanHangPanel extends JPanel {
             txtSoDienThoai.setText("");
             txtTenKhachHang.setText("");
             cboKhuyenMai.setSelectedIndex(0);
+            if (cboDonThuoc != null)
+                cboDonThuoc.setSelectedIndex(0);
             areaNotes.setText("");
             khachHangHienTai = null;
         } else {
@@ -1088,30 +1153,4 @@ public class BanHangPanel extends JPanel {
         return btn;
     }
 
-    private class ScrollableViewportPanel extends JPanel implements Scrollable {
-        @Override
-        public Dimension getPreferredScrollableViewportSize() {
-            return super.getPreferredSize();
-        }
-
-        @Override
-        public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
-            return 16;
-        }
-
-        @Override
-        public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
-            return 16;
-        }
-
-        @Override
-        public boolean getScrollableTracksViewportWidth() {
-            return true;
-        }
-
-        @Override
-        public boolean getScrollableTracksViewportHeight() {
-            return false;
-        }
-    }
 }
