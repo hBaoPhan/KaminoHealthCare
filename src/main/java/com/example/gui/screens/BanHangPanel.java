@@ -329,6 +329,7 @@ public class BanHangPanel extends JPanel {
                 }
 
                 if (lblTongTienHoaDon != null) {
+                    autoSelectBestKhuyenMai();
                     updateSummary();
                     SwingUtilities.invokeLater(() -> luuHoaDon(false));
                 }
@@ -561,16 +562,7 @@ public class BanHangPanel extends JPanel {
             KhuyenMai km = dsKhuyenMai.get(idx);
 
             // Kiểm tra giá trị đơn hàng tối thiểu
-            if (tongTien < km.getGiaTriDonHangToiThieu()) {
-                final double minVal = km.getGiaTriDonHangToiThieu();
-                SwingUtilities.invokeLater(() -> {
-                    if (cboKhuyenMai.getSelectedIndex() != 0) {
-                        cboKhuyenMai.setSelectedIndex(0);
-                        JOptionPane.showMessageDialog(this, "Đơn hàng chưa đạt giá trị tối thiểu (" +
-                                new DecimalFormat("#,### đ").format(minVal) + ") để áp dụng khuyến mãi!");
-                    }
-                });
-            } else {
+            if (tongTien >= km.getGiaTriDonHangToiThieu()) {
                 if (km.getLoaiKhuyenMai() == LoaiKhuyenMai.PHAN_TRAM) {
                     soTienGiam = tongTien * km.getKhuyenMaiPhanTram() / 100.0;
                 }
@@ -583,6 +575,8 @@ public class BanHangPanel extends JPanel {
         lblKhuyenMaiLabel.setForeground(COLOR_PRIMARY); // Màu xanh lá
         lblThue.setText("Thuế : " + df.format(thue));
         lblThanhTien.setText("Thành tiền : " + df.format(thanhTien));
+        if (cboKhuyenMai != null)
+            cboKhuyenMai.repaint();
         tinhTienThoi();
     }
 
@@ -697,6 +691,42 @@ public class BanHangPanel extends JPanel {
         for (KhuyenMai km : dsKhuyenMai) {
             cboKhuyenMai.addItem(km.getTenKhuyenMai());
         }
+
+        cboKhuyenMai.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected,
+                    boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (index > 0 && dsKhuyenMai != null && index - 1 < dsKhuyenMai.size()) {
+                    double tongTienHang = 0;
+                    if (model != null) {
+                        for (int i = 0; i < model.getRowCount(); i++) {
+                            Boolean isGift = (Boolean) model.getValueAt(i, 8);
+                            if (isGift == null || !isGift) {
+                                int qty = Integer.parseInt(model.getValueAt(i, 3).toString());
+                                double price = Double.parseDouble(model.getValueAt(i, 4).toString());
+                                tongTienHang += qty * price;
+                            }
+                        }
+                    }
+                    KhuyenMai km = dsKhuyenMai.get(index - 1);
+                    String text = km.getTenKhuyenMai();
+                    if (tongTienHang >= km.getGiaTriDonHangToiThieu()) {
+                        if (km.getLoaiKhuyenMai() == LoaiKhuyenMai.PHAN_TRAM) {
+                            double giam = tongTienHang * km.getKhuyenMaiPhanTram() / 100.0;
+                            text += " (Giảm " + new DecimalFormat("#,### đ").format(giam) + ")";
+                        } else {
+                            text += " (Tặng quà)";
+                        }
+                    } else {
+                        text += " (Chưa đủ điều kiện)";
+                    }
+                    setText(text);
+                }
+                return this;
+            }
+        });
+
         cboKhuyenMai.addActionListener(e -> capNhatQuaTang());
         sidebar.add(createFieldGroup("Khuyến mãi", cboKhuyenMai));
 
@@ -876,6 +906,53 @@ public class BanHangPanel extends JPanel {
             dsChiTiet.add(ct);
         }
         return dsChiTiet;
+    }
+
+    private boolean isAutoSelectingPromotion = false;
+
+    private void autoSelectBestKhuyenMai() {
+        if (isAutoSelectingPromotion || cboKhuyenMai == null || dsKhuyenMai == null || dsKhuyenMai.isEmpty())
+            return;
+
+        double tongTienHang = 0;
+        for (int i = 0; i < model.getRowCount(); i++) {
+            Boolean isGift = (Boolean) model.getValueAt(i, 8);
+            if (isGift == null || !isGift) {
+                int qty = Integer.parseInt(model.getValueAt(i, 3).toString());
+                double price = Double.parseDouble(model.getValueAt(i, 4).toString());
+                tongTienHang += qty * price;
+            }
+        }
+
+        int bestIndex = 0;
+        double maxGiam = -1;
+
+        for (int i = 0; i < dsKhuyenMai.size(); i++) {
+            KhuyenMai km = dsKhuyenMai.get(i);
+            if (tongTienHang >= km.getGiaTriDonHangToiThieu()) {
+                if (km.getLoaiKhuyenMai() == LoaiKhuyenMai.PHAN_TRAM) {
+                    double giam = tongTienHang * km.getKhuyenMaiPhanTram() / 100.0;
+                    if (giam > maxGiam) {
+                        maxGiam = giam;
+                        bestIndex = i + 1;
+                    }
+                } else if (km.getLoaiKhuyenMai() == LoaiKhuyenMai.TANG_KEM) {
+                    if (maxGiam <= 0) {
+                        maxGiam = 0;
+                        bestIndex = i + 1;
+                    }
+                }
+            }
+        }
+
+        if (cboKhuyenMai.getSelectedIndex() != bestIndex) {
+            isAutoSelectingPromotion = true;
+            try {
+                cboKhuyenMai.setSelectedIndex(bestIndex);
+            } finally {
+                isAutoSelectingPromotion = false;
+            }
+        }
     }
 
     private void capNhatQuaTang() {
