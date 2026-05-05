@@ -3,7 +3,7 @@ package com.example.dao;
 import com.example.connectDB.ConnectDB;
 import com.example.entity.KhuyenMai;
 import com.example.entity.QuaTang;
-import com.example.entity.SanPham;
+import com.example.entity.DonViQuyDoi;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -22,7 +22,7 @@ public class QuaTangDAO {
             while (ketQua.next()) {
                 QuaTang qt = new QuaTang();
                 qt.setKhuyenMai(new KhuyenMai(ketQua.getString("maKhuyenMai")));
-                qt.setSanPham(new SanPham(ketQua.getString("maSanPham")));
+                qt.setDonViQuyDoi(new DonViQuyDoi(ketQua.getString("maDonVi")));
                 qt.setSoLuongTang(ketQua.getInt("soLuongTang"));
                 danhSach.add(qt);
             }
@@ -44,7 +44,7 @@ public class QuaTangDAO {
             while (ketQua.next()) {
                 QuaTang qt = new QuaTang();
                 qt.setKhuyenMai(new KhuyenMai(ketQua.getString("maKhuyenMai")));
-                qt.setSanPham(new SanPham(ketQua.getString("maSanPham")));
+                qt.setDonViQuyDoi(new DonViQuyDoi(ketQua.getString("maDonVi")));
                 qt.setSoLuongTang(ketQua.getInt("soLuongTang"));
                 danhSach.add(qt);
             }
@@ -61,7 +61,7 @@ public class QuaTangDAO {
             String truyVan = "INSERT INTO QuaTang VALUES (?, ?, ?)";
             PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
             lenh.setString(1, qt.getKhuyenMai().getMaKhuyenMai());
-            lenh.setString(2, qt.getSanPham().getMaSanPham());
+            lenh.setString(2, qt.getDonViQuyDoi().getMaDonVi());
             lenh.setInt(3, qt.getSoLuongTang());
             soDongThayDoi = lenh.executeUpdate();
         } catch (SQLException e) {
@@ -70,14 +70,14 @@ public class QuaTangDAO {
         return soDongThayDoi > 0;
     }
 
-    public boolean xoa(String maKM, String maSP) {
+    public boolean xoa(String maKM, String maDonVi) {
         int soDongThayDoi = 0;
         try {
             Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "DELETE FROM QuaTang WHERE maKhuyenMai = ? AND maSanPham = ?";
+            String truyVan = "DELETE FROM QuaTang WHERE maKhuyenMai = ? AND maDonVi = ?";
             PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
             lenh.setString(1, maKM);
-            lenh.setString(2, maSP);
+            lenh.setString(2, maDonVi);
             soDongThayDoi = lenh.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();

@@ -1,7 +1,7 @@
 package com.example.dao;
 
 import com.example.connectDB.ConnectDB;
-import com.example.entity.enums.PhanLoai;
+import com.example.entity.enums.LoaiSanPham;
 import com.example.entity.SanPham;
 
 import java.sql.*;
@@ -47,7 +47,7 @@ public class SanPhamDAO {
     public boolean them(SanPham sp) {
         Connection ketNoi = ConnectDB.getConnection();
         try (PreparedStatement lenh = ketNoi.prepareStatement(
-                "INSERT INTO SanPham (maSanPham, tenSanPham, phanLoai, soLuongTon, moTa, hoatChat, donGiaCoBan, trangThaiKinhDoanh, thue) " +
+                "INSERT INTO SanPham (maSanPham, tenSanPham, loaiSanPham, soLuongTon, moTa, hoatChat, donGiaCoBan, trangThaiKinhDoanh, thue) " +
                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
 
             setParameters(lenh, sp);
@@ -61,11 +61,11 @@ public class SanPhamDAO {
     public boolean capNhat(SanPham sp) {
         Connection ketNoi = ConnectDB.getConnection();
         try (PreparedStatement lenh = ketNoi.prepareStatement(
-                "UPDATE SanPham SET tenSanPham = ?, phanLoai = ?, soLuongTon = ?, moTa = ?, hoatChat = ?, " +
+                "UPDATE SanPham SET tenSanPham = ?, loaiSanPham = ?, soLuongTon = ?, moTa = ?, hoatChat = ?, " +
                         "donGiaCoBan = ?, trangThaiKinhDoanh = ?, thue = ? WHERE maSanPham = ?")) {
 
             lenh.setString(1, sp.getTenSanPham());
-            lenh.setString(2, sp.getPhanLoai().name());
+            lenh.setString(2, sp.getLoaiSanPham().name());
             lenh.setInt(3, sp.getSoLuongTon());
             lenh.setString(4, sp.getMoTa());
             lenh.setString(5, sp.getHoatChat());
@@ -143,12 +143,12 @@ public class SanPhamDAO {
     /**
      * Lọc theo phân loại (ETC, OTC, TPCN)
      */
-    public List<SanPham> timTheoPhanLoai(PhanLoai phanLoai) {
+    public List<SanPham> timTheoPhanLoai(LoaiSanPham loaiSanPham) {
         List<SanPham> danhSach = new ArrayList<>();
         Connection ketNoi = ConnectDB.getConnection();
-        try (PreparedStatement lenh = ketNoi.prepareStatement("SELECT * FROM SanPham WHERE phanLoai = ?")) {
+        try (PreparedStatement lenh = ketNoi.prepareStatement("SELECT * FROM SanPham WHERE loaiSanPham = ?")) {
 
-            lenh.setString(1, phanLoai.name());
+            lenh.setString(1, loaiSanPham.name());
             try (ResultSet rs = lenh.executeQuery()) {
                 while (rs.next()) {
                     danhSach.add(mapResultSetToSanPham(rs));
@@ -226,9 +226,9 @@ public class SanPhamDAO {
      * <p>
      * Ví dụ: Panadol (OTC) -> OTC-PAN-001
      */
-    public String taoMaSanPhamTuDong(PhanLoai phanLoai, String tenSanPham) {
+    public String taoMaSanPhamTuDong(LoaiSanPham loaiSanPham, String tenSanPham) {
         String vietTat = taoVietTatTenSanPham(tenSanPham);
-        String prefix = phanLoai.name() + "-" + vietTat + "-";
+        String prefix = loaiSanPham.name() + "-" + vietTat + "-";
 
         String sql = "SELECT MAX(maSanPham) FROM SanPham WHERE maSanPham LIKE ?";
         Connection ketNoi = ConnectDB.getConnection();
@@ -261,15 +261,15 @@ public class SanPhamDAO {
     /**
      * Tìm kiếm nâng cao (kết hợp từ khóa + phân loại)
      */
-    public List<SanPham> timKiemNangCao(String tuKhoa, PhanLoai phanLoai) {
+    public List<SanPham> timKiemNangCao(String tuKhoa, LoaiSanPham loaiSanPham) {
         List<SanPham> danhSach = new ArrayList<>();
         StringBuilder sql = new StringBuilder("SELECT * FROM SanPham WHERE 1=1");
 
         if (tuKhoa != null && !tuKhoa.trim().isEmpty()) {
             sql.append(" AND (maSanPham LIKE ? OR tenSanPham LIKE ?)");
         }
-        if (phanLoai != null) {
-            sql.append(" AND phanLoai = ?");
+        if (loaiSanPham != null) {
+            sql.append(" AND loaiSanPham = ?");
         }
 
         Connection ketNoi = ConnectDB.getConnection();
@@ -281,8 +281,8 @@ public class SanPhamDAO {
                 lenh.setString(paramIndex++, keyword);
                 lenh.setString(paramIndex++, keyword);
             }
-            if (phanLoai != null) {
-                lenh.setString(paramIndex, phanLoai.name());
+            if (loaiSanPham != null) {
+                lenh.setString(paramIndex, loaiSanPham.name());
             }
 
             try (ResultSet rs = lenh.executeQuery()) {
@@ -301,7 +301,7 @@ public class SanPhamDAO {
         SanPham sp = new SanPham();
         sp.setMaSanPham(rs.getString("maSanPham"));
         sp.setTenSanPham(rs.getString("tenSanPham"));
-        sp.setPhanLoai(PhanLoai.valueOf(rs.getString("phanLoai")));
+        sp.setLoaiSanPham(LoaiSanPham.valueOf(rs.getString("loaiSanPham")));
         sp.setSoLuongTon(rs.getInt("soLuongTon"));
         sp.setMoTa(rs.getString("moTa"));
         sp.setHoatChat(rs.getString("hoatChat"));
@@ -314,7 +314,7 @@ public class SanPhamDAO {
     private void setParameters(PreparedStatement lenh, SanPham sp) throws SQLException {
         lenh.setString(1, sp.getMaSanPham());
         lenh.setString(2, sp.getTenSanPham());
-        lenh.setString(3, sp.getPhanLoai().name());
+        lenh.setString(3, sp.getLoaiSanPham().name());
         lenh.setInt(4, sp.getSoLuongTon());
         lenh.setString(5, sp.getMoTa());
         lenh.setString(6, sp.getHoatChat());

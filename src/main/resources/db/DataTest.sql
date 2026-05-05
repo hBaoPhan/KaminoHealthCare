@@ -28,7 +28,7 @@ INSERT INTO KhuyenMai (maKhuyenMai, tenKhuyenMai, thoiGianBatDau, thoiGianKetThu
                                                                                                                                                 ('KM05', N'Sale sinh nhật 20%', '2026-10-01', '2026-10-31', N'PHAN_TRAM', 20, 1000000);
 
 -- Bảng SanPham
-INSERT INTO SanPham (maSanPham, tenSanPham, phanLoai, soLuongTon, moTa, hoatChat, donGiaCoBan, trangThaiKinhDoanh, thue) VALUES
+INSERT INTO SanPham (maSanPham, tenSanPham, loaiSanPham, soLuongTon, moTa, hoatChat, donGiaCoBan, trangThaiKinhDoanh, thue) VALUES
                                                                                                                              ('SP01', N'Panadol Extra', N'OTC', 1000, N'Giảm đau, hạ sốt', N'Paracetamol 500mg, Caffeine 65mg', 15000, 1, 5),
                                                                                                                              ('SP02', N'Vitamin C 500mg', N'TPCN', 500, N'Bổ sung Vitamin C', N'Vitamin C', 50000, 1, 10),
                                                                                                                              ('SP03', N'Amoxicillin 500mg', N'ETC', 2000, N'Kháng sinh', N'Amoxicillin', 20000, 1, 5),
@@ -86,12 +86,12 @@ INSERT INTO Lo (maLo, soLo, ngayHetHan, soLuongSanPham, maSanPham, giaNhap) VALU
 -- =====================================================================
 
 -- Bảng QuaTang (Phụ thuộc KhuyenMai, SanPham)
-INSERT INTO QuaTang (maKhuyenMai, maSanPham, soLuongTang) VALUES
-                                                              ('KM02', 'SP02', 1),
-                                                              ('KM04', 'SP04', 1),
-                                                              ('KM02', 'SP04', 2),
-                                                              ('KM04', 'SP05', 1),
-                                                              ('KM05', 'SP04', 5);
+INSERT INTO QuaTang (maKhuyenMai, maDonVi, soLuongTang) VALUES
+                                                              ('KM02', 'DV03', 1),
+                                                              ('KM04', 'DV05', 1),
+                                                              ('KM02', 'DV01', 2),
+                                                              ('KM04', 'DV04', 1),
+                                                              ('KM05', 'DV02', 5);
 
 -- Bảng HoaDon (Phụ thuộc NhanVien, KhachHang, KhuyenMai, CaLam, DonThuoc)
 INSERT INTO HoaDon (maHoaDon, thoiGianTao, maNhanVien, trangThaiThanhToan, maKhachHang, maKhuyenMai, loaiHoaDon, maCa, ghiChu, maHoaDonDoiTra, maDonThuoc, phuongThucThanhToan) VALUES

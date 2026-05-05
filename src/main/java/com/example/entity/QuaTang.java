@@ -5,15 +5,15 @@ import java.util.Objects;
 
 public class QuaTang {
     private KhuyenMai khuyenMai;
-    private SanPham sanPham;
+    private DonViQuyDoi donViQuyDoi;
     private int soLuongTang;
 
     public QuaTang() {
     }
 
-    public QuaTang(KhuyenMai khuyenMai, SanPham sanPham, int soLuongTang) {
+    public QuaTang(KhuyenMai khuyenMai, DonViQuyDoi donViQuyDoi, int soLuongTang) {
         this.khuyenMai = khuyenMai;
-        this.sanPham = sanPham;
+        this.donViQuyDoi = donViQuyDoi;
         this.soLuongTang = soLuongTang;
     }
 
@@ -25,12 +25,12 @@ public class QuaTang {
         this.khuyenMai = khuyenMai;
     }
 
-    public SanPham getSanPham() {
-        return sanPham;
+    public DonViQuyDoi getDonViQuyDoi() {
+        return donViQuyDoi;
     }
 
-    public void setSanPham(SanPham sanPham) {
-        this.sanPham = sanPham;
+    public void setDonViQuyDoi(DonViQuyDoi donViQuyDoi) {
+        this.donViQuyDoi = donViQuyDoi;
     }
 
     public int getSoLuongTang() {
@@ -46,19 +46,19 @@ public class QuaTang {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         QuaTang quaTang = (QuaTang) o;
-        return Objects.equals(khuyenMai, quaTang.khuyenMai) && Objects.equals(sanPham, quaTang.sanPham);
+        return Objects.equals(khuyenMai, quaTang.khuyenMai) && Objects.equals(donViQuyDoi, quaTang.donViQuyDoi);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(khuyenMai, sanPham);
+        return Objects.hash(khuyenMai, donViQuyDoi);
     }
 
     @Override
     public String toString() {
         return "QuaTang{" +
                 "khuyenMai=" + (khuyenMai != null ? khuyenMai.getMaKhuyenMai() : "null") +
-                ", sanPham=" + (sanPham != null ? sanPham.getMaSanPham() : "null") +
+                ", donViQuyDoi=" + (donViQuyDoi != null ? donViQuyDoi.getMaDonVi() : "null") +
                 ", soLuongTang=" + soLuongTang +
                 '}';
     }

@@ -6,7 +6,7 @@ import com.example.entity.TaiKhoan;
 import com.example.entity.ChiTietHoaDon;
 import com.example.entity.HoaDon;
 import com.example.entity.Lo;
-import com.example.entity.enums.PhanLoai;
+import com.example.entity.enums.LoaiSanPham;
 import com.example.dao.HoaDonDAO;
 import com.example.dao.LoDAO;
 
@@ -360,12 +360,12 @@ public class ManHinhChinhPanel extends JPanel {
                 for (ChiTietHoaDon ct : hd.getDsChiTiet()) {
                     if (ct.getDonViQuyDoi() != null && ct.getDonViQuyDoi().getSanPham() != null) {
                         double tienCT = ct.tinhThanhTien();
-                        PhanLoai pl = ct.getDonViQuyDoi().getSanPham().getPhanLoai();
-                        if (pl == PhanLoai.ETC)
+                        LoaiSanPham pl = ct.getDonViQuyDoi().getSanPham().getLoaiSanPham();
+                        if (pl == LoaiSanPham.ETC)
                             dtETC += tienCT;
-                        else if (pl == PhanLoai.OTC)
+                        else if (pl == LoaiSanPham.OTC)
                             dtOTC += tienCT;
-                        else if (pl == PhanLoai.TPCN)
+                        else if (pl == LoaiSanPham.TPCN)
                             dtTPCN += tienCT;
                     }
                 }

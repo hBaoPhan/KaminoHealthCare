@@ -54,7 +54,7 @@ CREATE TABLE KhuyenMai (
 CREATE TABLE SanPham (
     maSanPham VARCHAR(20) PRIMARY KEY,
     tenSanPham NVARCHAR(200) NOT NULL,
-    phanLoai NVARCHAR(20) CHECK (phanLoai IN (N'ETC', N'OTC', N'TPCN')),
+    loaiSanPham NVARCHAR(20) CHECK (loaiSanPham IN (N'ETC', N'OTC', N'TPCN')),
     soLuongTon INT DEFAULT 0,
     moTa NVARCHAR(MAX),
     hoatChat NVARCHAR(200),
@@ -63,18 +63,18 @@ CREATE TABLE SanPham (
     thue FLOAT
 );
 
-CREATE TABLE QuaTang (
-    maKhuyenMai VARCHAR(10) FOREIGN KEY REFERENCES KhuyenMai(maKhuyenMai),
-    maSanPham VARCHAR(20) FOREIGN KEY REFERENCES SanPham(maSanPham),
-    soLuongTang INT,
-    PRIMARY KEY (maKhuyenMai, maSanPham)
-);
-
 CREATE TABLE DonViQuyDoi (
     maDonVi VARCHAR(20) PRIMARY KEY,
-    tenDonVi NVARCHAR(20) CHECK (tenDonVi IN (N'VIEN', N'VI', N'HOP', N'TUYP', N'CHAI')),
+    tenDonVi NVARCHAR(20) CHECK (tenDonVi IN (N'VIEN', N'VI', N'HOP', N'TUYP', N'CHAI', N'CAI')),
     heSoQuyDoi INT,
     maSanPham VARCHAR(20) FOREIGN KEY REFERENCES SanPham(maSanPham)
+);
+
+CREATE TABLE QuaTang (
+    maKhuyenMai VARCHAR(10) FOREIGN KEY REFERENCES KhuyenMai(maKhuyenMai),
+    maDonVi VARCHAR(20) FOREIGN KEY REFERENCES DonViQuyDoi(maDonVi),
+    soLuongTang INT,
+    PRIMARY KEY (maKhuyenMai, maDonVi)
 );
 
 CREATE TABLE Lo (

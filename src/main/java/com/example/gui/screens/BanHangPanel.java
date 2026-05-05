@@ -509,7 +509,7 @@ public class BanHangPanel extends JPanel {
         };
         model.addRow(row);
 
-        if (sp.getPhanLoai() != null && sp.getPhanLoai() == PhanLoai.ETC) {
+        if (sp.getLoaiSanPham() != null && sp.getLoaiSanPham() == LoaiSanPham.ETC) {
             if (cboDonThuoc != null && cboDonThuoc.getSelectedIndex() == 0) {
                 JOptionPane.showMessageDialog(this,
                         "Sản phẩm [" + sp.getTenSanPham()
@@ -544,7 +544,7 @@ public class BanHangPanel extends JPanel {
             thue += tienThue;
 
             DonViQuyDoi dv = (DonViQuyDoi) model.getValueAt(i, 7);
-            if (dv != null && dv.getSanPham() != null && dv.getSanPham().getPhanLoai() == PhanLoai.ETC) {
+            if (dv != null && dv.getSanPham() != null && dv.getSanPham().getLoaiSanPham() == LoaiSanPham.ETC) {
                 hasETC = true;
             }
         }
@@ -994,16 +994,10 @@ public class BanHangPanel extends JPanel {
             KhuyenMai km = dsKhuyenMai.get(idx);
             if (km.getLoaiKhuyenMai() == LoaiKhuyenMai.TANG_KEM && km.getQuaTangKem() != null) {
                 QuaTang qt = km.getQuaTangKem();
-                SanPham sp = sanPhamDAO.timTheoMa(qt.getSanPham().getMaSanPham());
-
-                // Lấy đơn vị quy đổi có hệ số 1 (đơn vị cơ bản)
-                List<DonViQuyDoi> dsDV = donViQuyDoiDAO.timTheoMaSanPham(sp.getMaSanPham());
-                DonViQuyDoi dvCoBan = dsDV.stream()
-                        .filter(dv -> dv.getHeSoQuyDoi() == 1)
-                        .findFirst()
-                        .orElse(dsDV.isEmpty() ? null : dsDV.get(0));
+                DonViQuyDoi dvCoBan = donViQuyDoiDAO.timTheoMa(qt.getDonViQuyDoi().getMaDonVi());
 
                 if (dvCoBan != null) {
+                    SanPham sp = dvCoBan.getSanPham();
                     Object[] row = {
                             sp.getMaSanPham(),
                             sp.getTenSanPham() + " (Quà tặng)",
@@ -1036,7 +1030,7 @@ public class BanHangPanel extends JPanel {
         boolean hasETC = false;
         for (int i = 0; i < model.getRowCount(); i++) {
             DonViQuyDoi dv = (DonViQuyDoi) model.getValueAt(i, 7);
-            if (dv != null && dv.getSanPham() != null && dv.getSanPham().getPhanLoai() == PhanLoai.ETC) {
+            if (dv != null && dv.getSanPham() != null && dv.getSanPham().getLoaiSanPham() == LoaiSanPham.ETC) {
                 hasETC = true;
                 break;
             }
