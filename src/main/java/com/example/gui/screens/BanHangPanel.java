@@ -952,6 +952,8 @@ public class BanHangPanel extends JPanel {
             } finally {
                 isAutoSelectingPromotion = false;
             }
+            // Gọi tường minh sau khi flag đã reset để xóa quà cũ và thêm quà mới đúng
+            capNhatQuaTang();
         }
     }
 
@@ -980,7 +982,7 @@ public class BanHangPanel extends JPanel {
             }
         }
 
-        // 3. Xóa tất cả quà tặng hiện có trong bảng
+        // 3. Luôn xóa toàn bộ quà tặng cũ trong bảng (kể cả khi ActionListener gọi từ auto-select)
         for (int i = model.getRowCount() - 1; i >= 0; i--) {
             Boolean isGift = (Boolean) model.getValueAt(i, 8);
             if (isGift != null && isGift) {
@@ -988,7 +990,13 @@ public class BanHangPanel extends JPanel {
             }
         }
 
-        // 4. Nếu khuyến mãi hiện tại là TẶNG_KÈM, thêm quà vào
+        // 4. Nếu đang auto-select, dừng ở đây — lần gọi tường minh sau khi flag reset sẽ xử lý tiếp
+        if (isAutoSelectingPromotion) {
+            updateSummary();
+            return;
+        }
+
+        // 5. Nếu khuyến mãi hiện tại là TẶNG_KÈM, thêm quà vào
         idx = (cboKhuyenMai != null) ? cboKhuyenMai.getSelectedIndex() - 1 : -1;
         if (idx >= 0 && idx < dsKhuyenMai.size()) {
             KhuyenMai km = dsKhuyenMai.get(idx);

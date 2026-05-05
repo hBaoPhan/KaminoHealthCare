@@ -40,6 +40,7 @@ public class HoaDonPanel extends JPanel {
 
     private RoundedTextField txtSearch;
     private DatePicker datePicker;
+    private JComboBox<String> cboLoaiHoaDon;
     private RoundedButton btnView;
     private JTable table;
 
@@ -130,6 +131,17 @@ public class HoaDonPanel extends JPanel {
         datePicker.setBackground(Color.WHITE);
         datePicker.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1, true));
 
+        // --- ComboBox lọc loại hóa đơn ---
+        cboLoaiHoaDon = new JComboBox<>(new String[] {
+                "Tất cả",
+                LoaiHoaDon.BAN_HANG.getMoTa(),
+                LoaiHoaDon.DOI_HANG.getMoTa(),
+                LoaiHoaDon.TRA_HANG.getMoTa()
+        });
+        cboLoaiHoaDon.setFont(FONT_TEXT);
+        cboLoaiHoaDon.setPreferredSize(new Dimension(160, 35));
+        cboLoaiHoaDon.setBackground(Color.WHITE);
+
         btnView = new RoundedButton("Xem  👁");
         btnView.setFont(FONT_TEXT);
         btnView.setForeground(Color.DARK_GRAY);
@@ -138,6 +150,8 @@ public class HoaDonPanel extends JPanel {
 
         leftPanel.add(txtSearch);
         leftPanel.add(datePicker);
+        leftPanel.add(new JLabel("Loại:"));
+        leftPanel.add(cboLoaiHoaDon);
         leftPanel.add(btnView);
 
         RoundedButton btnPayment = new RoundedButton("Thanh toán");
@@ -164,6 +178,7 @@ public class HoaDonPanel extends JPanel {
         });
 
         datePicker.addDateChangeListener(event -> taiLaiDanhSach());
+        cboLoaiHoaDon.addActionListener(e -> taiLaiDanhSach());
         btnView.addActionListener(e -> xemChiTietHoaDon());
         btnPayment.addActionListener(e -> thanhToanHoaDon());
 
@@ -251,26 +266,39 @@ public class HoaDonPanel extends JPanel {
     public void taiLaiDanhSach() {
         if (model == null)
             return;
-        model.setRowCount(0); // Xóa dữ liệu cũ
+        model.setRowCount(0);
 
         String keyword = txtSearch != null ? txtSearch.getText().trim() : "";
         if (keyword.equals("Mã"))
-            keyword = ""; // Bỏ qua text mặc định
+            keyword = "";
 
         java.time.LocalDate date = datePicker != null ? datePicker.getDate() : null;
 
+        // Lấy loại hóa đơn được chọn từ combobox
+        String loaiChon = cboLoaiHoaDon != null ? (String) cboLoaiHoaDon.getSelectedItem() : "Tất cả";
+
         List<HoaDon> ds = hoaDonDAO.timKiem(keyword, date);
 
-        int homNay = 0;
-        int banHang = 0;
-        int doiHang = 0;
-        int traHang = 0;
-
+        int homNay = 0, banHang = 0, doiHang = 0, traHang = 0;
         java.time.LocalDate today = java.time.LocalDate.now();
         java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
         java.text.NumberFormat nf = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("vi", "VN"));
 
         for (HoaDon h : ds) {
+            // Cập nhật stats (luôn đếm toàn bộ, không phụ thuộc filter loại)
+            if (h.getThoiGianTao() != null && h.getThoiGianTao().toLocalDate().isEqual(today))
+                homNay++;
+            if (h.getLoaiHoaDon() == LoaiHoaDon.BAN_HANG)   banHang++;
+            else if (h.getLoaiHoaDon() == LoaiHoaDon.DOI_HANG) doiHang++;
+            else if (h.getLoaiHoaDon() == LoaiHoaDon.TRA_HANG) traHang++;
+
+            // Lọc theo loại hóa đơn được chọn
+            if (!"Tất cả".equals(loaiChon)) {
+                String moTaLoai = h.getLoaiHoaDon() != null ? h.getLoaiHoaDon().getMoTa() : "";
+                if (!loaiChon.equals(moTaLoai))
+                    continue;
+            }
+
             String ngayTao = h.getThoiGianTao() != null ? h.getThoiGianTao().format(dtf) : "";
             String nguoiTao = h.getNhanVien() != null ? h.getNhanVien().getTenNhanVien() : "";
             String loaiHoaDon = h.getLoaiHoaDon() != null ? h.getLoaiHoaDon().getMoTa() : "";
@@ -280,27 +308,9 @@ public class HoaDonPanel extends JPanel {
             String trangThai = h.isTrangThaiThanhToan() ? "Đã thanh toán" : "Chưa thanh toán";
 
             model.addRow(new Object[] {
-                    h.getMaHoaDon(),
-                    nguoiTao,
-                    ngayTao,
-                    loaiHoaDon,
-                    khachHang,
-                    tongTien,
-                    khuyenMai,
-                    trangThai
+                    h.getMaHoaDon(), nguoiTao, ngayTao, loaiHoaDon,
+                    khachHang, tongTien, khuyenMai, trangThai
             });
-
-            if (h.getThoiGianTao() != null && h.getThoiGianTao().toLocalDate().isEqual(today)) {
-                homNay++;
-            }
-
-            if (h.getLoaiHoaDon() == LoaiHoaDon.BAN_HANG) {
-                banHang++;
-            } else if (h.getLoaiHoaDon() == LoaiHoaDon.DOI_HANG) {
-                doiHang++;
-            } else if (h.getLoaiHoaDon() == LoaiHoaDon.TRA_HANG) {
-                traHang++;
-            }
         }
 
         if (lblHoaDonHomNay != null) {
