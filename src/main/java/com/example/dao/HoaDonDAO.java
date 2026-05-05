@@ -261,6 +261,57 @@ public class HoaDonDAO {
         return soDongThayDoi > 0;
     }
 
+    public boolean huyHoaDon(String maHD) {
+        Connection con = null;
+        try {
+            con = ConnectDB.getConnection();
+            con.setAutoCommit(false);
+
+            // 1. Xóa SuPhanBoLo (nếu có)
+            try (PreparedStatement ps = con.prepareStatement("DELETE FROM SuPhanBoLo WHERE maHoaDon = ?")) {
+                ps.setString(1, maHD);
+                ps.executeUpdate();
+            }
+
+            // 2. Xóa ChiTietHoaDon
+            try (PreparedStatement ps = con.prepareStatement("DELETE FROM ChiTietHoaDon WHERE maHoaDon = ?")) {
+                ps.setString(1, maHD);
+                ps.executeUpdate();
+            }
+
+            // 3. Xóa HoaDon
+            try (PreparedStatement ps = con.prepareStatement("DELETE FROM HoaDon WHERE maHoaDon = ?")) {
+                ps.setString(1, maHD);
+                int rows = ps.executeUpdate();
+                if (rows == 0) {
+                    con.rollback();
+                    return false;
+                }
+            }
+
+            con.commit();
+            return true;
+        } catch (SQLException e) {
+            if (con != null) {
+                try {
+                    con.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (con != null) {
+                try {
+                    con.setAutoCommit(true);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+    }
+
     public boolean xoa(String maHD) {
         int soDongThayDoi = 0;
         try {

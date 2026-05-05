@@ -102,15 +102,6 @@ public class BanHangPanel extends JPanel {
                 txtTenKhachHang.setText(khachHangHienTai.getTenKhachHang());
         }
 
-        if (hd.getKhuyenMai() != null && cboKhuyenMai != null) {
-            for (int i = 0; i < dsKhuyenMai.size(); i++) {
-                if (dsKhuyenMai.get(i).getMaKhuyenMai().equals(hd.getKhuyenMai().getMaKhuyenMai())) {
-                    cboKhuyenMai.setSelectedIndex(i + 1);
-                    break;
-                }
-            }
-        }
-
         if (areaNotes != null)
             areaNotes.setText(hd.getGhiChu() != null ? hd.getGhiChu() : "");
         if (hd.getPhuongThucThanhToan() != null && rdoChuyenKhoan != null) {
@@ -120,9 +111,9 @@ public class BanHangPanel extends JPanel {
                 rdoTienMat.setSelected(true);
         }
 
+        // 1. Tải danh sách sản phẩm vào bảng trước
         if (model != null && hd.getDsChiTiet() != null) {
             model.setRowCount(0);
-            DecimalFormat df = new DecimalFormat("#,###");
             for (ChiTietHoaDon ct : hd.getDsChiTiet()) {
                 DonViQuyDoi dv = ct.getDonViQuyDoi();
                 String tenDonVi = dv.getTenDonVi() != null ? dv.getTenDonVi().getMoTa() : dv.getMaDonVi();
@@ -139,6 +130,23 @@ public class BanHangPanel extends JPanel {
                         dv,
                         ct.isLaQuaTangKem()
                 });
+            }
+        }
+
+        updateSummary();
+
+        // 2. Áp dụng khuyến mãi sau khi đã có dữ liệu sản phẩm và tổng tiền
+        if (hd.getKhuyenMai() != null && cboKhuyenMai != null) {
+            isAutoSelectingPromotion = true;
+            try {
+                for (int i = 0; i < dsKhuyenMai.size(); i++) {
+                    if (dsKhuyenMai.get(i).getMaKhuyenMai().equals(hd.getKhuyenMai().getMaKhuyenMai())) {
+                        cboKhuyenMai.setSelectedIndex(i + 1);
+                        break;
+                    }
+                }
+            } finally {
+                isAutoSelectingPromotion = false;
             }
         }
 
@@ -958,7 +966,15 @@ public class BanHangPanel extends JPanel {
     }
 
     private void capNhatQuaTang() {
-        // 1. Tính toán tổng tiền hàng (không tính quà tặng hiện có)
+        // 1. Luôn xóa toàn bộ quà tặng cũ trong bảng trước khi tính toán
+        for (int i = model.getRowCount() - 1; i >= 0; i--) {
+            Boolean isGift = (Boolean) model.getValueAt(i, 8);
+            if (isGift != null && isGift) {
+                model.removeRow(i);
+            }
+        }
+
+        // 2. Tính toán tổng tiền hàng
         double tongTienHang = 0;
         for (int i = 0; i < model.getRowCount(); i++) {
             Boolean isGift = (Boolean) model.getValueAt(i, 8);
@@ -969,28 +985,23 @@ public class BanHangPanel extends JPanel {
             }
         }
 
-        // 2. Kiểm tra điều kiện áp dụng trước khi thêm quà mới
+        // 3. Kiểm tra điều kiện áp dụng
         int idx = (cboKhuyenMai != null) ? cboKhuyenMai.getSelectedIndex() - 1 : -1;
         if (idx >= 0 && idx < dsKhuyenMai.size()) {
             KhuyenMai km = dsKhuyenMai.get(idx);
             if (tongTienHang < km.getGiaTriDonHangToiThieu()) {
-                JOptionPane.showMessageDialog(this, "Đơn hàng chưa đạt giá trị tối thiểu (" +
-                        new DecimalFormat("#,### đ").format(km.getGiaTriDonHangToiThieu())
-                        + ") để áp dụng khuyến mãi này!");
-                cboKhuyenMai.setSelectedIndex(0);
+                if (!isAutoSelectingPromotion) {
+                    JOptionPane.showMessageDialog(this, "Đơn hàng chưa đạt giá trị tối thiểu (" +
+                            new DecimalFormat("#,### đ").format(km.getGiaTriDonHangToiThieu())
+                            + ") để áp dụng khuyến mãi này!");
+                    cboKhuyenMai.setSelectedIndex(0);
+                }
+                updateSummary();
                 return;
             }
         }
 
-        // 3. Luôn xóa toàn bộ quà tặng cũ trong bảng (kể cả khi ActionListener gọi từ auto-select)
-        for (int i = model.getRowCount() - 1; i >= 0; i--) {
-            Boolean isGift = (Boolean) model.getValueAt(i, 8);
-            if (isGift != null && isGift) {
-                model.removeRow(i);
-            }
-        }
-
-        // 4. Nếu đang auto-select, dừng ở đây — lần gọi tường minh sau khi flag reset sẽ xử lý tiếp
+        // 4. Nếu đang auto-select, dừng ở đây (sẽ có lần gọi sau khi flag reset)
         if (isAutoSelectingPromotion) {
             updateSummary();
             return;
