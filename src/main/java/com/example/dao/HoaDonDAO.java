@@ -443,10 +443,10 @@ public class HoaDonDAO {
     /**
      * Hàm thực thi toàn bộ luồng đổi hàng trong 1 Transaction duy nhất
      */
-    public boolean luuGiaoDichDoiHang(HoaDon hoaDonMoi,
-                                      List<SuPhanBoLo> dsTraLai,
-                                      List<ChiTietHoaDon> dsChiTietMoi,
-                                      List<SuPhanBoLo> dsPhanBoMoi) {
+    public boolean luuHoaDonDoiHang(HoaDon hoaDonMoi,
+            List<SuPhanBoLo> dsTraLai,
+            List<ChiTietHoaDon> dsChiTietMoi,
+            List<SuPhanBoLo> dsPhanBoMoi) {
         Connection ketNoi = null;
         try {
             ketNoi = ConnectDB.getConnection();
@@ -510,8 +510,8 @@ public class HoaDonDAO {
                 String themPhanBo = "INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong) VALUES (?, ?, ?, ?)";
 
                 try (PreparedStatement psKtLo = ketNoi.prepareStatement(ktLo);
-                     PreparedStatement psLoMoi = ketNoi.prepareStatement(capNhatLoMoi);
-                     PreparedStatement psPhanBo = ketNoi.prepareStatement(themPhanBo)) {
+                        PreparedStatement psLoMoi = ketNoi.prepareStatement(capNhatLoMoi);
+                        PreparedStatement psPhanBo = ketNoi.prepareStatement(themPhanBo)) {
 
                     for (SuPhanBoLo spMoi : dsPhanBoMoi) {
                         psKtLo.setString(1, spMoi.getLo().getMaLo());
@@ -678,7 +678,7 @@ public class HoaDonDAO {
      * Không trừ kho. Nếu HoaDon đã tồn tại, chỉ lưu thêm chi tiết (idempotent với
      * maHoaDon).
      */
-    public boolean luuHoaDon(HoaDon hd, List<ChiTietHoaDon> dsChiTiet) {
+    public boolean luuHoaDonBanHang(HoaDon hd, List<ChiTietHoaDon> dsChiTiet) {
         Connection con = null;
         try {
             con = ConnectDB.getConnection();
@@ -788,7 +788,7 @@ public class HoaDonDAO {
             String sqlSPBL = "INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong) VALUES (?, ?, ?, ?)";
 
             try (PreparedStatement pstLo = con.prepareStatement(sqlLo);
-                 PreparedStatement pstSPBL = con.prepareStatement(sqlSPBL)) {
+                    PreparedStatement pstSPBL = con.prepareStatement(sqlSPBL)) {
 
                 for (ChiTietHoaDon ct : dsChiTiet) {
                     int soLuongCanTru = ct.getSoLuong() * ct.getDonViQuyDoi().getHeSoQuyDoi();

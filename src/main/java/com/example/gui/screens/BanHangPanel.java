@@ -1095,7 +1095,7 @@ public class BanHangPanel extends JPanel {
             return;
         List<ChiTietHoaDon> dsChiTiet = thuThapChiTiet(hd);
 
-        if (hoaDonDAO.luuHoaDon(hd, dsChiTiet)) {
+        if (hoaDonDAO.luuHoaDonBanHang(hd, dsChiTiet)) {
             if (hienThongBao) {
                 JOptionPane.showMessageDialog(this, "Lưu hóa đơn thành công!", "Thành công",
                         JOptionPane.INFORMATION_MESSAGE);
