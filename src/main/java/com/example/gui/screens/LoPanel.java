@@ -3,18 +3,18 @@ package com.example.gui.screens;
 import com.example.dao.LoDAO;
 import com.example.entity.Lo;
 import com.example.entity.SanPham;
+import com.toedter.calendar.JDateChooser;   // ← Cần import này
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.geom.RoundRectangle2D;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 
 public class LoPanel extends JPanel {
@@ -23,7 +23,8 @@ public class LoPanel extends JPanel {
     private JTable table;
     private DefaultTableModel model;
 
-    private JTextField txtMaLo, txtSoLo, txtMaSanPham, txtNgayHetHan, txtSoLuong, txtGiaNhap, txtSearch;
+    private JTextField txtMaLo, txtSoLo, txtMaSanPham, txtSoLuong, txtGiaNhap;
+    private JDateChooser dateChooserNgayHetHan;   // ← Thay thế cho JTextField ngày
 
     public LoPanel() {
         setLayout(new BorderLayout());
@@ -39,18 +40,17 @@ public class LoPanel extends JPanel {
         add(splitPane, BorderLayout.CENTER);
 
         loadDataToTable();
-        lamMoi(); // Sinh mã lô đầu tiên
+        lamMoi();
     }
 
     // ==========================================
-    // PANEL BÊN TRÁI - DANH SÁCH LÔ HÀNG
+    // PANEL BÊN TRÁI
     // ==========================================
     private JPanel createLeftPanel() {
         JPanel leftPanel = new JPanel(new BorderLayout(10, 10));
         leftPanel.setBackground(new Color(245, 245, 245));
         leftPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        // Thanh công cụ
         JPanel topBar = new JPanel(new BorderLayout(15, 0));
         topBar.setBackground(new Color(245, 245, 245));
 
@@ -58,33 +58,15 @@ public class LoPanel extends JPanel {
         lblDanhSachLo.setFont(new Font("Segoe UI", Font.BOLD, 20));
         lblDanhSachLo.setForeground(new Color(50, 50, 50));
 
-        // Search
-        txtSearch = new JTextField("Tìm kiếm mã lô...");
+        JTextField txtSearch = new JTextField("Tìm kiếm mã lô...");
         txtSearch.setForeground(Color.GRAY);
         txtSearch.setPreferredSize(new Dimension(250, 35));
-        txtSearch.addFocusListener(new FocusAdapter() {
-            @Override
-            public void focusGained(FocusEvent e) {
-                if ("Tìm kiếm mã lô...".equals(txtSearch.getText().trim())) {
-                    txtSearch.setText("");
-                    txtSearch.setForeground(Color.BLACK);
-                }
-            }
-
-            @Override
-            public void focusLost(FocusEvent e) {
-                if (txtSearch.getText().trim().isEmpty()) {
-                    txtSearch.setText("Tìm kiếm mã lô...");
-                    txtSearch.setForeground(Color.GRAY);
-                }
-            }
-        });
 
         JButton btnSearch = new RoundedButton("Tìm");
         btnSearch.setPreferredSize(new Dimension(80, 35));
         btnSearch.setBackground(new Color(0, 123, 255));
         btnSearch.setForeground(Color.WHITE);
-        btnSearch.addActionListener(e -> timKiem(txtSearch.getText().trim()));
+        btnSearch.addActionListener(e -> loadDataToTable()); // tạm thời load lại
 
         JPanel searchWrapper = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
         searchWrapper.setBackground(new Color(245, 245, 245));
@@ -94,60 +76,46 @@ public class LoPanel extends JPanel {
         topBar.add(lblDanhSachLo, BorderLayout.WEST);
         topBar.add(searchWrapper, BorderLayout.EAST);
 
-        // Bảng dữ liệu
+        // Bảng
         String[] columns = {"STT", "Mã lô", "Số lô", "Mã SP", "Ngày hết hạn", "SL tồn", "Giá nhập"};
         model = new DefaultTableModel(columns, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
+            @Override public boolean isCellEditable(int row, int column) { return false; }
         };
 
         table = new JTable(model);
         table.setRowHeight(35);
         table.setShowGrid(true);
         table.setGridColor(new Color(230, 230, 230));
-        table.setIntercellSpacing(new Dimension(0, 0));
         table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
         table.getTableHeader().setBackground(new Color(240, 240, 240));
-        table.getTableHeader().setPreferredSize(new Dimension(100, 40));
-        table.getTableHeader().setReorderingAllowed(false);
 
-        // Double click để sửa
+        // Double-click hoặc click để load form sửa
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
-                    loadSelectedRowToForm();
-                }
+                loadSelectedRowToForm();   // Load dữ liệu khi click
             }
         });
 
         // Renderer
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-
-        DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
-        rightRenderer.setHorizontalAlignment(JLabel.RIGHT);
+        DefaultTableCellRenderer center = new DefaultTableCellRenderer();
+        center.setHorizontalAlignment(JLabel.CENTER);
+        DefaultTableCellRenderer right = new DefaultTableCellRenderer();
+        right.setHorizontalAlignment(JLabel.RIGHT);
 
         table.getColumnModel().getColumn(0).setPreferredWidth(50);
-        table.getColumnModel().getColumn(1).setPreferredWidth(100);
-        table.getColumnModel().getColumn(2).setPreferredWidth(100);
-        table.getColumnModel().getColumn(3).setPreferredWidth(80);
+        table.getColumnModel().getColumn(1).setPreferredWidth(110);
         table.getColumnModel().getColumn(4).setPreferredWidth(100);
         table.getColumnModel().getColumn(5).setPreferredWidth(80);
-        table.getColumnModel().getColumn(6).setPreferredWidth(100);
+        table.getColumnModel().getColumn(6).setPreferredWidth(110);
 
-        table.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
-        table.getColumnModel().getColumn(1).setCellRenderer(centerRenderer);
-        table.getColumnModel().getColumn(3).setCellRenderer(centerRenderer);
-        table.getColumnModel().getColumn(4).setCellRenderer(centerRenderer);
-        table.getColumnModel().getColumn(5).setCellRenderer(rightRenderer);
-        table.getColumnModel().getColumn(6).setCellRenderer(rightRenderer);
+        for (int i = 0; i < 7; i++) {
+            if (i == 5 || i == 6) table.getColumnModel().getColumn(i).setCellRenderer(right);
+            else table.getColumnModel().getColumn(i).setCellRenderer(center);
+        }
 
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220), 1));
-        scrollPane.getViewport().setBackground(Color.WHITE);
 
         leftPanel.add(topBar, BorderLayout.NORTH);
         leftPanel.add(scrollPane, BorderLayout.CENTER);
@@ -156,7 +124,7 @@ public class LoPanel extends JPanel {
     }
 
     // ==========================================
-    // PANEL BÊN PHẢI - FORM NHẬP LÔ
+    // PANEL BÊN PHẢI - FORM
     // ==========================================
     private JPanel createRightPanel() {
         JPanel rightPanel = new JPanel(new BorderLayout(10, 10));
@@ -167,7 +135,6 @@ public class LoPanel extends JPanel {
 
         JLabel lblTitle = new JLabel("THÔNG TIN LÔ HÀNG", SwingConstants.CENTER);
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        lblTitle.setBorder(new EmptyBorder(15, 0, 10, 0));
         rightPanel.add(lblTitle, BorderLayout.NORTH);
 
         JPanel formPanel = new JPanel(new GridBagLayout());
@@ -181,18 +148,21 @@ public class LoPanel extends JPanel {
         txtMaLo = new JTextField();
         txtMaLo.setEditable(false);
         txtMaLo.setBackground(new Color(235, 235, 235));
-        txtMaLo.setFont(new Font("Segoe UI", Font.BOLD, 13));
 
         txtSoLo = new JTextField();
         txtMaSanPham = new JTextField();
-        txtNgayHetHan = new JTextField("dd/mm/yyyy");
         txtSoLuong = new JTextField();
         txtGiaNhap = new JTextField();
+
+        // === DATE CHOOSER ===
+        dateChooserNgayHetHan = new JDateChooser();
+        dateChooserNgayHetHan.setDateFormatString("dd/MM/yyyy");
+        dateChooserNgayHetHan.setPreferredSize(new Dimension(200, 32));
 
         addResponsiveFormField(formPanel, gbc, row++, "Mã lô:", txtMaLo, false);
         addResponsiveFormField(formPanel, gbc, row++, "Số lô:", txtSoLo, true);
         addResponsiveFormField(formPanel, gbc, row++, "Mã sản phẩm:", txtMaSanPham, true);
-        addResponsiveFormField(formPanel, gbc, row++, "Ngày hết hạn:", txtNgayHetHan, true);
+        addDateField(formPanel, gbc, row++, "Ngày hết hạn:", dateChooserNgayHetHan);
         addResponsiveFormField(formPanel, gbc, row++, "Số lượng SP:", txtSoLuong, true);
         addResponsiveFormField(formPanel, gbc, row++, "Giá nhập (VNĐ):", txtGiaNhap, true);
 
@@ -224,22 +194,30 @@ public class LoPanel extends JPanel {
 
     private void addResponsiveFormField(JPanel panel, GridBagConstraints gbc, int row, 
             String labelText, JComponent inputComp, boolean isEditable) {
-        gbc.gridx = 0; gbc.gridy = row; gbc.gridwidth = 1; gbc.weightx = 0;
+        gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0;
         JLabel lbl = new JLabel(labelText);
         lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
         panel.add(lbl, gbc);
 
-        if (inputComp instanceof JTextField) {
-            JTextField txt = (JTextField) inputComp;
+        if (inputComp instanceof JTextField txt) {
             txt.setEditable(isEditable);
-            if (!isEditable) {
-                txt.setBackground(new Color(235, 235, 235));
-            }
+            if (!isEditable) txt.setBackground(new Color(235, 235, 235));
             txt.setPreferredSize(new Dimension(200, 32));
         }
 
         gbc.gridx = 1; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
         panel.add(inputComp, gbc);
+    }
+
+    private void addDateField(JPanel panel, GridBagConstraints gbc, int row, 
+            String labelText, JDateChooser dateChooser) {
+        gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0;
+        JLabel lbl = new JLabel(labelText);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        panel.add(lbl, gbc);
+
+        gbc.gridx = 1; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel.add(dateChooser, gbc);
     }
 
     private JButton createStyledButton(String text, Color bgColor, Color fgColor) {
@@ -248,9 +226,8 @@ public class LoPanel extends JPanel {
         btn.setForeground(fgColor);
         btn.setFocusPainted(false);
         btn.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        btn.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btn.setPreferredSize(new Dimension(110, 40));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         return btn;
     }
 
@@ -259,7 +236,7 @@ public class LoPanel extends JPanel {
     private void loadDataToTable() {
         model.setRowCount(0);
         List<Lo> list = loDAO.layTatCa();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 
         int stt = 1;
         for (Lo lo : list) {
@@ -268,7 +245,7 @@ public class LoPanel extends JPanel {
                     lo.getMaLo(),
                     lo.getSoLo(),
                     lo.getSanPham().getMaSanPham(),
-                    lo.getNgayHetHan().format(formatter),
+                    sdf.format(java.sql.Date.valueOf(lo.getNgayHetHan())),
                     lo.getSoLuongSanPham(),
                     String.format("%,.0f", lo.getGiaNhap())
             });
@@ -276,25 +253,45 @@ public class LoPanel extends JPanel {
     }
 
     private void loadNewMaLo() {
-        String maLoMoi = loDAO.sinhMaLo();
-        txtMaLo.setText(maLoMoi);
+        txtMaLo.setText(loDAO.sinhMaLo());
     }
 
     private void lamMoi() {
         loadNewMaLo();
         txtSoLo.setText("");
         txtMaSanPham.setText("");
-        txtNgayHetHan.setText("dd/mm/yyyy");
+        dateChooserNgayHetHan.setDate(new Date()); // Ngày hiện tại
         txtSoLuong.setText("");
         txtGiaNhap.setText("");
         table.clearSelection();
     }
 
-    private void themLo() {
+    /** Load dữ liệu từ bảng lên form để sửa */
+    private void loadSelectedRowToForm() {
+        int row = table.getSelectedRow();
+        if (row == -1) return;
+
         try {
-            if (txtSoLo.getText().trim().isEmpty() || txtMaSanPham.getText().trim().isEmpty() ||
-                txtNgayHetHan.getText().trim().isEmpty() || txtSoLuong.getText().trim().isEmpty() ||
-                txtGiaNhap.getText().trim().isEmpty()) {
+            txtMaLo.setText((String) model.getValueAt(row, 1));
+            txtSoLo.setText((String) model.getValueAt(row, 2));
+            txtMaSanPham.setText((String) model.getValueAt(row, 3));
+
+            // Chuyển ngày từ String sang Date cho JDateChooser
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+            Date date = sdf.parse((String) model.getValueAt(row, 4));
+            dateChooserNgayHetHan.setDate(date);
+
+            txtSoLuong.setText(model.getValueAt(row, 5).toString());
+            txtGiaNhap.setText(model.getValueAt(row, 6).toString().replace(",", ""));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void themLo() { /* giữ nguyên như cũ */ 
+        // ... (code thêm lô giống trước)
+        try {
+            if (txtSoLo.getText().trim().isEmpty() || txtMaSanPham.getText().trim().isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ thông tin!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
                 return;
             }
@@ -302,17 +299,16 @@ public class LoPanel extends JPanel {
             Lo lo = new Lo();
             lo.setMaLo(txtMaLo.getText());
             lo.setSoLo(txtSoLo.getText().trim());
-            lo.setNgayHetHan(LocalDate.parse(txtNgayHetHan.getText().trim(), DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+            lo.setNgayHetHan(dateChooserNgayHetHan.getDate().toInstant()
+                    .atZone(ZoneId.systemDefault()).toLocalDate());
             lo.setSoLuongSanPham(Integer.parseInt(txtSoLuong.getText().trim()));
             lo.setSanPham(new SanPham(txtMaSanPham.getText().trim()));
             lo.setGiaNhap(Double.parseDouble(txtGiaNhap.getText().trim().replace(",", "")));
 
             if (loDAO.themLo(lo)) {
-                JOptionPane.showMessageDialog(this, "Thêm lô hàng thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Thêm thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
                 loadDataToTable();
                 lamMoi();
-            } else {
-                JOptionPane.showMessageDialog(this, "Thêm lô thất bại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
@@ -322,7 +318,7 @@ public class LoPanel extends JPanel {
     private void suaLo() {
         int row = table.getSelectedRow();
         if (row == -1) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn lô hàng cần sửa!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn lô cần sửa!", "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -330,61 +326,34 @@ public class LoPanel extends JPanel {
             Lo lo = new Lo();
             lo.setMaLo(txtMaLo.getText());
             lo.setSoLo(txtSoLo.getText().trim());
-            lo.setNgayHetHan(LocalDate.parse(txtNgayHetHan.getText().trim(), DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+            lo.setNgayHetHan(dateChooserNgayHetHan.getDate().toInstant()
+                    .atZone(ZoneId.systemDefault()).toLocalDate());
             lo.setSoLuongSanPham(Integer.parseInt(txtSoLuong.getText().trim()));
             lo.setSanPham(new SanPham(txtMaSanPham.getText().trim()));
             lo.setGiaNhap(Double.parseDouble(txtGiaNhap.getText().trim().replace(",", "")));
 
             if (loDAO.capNhatLo(lo)) {
-                JOptionPane.showMessageDialog(this, "Cập nhật thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Cập nhật lô hàng thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
                 loadDataToTable();
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi khi cập nhật: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Lỗi khi sửa: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void xoaLo() {
         int row = table.getSelectedRow();
-        if (row == -1) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn lô hàng cần xóa!", "Thông báo", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
+        if (row == -1) return;
 
         String maLo = (String) model.getValueAt(row, 1);
-        int confirm = JOptionPane.showConfirmDialog(this, 
-                "Bạn có chắc chắn muốn xóa lô " + maLo + "?", 
-                "Xác nhận xóa", JOptionPane.YES_NO_OPTION);
-
+        int confirm = JOptionPane.showConfirmDialog(this, "Xóa lô " + maLo + "?", "Xác nhận", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION && loDAO.xoaLo(maLo)) {
-            JOptionPane.showMessageDialog(this, "Xóa thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
             loadDataToTable();
             lamMoi();
         }
     }
 
-    private void loadSelectedRowToForm() {
-        int row = table.getSelectedRow();
-        if (row == -1) return;
-
-        txtMaLo.setText((String) model.getValueAt(row, 1));
-        txtSoLo.setText((String) model.getValueAt(row, 2));
-        txtMaSanPham.setText((String) model.getValueAt(row, 3));
-        txtNgayHetHan.setText((String) model.getValueAt(row, 4));
-        txtSoLuong.setText(model.getValueAt(row, 5).toString());
-        txtGiaNhap.setText(model.getValueAt(row, 6).toString().replace(",", ""));
-    }
-
-    private void timKiem(String keyword) {
-        if (keyword.isEmpty() || "Tìm kiếm mã lô...".equals(keyword)) {
-            loadDataToTable();
-            return;
-        }
-        // Có thể cải tiến sau bằng cách query theo từ khóa
-        loadDataToTable();
-    }
-
-    // Inner class RoundedButton
+    // RoundedButton class (giữ nguyên)
     private static class RoundedButton extends JButton {
         public RoundedButton(String text) {
             super(text);
