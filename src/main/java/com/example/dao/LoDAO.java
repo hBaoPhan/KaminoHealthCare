@@ -165,7 +165,7 @@ public class LoDAO {
                   + String.format("%02d", today.getMonthValue())
                   + String.format("%02d", today.getYear() % 100);
 
-    String sql = "SELECT maLo FROM Lo WHERE maLo LIKE ? ORDER BY maLo DESC LIMIT 1";
+    String sql = "SELECT TOP 1 maLo FROM Lo WHERE maLo LIKE ? ORDER BY maLo DESC";
 
     try (Connection con = ConnectDB.getConnection();
          PreparedStatement stmt = con.prepareStatement(sql)) {
