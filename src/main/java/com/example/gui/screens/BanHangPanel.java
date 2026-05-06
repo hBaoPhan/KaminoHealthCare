@@ -176,7 +176,7 @@ public class BanHangPanel extends JPanel {
         JLabel lblTitle = new JLabel("Danh sách sản phẩm");
         lblTitle.setFont(FONT_TITLE);
 
-        RoundedTextField txtSearch = new RoundedTextField("Mã/Tên sản phẩm", 15);
+        RoundedTextField txtSearch = new RoundedTextField("Tìm Mã/Tên sản phẩm", 15);
         txtSearch.setPreferredSize(new Dimension(250, 35));
         txtSearch.setFont(FONT_TEXT);
 
@@ -1163,19 +1163,19 @@ public class BanHangPanel extends JPanel {
     /** Thanh toán: tạo hóa đơn trước, sau đó xác nhận thanh toán + trừ kho */
     private void thanhToan(RoundedButton btnSave) {
         // Ràng buộc tiền khách trả > tiền hóa đơn (cho Tiền mặt)
-        if (rdoTienMat.isSelected()) {
-            String ttStr = lblThanhTien.getText().replaceAll("[^\\d]", "");
-            double thanhTien = ttStr.isEmpty() ? 0 : Double.parseDouble(ttStr);
-            String kd = txtTienKhachDua.getText().replaceAll("[^\\d]", "");
-            double khachDua = kd.isEmpty() ? 0 : Double.parseDouble(kd);
+        // if (rdoTienMat.isSelected()) {
+        // String ttStr = lblThanhTien.getText().replaceAll("[^\\d]", "");
+        // double thanhTien = ttStr.isEmpty() ? 0 : Double.parseDouble(ttStr);
+        // String kd = txtTienKhachDua.getText().replaceAll("[^\\d]", "");
+        // double khachDua = kd.isEmpty() ? 0 : Double.parseDouble(kd);
 
-            if (khachDua < thanhTien) {
-                JOptionPane.showMessageDialog(this,
-                        "Tiền khách trả phải lớn hơn tiền hóa đơn!",
-                        "Lỗi thanh toán", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-        }
+        // if (khachDua < thanhTien) {
+        // JOptionPane.showMessageDialog(this,
+        // "Tiền khách trả phải lớn hơn tiền hóa đơn!",
+        // "Lỗi thanh toán", JOptionPane.ERROR_MESSAGE);
+        // return;
+        // }
+        // }
 
         // Lưu hóa đơn trước khi thanh toán (chế độ im lặng)
         luuHoaDon(false);
