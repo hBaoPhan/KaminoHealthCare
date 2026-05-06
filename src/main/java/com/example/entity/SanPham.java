@@ -6,7 +6,7 @@ import java.util.Objects;
 public class SanPham {
     private String maSanPham;
     private String tenSanPham;
-    private PhanLoai phanLoai;
+    private LoaiSanPham loaiSanPham;
     private int soLuongTon;
     private String moTa;
     private String hoatChat;
@@ -21,10 +21,10 @@ public class SanPham {
         this.maSanPham = maSanPham;
     }
 
-    public SanPham(String maSanPham, String tenSanPham, PhanLoai phanLoai, int soLuongTon, String moTa, String hoatChat, double donGiaCoBan, boolean trangThaiKinhDoanh, double thue) {
+    public SanPham(String maSanPham, String tenSanPham, LoaiSanPham loaiSanPham, int soLuongTon, String moTa, String hoatChat, double donGiaCoBan, boolean trangThaiKinhDoanh, double thue) {
         this.maSanPham = maSanPham;
         this.tenSanPham = tenSanPham;
-        this.phanLoai = phanLoai;
+        this.loaiSanPham = loaiSanPham;
         this.soLuongTon = soLuongTon;
         this.moTa = moTa;
         this.hoatChat = hoatChat;
@@ -49,12 +49,12 @@ public class SanPham {
         this.tenSanPham = tenSanPham;
     }
 
-    public PhanLoai getPhanLoai() {
-        return phanLoai;
+    public LoaiSanPham getLoaiSanPham() {
+        return loaiSanPham;
     }
 
-    public void setPhanLoai(PhanLoai phanLoai) {
-        this.phanLoai = phanLoai;
+    public void setLoaiSanPham(LoaiSanPham loaiSanPham) {
+        this.loaiSanPham = loaiSanPham;
     }
 
     public int getSoLuongTon() {
@@ -123,7 +123,7 @@ public class SanPham {
         return "SanPham{" +
                 "maSanPham='" + maSanPham + '\'' +
                 ", tenSanPham='" + tenSanPham + '\'' +
-                ", phanLoai=" + phanLoai +
+                ", loaiSanPham=" + loaiSanPham +
                 ", soLuongTon=" + soLuongTon +
                 ", moTa='" + moTa + '\'' +
                 ", hoatChat='" + hoatChat + '\'' +

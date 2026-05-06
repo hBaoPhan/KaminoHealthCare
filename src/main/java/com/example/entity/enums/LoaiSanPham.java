@@ -1,13 +1,13 @@
 package com.example.entity.enums;
 
-public enum PhanLoai {
+public enum LoaiSanPham {
     ETC("Thuốc kê đơn"),
     OTC("Thuốc không kê đơn"),
     TPCN("Thực phẩm chức năng");
 
     private final String moTa;
 
-    PhanLoai(String moTa) {
+    LoaiSanPham(String moTa) {
         this.moTa = moTa;
     }
 

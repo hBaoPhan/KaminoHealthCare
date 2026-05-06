@@ -5,7 +5,8 @@ public enum DonVi {
     VI("Vỉ"),
     HOP("Hộp"),
     TUYP("Tuýp"),
-    CHAI("Chai");
+    CHAI("Chai"),
+    CAI("Cái");
 
     private final String moTa;
 

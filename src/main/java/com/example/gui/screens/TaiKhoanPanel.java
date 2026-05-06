@@ -210,23 +210,4 @@ public class TaiKhoanPanel extends JPanel {
         return btn;
     }
 
-    // --- HÀM MAIN ĐỂ CHẠY THỬ NGHIỆM ĐỘC LẬP ---
-    public static void main(String[] args) {
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("Test Giao Diện: TaiKhoanPanel");
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setSize(1000, 600);
-            frame.setLocationRelativeTo(null);
-
-            frame.add(new TaiKhoanPanel());
-
-            frame.setVisible(true);
-        });
-    }
 }

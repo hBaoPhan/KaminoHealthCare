@@ -128,4 +128,27 @@ public class DonViQuyDoiDAO {
         }
         return danhSach;
     }
-}
+    public DonViQuyDoi timTheoTenVaMaSP(String tenDonViStr, String maSanPham) {
+        DonViQuyDoi dv = null;
+        try {
+            Connection con = ConnectDB.getConnection();
+            String sql = "SELECT * FROM DonViQuyDoi WHERE tenDonVi = ? AND maSanPham = ?";
+            PreparedStatement stmt = con.prepareStatement(sql);
+            stmt.setString(1, tenDonViStr);
+            stmt.setString(2, maSanPham);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                dv = new DonViQuyDoi();
+                dv.setMaDonVi(rs.getString("maDonVi"));
+                dv.setTenDonVi(DonVi.valueOf(rs.getString("tenDonVi")));
+                dv.setHeSoQuyDoi(rs.getInt("heSoQuyDoi")); // Dùng để tính giá 
+                
+                // Lấy thông tin sản phẩm để có giá bán cơ bản (giá 1 viên/chai/tuýp)
+                SanPhamDAO spDAO = new SanPhamDAO();
+                dv.setSanPham(spDAO.timTheoMa(maSanPham));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return dv;
+    }}

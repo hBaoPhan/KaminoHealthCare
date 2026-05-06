@@ -4,6 +4,7 @@ import com.example.entity.KhuyenMai;
 import com.example.entity.enums.LoaiKhuyenMai;
 import com.example.entity.QuaTang;
 import com.example.entity.SanPham;
+import com.example.entity.DonViQuyDoi;
 import com.github.lgooddatepicker.components.DatePicker;
 import com.github.lgooddatepicker.components.DatePickerSettings;
 
@@ -431,8 +432,10 @@ public class KhuyenMaiPanel extends JPanel {
             }
             SanPham sp = new SanPham();
             sp.setTenSanPham(sanPham);
+            DonViQuyDoi dv = new DonViQuyDoi();
+            dv.setSanPham(sp);
             quaTang = new QuaTang();
-            quaTang.setSanPham(sp);
+            quaTang.setDonViQuyDoi(dv);
             quaTang.setSoLuongTang(soLuongTang);
         }
 
@@ -513,7 +516,9 @@ public class KhuyenMaiPanel extends JPanel {
         QuaTang qt2 = new QuaTang();
         SanPham sp2 = new SanPham();
         sp2.setTenSanPham("Ly sứ cao cấp");
-        qt2.setSanPham(sp2);
+        DonViQuyDoi dv2 = new DonViQuyDoi();
+        dv2.setSanPham(sp2);
+        qt2.setDonViQuyDoi(dv2);
         qt2.setSoLuongTang(1);
         km2.setQuaTangKem(qt2);
         danhSachKhuyenMai.add(km2);
@@ -551,7 +556,9 @@ public class KhuyenMaiPanel extends JPanel {
         QuaTang qt5 = new QuaTang();
         SanPham sp5 = new SanPham();
         sp5.setTenSanPham("Khăn microfiber");
-        qt5.setSanPham(sp5);
+        DonViQuyDoi dv5 = new DonViQuyDoi();
+        dv5.setSanPham(sp5);
+        qt5.setDonViQuyDoi(dv5);
         qt5.setSoLuongTang(2);
         km5.setQuaTangKem(qt5);
         danhSachKhuyenMai.add(km5);
@@ -578,7 +585,9 @@ public class KhuyenMaiPanel extends JPanel {
         QuaTang qt7 = new QuaTang();
         SanPham sp7 = new SanPham();
         sp7.setTenSanPham("Mặt nạ dưỡng da");
-        qt7.setSanPham(sp7);
+        DonViQuyDoi dv7 = new DonViQuyDoi();
+        dv7.setSanPham(sp7);
+        qt7.setDonViQuyDoi(dv7);
         qt7.setSoLuongTang(3);
         km7.setQuaTangKem(qt7);
         danhSachKhuyenMai.add(km7);
@@ -605,7 +614,9 @@ public class KhuyenMaiPanel extends JPanel {
         QuaTang qt9 = new QuaTang();
         SanPham sp9 = new SanPham();
         sp9.setTenSanPham("Hộp vitamin bổ sung");
-        qt9.setSanPham(sp9);
+        DonViQuyDoi dv9 = new DonViQuyDoi();
+        dv9.setSanPham(sp9);
+        qt9.setDonViQuyDoi(dv9);
         qt9.setSoLuongTang(1);
         km9.setQuaTangKem(qt9);
         danhSachKhuyenMai.add(km9);
@@ -649,7 +660,7 @@ public class KhuyenMaiPanel extends JPanel {
             String loaiText = km.getLoaiKhuyenMai() != null ? km.getLoaiKhuyenMai().getMoTa() : "";
             String phanTram = km.getLoaiKhuyenMai() == LoaiKhuyenMai.PHAN_TRAM ? String.format("%.0f%%", km.getKhuyenMaiPhanTram()) : "";
             String quaTangText = km.getLoaiKhuyenMai() == LoaiKhuyenMai.TANG_KEM && km.getQuaTangKem() != null ?
-                    km.getQuaTangKem().getSanPham().getTenSanPham() + " x" + km.getQuaTangKem().getSoLuongTang() : "";
+                    km.getQuaTangKem().getDonViQuyDoi().getSanPham().getTenSanPham() + " x" + km.getQuaTangKem().getSoLuongTang() : "";
             String giaTriToiThieu = km.getGiaTriDonHangToiThieu() > 0 ? String.format("%.0f", km.getGiaTriDonHangToiThieu()) : "";
             String batDau = km.getThoiGianBatDau() != null ? km.getThoiGianBatDau().toLocalDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "";
             String ketThuc = km.getThoiGianKetThuc() != null ? km.getThoiGianKetThuc().toLocalDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "";
@@ -704,7 +715,7 @@ public class KhuyenMaiPanel extends JPanel {
                     txtKhuyenMaiPhanTram.setText(String.valueOf((int) km.getKhuyenMaiPhanTram()));
                 }
                 if (km.getLoaiKhuyenMai() == LoaiKhuyenMai.TANG_KEM && km.getQuaTangKem() != null) {
-                    txtSanPhamQuaTang.setText(km.getQuaTangKem().getSanPham().getTenSanPham());
+                    txtSanPhamQuaTang.setText(km.getQuaTangKem().getDonViQuyDoi().getSanPham().getTenSanPham());
                     txtSoLuongTang.setText(String.valueOf(km.getQuaTangKem().getSoLuongTang()));
                 }
                 if (km.getGiaTriDonHangToiThieu() > 0) {
@@ -788,8 +799,10 @@ public class KhuyenMaiPanel extends JPanel {
             }
             SanPham sp = new SanPham();
             sp.setTenSanPham(sanPham);
+            DonViQuyDoi dv = new DonViQuyDoi();
+            dv.setSanPham(sp);
             quaTang = new QuaTang();
-            quaTang.setSanPham(sp);
+            quaTang.setDonViQuyDoi(dv);
             quaTang.setSoLuongTang(soLuongTang);
         }
 
