@@ -821,7 +821,7 @@ public class HoaDonDAO {
      * Xác nhận thanh toán: Cập nhật trangThaiThanhToan = true và trừ kho (FEFO).
      * Phải gọi luuHoaDon() trước khi gọi hàm này.
      */
-    public boolean xacNhanThanhToan(String maHoaDon, List<ChiTietHoaDon> dsChiTiet) {
+    public boolean xacNhanThanhToan(String maHoaDon, List<ChiTietHoaDon> dsChiTiet) throws SQLException {
         Connection con = null;
         try {
             con = ConnectDB.getConnection();
@@ -872,15 +872,15 @@ public class HoaDonDAO {
 
             con.commit();
             return true;
-        } catch (Exception e) {
-            if (con != null)
+        } catch (SQLException e) {
+            if (con != null) {
                 try {
                     con.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
-            e.printStackTrace();
-            return false;
+            }
+            throw e;
         } finally {
             if (con != null)
                 try {

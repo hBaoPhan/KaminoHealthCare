@@ -1169,7 +1169,7 @@ public class BanHangPanel extends JPanel {
             String kd = txtTienKhachDua.getText().replaceAll("[^\\d]", "");
             double khachDua = kd.isEmpty() ? 0 : Double.parseDouble(kd);
 
-            if (khachDua <= thanhTien) {
+            if (khachDua < thanhTien) {
                 JOptionPane.showMessageDialog(this,
                         "Tiền khách trả phải lớn hơn tiền hóa đơn!",
                         "Lỗi thanh toán", JOptionPane.ERROR_MESSAGE);
@@ -1186,23 +1186,29 @@ public class BanHangPanel extends JPanel {
             return;
         java.util.List<ChiTietHoaDon> dsChiTiet = thuThapChiTiet(hd);
 
-        if (hoaDonDAO.xacNhanThanhToan(maHoaDonHienTai, dsChiTiet)) {
-            JOptionPane.showMessageDialog(this, "Thanh toán thành công!", "Thành công",
-                    JOptionPane.INFORMATION_MESSAGE);
-            // Reset form
-            model.setRowCount(0);
-            maHoaDonHienTai = sinhMaHoaDon();
-            lblMaHoaDon.setText(maHoaDonHienTai);
-            txtSoDienThoai.setText("");
-            txtTenKhachHang.setText("");
-            cboKhuyenMai.setSelectedIndex(0);
-            if (cboDonThuoc != null)
-                cboDonThuoc.setSelectedIndex(0);
-            areaNotes.setText("");
-            txtTienKhachDua.setText("");
-            khachHangHienTai = null;
-        } else {
-            JOptionPane.showMessageDialog(this, "Lỗi khi thanh toán!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+        try {
+            if (hoaDonDAO.xacNhanThanhToan(maHoaDonHienTai, dsChiTiet)) {
+                JOptionPane.showMessageDialog(this, "Thanh toán thành công!", "Thành công",
+                        JOptionPane.INFORMATION_MESSAGE);
+                // Reset form
+                model.setRowCount(0);
+                maHoaDonHienTai = sinhMaHoaDon();
+                lblMaHoaDon.setText(maHoaDonHienTai);
+                txtSoDienThoai.setText("");
+                txtTenKhachHang.setText("");
+                cboKhuyenMai.setSelectedIndex(0);
+                if (cboDonThuoc != null)
+                    cboDonThuoc.setSelectedIndex(0);
+                areaNotes.setText("");
+                txtTienKhachDua.setText("");
+                khachHangHienTai = null;
+            } else {
+                JOptionPane.showMessageDialog(this, "Lỗi khi thanh toán!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (java.sql.SQLException e) {
+            JOptionPane.showMessageDialog(this, e.getMessage(), "Lỗi thanh toán",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
     }
 
