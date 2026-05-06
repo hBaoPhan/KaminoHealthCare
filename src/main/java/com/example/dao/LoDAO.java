@@ -10,9 +10,12 @@ import java.util.List;
 
 public class LoDAO {
 
+    /**
+     * Lấy tất cả lô hàng
+     */
     public List<Lo> layTatCa() {
         List<Lo> danhSach = new ArrayList<>();
-        String sql = "SELECT * FROM Lo ORDER BY ngayHetHan ASC";
+        String sql = "SELECT * FROM Lo ORDER BY ngayHetHan ASC, maLo ASC";
 
         try (Connection ketNoi = ConnectDB.getConnection();
              Statement lenh = ketNoi.createStatement();
@@ -34,6 +37,41 @@ public class LoDAO {
         return danhSach;
     }
 
+    /**
+     * Tự động sinh mã lô theo định dạng: LO + DD + MM + YY + XXX
+     * Ví dụ: LO060526001
+     */
+    public String sinhMaLo() {
+        LocalDate today = LocalDate.now();
+        String prefix = "LO" 
+                      + String.format("%02d", today.getDayOfMonth())
+                      + String.format("%02d", today.getMonthValue())
+                      + String.format("%02d", today.getYear() % 100);
+
+        String sql = "SELECT maLo FROM Lo WHERE maLo LIKE ? ORDER BY maLo DESC LIMIT 1";
+
+        try (Connection con = ConnectDB.getConnection();
+             PreparedStatement stmt = con.prepareStatement(sql)) {
+
+            stmt.setString(1, prefix + "%");
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                String lastMaLo = rs.getString("maLo");
+                int lastNumber = Integer.parseInt(lastMaLo.substring(lastMaLo.length() - 3));
+                return prefix + String.format("%03d", lastNumber + 1);
+            } else {
+                return prefix + "001";
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return prefix + "001"; // fallback
+        }
+    }
+
+    /**
+     * Thêm lô mới
+     */
     public boolean themLo(Lo lo) {
         String sql = "INSERT INTO Lo(maLo, soLo, ngayHetHan, soLuongSanPham, maSanPham, giaNhap) " +
                      "VALUES(?, ?, ?, ?, ?, ?)";
@@ -54,6 +92,9 @@ public class LoDAO {
         }
     }
 
+    /**
+     * Cập nhật lô
+     */
     public boolean capNhatLo(Lo lo) {
         String sql = "UPDATE Lo SET soLo = ?, ngayHetHan = ?, soLuongSanPham = ?, " +
                      "maSanPham = ?, giaNhap = ? WHERE maLo = ?";
@@ -74,6 +115,9 @@ public class LoDAO {
         }
     }
 
+    /**
+     * Xóa lô
+     */
     public boolean xoaLo(String maLo) {
         String sql = "DELETE FROM Lo WHERE maLo = ?";
         try (Connection con = ConnectDB.getConnection();
@@ -87,6 +131,9 @@ public class LoDAO {
         }
     }
 
+    /**
+     * Tìm theo mã lô
+     */
     public Lo timTheoMa(String maLo) {
         String sql = "SELECT * FROM Lo WHERE maLo = ?";
         try (Connection ketNoi = ConnectDB.getConnection();
@@ -111,7 +158,7 @@ public class LoDAO {
         return null;
     }
 
-    // Giữ nguyên các hàm cũ
+    // ====================== CÁC HÀM CŨ (giữ lại) ======================
     public boolean capNhatSoLuongTon(String maLo, int soLuongThayDoi, Connection con) throws SQLException {
         String sql = "UPDATE Lo SET soLuongSanPham = soLuongSanPham + ? WHERE maLo = ?";
         PreparedStatement stmt = con.prepareStatement(sql);
@@ -130,12 +177,11 @@ public class LoDAO {
     }
 
     public List<Lo> layDanhSachLoKhaDung(String maDonViQuyDoi) {
-        // ... (giữ nguyên như cũ)
         List<Lo> danhSach = new ArrayList<>();
         String truyVan = "SELECT l.* FROM Lo l " +
                          "INNER JOIN DonViQuyDoi dv ON l.maSanPham = dv.maSanPham " +
-                         "WHERE dv.maDonVi = ? AND l.soLuongSanPham > 0 AND l.ngayHetHan > GETDATE() " +
-                         "ORDER BY l.ngayHetHan ASC";
+                         "WHERE dv.maDonVi = ? AND l.soLuongSanPham > 0 " +
+                         "AND l.ngayHetHan > GETDATE() ORDER BY l.ngayHetHan ASC";
 
         try (Connection ketNoi = ConnectDB.getConnection();
              PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
@@ -157,37 +203,5 @@ public class LoDAO {
             e.printStackTrace();
         }
         return danhSach;
-    }
-    public String sinhMaLo() {
-    LocalDate today = LocalDate.now();
-    String prefix = "LO" 
-                  + String.format("%02d", today.getDayOfMonth())
-                  + String.format("%02d", today.getMonthValue())
-                  + String.format("%02d", today.getYear() % 100);
-
-    String sql = "SELECT TOP 1 maLo FROM Lo WHERE maLo LIKE ? ORDER BY maLo DESC";
-
-    try (Connection con = ConnectDB.getConnection();
-         PreparedStatement stmt = con.prepareStatement(sql)) {
-
-        stmt.setString(1, prefix + "%");
-        ResultSet rs = stmt.executeQuery();
-
-        if (rs.next()) {
-            String lastMaLo = rs.getString("maLo");
-            // Lấy 3 số cuối
-            int lastNumber = Integer.parseInt(lastMaLo.substring(lastMaLo.length() - 3));
-            int nextNumber = lastNumber + 1;
-            return prefix + String.format("%03d", nextNumber);
-        } else {
-            // Nếu chưa có lô nào trong ngày thì bắt đầu từ 001
-            return prefix + "001";
-        }
-
-    } catch (SQLException e) {
-        e.printStackTrace();
-        // Fallback
-        return prefix + "001";
-    }
     }
 }
