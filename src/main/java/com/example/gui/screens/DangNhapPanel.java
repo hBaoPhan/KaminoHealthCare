@@ -188,7 +188,8 @@ public class DangNhapPanel extends JFrame implements ActionListener {
 
     private ImageIcon loadIcon(String path) {
         URL imgUrl = getClass().getResource(path);
-        if (imgUrl != null) return new ImageIcon(imgUrl);
+        if (imgUrl != null)
+            return new ImageIcon(imgUrl);
         return null;
     }
 
@@ -200,37 +201,41 @@ public class DangNhapPanel extends JFrame implements ActionListener {
             String password = new String(txtPassword.getPassword());
 
             // 2. Kiểm tra rỗng
-//            if (username.isEmpty() || username.equals("Tài khoản") || password.isEmpty() || password.equals("Mật khẩu")) {
-//                JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ tài khoản và mật khẩu!", "Thông báo", JOptionPane.WARNING_MESSAGE);
-//                return;
-//            }
+            // if (username.isEmpty() || username.equals("Tài khoản") || password.isEmpty()
+            // || password.equals("Mật khẩu")) {
+            // JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ tài khoản và mật
+            // khẩu!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            // return;
+            // }
 
             // 3. Gọi DAO xử lý (Sử dụng mã admin001 từ script SQL mới của bạn)
             TaiKhoanDAO dao = new TaiKhoanDAO();
             TaiKhoan tk = dao.timTheoMa("admin_QL001");
 
-//            if (tk != null) {
-//                String dbPassword = tk.getMatKhau();
-//                boolean isMatch = false;
-//
-//                // Kiểm tra BCrypt hoặc so sánh thường
-//                if (dbPassword != null && dbPassword.startsWith("$2")) {
-//                    try { isMatch = BCrypt.checkpw(password, dbPassword); } catch (Exception ex) { isMatch = false; }
-//                } else {
-//                    isMatch = password.equals(dbPassword);
-//                }
-                boolean isMatch=true;
-                if (isMatch) {
-                    SwingUtilities.invokeLater(() -> {
-                        ThanhDieuHuongPanel mainFrame = new ThanhDieuHuongPanel(tk);
-                        mainFrame.setVisible(true);
-                    });
-                    dispose();
-                } else {
-                    JOptionPane.showMessageDialog(this, "Mật khẩu không chính xác!", "Lỗi đăng nhập", JOptionPane.ERROR_MESSAGE);
-                }
+            // if (tk != null) {
+            // String dbPassword = tk.getMatKhau();
+            // boolean isMatch = false;
+            //
+            // // Kiểm tra BCrypt hoặc so sánh thường
+            // if (dbPassword != null && dbPassword.startsWith("$2")) {
+            // try { isMatch = BCrypt.checkpw(password, dbPassword); } catch (Exception ex)
+            // { isMatch = false; }
+            // } else {
+            // isMatch = password.equals(dbPassword);
+            // }
+            boolean isMatch = true;
+            if (isMatch) {
+                SwingUtilities.invokeLater(() -> {
+                    ThanhDieuHuongPanel mainFrame = new ThanhDieuHuongPanel(tk);
+                    mainFrame.setVisible(true);
+                });
+                dispose();
             } else {
-                JOptionPane.showMessageDialog(this, "Tài khoản không tồn tại!", "Lỗi đăng nhập", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Mật khẩu không chính xác!", "Lỗi đăng nhập",
+                        JOptionPane.ERROR_MESSAGE);
             }
+        } else {
+            JOptionPane.showMessageDialog(this, "Tài khoản không tồn tại!", "Lỗi đăng nhập", JOptionPane.ERROR_MESSAGE);
         }
+    }
 }

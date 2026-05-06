@@ -19,10 +19,11 @@ public class QuaTangDAO {
             Statement lenh = ketNoi.createStatement();
             ResultSet ketQua = lenh.executeQuery(truyVan);
 
+            DonViQuyDoiDAO dvDAO = new DonViQuyDoiDAO();
             while (ketQua.next()) {
                 QuaTang qt = new QuaTang();
                 qt.setKhuyenMai(new KhuyenMai(ketQua.getString("maKhuyenMai")));
-                qt.setDonViQuyDoi(new DonViQuyDoi(ketQua.getString("maDonVi")));
+                qt.setDonViQuyDoi(dvDAO.timTheoMa(ketQua.getString("maDonVi")));
                 qt.setSoLuongTang(ketQua.getInt("soLuongTang"));
                 danhSach.add(qt);
             }
@@ -41,10 +42,11 @@ public class QuaTangDAO {
             lenh.setString(1, maKM);
             ResultSet ketQua = lenh.executeQuery();
 
+            DonViQuyDoiDAO dvDAO = new DonViQuyDoiDAO();
             while (ketQua.next()) {
                 QuaTang qt = new QuaTang();
                 qt.setKhuyenMai(new KhuyenMai(ketQua.getString("maKhuyenMai")));
-                qt.setDonViQuyDoi(new DonViQuyDoi(ketQua.getString("maDonVi")));
+                qt.setDonViQuyDoi(dvDAO.timTheoMa(ketQua.getString("maDonVi")));
                 qt.setSoLuongTang(ketQua.getInt("soLuongTang"));
                 danhSach.add(qt);
             }
@@ -83,5 +85,26 @@ public class QuaTangDAO {
             e.printStackTrace();
         }
         return soDongThayDoi > 0;
+    }
+
+    public boolean xoaTheoKhuyenMai(String maKM) {
+        int soDongThayDoi = 0;
+        try {
+            Connection ketNoi = ConnectDB.getConnection();
+            String truyVan = "DELETE FROM QuaTang WHERE maKhuyenMai = ?";
+            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
+            lenh.setString(1, maKM);
+            soDongThayDoi = lenh.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return soDongThayDoi > 0;
+    }
+
+    public boolean capNhat(QuaTang qt) {
+        // Vì QuaTang không có ID riêng, ta xóa cũ thêm mới hoặc update dựa trên maKM
+        // Tuy nhiên, logic thường là 1 KM TẶNG KÈM chỉ có 1 sản phẩm tặng kèm (theo thiết kế hiện tại)
+        xoaTheoKhuyenMai(qt.getKhuyenMai().getMaKhuyenMai());
+        return them(qt);
     }
 }

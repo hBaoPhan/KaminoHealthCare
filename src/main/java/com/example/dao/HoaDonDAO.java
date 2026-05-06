@@ -261,6 +261,57 @@ public class HoaDonDAO {
         return soDongThayDoi > 0;
     }
 
+    public boolean huyHoaDon(String maHD) {
+        Connection con = null;
+        try {
+            con = ConnectDB.getConnection();
+            con.setAutoCommit(false);
+
+            // 1. Xóa SuPhanBoLo (nếu có)
+            try (PreparedStatement ps = con.prepareStatement("DELETE FROM SuPhanBoLo WHERE maHoaDon = ?")) {
+                ps.setString(1, maHD);
+                ps.executeUpdate();
+            }
+
+            // 2. Xóa ChiTietHoaDon
+            try (PreparedStatement ps = con.prepareStatement("DELETE FROM ChiTietHoaDon WHERE maHoaDon = ?")) {
+                ps.setString(1, maHD);
+                ps.executeUpdate();
+            }
+
+            // 3. Xóa HoaDon
+            try (PreparedStatement ps = con.prepareStatement("DELETE FROM HoaDon WHERE maHoaDon = ?")) {
+                ps.setString(1, maHD);
+                int rows = ps.executeUpdate();
+                if (rows == 0) {
+                    con.rollback();
+                    return false;
+                }
+            }
+
+            con.commit();
+            return true;
+        } catch (SQLException e) {
+            if (con != null) {
+                try {
+                    con.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (con != null) {
+                try {
+                    con.setAutoCommit(true);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+    }
+
     public boolean xoa(String maHD) {
         int soDongThayDoi = 0;
         try {
@@ -443,10 +494,10 @@ public class HoaDonDAO {
     /**
      * Hàm thực thi toàn bộ luồng đổi hàng trong 1 Transaction duy nhất
      */
-    public boolean luuGiaoDichDoiHang(HoaDon hoaDonMoi,
-                                      List<SuPhanBoLo> dsTraLai,
-                                      List<ChiTietHoaDon> dsChiTietMoi,
-                                      List<SuPhanBoLo> dsPhanBoMoi) {
+    public boolean luuHoaDonDoiHang(HoaDon hoaDonMoi,
+            List<SuPhanBoLo> dsTraLai,
+            List<ChiTietHoaDon> dsChiTietMoi,
+            List<SuPhanBoLo> dsPhanBoMoi) {
         Connection ketNoi = null;
         try {
             ketNoi = ConnectDB.getConnection();
@@ -510,8 +561,8 @@ public class HoaDonDAO {
                 String themPhanBo = "INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong) VALUES (?, ?, ?, ?)";
 
                 try (PreparedStatement psKtLo = ketNoi.prepareStatement(ktLo);
-                     PreparedStatement psLoMoi = ketNoi.prepareStatement(capNhatLoMoi);
-                     PreparedStatement psPhanBo = ketNoi.prepareStatement(themPhanBo)) {
+                        PreparedStatement psLoMoi = ketNoi.prepareStatement(capNhatLoMoi);
+                        PreparedStatement psPhanBo = ketNoi.prepareStatement(themPhanBo)) {
 
                     for (SuPhanBoLo spMoi : dsPhanBoMoi) {
                         psKtLo.setString(1, spMoi.getLo().getMaLo());
@@ -678,7 +729,7 @@ public class HoaDonDAO {
      * Không trừ kho. Nếu HoaDon đã tồn tại, chỉ lưu thêm chi tiết (idempotent với
      * maHoaDon).
      */
-    public boolean luuHoaDon(HoaDon hd, List<ChiTietHoaDon> dsChiTiet) {
+    public boolean luuHoaDonBanHang(HoaDon hd, List<ChiTietHoaDon> dsChiTiet) {
         Connection con = null;
         try {
             con = ConnectDB.getConnection();
@@ -773,7 +824,7 @@ public class HoaDonDAO {
      * Xác nhận thanh toán: Cập nhật trangThaiThanhToan = true và trừ kho (FEFO).
      * Phải gọi luuHoaDon() trước khi gọi hàm này.
      */
-    public boolean xacNhanThanhToan(String maHoaDon, List<ChiTietHoaDon> dsChiTiet) {
+    public boolean xacNhanThanhToan(String maHoaDon, List<ChiTietHoaDon> dsChiTiet) throws SQLException {
         Connection con = null;
         try {
             con = ConnectDB.getConnection();
@@ -791,7 +842,7 @@ public class HoaDonDAO {
             String sqlSPBL = "INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong) VALUES (?, ?, ?, ?)";
 
             try (PreparedStatement pstLo = con.prepareStatement(sqlLo);
-                 PreparedStatement pstSPBL = con.prepareStatement(sqlSPBL)) {
+                    PreparedStatement pstSPBL = con.prepareStatement(sqlSPBL)) {
 
                 for (ChiTietHoaDon ct : dsChiTiet) {
                     int soLuongCanTru = ct.getSoLuong() * ct.getDonViQuyDoi().getHeSoQuyDoi();
@@ -824,15 +875,15 @@ public class HoaDonDAO {
 
             con.commit();
             return true;
-        } catch (Exception e) {
-            if (con != null)
+        } catch (SQLException e) {
+            if (con != null) {
                 try {
                     con.rollback();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
-            e.printStackTrace();
-            return false;
+            }
+            throw e;
         } finally {
             if (con != null)
                 try {

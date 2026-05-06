@@ -32,6 +32,15 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 	private MoCaPanel pnlMoCa;
 	private DongCaPanel pnlDongCa;
 	private BanHangPanel pnlBanHang;
+	private DoiHangPanel pnlDoiHang;
+	private TraHangPanel pnlTraHang;
+	private SanPhamPanel pnlSanPham;
+	private LoPanel pnlLo;
+	private KhuyenMaiPanel pnlKhuyenMai;
+	private DonThuocPanel pnlDonThuoc;
+	private TaiKhoanPanel pnlTaiKhoan;
+	private CaLamPanel pnlCaLam;
+	private TroGiupPanel pnlTroGiup;
 	private List<MenuItem> menuStructure = new ArrayList<>();
 	private JPanel sidebar;
 	private JPanel pLogout;
@@ -41,7 +50,6 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 	private Border selectedBorder = BorderFactory.createCompoundBorder(
 			BorderFactory.createMatteBorder(0, 5, 0, 0, Color.decode("#174EA6")),
 			menuPadding);
-	private TroGiupPanel pnlTroGiup;
 
 	public ThanhDieuHuongPanel(TaiKhoan taiKhoan) {
 		// KIỂM TRA DỮ LIỆU ĐẦU VÀO ĐỂ TRÁNH LỖI NULL POINTER
@@ -105,20 +113,20 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		contentPanel = new JPanel(cardLayout);
 		
 		contentPanel.add(pnlTrangChu = new ManHinhChinhPanel(taiKhoan), "Màn Hình Chính");
-		contentPanel.add(pnlHoaDon = new HoaDonPanel(), "Quản Lý Hóa Đơn");
-		contentPanel.add(pnlBanHang=new  BanHangPanel(taiKhoan), "Bán Hàng");
-		contentPanel.add(new DoiHangPanel(taiKhoan), "Đổi Hàng");
-		contentPanel.add(new TraHangPanel(), "Trả Hàng");
+		contentPanel.add(pnlHoaDon = new HoaDonPanel(taiKhoan), "Quản Lý Hóa Đơn");
+		contentPanel.add(pnlBanHang = new BanHangPanel(taiKhoan), "Bán Hàng");
+		contentPanel.add(pnlDoiHang = new DoiHangPanel(taiKhoan), "Đổi Hàng");
+		contentPanel.add(pnlTraHang = new TraHangPanel(), "Trả Hàng");
 		contentPanel.add(pnlKhachHang = new KhachHangPanel(), "Khách Hàng");
-		contentPanel.add(new SanPhamPanel(), "Quản Lý Sản Phẩm");
+		contentPanel.add(pnlSanPham = new SanPhamPanel(), "Quản Lý Sản Phẩm");
 		
 		if (isQuanLy) {
-			contentPanel.add(new LoPanel(), "Quản Lý Lô");
-			contentPanel.add(new KhuyenMaiPanel(), "Khuyến Mãi");
-			contentPanel.add(new DonThuocPanel(), "Quản Lý Đơn Thuốc");
+			contentPanel.add(pnlLo = new LoPanel(), "Quản Lý Lô");
+			contentPanel.add(pnlKhuyenMai = new KhuyenMaiPanel(), "Khuyến Mãi");
+			contentPanel.add(pnlDonThuoc = new DonThuocPanel(), "Quản Lý Đơn Thuốc");
 			contentPanel.add(pnlNhanVien = new NhanVienPanel(), "Quản Lý Nhân Viên");
-			contentPanel.add(new TaiKhoanPanel(), "Quản Lý Tài Khoản");
-			contentPanel.add(new CaLamPanel(), "Quản Lý Ca Làm");
+			contentPanel.add(pnlTaiKhoan = new TaiKhoanPanel(), "Quản Lý Tài Khoản");
+			contentPanel.add(pnlCaLam = new CaLamPanel(), "Quản Lý Ca Làm");
 			contentPanel.add(pnlThongKe = new ThongKePanel(), "Thống Kê");
 		}
 		contentPanel.add(pnlMoCa = new MoCaPanel(taiKhoan), "Mở Ca");
@@ -209,12 +217,13 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 			pnlTrangChu.loadThongKeData();
 			pnlTrangChu.layDuLieuChoHoatDongGanDay();
 		}
-    	pnlMoCa.loadDuLieuCa();
-		pnlDongCa.loadDuLieuCa();
-		pnlBanHang.loadHoaDonChuaThanhToan();
-		if (isQuanLy && pnlNhanVien != null) {
-			pnlNhanVien.taiLaiDanhSach();
-			pnlThongKe.capNhatDuLieuThongKe();
+		if (pnlMoCa != null) pnlMoCa.loadDuLieuCa();
+		if (pnlDongCa != null) pnlDongCa.loadDuLieuCa();
+		if (pnlBanHang != null) pnlBanHang.loadHoaDonChuaThanhToan();
+		
+		if (isQuanLy) {
+			if (pnlNhanVien != null) pnlNhanVien.taiLaiDanhSach();
+			if (pnlThongKe != null) pnlThongKe.capNhatDuLieuThongKe();
 		}
 	}
 

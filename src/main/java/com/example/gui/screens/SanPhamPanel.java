@@ -386,11 +386,9 @@ public class SanPhamPanel extends JPanel {
 
         cbLoaiSP.setSelectedItem(sp.getLoaiSanPham().name());
 
-        // Load ảnh (theo quy ước)
-        String imagePath = "/images/anhSanPham/" + sp.getMaSanPham() + ".png";
-        java.net.URL url = getClass().getResource(imagePath);
-        if (url != null) {
-            ImageIcon icon = new ImageIcon(url);
+        // Load ảnh (Sử dụng hàm loadProductImageIcon để có scaling)
+        ImageIcon icon = loadProductImageIcon(sp.getMaSanPham(), 150, 100);
+        if (icon != null) {
             lblImageRight.setIcon(icon);
             lblImageRight.setText("");
         } else {
