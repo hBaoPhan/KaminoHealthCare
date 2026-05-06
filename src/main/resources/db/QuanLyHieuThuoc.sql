@@ -4,7 +4,6 @@ GO
 -- 1. XÓA DATABASE CŨ (NẾU ĐANG TỒN TẠI)
 IF EXISTS (SELECT name FROM sys.databases WHERE name = N'QUANLYKAMINOHEALTHCARE')
 BEGIN
-    -- Ngắt tất cả kết nối đang truy cập vào database để có thể xóa
     ALTER DATABASE [QUANLYKAMINOHEALTHCARE] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
     DROP DATABASE [QUANLYKAMINOHEALTHCARE];
 END
@@ -17,7 +16,9 @@ GO
 USE [QUANLYKAMINOHEALTHCARE];
 GO
 
---- 2. KHỞI TẠO CÁC BẢNG THỰC THỂ ---
+--- =================================================== ---
+--- 3. KHỞI TẠO CÁC BẢNG THỰC THỂ (DDL)
+--- =================================================== ---
 
 CREATE TABLE NhanVien (
     maNhanVien VARCHAR(10) PRIMARY KEY,
@@ -25,7 +26,7 @@ CREATE TABLE NhanVien (
     cccd VARCHAR(12) UNIQUE,
     sdt VARCHAR(10),
     chucVu NVARCHAR(50) NOT NULL CHECK (chucVu IN (N'DUOC_SI', N'NHAN_VIEN_QUAN_LY')),
-    trangThaiHoatDong BIT -- 1: Đang làm, 0: Nghỉ
+    trangThaiHoatDong BIT 
 );
 
 CREATE TABLE TaiKhoan (
@@ -39,7 +40,6 @@ CREATE TABLE CaLam (
     maNhanVien VARCHAR(10) FOREIGN KEY REFERENCES NhanVien(maNhanVien),
     gioBatDau DATETIME,
     gioKetThuc DATETIME,
-    -- Thay cho bảng TrangThaiCaLam
     trangThaiCaLam NVARCHAR(20) CHECK (trangThaiCaLam IN (N'DANG_MO', N'DONG')),
     tienMoCa FLOAT,
     tienKetCa FLOAT,
@@ -99,8 +99,6 @@ CREATE TABLE Lo (
     giaNhap FLOAT
 );
 
---- 3. NGHIỆP VỤ HÓA ĐƠN ---
-
 CREATE TABLE DonThuoc (
     maDonThuoc VARCHAR(20) PRIMARY KEY,
     tenBacSi NVARCHAR(100),
@@ -142,62 +140,66 @@ CREATE TABLE SuPhanBoLo (
         REFERENCES ChiTietHoaDon(maHoaDon, maDonVi),
     PRIMARY KEY (maHoaDon, maDonVi, maLo)
 );
-
-USE QUANLYKAMINOHEALTHCARE;
 GO
 
--- =====================================================
--- 1. DỌN DẸP SẠCH SẼ DỮ LIỆU CŨ
--- =====================================================
-DELETE FROM SuPhanBoLo;
-DELETE FROM ChiTietHoaDon;
-DELETE FROM HoaDon;
-DELETE FROM QuaTang;
-DELETE FROM Lo;
-DELETE FROM DonViQuyDoi;
-DELETE FROM TaiKhoan;
-DELETE FROM CaLam;
-DELETE FROM DonThuoc;
-DELETE FROM SanPham;
-DELETE FROM KhuyenMai;
-DELETE FROM KhachHang;
-DELETE FROM NhanVien;
-GO
+--- =================================================== ---
+--- 4. CHÈN DỮ LIỆU MẪU (ÁP DỤNG QUY TẮC MÃ ĐỊNH DANH MỚI)
+--- =================================================== ---
 
--- =====================================================
--- 2. CHÈN BẢNG DANH MỤC ĐỘC LẬP
--- =====================================================
+-- 4.1. NHÂN VIÊN & TÀI KHOẢN (Mã: Chức vụ + 3 số)
 INSERT INTO NhanVien (maNhanVien, tenNhanVien, cccd, sdt, chucVu, trangThaiHoatDong) VALUES
-('NV01', N'Phan Hoài Bảo', '079200000001', '0901234567', N'NHAN_VIEN_QUAN_LY', 1),
-('NV02', N'Nguyễn Văn An', '079200000002', '0901234568', N'DUOC_SI', 1),
-('NV03', N'Trần Thị Bích', '079200000003', '0901234569', N'DUOC_SI', 1),
-('NV04', N'Lê Văn Cường', '079200000004', '0901234570', N'DUOC_SI', 1),
-('NV05', N'Phạm Thị Dung', '079200000005', '0901234571', N'DUOC_SI', 0);
+('QL001', N'Phan Hoài Bảo', '079200000001', '0901234567', N'NHAN_VIEN_QUAN_LY', 1),
+('DS001', N'Nguyễn Văn An', '079200000002', '0901234568', N'DUOC_SI', 1),
+('DS002', N'Trần Thị Bích', '079200000003', '0901234569', N'DUOC_SI', 1),
+('DS003', N'Lê Văn Cường', '079200000004', '0901234570', N'DUOC_SI', 1),
+('DS004', N'Phạm Thị Dung', '079200000005', '0901234571', N'DUOC_SI', 0);
 
+INSERT INTO TaiKhoan (tenDangNhap, matKhau, maNhanVien) VALUES
+('admin_QL001', '123456', 'QL001'),
+('duocsi_DS001', '123456', 'DS001'),
+('duocsi_DS002', '123456', 'DS002'),
+('duocsi_DS003', '123456', 'DS003'),
+('duocsi_DS004', '123456', 'DS004');
+
+-- 4.2. KHÁCH HÀNG (Mã: TV/KL + 6 số)
 INSERT INTO KhachHang (maKhachHang, tenKhachHang, sdt, trangThaiKhachHang) VALUES
-('KH01', N'Khách vãng lai 1', '0911111111', N'KHACH_LE'),
-('KH02', N'Ngô Thị Em', '0922222222', N'KHACH_HANG_THANH_VIEN'),
-('KH03', N'Vũ Văn Phong', '0933333333', N'KHACH_HANG_THANH_VIEN'),
-('KH04', N'Đặng Thị Giang', '0944444444', N'KHACH_HANG_THANH_VIEN'),
-('KH05', N'Bùi Văn Hùng', '0955555555', N'KHACH_HANG_THANH_VIEN');
+('KL000001', N'Khách vãng lai 1', '0911111111', N'KHACH_LE'),
+('TV000001', N'Ngô Thị Em', '0922222222', N'KHACH_HANG_THANH_VIEN'),
+('TV000002', N'Vũ Văn Phong', '0933333333', N'KHACH_HANG_THANH_VIEN'),
+('TV000003', N'Đặng Thị Giang', '0944444444', N'KHACH_HANG_THANH_VIEN'),
+('TV000004', N'Bùi Văn Hùng', '0955555555', N'KHACH_HANG_THANH_VIEN');
 
+-- 4.3. KHUYẾN MÃI (Mã: KM + Ngày Tháng + Số)
 INSERT INTO KhuyenMai (maKhuyenMai, tenKhuyenMai, thoiGianBatDau, thoiGianKetThuc, loaiKhuyenMai, khuyenMaiPhanTram, giaTriDonHangToiThieu) VALUES
-('KM01', N'Giảm 10% đơn từ 500k', '2026-04-01', '2026-05-01', N'PHAN_TRAM', 10, 500000),
-('KM02', N'Mua 1 tặng 1 Vitamin C', '2026-04-15', '2026-04-30', N'TANG_KEM', 0, 0),
-('KM03', N'Giảm giá 5% Lễ 30/4', '2026-04-25', '2026-05-05', N'PHAN_TRAM', 5, 0),
-('KM04', N'Tặng khẩu trang đơn 100k', '2026-04-01', '2026-12-31', N'TANG_KEM', 0, 100000),
-('KM05', N'Sale sinh nhật 20%', '2026-10-01', '2026-10-31', N'PHAN_TRAM', 20, 1000000);
+('KM010401', N'Giảm 10% đơn từ 500k', '2026-04-01', '2026-05-01', N'PHAN_TRAM', 10, 500000),
+('KM150401', N'Mua 1 tặng 1 Vitamin C', '2026-04-15', '2026-04-30', N'TANG_KEM', 0, 0),
+('KM250401', N'Giảm giá 5% Lễ 30/4', '2026-04-25', '2026-05-05', N'PHAN_TRAM', 5, 0),
+('KM010402', N'Tặng khẩu trang đơn 100k', '2026-04-01', '2026-12-31', N'TANG_KEM', 0, 100000),
+('KM011001', N'Sale sinh nhật 20%', '2026-10-01', '2026-10-31', N'PHAN_TRAM', 20, 1000000);
 
+-- 4.4. ĐƠN THUỐC (Mã: DT + DDMMYY + 3 số)
 INSERT INTO DonThuoc (maDonThuoc, tenBacSi, coSoKhamBenh, ngayKeDon) VALUES
-('DT01', N'BS. Nguyễn Văn A', N'Bệnh viện Chợ Rẫy', '2026-04-20'),
-('DT02', N'BS. Trần Thị B', N'Bệnh viện 115', '2026-04-21'),
-('DT03', N'BS. Lê Văn C', N'Phòng khám đa khoa', '2026-04-22'),
-('DT04', N'BS. Phạm Thị D', N'Bệnh viện Đại học Y Dược', '2026-04-23'),
-('DT05', N'BS. Ngô Văn E', N'Bệnh viện Nhi Đồng', '2026-04-24');
+('DT200426001', N'BS. Nguyễn Văn A', N'Bệnh viện Chợ Rẫy', '2026-04-20'),
+('DT210426001', N'BS. Trần Thị B', N'Bệnh viện 115', '2026-04-21'),
+('DT220426001', N'BS. Lê Văn C', N'Phòng khám đa khoa', '2026-04-22'),
+('DT230426001', N'BS. Phạm Thị D', N'Bệnh viện Đại học Y Dược', '2026-04-23'),
+('DT240426001', N'BS. Ngô Văn E', N'Bệnh viện Nhi Đồng', '2026-04-24'),
+('DT300426001', N'BS. Hoàng Trọng E', N'Bệnh viện Nhân dân Gia Định', '2026-04-30');
 
--- =====================================================
--- 3. CHÈN 60 SẢN PHẨM CHUẨN
--- =====================================================
+-- 4.5. CA LÀM (Mã: CA + DDMMYY + 2 số)
+INSERT INTO CaLam (maCa, maNhanVien, gioBatDau, gioKetThuc, trangThaiCaLam, tienMoCa, tienKetCa, tienHeThong, ghiChu) VALUES
+('CA20042601', 'QL001', '2026-04-20 08:00:00', '2026-04-20 16:00:00', N'DONG', 1000000, 5000000, 4000000, N'Ca bình thường'),
+('CA20042602', 'DS001', '2026-04-20 16:00:00', '2026-04-20 22:00:00', N'DONG', 5000000, 8000000, 3000000, N'Ca bình thường'),
+('CA21042601', 'DS002', '2026-04-21 08:00:00', '2026-04-21 16:00:00', N'DONG', 1000000, 6000000, 5000000, N'Ca bình thường'),
+('CA21042602', 'DS003', '2026-04-21 16:00:00', '2026-04-21 22:00:00', N'DONG', 6000000, 9000000, 3000000, N'Ca bình thường'),
+('CA22042601', 'DS001', '2026-04-22 08:00:00', '2026-04-22 08:00:00', N'DONG', 1000000, 1000000, 0, N'Ca bình thường'),
+('CA26042601', 'DS002', '2026-04-26 08:00:00', '2026-04-26 16:00:00', N'DONG', 1000000, 5000000, 4000000, N'Ca bình thường'),
+('CA30042601', 'DS002', '2026-04-30 08:00:00', '2026-04-30 16:00:00', N'DONG', 1000000, 6000000, 5000000, N'Ca bình thường'),
+('CA02052601', 'DS001', '2026-05-02 08:00:00', '2026-05-02 16:00:00', N'DANG_MO', 1000000, 5000000, 4000000, N'Đang trực');
+
+
+
+-- 4.6. SẢN PHẨM & ĐƠN VỊ QUY ĐỔI
 INSERT INTO SanPham (maSanPham, tenSanPham, loaiSanPham, soLuongTon, moTa, hoatChat, donGiaCoBan, trangThaiKinhDoanh, thue) VALUES
 ('OTC-BIA-001', 'Biafine Janssen', 'OTC', 120, 'Kem trị bỏng, vết thương và bỏng nắng', 'Biafine', 95000, 1, 0.05),
 ('OTC-CON-002', 'Contractubex', 'OTC', 90, 'Kem trị sẹo lồi, sẹo lõm', 'Contractubex', 145000, 1, 0.05),
@@ -260,26 +262,6 @@ INSERT INTO SanPham (maSanPham, tenSanPham, loaiSanPham, soLuongTon, moTa, hoatC
 ('TPCN-POB-057', 'Premium Omexxel Bone Health', 'TPCN', 135, 'Hỗ trợ xương khớp cao cấp', 'Calcium + Vitamin D & K2', 289000, 1, 0.1),
 ('TPCN-SKI-058', 'SkillMax Ocavill', 'TPCN', 130, 'Hỗ trợ trí não', 'Ginkgo & Phosphatidylserine', 215000, 1, 0.1);
 
--- =====================================================
--- 4. CHÈN TÀI KHOẢN VÀ CA LÀM
--- =====================================================
-INSERT INTO TaiKhoan (tenDangNhap, matKhau, maNhanVien) VALUES
-('admin', '123456', 'NV01'),
-('duocsi1', '123456', 'NV02'),
-('duocsi2', '123456', 'NV03'),
-('duocsi3', '123456', 'NV04'),
-('duocsi4', '123456', 'NV05');
-
-INSERT INTO CaLam (maCa, maNhanVien, gioBatDau, gioKetThuc, trangThaiCaLam, tienMoCa, tienKetCa, tienHeThong, ghiChu) VALUES
-('CA01', 'NV01', '2026-04-20 08:00:00', '2026-04-20 16:00:00', N'DONG', 1000000, 5000000, 4000000, N'Ca bình thường'),
-('CA02', 'NV02', '2026-04-20 16:00:00', '2026-04-20 22:00:00', N'DONG', 5000000, 8000000, 3000000, N'Ca bình thường'),
-('CA03', 'NV03', '2026-04-21 08:00:00', '2026-04-21 16:00:00', N'DONG', 1000000, 6000000, 5000000, N'Ca bình thường'),
-('CA04', 'NV04', '2026-04-21 16:00:00', '2026-04-21 22:00:00', N'DONG', 6000000, 9000000, 3000000, N'Ca bình thường'),
-('CA05', 'NV02', '2026-04-22 08:00:00', '2026-04-22 08:00:00', N'DONG', 1000000, 1000000, 0, N'Đang trực');
-
--- =====================================================
--- 5. CHÈN 101 ĐƠN VỊ QUY ĐỔI (Đã đồng bộ chuẩn mã)
--- =====================================================
 INSERT INTO DonViQuyDoi (maDonVi, tenDonVi, heSoQuyDoi, maSanPham) VALUES
 ('DV001', 'TUYP', 1, 'OTC-BIA-001'),
 ('DV002', 'TUYP', 1, 'OTC-CON-002'),
@@ -325,36 +307,94 @@ INSERT INTO DonViQuyDoi (maDonVi, tenDonVi, heSoQuyDoi, maSanPham) VALUES
 ('DV096', 'VIEN', 1, 'TPCN-PIK-056'), ('DV097', 'VI', 10, 'TPCN-PIK-056'), ('DV098', 'HOP', 30, 'TPCN-PIK-056'),
 ('DV099', 'VIEN', 1, 'TPCN-SKI-058'), ('DV100', 'VI', 10, 'TPCN-SKI-058'), ('DV101', 'HOP', 30, 'TPCN-SKI-058');
 
--- =====================================================
--- 6. CHÈN BẢNG LÔ HÀNG (Đã fix lỗi mã sản phẩm)
--- =====================================================
+-- 4.7. LÔ HÀNG (Mã: LO + DDMMYY + 3 số)
 INSERT INTO Lo (maLo, soLo, ngayHetHan, soLuongSanPham, maSanPham, giaNhap) VALUES
-('LO01', 'L001', '2028-01-01', 500, 'OTC-BIA-001', 10000),
-('LO02', 'L002', '2027-06-01', 500, 'OTC-BIA-001', 11000),
-('LO03', 'L003', '2027-12-31', 500, 'OTC-CON-002', 35000),
-('LO04', 'L004', '2026-10-01', 2000, 'OTC-ALL-006', 15000), -- Thay thế thuốc test
-('LO05', 'L005', '2029-01-01', 3000, 'ETC-DEX-020', 3000);
+('LO010126001', 'L001', '2028-01-01', 500, 'OTC-BIA-001', 10000),
+('LO010226001', 'L002', '2027-06-01', 500, 'OTC-BIA-001', 11000),
+('LO150326001', 'L003', '2027-12-31', 500, 'OTC-CON-002', 35000),
+('LO200326001', 'L004', '2026-10-01', 2000, 'OTC-ALL-006', 15000),
+('LO250326001', 'L005', '2029-01-01', 3000, 'ETC-DEX-020', 3000);
 
--- =====================================================
--- 7. CHÈN QUÀ TẶNG & HÓA ĐƠN TEST (Khớp hoàn toàn với bảng Đơn Vị Quy Đổi)
--- =====================================================
+-- 4.8. QUÀ TẶNG (Khớp mã Khuyến Mãi và Đơn Vị mới)
 INSERT INTO QuaTang (maKhuyenMai, maDonVi, soLuongTang) VALUES
-('KM02', 'DV015', 1), -- Tặng 1 Viên Allerphast
-('KM04', 'DV017', 1), -- Tặng 1 Hộp Allerphast
-('KM02', 'DV001', 2), -- Tặng 2 Tuýp Biafine
-('KM04', 'DV016', 1), -- Tặng 1 Vỉ Allerphast
-('KM05', 'DV002', 5); -- Tặng 5 Tuýp Contractubex
+('KM150401', 'DV015', 1),
+('KM010402', 'DV017', 1),
+('KM150401', 'DV001', 2),
+('KM010402', 'DV016', 1),
+('KM011001', 'DV002', 5);
 
+-- 4.9. HÓA ĐƠN & CHI TIẾT (Mã: HD + B/D/T + DDMMYY + 3 số)
 INSERT INTO HoaDon (maHoaDon, thoiGianTao, maNhanVien, trangThaiThanhToan, maKhachHang, maKhuyenMai, loaiHoaDon, maCa, ghiChu, maHoaDonDoiTra, maDonThuoc, phuongThucThanhToan) VALUES
-('HD01', '2026-04-20 10:00:00', 'NV01', 1, 'KH02', 'KM01', N'BAN_HANG', 'CA01', N'', NULL, NULL, N'TIEN_MAT'),
-('HD02', '2026-04-20 14:00:00', 'NV01', 1, 'KH01', NULL, N'BAN_HANG', 'CA01', N'', NULL, 'DT01', N'CHUYEN_KHOAN'),
-('HD03', '2026-04-21 09:00:00', 'NV03', 1, 'KH03', 'KM02', N'BAN_HANG', 'CA03', N'', NULL, NULL, N'TIEN_MAT'),
-('HD04', '2026-04-21 11:00:00', 'NV03', 1, 'KH04', NULL, N'BAN_HANG', 'CA03', N'', NULL, 'DT02', N'CHUYEN_KHOAN'),
-('HD05', '2026-04-22 08:30:00', 'NV02', 1, 'KH05', 'KM04', N'BAN_HANG', 'CA05', N'', NULL, NULL, N'TIEN_MAT');
+('HDB200426001', '2026-04-20 10:00:00', 'QL001', 1, 'TV000001', 'KM010401', N'BAN_HANG', 'CA20042601', N'', NULL, NULL, N'TIEN_MAT'),
+('HDB200426002', '2026-04-20 14:00:00', 'QL001', 1, 'KL000001', NULL, N'BAN_HANG', 'CA20042601', N'', NULL, 'DT200426001', N'CHUYEN_KHOAN'),
+('HDB210426001', '2026-04-21 09:00:00', 'DS002', 1, 'TV000002', 'KM150401', N'BAN_HANG', 'CA21042601', N'', NULL, NULL, N'TIEN_MAT'),
+('HDB210426002', '2026-04-21 11:00:00', 'DS002', 1, 'TV000003', NULL, N'BAN_HANG', 'CA21042601', N'', NULL, 'DT210426001', N'CHUYEN_KHOAN'),
+('HDB220426001', '2026-04-22 08:30:00', 'DS001', 1, 'TV000004', 'KM010402', N'BAN_HANG', 'CA22042601', N'', NULL, NULL, N'TIEN_MAT'),
+('HDB260426001', '2026-04-26 09:00:00', 'DS002', 1, 'TV000002', 'KM150401', N'BAN_HANG', 'CA26042601', N'', NULL, NULL, N'TIEN_MAT'),
+('HDB300426001', '2026-04-30 11:00:00', 'DS002', 1, 'TV000003', NULL, N'BAN_HANG', 'CA30042601', N'', NULL, 'DT300426001', N'CHUYEN_KHOAN'),
+('HDB020526001', '2026-05-02 08:30:00', 'DS001', 1, 'TV000004', 'KM010402', N'BAN_HANG', 'CA02052601', N'', NULL, NULL, N'TIEN_MAT');
 
 INSERT INTO ChiTietHoaDon (maHoaDon, maDonVi, soLuong, donGia, laQuaTangKem) VALUES
-('HD01', 'DV001', 2, 15000, 0),   -- 2 Tuýp Biafine
-('HD01', 'DV015', 1, 50000, 0),   -- 1 Viên Allerphast
-('HD02', 'DV016', 10, 20000, 0),  -- 10 Vỉ Allerphast
-('HD03', 'DV015', 2, 50000, 0),   -- 2 Viên Allerphast
-('HD04', 'DV017', 5, 5000, 0);    -- 5 Hộp Allerphast
+('HDB200426001', 'DV001', 2, 15000, 0),
+('HDB200426001', 'DV015', 1, 50000, 0),
+('HDB200426002', 'DV016', 10, 20000, 0),
+('HDB210426001', 'DV015', 2, 50000, 0),
+('HDB210426002', 'DV017', 5, 5000, 0),
+('HDB260426001', 'DV016', 10, 20000, 0),
+('HDB300426001', 'DV015', 2, 50000, 0),
+('HDB020526001', 'DV017', 5, 5000, 0);
+
+INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong) VALUES
+('HDB200426001', 'DV001', 'LO010126001', 2),
+('HDB200426001', 'DV015', 'LO200326001', 1),
+('HDB200426002', 'DV016', 'LO200326001', 10),
+('HDB210426001', 'DV015', 'LO200326001', 2),
+('HDB210426002', 'DV017', 'LO200326001', 5),
+('HDB260426001', 'DV016', 'LO200326001', 10),
+('HDB300426001', 'DV015', 'LO200326001', 2),
+('HDB020526001', 'DV017', 'LO200326001', 5);
+GO
+
+--- =================================================== ---
+--- 5. Trigger
+--- =================================================== ---
+
+CREATE TRIGGER trg_Lo_UpdateTonKho
+ON Lo
+AFTER INSERT, UPDATE, DELETE
+AS
+BEGIN
+    -- Ngăn việc trả về số dòng bị ảnh hưởng, giúp tăng hiệu suất
+    SET NOCOUNT ON;
+
+    -- BƯỚC 1: Xử lý phần dữ liệu bị mất đi (Dành cho sự kiện DELETE và UPDATE)
+    -- Lấy số lượng cũ từ bảng ảo 'deleted' trừ khỏi kho
+    IF EXISTS (SELECT 1 FROM deleted)
+    BEGIN
+        UPDATE sp
+        SET sp.soLuongTon = ISNULL(sp.soLuongTon, 0) - d.TongSoLuongCu
+        FROM SanPham sp
+        INNER JOIN (
+            -- Tính tổng số lượng lô bị xóa/cũ theo từng mã sản phẩm
+            SELECT maSanPham, SUM(soLuongSanPham) AS TongSoLuongCu
+            FROM deleted
+            GROUP BY maSanPham
+        ) d ON sp.maSanPham = d.maSanPham;
+    END
+
+    -- BƯỚC 2: Xử lý phần dữ liệu mới được thêm (Dành cho sự kiện INSERT và UPDATE)
+    -- Lấy số lượng mới từ bảng ảo 'inserted' cộng vào kho
+    IF EXISTS (SELECT 1 FROM inserted)
+    BEGIN
+        UPDATE sp
+        SET sp.soLuongTon = ISNULL(sp.soLuongTon, 0) + i.TongSoLuongMoi
+        FROM SanPham sp
+        INNER JOIN (
+            -- Tính tổng số lượng lô mới theo từng mã sản phẩm
+            SELECT maSanPham, SUM(soLuongSanPham) AS TongSoLuongMoi
+            FROM inserted
+            GROUP BY maSanPham
+        ) i ON sp.maSanPham = i.maSanPham;
+    END
+END;
+GO

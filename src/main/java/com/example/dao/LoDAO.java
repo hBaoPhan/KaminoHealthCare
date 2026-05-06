@@ -17,8 +17,7 @@ public class LoDAO {
         List<Lo> danhSach = new ArrayList<>();
         String sql = "SELECT * FROM Lo ORDER BY ngayHetHan ASC, maLo ASC";
 
-        try (Connection ketNoi = ConnectDB.getConnection();
-             Statement lenh = ketNoi.createStatement();
+        try (Statement lenh = ConnectDB.getConnection().createStatement();
              ResultSet ketQua = lenh.executeQuery(sql)) {
 
             while (ketQua.next()) {
@@ -50,8 +49,7 @@ public class LoDAO {
 
         String sql = "SELECT TOP 1 maLo FROM Lo WHERE maLo LIKE ? ORDER BY maLo DESC";
 
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement stmt = con.prepareStatement(sql)) {
+        try (PreparedStatement stmt = ConnectDB.getConnection().prepareStatement(sql)) {
 
             stmt.setString(1, prefix + "%");
             ResultSet rs = stmt.executeQuery();
@@ -75,8 +73,7 @@ public class LoDAO {
     public boolean themLo(Lo lo) {
         String sql = "INSERT INTO Lo(maLo, soLo, ngayHetHan, soLuongSanPham, maSanPham, giaNhap) " +
                      "VALUES(?, ?, ?, ?, ?, ?)";
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement stmt = con.prepareStatement(sql)) {
+        try (PreparedStatement stmt = ConnectDB.getConnection().prepareStatement(sql)) {
 
             stmt.setString(1, lo.getMaLo());
             stmt.setString(2, lo.getSoLo());
@@ -98,8 +95,7 @@ public class LoDAO {
     public boolean capNhatLo(Lo lo) {
         String sql = "UPDATE Lo SET soLo = ?, ngayHetHan = ?, soLuongSanPham = ?, " +
                      "maSanPham = ?, giaNhap = ? WHERE maLo = ?";
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement stmt = con.prepareStatement(sql)) {
+        try (PreparedStatement stmt = ConnectDB.getConnection().prepareStatement(sql)) {
 
             stmt.setString(1, lo.getSoLo());
             stmt.setDate(2, Date.valueOf(lo.getNgayHetHan()));
@@ -120,8 +116,7 @@ public class LoDAO {
      */
     public boolean xoaLo(String maLo) {
         String sql = "DELETE FROM Lo WHERE maLo = ?";
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement stmt = con.prepareStatement(sql)) {
+        try (PreparedStatement stmt = ConnectDB.getConnection().prepareStatement(sql)) {
 
             stmt.setString(1, maLo);
             return stmt.executeUpdate() > 0;
@@ -136,8 +131,7 @@ public class LoDAO {
      */
     public Lo timTheoMa(String maLo) {
         String sql = "SELECT * FROM Lo WHERE maLo = ?";
-        try (Connection ketNoi = ConnectDB.getConnection();
-             PreparedStatement lenh = ketNoi.prepareStatement(sql)) {
+        try (PreparedStatement lenh = ConnectDB.getConnection().prepareStatement(sql)) {
 
             lenh.setString(1, maLo);
             ResultSet ketQua = lenh.executeQuery();
@@ -168,7 +162,8 @@ public class LoDAO {
     }
 
     public boolean capNhatSoLuongTon(String maLo, int soLuongThayDoi) {
-        try (Connection con = ConnectDB.getConnection()) {
+        try {
+            Connection con = ConnectDB.getConnection();
             return capNhatSoLuongTon(maLo, soLuongThayDoi, con);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -183,8 +178,7 @@ public class LoDAO {
                          "WHERE dv.maDonVi = ? AND l.soLuongSanPham > 0 " +
                          "AND l.ngayHetHan > GETDATE() ORDER BY l.ngayHetHan ASC";
 
-        try (Connection ketNoi = ConnectDB.getConnection();
-             PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
+        try (PreparedStatement lenh = ConnectDB.getConnection().prepareStatement(truyVan)) {
 
             lenh.setString(1, maDonViQuyDoi);
             ResultSet ketQua = lenh.executeQuery();

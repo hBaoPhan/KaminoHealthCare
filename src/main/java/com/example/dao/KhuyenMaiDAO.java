@@ -23,8 +23,7 @@ public class KhuyenMaiDAO {
         String prefix = "KM" + datePart;
 
         String maxMa = null;
-        try (Connection ketNoi = ConnectDB.getConnection();
-                PreparedStatement lenh = ketNoi.prepareStatement(
+        try (PreparedStatement lenh = ConnectDB.getConnection().prepareStatement(
                         "SELECT TOP 1 maKhuyenMai FROM KhuyenMai WHERE maKhuyenMai LIKE ? ORDER BY maKhuyenMai DESC")) {
 
             lenh.setString(1, prefix + "%");
@@ -51,8 +50,7 @@ public class KhuyenMaiDAO {
 
     public List<KhuyenMai> layTatCa() {
         List<KhuyenMai> danhSach = new ArrayList<>();
-        try (Connection ketNoi = ConnectDB.getConnection();
-                Statement lenh = ketNoi.createStatement();
+        try (Statement lenh = ConnectDB.getConnection().createStatement();
                 ResultSet ketQua = lenh.executeQuery("SELECT * FROM KhuyenMai ORDER BY maKhuyenMai")) {
 
             while (ketQua.next()) {
@@ -71,8 +69,7 @@ public class KhuyenMaiDAO {
     }
 
     public KhuyenMai timTheoMa(String maKM) {
-        try (Connection ketNoi = ConnectDB.getConnection();
-                PreparedStatement lenh = ketNoi.prepareStatement("SELECT * FROM KhuyenMai WHERE maKhuyenMai = ?")) {
+        try (PreparedStatement lenh = ConnectDB.getConnection().prepareStatement("SELECT * FROM KhuyenMai WHERE maKhuyenMai = ?")) {
 
             lenh.setString(1, maKM);
             try (ResultSet ketQua = lenh.executeQuery()) {
@@ -97,8 +94,7 @@ public class KhuyenMaiDAO {
             km.setMaKhuyenMai(generateNextMaKhuyenMai());
         }
 
-        try (Connection ketNoi = ConnectDB.getConnection();
-                PreparedStatement lenh = ketNoi.prepareStatement(
+        try (PreparedStatement lenh = ConnectDB.getConnection().prepareStatement(
                         "INSERT INTO KhuyenMai (maKhuyenMai, tenKhuyenMai, thoiGianBatDau, thoiGianKetThuc, " +
                                 "loaiKhuyenMai, khuyenMaiPhanTram, giaTriDonHangToiThieu) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
 
@@ -126,8 +122,7 @@ public class KhuyenMaiDAO {
     }
 
     public boolean capNhat(KhuyenMai km) {
-        try (Connection ketNoi = ConnectDB.getConnection();
-                PreparedStatement lenh = ketNoi.prepareStatement(
+        try (PreparedStatement lenh = ConnectDB.getConnection().prepareStatement(
                         "UPDATE KhuyenMai SET tenKhuyenMai = ?, thoiGianBatDau = ?, thoiGianKetThuc = ?, " +
                                 "loaiKhuyenMai = ?, khuyenMaiPhanTram = ?, giaTriDonHangToiThieu = ? WHERE maKhuyenMai = ?")) {
 
@@ -159,7 +154,8 @@ public class KhuyenMaiDAO {
     }
 
     public boolean xoa(String maKM) {
-        try (Connection ketNoi = ConnectDB.getConnection()) {
+        try {
+            Connection ketNoi = ConnectDB.getConnection();
             // Xóa quà tặng trước
             quaTangDAO.xoaTheoKhuyenMai(maKM);
 
