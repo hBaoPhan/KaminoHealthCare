@@ -714,7 +714,9 @@ public class HoaDonDAO {
                 }
             } else {
                 // Thêm mới Hóa đơn
-                String sqlHD = "INSERT INTO HoaDon (maHoaDon, thoiGianTao, maNhanVien, trangThaiThanhToan, maKhachHang, maKhuyenMai, loaiHoaDon, maCa, ghiChu, phuongThucThanhToan) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            	String sqlHD = "INSERT INTO HoaDon (maHoaDon, thoiGianTao, maNhanVien, trangThaiThanhToan, " +
+                        "maKhachHang, maKhuyenMai, loaiHoaDon, maCa, ghiChu, phuongThucThanhToan, maHoaDonDoiTra) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 try (PreparedStatement pstHD = con.prepareStatement(sqlHD)) {
                     pstHD.setString(1, hd.getMaHoaDon());
                     pstHD.setTimestamp(2, Timestamp.valueOf(hd.getThoiGianTao()));
@@ -727,6 +729,7 @@ public class HoaDonDAO {
                     pstHD.setString(9, hd.getGhiChu());
                     pstHD.setString(10,
                             hd.getPhuongThucThanhToan() != null ? hd.getPhuongThucThanhToan().name() : null);
+                    pstHD.setString(11, hd.getHoaDonDoiTra() != null ? hd.getHoaDonDoiTra().getMaHoaDon() : null);
                     pstHD.executeUpdate();
                 }
             }
