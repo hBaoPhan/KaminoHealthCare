@@ -203,27 +203,51 @@ public class DoiHangPanel extends JPanel {
     }
 
     private void xuLyKhiThayDoiDonVi(JTable table, int row, int col) {
-        if (col != 2 && col != 3) return; 
         DefaultTableModel model = (DefaultTableModel) table.getModel();
-        if (row < 0 || row >= model.getRowCount()) return;
-
         String maSP = model.getValueAt(row, 0).toString();
+
+        // LOGIC CHẶN SỐ LƯỢNG GIỮ LẠI (Bảng hóa đơn gốc)
+        if (table == tblHoaDonGoc && col == 3) {
+            int slGiuLaiNhap = Integer.parseInt(model.getValueAt(row, 3).toString());
+            
+            // Lấy chi tiết gốc và hệ số quy đổi lúc mua
+            ChiTietHoaDon ctGoc = chiTietHoaDonGocList.get(row);
+            int heSoGoc = ctGoc.getDonViQuyDoi().getHeSoQuyDoi();
+            int tongDonViNhoNhatDaMua = ctGoc.getSoLuong() * heSoGoc;
+            
+            // Lấy hệ số quy đổi của đơn vị đang được chọn để GIỮ LẠI
+            String moTaDonViGiuLai = model.getValueAt(row, 2).toString(); 
+            DonViQuyDoi dvGiuLai = donViQuyDoiDAO.timTheoTenVaMaSP(DonVi.tuMoTa(moTaDonViGiuLai).name(), maSP);
+            
+            if (dvGiuLai != null) {
+                int tongDonViNhoNhatGiuLai = slGiuLaiNhap * dvGiuLai.getHeSoQuyDoi();
+                
+                if (tongDonViNhoNhatGiuLai > tongDonViNhoNhatDaMua) {
+                    JOptionPane.showMessageDialog(this, 
+                        "Số lượng giữ lại vượt quá số lượng đã mua ban đầu!", 
+                        "Cảnh báo gian lận", JOptionPane.ERROR_MESSAGE);
+                    
+                    // Trả về số lượng tối đa được phép giữ lại theo đơn vị hiện tại
+                    int slToiDaHopLe = tongDonViNhoNhatDaMua / dvGiuLai.getHeSoQuyDoi();
+                    model.setValueAt(slToiDaHopLe, row, 3); 
+                    return;
+                }
+            }
+        }
+
+        // LOGIC CẬP NHẬT GIÁ THEO ĐƠN VỊ VÀ TÍNH TIỀN
         String moTaDonVi = model.getValueAt(row, 2).toString(); 
         DonVi dvEnum = DonVi.tuMoTa(moTaDonVi);
-        if (dvEnum == null) return;
-
         DonViQuyDoi dv = donViQuyDoiDAO.timTheoTenVaMaSP(dvEnum.name(), maSP);
+        
         if (dv != null) {
             double giaMoi = dv.getSanPham().getDonGiaCoBan() * dv.getHeSoQuyDoi();
             SwingUtilities.invokeLater(() -> {
-                if (row < model.getRowCount()) {
-                    model.setValueAt(giaMoi, row, 4);
-                    int sl = Integer.parseInt(model.getValueAt(row, 3).toString());
-                    double thueTiLe = Double.parseDouble(model.getValueAt(row, 5).toString());
-                    double thanhTienMoi = sl * giaMoi * (1 + thueTiLe);
-                    model.setValueAt(thanhTienMoi, row, 6);
-                    tinhToanToanBoTien();
-                }
+                model.setValueAt(giaMoi, row, 4);
+                int sl = Integer.parseInt(model.getValueAt(row, 3).toString());
+                double thueTiLe = Double.parseDouble(model.getValueAt(row, 5).toString());
+                model.setValueAt(sl * giaMoi * (1 + thueTiLe), row, 6);
+                tinhToanToanBoTien();
             });
         }
     }
@@ -267,35 +291,90 @@ public class DoiHangPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Thuốc kê đơn không được phép đổi trả!", "Cảnh báo", JOptionPane.ERROR_MESSAGE);
             return;
         }
+        
+        // Kiểm tra tồn kho thực tế
+        SanPham spDB = sanPhamDAO.timTheoMa(sp.getMaSanPham());
+        if (spDB == null || spDB.getSoLuongTon() <= 0) {
+            JOptionPane.showMessageDialog(this, "Sản phẩm này hiện đã hết hàng trong kho!", "Hết hàng", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // KIỂM TRA ĐƠN VỊ QUY ĐỔI TRƯỚC KHI THÊM
+        List<DonViQuyDoi> dsDV = donViQuyDoiDAO.timTheoMaSanPham(sp.getMaSanPham());
+        if (dsDV == null || dsDV.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Sản phẩm này chưa được thiết lập Đơn vị quy đổi trong hệ thống! Không thể bán.", "Lỗi dữ liệu", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
         DefaultTableModel model = (DefaultTableModel) tblSanPham.getModel();
         for (int i = 0; i < model.getRowCount(); i++) {
             if (model.getValueAt(i, 0).equals(sp.getMaSanPham())) {
                 int slHienTai = Integer.parseInt(model.getValueAt(i, 3).toString());
+                
+                // Lấy hệ số quy đổi của đơn vị đang chọn
+                int heSo = dsDV.get(0).getHeSoQuyDoi();
+                
+                if ((slHienTai + 1) * heSo > spDB.getSoLuongTon()) {
+                    JOptionPane.showMessageDialog(this, "Kho không đủ số lượng để đổi thêm!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                
                 model.setValueAt(slHienTai + 1, i, 3);
                 return;
             }
         }
-        List<DonViQuyDoi> ds = donViQuyDoiDAO.timTheoMaSanPham(sp.getMaSanPham());
-        String dv = ds.isEmpty() ? DonVi.VIEN.getMoTa() : ds.get(0).getTenDonVi().getMoTa();
+        
+        // Lấy mô tả của đơn vị đầu tiên trong danh sách để hiển thị mặc định
+        String dv = dsDV.get(0).getTenDonVi().getMoTa();
         model.addRow(new Object[]{sp.getMaSanPham(), sp.getTenSanPham(), dv, 1, sp.getDonGiaCoBan(), sp.getThue(), 0.0});
     }
 
     private void tinhToanToanBoTien() {
-        double tongTienGocHienTai = tinhTienChoBang(tblHoaDonGoc); 
-        double tongTienDoiMoi = tinhTienChoBang(tblSanPham); 
-        double tongTienHoaDonMoi = tongTienGocHienTai + tongTienDoiMoi;
+        // 1. Tính tiền hàng giữ lại (Bảng 1)
+        double tongTienGocSauThayDoi = tinhTienChoBang(tblHoaDonGoc); 
+        // 2. Tính tiền hàng mua mới (Bảng 2)
+        double tongTienHangDoiMoi = tinhTienChoBang(tblSanPham); 
         
-        txtTienDoi.setText(formatVND(tongTienHoaDonMoi)); 
+        // TỔNG GIÁ TRỊ HÓA ĐƠN MỚI (Gồm hàng giữ lại + hàng mới)
+        double tongTienHoaDonMoi = tongTienGocSauThayDoi + tongTienHangDoiMoi;
+        
+        // Cập nhật UI: Tiền HĐ đổi chính là tổng giá trị hóa đơn mới
+        txtTienDoi.setText(formatVND(tongTienHoaDonMoi));
+        
+        // Công thức tính chênh lệch đúng như ý bạn: HĐ Mới - HĐ Gốc
         double chenhLech = tongTienHoaDonMoi - tongTienHoaDonGocBanDau;
         txtChenhLech.setText(formatVND(chenhLech));
 
-        if (radTienMat.isSelected() && chenhLech > 1000) {
-            double lamTron = Math.round(chenhLech / 1000.0) * 1000;
+        if (chenhLech < 0) {
+            // TRƯỜNG HỢP HOÀN TIỀN
+            double soTienHoan = Math.abs(chenhLech);
+            txtThanhTienLamTron.setText(formatVND(soTienHoan));
+            txtThanhTienLamTron.setForeground(new Color(220, 53, 69)); // Màu đỏ cảnh báo
+            
+            txtKhachDua.setText("0");
+            txtKhachDua.setEnabled(false); 
+            txtTienThoi.setText(formatVND(soTienHoan));
+            
+            if (pnlThanhTienContainer.getComponentCount() > 0 && pnlThanhTienContainer.getComponent(0) instanceof JLabel) {
+                ((JLabel) pnlThanhTienContainer.getComponent(0)).setText("Số tiền hoàn trả khách:");
+            }
+        } else {
+            // TRƯỜNG HỢP THU THÊM
+            double lamTron = (radTienMat.isSelected() && chenhLech > 1000) 
+                             ? Math.round(chenhLech / 1000.0) * 1000 
+                             : chenhLech;
+            
             txtThanhTienLamTron.setText(formatVND(lamTron));
-        } else { 
-            txtThanhTienLamTron.setText(formatVND(Math.max(0, chenhLech))); 
+            txtThanhTienLamTron.setForeground(Color.BLACK);
+            
+            txtKhachDua.setEnabled(true);
+            
+            if (pnlThanhTienContainer.getComponentCount() > 0 && pnlThanhTienContainer.getComponent(0) instanceof JLabel) {
+                ((JLabel) pnlThanhTienContainer.getComponent(0)).setText("Thành tiền (đã làm tròn):");
+            }
+            
+            tinhTienThoi();
         }
-        tinhTienThoi();
     }
 
     private double tinhTienChoBang(JTable table) {
@@ -341,63 +420,159 @@ public class DoiHangPanel extends JPanel {
     private void xuLyThanhToan() {
         DefaultTableModel modelGoc = (DefaultTableModel) tblHoaDonGoc.getModel();
         DefaultTableModel modelDoi = (DefaultTableModel) tblSanPham.getModel();
-        if (modelDoi.getRowCount() == 0 && modelGoc.getRowCount() == 0) return;
+        
+        // 1. CHẶN NGHIỆP VỤ: Nếu bảng đổi mới trống thì không cho thanh toán (Đây là trả hàng, không phải đổi)
+        if (modelDoi.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this, 
+                "Vui lòng chọn ít nhất 1 sản phẩm mới để tiến hành Đổi hàng!\n(Nếu chỉ trả lại hàng, vui lòng sử dụng chức năng Trả hàng).", 
+                "Cảnh báo nghiệp vụ", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        if (modelGoc.getRowCount() == 0) return;
 
         try {
             double chenhLech = Double.parseDouble(txtChenhLech.getText().replaceAll("[^\\d-]", ""));
             double thanhTienPhaiTra = Double.parseDouble(txtThanhTienLamTron.getText().replaceAll("[^\\d]", ""));
             
-            if (radTienMat.isSelected()) {
+            // 2. KIỂM TRA TIỀN KHÁCH ĐƯA: Chỉ bắt buộc nếu khách phải bù thêm tiền
+            if (radTienMat.isSelected() && chenhLech > 0) {
                 String txtDuaRaw = txtKhachDua.getText().trim().replaceAll("[^\\d]", "");
                 double khachDua = txtDuaRaw.isEmpty() ? 0 : Double.parseDouble(txtDuaRaw);
-                if (chenhLech > 0 && khachDua < thanhTienPhaiTra) {
-                    JOptionPane.showMessageDialog(this, "Tiền khách đưa không đủ!"); return;
+                if (khachDua < thanhTienPhaiTra) {
+                    JOptionPane.showMessageDialog(this, "Tiền khách đưa không đủ!"); 
+                    return;
                 }
             }
 
+            // 3. KHỞI TẠO THÔNG TIN HÓA ĐƠN MỚI
             LocalDateTime now = LocalDateTime.now();
             String ngayThangNam = now.format(DateTimeFormatter.ofPattern("ddMMyy"));
             int stt = hoaDonDAO.laySoLuongHoaDonTrongNgay("HDD", ngayThangNam) + 1;
             String maHoaDonMoi = String.format("HDD%s%03d", ngayThangNam, stt);
 
             HoaDon hdMoi = new HoaDon();
-            hdMoi.setMaHoaDon(maHoaDonMoi); hdMoi.setThoiGianTao(now);
+            hdMoi.setMaHoaDon(maHoaDonMoi); 
+            hdMoi.setThoiGianTao(now);
             hdMoi.setNhanVien(taiKhoanDangNhap.getNhanVien());
             hdMoi.setKhachHang(hoaDonGocHienTai.getKhachHang());
             hdMoi.setLoaiHoaDon(LoaiHoaDon.DOI_HANG);
-            hdMoi.setHoaDonDoiTra(hoaDonGocHienTai); hdMoi.setTrangThaiThanhToan(true);
+            hdMoi.setHoaDonDoiTra(hoaDonGocHienTai); 
+            hdMoi.setTrangThaiThanhToan(true);
             hdMoi.setPhuongThucThanhToan(radTienMat.isSelected() ? PhuongThucThanhToan.TIEN_MAT : PhuongThucThanhToan.CHUYEN_KHOAN);
             hdMoi.setGhiChu(txtGhiChu.getText());
 
             CaLam ca = new CaLamDAO().layCaHienTai(taiKhoanDangNhap.getNhanVien().getMaNhanVien());
-            if (ca == null) { JOptionPane.showMessageDialog(this, "Chưa mở ca làm việc!"); return; }
+            if (ca == null) { 
+                JOptionPane.showMessageDialog(this, "Chưa mở ca làm việc!"); 
+                return; 
+            }
             hdMoi.setCa(ca);
 
+            // --- 4. XỬ LÝ HÀNG TRẢ LẠI KHO (Cộng lại tồn kho cho các Lô cũ)---
+            List<SuPhanBoLo> dsTraLai = new ArrayList<>();
+            for (int i = 0; i < modelGoc.getRowCount(); i++) {
+                int slGiuLai = Integer.parseInt(modelGoc.getValueAt(i, 3).toString());
+                ChiTietHoaDon ctGoc = chiTietHoaDonGocList.get(i);
+                int slTra = ctGoc.getSoLuong() - slGiuLai;
+                
+                if (slTra > 0) {
+                    List<SuPhanBoLo> dsPhanBoGoc = ctGoc.getDsPhanBoLo(); 
+                    int slConLaiDeTra = slTra * ctGoc.getDonViQuyDoi().getHeSoQuyDoi();
+                    
+                    if (dsPhanBoGoc != null) {
+                        for (SuPhanBoLo spb : dsPhanBoGoc) {
+                            if (slConLaiDeTra <= 0) break;
+                            int slHoan = Math.min(slConLaiDeTra, spb.getSoLuong());
+                            SuPhanBoLo traLai = new SuPhanBoLo();
+                            traLai.setLo(spb.getLo());
+                            traLai.setSoLuong(slHoan);
+                            dsTraLai.add(traLai);
+                            slConLaiDeTra -= slHoan;
+                        }
+                    }
+                }
+            }
+
+         // --- 5. GỘP CẢ 2 BẢNG VÀO HÓA ĐƠN MỚI (ƯU TIÊN THỨ TỰ HIỂN THỊ) ---
             Map<String, ChiTietHoaDon> mapMerge = new HashMap<>();
+            List<ChiTietHoaDon> dsHangGiuLai = new ArrayList<>(); // Danh sách chứa hàng từ bảng gốc
+            List<ChiTietHoaDon> dsHangMuaMoi = new ArrayList<>(); // Danh sách chứa hàng mua thêm
+
+            // Thêm hàng giữ lại từ Bảng 1 (Sẽ xuất hiện trước)
             for (int i = 0; i < modelGoc.getRowCount(); i++) {
                 int sl = Integer.parseInt(modelGoc.getValueAt(i, 3).toString());
                 if (sl > 0) {
                     ChiTietHoaDon ct = taoChiTietTuDong(modelGoc, i, hdMoi);
+                    dsHangGiuLai.add(ct);
                     mapMerge.put(ct.getDonViQuyDoi().getMaDonVi(), ct);
                 }
             }
+
+            // Thêm hàng mới từ Bảng 2
             for (int i = 0; i < modelDoi.getRowCount(); i++) {
                 ChiTietHoaDon ctMoi = taoChiTietTuDong(modelDoi, i, hdMoi);
                 String maDV = ctMoi.getDonViQuyDoi().getMaDonVi();
+                
+                // Nếu trùng sản phẩm đã có ở bảng gốc (hiếm gặp nhưng vẫn xử lý)
                 if (mapMerge.containsKey(maDV)) {
                     mapMerge.get(maDV).setSoLuong(mapMerge.get(maDV).getSoLuong() + ctMoi.getSoLuong());
-                } else { mapMerge.put(maDV, ctMoi); }
-            }
-
-            List<ChiTietHoaDon> dsFinal = new ArrayList<>(mapMerge.values());
-            if (hoaDonDAO.luuHoaDon(hdMoi, dsFinal)) {
-                if (hoaDonDAO.xacNhanThanhToan(hdMoi.getMaHoaDon(), dsFinal)) {
-                    JOptionPane.showMessageDialog(this, "Thanh toán thành công: " + maHoaDonMoi);
-                    resetForm();
+                } else { 
+                    dsHangMuaMoi.add(ctMoi);
                 }
             }
-        } catch (Exception ex) { ex.printStackTrace(); }
+
+            // Hợp nhất danh sách: Đưa hàng giữ lại lên đầu danh sách cuối cùng
+            List<ChiTietHoaDon> dsChiTietMoi = new ArrayList<>();
+            dsChiTietMoi.addAll(dsHangGiuLai);
+            dsChiTietMoi.addAll(dsHangMuaMoi);
+            
+            // --- 6. KIỂM TRA LÔ VÀ TRỪ TỒN KHO HÀNG MỚI (FEFO) ---
+            List<SuPhanBoLo> dsPhanBoMoi = new ArrayList<>();
+            LoDAO loDAO = new LoDAO();
+            for (ChiTietHoaDon ct : dsChiTietMoi) {
+                int soLuongCanTru = ct.getSoLuong() * ct.getDonViQuyDoi().getHeSoQuyDoi();
+                List<Lo> dsLo = loDAO.layDanhSachLoKhaDung(ct.getDonViQuyDoi().getMaDonVi());
+                
+                if (dsLo == null || dsLo.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, 
+                        "Sản phẩm '" + ct.getDonViQuyDoi().getSanPham().getTenSanPham() + "' không có lô hàng khả dụng!", 
+                        "Lỗi kho hàng", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                int tongTonKho = 0;
+                for (Lo lo : dsLo) {
+                    if (soLuongCanTru <= 0) break;
+                    int tru = Math.min(soLuongCanTru, lo.getSoLuongSanPham());
+                    dsPhanBoMoi.add(new SuPhanBoLo(ct, lo, tru));
+                    soLuongCanTru -= tru;
+                    tongTonKho += lo.getSoLuongSanPham();
+                }
+
+                if (soLuongCanTru > 0) {
+                    JOptionPane.showMessageDialog(this, 
+                        "Sản phẩm '" + ct.getDonViQuyDoi().getSanPham().getTenSanPham() + "' không đủ tồn kho!\n" +
+                        "Thiếu: " + soLuongCanTru + " (đv nhỏ nhất)", 
+                        "Thiếu hàng", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+            }
+
+            // 7. THỰC THI TRANSACTION QUA DAO
+            if (hoaDonDAO.luuGiaoDichDoiHang(hdMoi, dsTraLai, dsChiTietMoi, dsPhanBoMoi)) {
+                JOptionPane.showMessageDialog(this, "Thanh toán thành công hóa đơn đổi: " + maHoaDonMoi);
+                resetForm();
+            } else {
+                JOptionPane.showMessageDialog(this, "Lỗi hệ thống: Giao dịch không thể hoàn tất!", "Lỗi SQL", JOptionPane.ERROR_MESSAGE);
+            }
+            
+        } catch (Exception ex) { 
+            JOptionPane.showMessageDialog(this, "Đã xảy ra lỗi: " + ex.getMessage(), "Lỗi thực thi", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace(); 
+        }
     }
+  
 
     private void resetForm() {
         txtMaHoaDonGoc.setText(""); txtNgayTao.setText(""); txtTenKhachHang.setText(""); txtNguoiTao.setText("");
@@ -536,7 +711,15 @@ public class DoiHangPanel extends JPanel {
             for (int i = 0; i < cb.getItemCount(); i++) if (cb.getItemAt(i).getMoTa().equals(v)) { cb.setSelectedIndex(i); break; }
             return cb;
         }
-        @Override public Object getCellEditorValue() { return ((DonVi) cb.getSelectedItem()).getMoTa(); }
+        
+        // ĐÃ SỬA LỖI NULL POINTER EXCEPTION TẠI ĐÂY
+        @Override public Object getCellEditorValue() { 
+            Object selected = cb.getSelectedItem();
+            if (selected != null && selected instanceof DonVi) {
+                return ((DonVi) selected).getMoTa();
+            }
+            return ""; // Trả về chuỗi rỗng thay vì ném exception
+        }
     }
 
     private class QuantitySpinnerEditor extends AbstractCellEditor implements TableCellEditor {

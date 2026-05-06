@@ -1,213 +1,398 @@
 package com.example.gui.screens;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Font;
+import com.example.dao.NhanVienDAO;
+import com.example.dao.TaiKhoanDAO;
+import com.example.entity.NhanVien;
+import com.example.entity.TaiKhoan;
+import com.example.entity.enums.ChucVu;
 
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.SwingConstants;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TaiKhoanPanel extends JPanel {
 
+    // Components Tìm kiếm & Lọc
+    private JTextField txtTimKiem;
+    private JComboBox<String> cboLocVaiTro, cboLocTrangThai;
+
+    // Components Form bên trái
+    private JTextField txtTenDangNhap, txtMatKhau;
+    private JComboBox<String> cboNhanVien, cboVaiTro, cboTrangThai;
+    private JButton btnThem, btnCapNhat, btnKhoaTK, btnLamMoi;
+
+    // Components Bảng bên phải
+    private JTable tableTaiKhoan;
+    private DefaultTableModel tableModel;
+    private JLabel lblTongSoTaiKhoan;
+
+    // DAO & Dữ liệu
+    private NhanVienDAO nhanVienDAO = new NhanVienDAO();
+    private TaiKhoanDAO taiKhoanDAO = new TaiKhoanDAO();
+    private List<TaiKhoan> danhSachTaiKhoanFull = new ArrayList<>();
+
     public TaiKhoanPanel() {
+        initComponents();
+        initData();
+        addEvents();
+    }
+
+    private void initComponents() {
         setLayout(new BorderLayout(10, 10));
         setBorder(new EmptyBorder(10, 10, 10, 10));
-        setBackground(new Color(245, 245, 245));
 
-        // 1. Khu vực trên cùng: Tìm kiếm & Lọc
-        add(createTopPanel(), BorderLayout.NORTH);
+        // ================= TOP PANEL (Tìm kiếm & Lọc) =================
+        JPanel pnlTop = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
+        pnlTop.add(new JLabel("Tìm kiếm:"));
+        txtTimKiem = new JTextField(20);
+        pnlTop.add(txtTimKiem);
 
-        // 2. Khu vực trung tâm
-        JPanel pnlCenter = new JPanel(new BorderLayout(15, 0));
-        pnlCenter.setBackground(new Color(245, 245, 245));
+        pnlTop.add(new JLabel("Lọc theo:"));
+        cboLocVaiTro = new JComboBox<>(new String[]{"Tất cả vai trò", "Dược sĩ", "Nhân viên quản lý"});
+        pnlTop.add(cboLocVaiTro);
+        
+        cboLocTrangThai = new JComboBox<>(new String[]{"Tất cả trạng thái", "Đang hoạt động", "Bị khóa"});
+        pnlTop.add(cboLocTrangThai);
+        
+        add(pnlTop, BorderLayout.NORTH);
 
-        pnlCenter.add(createFormPanel(), BorderLayout.WEST);
-        pnlCenter.add(createTablePanel(), BorderLayout.CENTER);
+        // ================= LEFT PANEL (Thông tin tài khoản) =================
+        JPanel pnlLeft = new JPanel(new BorderLayout());
+        pnlLeft.setPreferredSize(new Dimension(350, 0));
+        pnlLeft.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(Color.LIGHT_GRAY), 
+                "THÔNG TIN TÀI KHOẢN", TitledBorder.CENTER, TitledBorder.TOP, 
+                new Font("Arial", Font.BOLD, 14)));
+
+        JPanel pnlForm = new JPanel(new GridLayout(5, 2, 10, 20));
+        pnlForm.setBorder(new EmptyBorder(20, 10, 20, 10));
+        
+        pnlForm.add(new JLabel("Tên đăng nhập:"));
+        txtTenDangNhap = new JTextField();
+        pnlForm.add(txtTenDangNhap);
+
+        pnlForm.add(new JLabel("Mật khẩu:"));
+        txtMatKhau = new JTextField();
+        pnlForm.add(txtMatKhau);
+
+        pnlForm.add(new JLabel("Nhân viên:"));
+        cboNhanVien = new JComboBox<>();
+        pnlForm.add(cboNhanVien);
+
+        pnlForm.add(new JLabel("Vai trò:"));
+        cboVaiTro = new JComboBox<>();
+        pnlForm.add(cboVaiTro);
+
+        pnlForm.add(new JLabel("Trạng thái:"));
+        cboTrangThai = new JComboBox<>(new String[]{"Đang hoạt động", "Bị khóa"});
+        pnlForm.add(cboTrangThai);
+
+        pnlLeft.add(pnlForm, BorderLayout.NORTH);
+
+        // ================= BUTTONS =================
+        JPanel pnlButtons = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        btnThem = createButton("Thêm", new Color(0, 191, 255));
+        btnCapNhat = createButton("Cập nhật", new Color(255, 215, 0));
+        btnKhoaTK = createButton("Khóa TK", new Color(255, 69, 0));
+        btnLamMoi = createButton("Làm mới", new Color(50, 205, 50)); 
+
+        pnlButtons.add(btnThem);
+        pnlButtons.add(btnCapNhat);
+        pnlButtons.add(btnKhoaTK);
+        pnlButtons.add(btnLamMoi);
+        pnlLeft.add(pnlButtons, BorderLayout.SOUTH);
+
+        add(pnlLeft, BorderLayout.WEST);
+
+        // ================= CENTER PANEL (Danh sách tài khoản) =================
+        JPanel pnlCenter = new JPanel(new BorderLayout());
+        pnlCenter.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(Color.LIGHT_GRAY), 
+                "DANH SÁCH TÀI KHOẢN", TitledBorder.LEFT, TitledBorder.TOP, 
+                new Font("Arial", Font.BOLD, 14)));
+
+        String[] cols = {"Tên đăng nhập", "Tên nhân viên", "Vai trò", "Trạng thái"};
+        tableModel = new DefaultTableModel(cols, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+        tableTaiKhoan = new JTable(tableModel);
+        tableTaiKhoan.setRowHeight(25);
+        tableTaiKhoan.getTableHeader().setFont(new Font("Arial", Font.BOLD, 12));
+        
+        pnlCenter.add(new JScrollPane(tableTaiKhoan), BorderLayout.CENTER);
+
+        // Label tổng số
+        JPanel pnlBottom = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        lblTongSoTaiKhoan = new JLabel("Tổng cộng: 0 tài khoản");
+        lblTongSoTaiKhoan.setFont(new Font("Arial", Font.ITALIC, 12));
+        pnlBottom.add(lblTongSoTaiKhoan);
+        pnlCenter.add(pnlBottom, BorderLayout.SOUTH);
 
         add(pnlCenter, BorderLayout.CENTER);
     }
 
-    // --- TẠO THANH TÌM KIẾM VÀ LỌC ---
-    private JPanel createTopPanel() {
-        JPanel pnlTop = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 10));
-        pnlTop.setBackground(new Color(245, 245, 245));
-
-        JTextField txtTimKiem = new JTextField(25);
-        txtTimKiem.setToolTipText("Nhập tên đăng nhập hoặc tên nhân viên...");
-
-        JComboBox<String> cmbLocVaiTro = new JComboBox<>(new String[] { "Tất cả vai trò", "Quản lý", "Dược sĩ" });
-        cmbLocVaiTro.setPreferredSize(new Dimension(120, 30));
-
-        JComboBox<String> cmbLocTrangThai = new JComboBox<>(
-                new String[] { "Tất cả trạng thái", "Đang hoạt động", "Bị khóa" });
-        cmbLocTrangThai.setPreferredSize(new Dimension(120, 30));
-
-        pnlTop.add(new JLabel("Tìm kiếm:"));
-        pnlTop.add(txtTimKiem);
-        pnlTop.add(new JLabel("Lọc theo:"));
-        pnlTop.add(cmbLocVaiTro);
-        pnlTop.add(cmbLocTrangThai);
-
-        return pnlTop;
-    }
-
-    // --- TẠO FORM THÔNG TIN TÀI KHOẢN ---
-    private JPanel createFormPanel() {
-        JPanel pnlForm = new JPanel(new BorderLayout());
-        pnlForm.setBackground(Color.WHITE);
-        pnlForm.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.LIGHT_GRAY),
-                new EmptyBorder(20, 20, 20, 20)));
-        pnlForm.setPreferredSize(new Dimension(380, 0));
-
-        // 1. Tiêu đề
-        JLabel lblTitle = new JLabel("THÔNG TIN TÀI KHOẢN", SwingConstants.CENTER);
-        lblTitle.setFont(new Font("Arial", Font.BOLD, 18));
-        lblTitle.setBorder(new EmptyBorder(0, 0, 20, 0)); // Thêm khoảng cách dưới tiêu đề
-        pnlForm.add(lblTitle, BorderLayout.NORTH);
-
-        // 2. Form nhập liệu
-        JPanel pnlInput = new JPanel(new GridBagLayout());
-        pnlInput.setBackground(Color.WHITE);
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(12, 5, 12, 5);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        Dimension sizeCbo = new Dimension(250, 30);
-
-        JTextField txtTenDangNhap = new JTextField(15);
-        JPasswordField txtMatKhau = new JPasswordField(15);
-
-        JComboBox<String> cmbNhanVien = new JComboBox<>(
-                new String[] { "NV001 - Hoài Bảo", "NV002 - Trần Tấn Tài", "NV003 - Kiều Đỗ Thủy Tiên" });
-        cmbNhanVien.setPreferredSize(sizeCbo);
-        cmbNhanVien.setMinimumSize(sizeCbo); // <-- THÊM DÒNG NÀY ĐỂ ÉP CỨNG
-
-        JComboBox<String> cmbVaiTro = new JComboBox<>(new String[] { "Dược sĩ", "Quản lý" });
-        cmbVaiTro.setPreferredSize(sizeCbo);
-        cmbVaiTro.setMinimumSize(sizeCbo); // <-- THÊM DÒNG NÀY ĐỂ ÉP CỨNG
-
-        JComboBox<String> cmbTrangThai = new JComboBox<>(new String[] { "Đang hoạt động", "Bị khóa" });
-        cmbTrangThai.setPreferredSize(sizeCbo);
-        cmbTrangThai.setMinimumSize(sizeCbo); // <-- THÊM DÒNG NÀY ĐỂ ÉP CỨNG
-
-        String[] labels = { "Tên đăng nhập:", "Mật khẩu:", "Nhân viên:", "Vai trò:", "Trạng thái:" };
-        Component[] inputs = { txtTenDangNhap, txtMatKhau, cmbNhanVien, cmbVaiTro, cmbTrangThai };
-
-        for (int i = 0; i < labels.length; i++) {
-            gbc.gridx = 0;
-            gbc.gridy = i;
-            gbc.weightx = 0.3;
-            pnlInput.add(new JLabel(labels[i]), gbc);
-
-            gbc.gridx = 1;
-            gbc.weightx = 0.7;
-
-            if (inputs[i] instanceof JComboBox) {
-                gbc.fill = GridBagConstraints.NONE;
-                gbc.anchor = GridBagConstraints.WEST;
-            } else {
-                gbc.fill = GridBagConstraints.HORIZONTAL;
-            }
-            pnlInput.add(inputs[i], gbc);
-        }
-
-        // --- THỦ THUẬT ÉP FORM LÊN TRÊN ---
-        // Tạo một Panel bọc ngoài và đặt pnlInput lên phía trên (NORTH) của nó
-        JPanel pnlWrapper = new JPanel(new BorderLayout());
-        pnlWrapper.setBackground(Color.WHITE);
-        pnlWrapper.add(pnlInput, BorderLayout.NORTH);
-
-        // Thêm Panel bọc ngoài vào phần giữa của pnlForm
-        pnlForm.add(pnlWrapper, BorderLayout.CENTER);
-
-        // 3. Các nút chức năng
-        JPanel pnlButtons = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 15));
-        pnlButtons.setBackground(Color.WHITE);
-
-        JButton btnThem = createHoverButton("Thêm", new Color(0, 204, 255));
-        JButton btnSua = createHoverButton("Cập nhật", new Color(255, 235, 59));
-        JButton btnKhoa = createHoverButton("Khóa TK", new Color(255, 82, 82));
-        JButton btnLamMoi = createHoverButton("Làm mới", new Color(220, 220, 220));
-
-        pnlButtons.add(btnThem);
-        pnlButtons.add(btnSua);
-        pnlButtons.add(btnKhoa);
-        pnlButtons.add(btnLamMoi);
-
-        pnlForm.add(pnlButtons, BorderLayout.SOUTH);
-
-        return pnlForm;
-    }
-
-    // --- TẠO BẢNG DANH SÁCH TÀI KHOẢN ---
-    private JPanel createTablePanel() {
-        JPanel pnlTableContent = new JPanel(new BorderLayout());
-        pnlTableContent.setBackground(Color.WHITE);
-        pnlTableContent.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.LIGHT_GRAY),
-                new EmptyBorder(20, 10, 10, 10)));
-
-        JLabel lblTitle = new JLabel("DANH SÁCH TÀI KHOẢN");
-        lblTitle.setFont(new Font("Arial", Font.BOLD, 18));
-        lblTitle.setBorder(new EmptyBorder(0, 0, 15, 0));
-        pnlTableContent.add(lblTitle, BorderLayout.NORTH);
-
-        String[] columns = { "Tên đăng nhập", "Tên nhân viên", "Vai trò", "Trạng thái" };
-        Object[][] data = {
-                { "admin", "Hoài Bảo", "Quản lý", "Đang hoạt động" },
-                { "tantai_nv", "Trần Tấn Tài", "Dược sĩ", "Đang hoạt động" },
-                { "thuytien_kho", "Kiều Đỗ Thủy Tiên", "Dược sĩ", "Đang hoạt động" },
-                { "minhnhat22", "Nguyễn Minh Nhật", "Dược sĩ", "Bị khóa" }
-        };
-
-        DefaultTableModel model = new DefaultTableModel(data, columns);
-        JTable table = new JTable(model);
-
-        table.setRowHeight(30);
-        table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 12));
-        table.getTableHeader().setBackground(new Color(240, 240, 240));
-        table.setDefaultEditor(Object.class, null);
-
-        JScrollPane scrollPane = new JScrollPane(table);
-        pnlTableContent.add(scrollPane, BorderLayout.CENTER);
-
-        return pnlTableContent;
-    }
-
-    // --- HÀM TẠO NÚT BẤM CÓ HIỆU ỨNG HOVER ---
-    private JButton createHoverButton(String text, Color bgColor) {
+    private JButton createButton(String text, Color bg) {
         JButton btn = new JButton(text);
-        btn.setBackground(bgColor);
-        btn.setForeground(Color.BLACK);
+        btn.setBackground(bg);
+        btn.setForeground(Color.WHITE);
+        if(bg.equals(new Color(255, 215, 0))) btn.setForeground(Color.BLACK);
         btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
-        btn.setOpaque(true);
-        btn.setPreferredSize(new Dimension(85, 35));
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        Color hoverColor = bgColor.darker();
-
-        btn.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                btn.setBackground(hoverColor);
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                btn.setBackground(bgColor);
-            }
-        });
-
+        btn.setFont(new Font("Arial", Font.BOLD, 12));
         return btn;
     }
 
+    // ================= KHỞI TẠO DỮ LIỆU =================
+    private void initData() {
+        // 1. Load tất cả nhân viên của hệ thống vào ComboBox
+        cboNhanVien.removeAllItems();
+        List<NhanVien> dsNV = nhanVienDAO.layTatCa();
+        for (NhanVien nv : dsNV) {
+            cboNhanVien.addItem(nv.getMaNhanVien() + " - " + nv.getTenNhanVien());
+        }
+
+        // 2. Load ComboBox Vai trò
+        cboVaiTro.removeAllItems();
+        cboVaiTro.addItem(ChucVu.DUOC_SI.getMoTa());
+        cboVaiTro.addItem(ChucVu.NHAN_VIEN_QUAN_LY.getMoTa());
+
+        // 3. Load danh sách tài khoản từ DB lên
+        loadDataToTable();
+    }
+
+    private void loadDataToTable() {
+        danhSachTaiKhoanFull = taiKhoanDAO.layTatCa();
+        locDuLieu(); // Gọi bộ lọc mặc định để hiển thị
+    }
+
+    // ================= XỬ LÝ SỰ KIỆN =================
+    private void addEvents() {
+        // Tìm kiếm bằng phím Enter
+        txtTimKiem.addActionListener(e -> timKiemTaiKhoan());
+
+        // Thay đổi ComboBox bất kỳ sẽ thực hiện lọc
+        ActionListener locListener = e -> locDuLieu();
+        cboLocVaiTro.addActionListener(locListener);
+        cboLocTrangThai.addActionListener(locListener);
+
+        // Click 1 dòng trong danh sách tài khoản
+        tableTaiKhoan.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                fillDataToForm();
+            }
+        });
+
+        // Các nút chức năng
+        btnThem.addActionListener(e -> themTaiKhoan());
+        btnCapNhat.addActionListener(e -> capNhatTaiKhoan());
+        btnKhoaTK.addActionListener(e -> khoaTaiKhoan());
+        btnLamMoi.addActionListener(e -> lamMoiForm());
+    }
+
+    // ================= LOGIC CHI TIẾT =================
+
+    // Xử lý: Lọc theo 2 ComboBox
+    private void locDuLieu() {
+        tableModel.setRowCount(0);
+        String vaiTroLoc = cboLocVaiTro.getSelectedItem().toString();
+        String trangThaiLoc = cboLocTrangThai.getSelectedItem().toString();
+
+        int count = 0;
+        for (TaiKhoan tk : danhSachTaiKhoanFull) {
+            String vaiTroTK = tk.getNhanVien().getChucVu().getMoTa();
+            String trangThaiTK = tk.getNhanVien().isTrangThai() ? "Đang hoạt động" : "Bị khóa";
+
+            boolean matchVaiTro = vaiTroLoc.equals("Tất cả vai trò") || vaiTroLoc.equals(vaiTroTK);
+            boolean matchTrangThai = trangThaiLoc.equals("Tất cả trạng thái") || trangThaiLoc.equals(trangThaiTK);
+
+            // Kết quả của phép lọc được hiển thị ở bảng
+            if (matchVaiTro && matchTrangThai) {
+                tableModel.addRow(new Object[]{
+                        tk.getTenDangNhap(),
+                        tk.getNhanVien().getTenNhanVien(),
+                        vaiTroTK,
+                        trangThaiTK
+                });
+                count++;
+            }
+        }
+        // Hiển thị tổng số tài khoản góc dưới bên phải
+        lblTongSoTaiKhoan.setText("Tổng cộng: " + count + " tài khoản");
+    }
+
+    // Xử lý: Tìm kiếm Enter
+    private void timKiemTaiKhoan() {
+        String keyword = txtTimKiem.getText().trim().toLowerCase();
+        if (keyword.isEmpty()) {
+            loadDataToTable();
+            return;
+        }
+
+        cboLocVaiTro.setSelectedIndex(0);
+        cboLocTrangThai.setSelectedIndex(0);
+        
+        for (int i = 0; i < tableTaiKhoan.getRowCount(); i++) {
+            String tenDN = tableTaiKhoan.getValueAt(i, 0).toString().toLowerCase();
+            if (tenDN.equals(keyword)) {
+                // Tô đen dòng có tài khoản tìm thấy
+                tableTaiKhoan.setRowSelectionInterval(i, i);
+                tableTaiKhoan.scrollRectToVisible(tableTaiKhoan.getCellRect(i, 0, true));
+                
+                // Hiển thị thông tin lên form bên trái
+                fillDataToForm();
+                return;
+            }
+        }
+        JOptionPane.showMessageDialog(this, "Không tìm thấy tài khoản: " + keyword);
+    }
+
+    // Xử lý: Click Table -> Fill Form
+    private void fillDataToForm() {
+        int row = tableTaiKhoan.getSelectedRow();
+        if (row >= 0) {
+            String tenDN = tableTaiKhoan.getValueAt(row, 0).toString();
+            TaiKhoan tk = taiKhoanDAO.timTheoMa(tenDN);
+
+            if (tk != null) {
+                txtTenDangNhap.setText(tk.getTenDangNhap());
+                txtTenDangNhap.setEnabled(false); // Đã chọn thì khóa không cho sửa Tên Đăng Nhập
+                txtMatKhau.setText(tk.getMatKhau());
+                
+                String nvStr = tk.getNhanVien().getMaNhanVien() + " - " + tk.getNhanVien().getTenNhanVien();
+                cboNhanVien.setSelectedItem(nvStr);
+                cboNhanVien.setEnabled(false); // Khóa không cho đổi nhân viên
+
+                cboVaiTro.setSelectedItem(tk.getNhanVien().getChucVu().getMoTa());
+                cboVaiTro.setEnabled(false); // Vai trò thuộc tính chất của nhân viên nên chỉ hiển thị
+
+                cboTrangThai.setSelectedItem(tk.getNhanVien().isTrangThai() ? "Đang hoạt động" : "Bị khóa");
+            }
+        }
+    }
+
+    // Xử lý: Nút Làm mới (Xóa rỗng)
+    private void lamMoiForm() {
+        txtTenDangNhap.setText("");
+        txtTenDangNhap.setEnabled(true);
+        txtMatKhau.setText("");
+        
+        cboNhanVien.setEnabled(true);
+        cboVaiTro.setEnabled(true);
+        if(cboNhanVien.getItemCount() > 0) cboNhanVien.setSelectedIndex(0);
+        if(cboVaiTro.getItemCount() > 0) cboVaiTro.setSelectedIndex(0);
+        if(cboTrangThai.getItemCount() > 0) cboTrangThai.setSelectedIndex(0);
+        
+        tableTaiKhoan.clearSelection();
+        txtTimKiem.setText("");
+        cboLocVaiTro.setSelectedIndex(0);
+        cboLocTrangThai.setSelectedIndex(0);
+        loadDataToTable();
+    }
+
+    // Xử lý: Nút Thêm mới
+    private void themTaiKhoan() {
+        String tenDN = txtTenDangNhap.getText().trim();
+        String matKhau = txtMatKhau.getText().trim();
+        
+        if (tenDN.isEmpty() || matKhau.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập Tên đăng nhập và Mật khẩu!");
+            return;
+        }
+
+        if (taiKhoanDAO.timTheoMa(tenDN) != null) {
+            JOptionPane.showMessageDialog(this, "Tên đăng nhập đã tồn tại!");
+            return;
+        }
+
+        String selectedNV = cboNhanVien.getSelectedItem().toString();
+        String maNV = selectedNV.split(" - ")[0];
+
+        // YÊU CẦU: Ràng buộc mỗi tài khoản tương ứng với 1 nhân viên thôi
+        for (TaiKhoan tk : danhSachTaiKhoanFull) {
+            if (tk.getNhanVien().getMaNhanVien().equals(maNV)) {
+                JOptionPane.showMessageDialog(this, "Nhân viên này đã được cấp tài khoản hệ thống rồi!");
+                return;
+            }
+        }
+
+        TaiKhoan tkMoi = new TaiKhoan(tenDN, matKhau, new NhanVien(maNV));
+        if (taiKhoanDAO.them(tkMoi)) {
+            JOptionPane.showMessageDialog(this, "Thêm tài khoản mới thành công!");
+            loadDataToTable();
+            lamMoiForm();
+        } else {
+            JOptionPane.showMessageDialog(this, "Có lỗi xảy ra khi thêm tài khoản!");
+        }
+    }
+
+    // Xử lý: Nút Cập nhật
+    private void capNhatTaiKhoan() {
+        int row = tableTaiKhoan.getSelectedRow();
+        if (row < 0) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn tài khoản từ danh sách để cập nhật!");
+            return;
+        }
+
+        // YÊU CẦU: Nhớ hỏi xác nhận khi click vào nút trước khi cập nhật
+        int confirm = JOptionPane.showConfirmDialog(this, "Xác nhận cập nhật thông tin tài khoản này?", "Xác nhận", JOptionPane.YES_NO_OPTION);
+        if (confirm == JOptionPane.YES_OPTION) {
+            String tenDN = txtTenDangNhap.getText().trim();
+            String matKhauMoi = txtMatKhau.getText().trim();
+            boolean trangThaiMoi = cboTrangThai.getSelectedItem().toString().equals("Đang hoạt động");
+
+            // Chức năng đổi mật khẩu
+            TaiKhoan tk = new TaiKhoan();
+            tk.setTenDangNhap(tenDN);
+            tk.setMatKhau(matKhauMoi);
+            taiKhoanDAO.capNhat(tk);
+
+            // Chức năng vô hiệu hóa tài khoản bằng cách set trạng thái hoạt động thành bị khóa
+            String maNV = danhSachTaiKhoanFull.stream()
+                            .filter(t -> t.getTenDangNhap().equals(tenDN))
+                            .findFirst().get().getNhanVien().getMaNhanVien();
+                            
+            NhanVien nv = nhanVienDAO.timTheoMa(maNV);
+            nv.setTrangThai(trangThaiMoi);
+            nhanVienDAO.capNhat(nv);
+
+            JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
+            loadDataToTable();
+            lamMoiForm();
+        }
+    }
+
+    // Xử lý: Nút Khóa TK
+    private void khoaTaiKhoan() {
+        int row = tableTaiKhoan.getSelectedRow();
+        if (row < 0) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn tài khoản cần khóa!");
+            return;
+        }
+
+        // YÊU CẦU: Nhớ hỏi xác nhận
+        int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc chắn muốn KHÓA tài khoản này?", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+        if (confirm == JOptionPane.YES_OPTION) {
+            String tenDN = tableTaiKhoan.getValueAt(row, 0).toString();
+            String maNV = danhSachTaiKhoanFull.stream()
+                            .filter(t -> t.getTenDangNhap().equals(tenDN))
+                            .findFirst().get().getNhanVien().getMaNhanVien();
+
+            NhanVien nv = nhanVienDAO.timTheoMa(maNV);
+            // YÊU CẦU: Set trạng thái hoạt động thành bị khóa
+            nv.setTrangThai(false); 
+            nhanVienDAO.capNhat(nv);
+            
+            JOptionPane.showMessageDialog(this, "Đã khóa tài khoản!");
+            loadDataToTable();
+            lamMoiForm();
+        }
+    }
 }
