@@ -146,13 +146,13 @@ public class HoaDonPanel extends JPanel {
         cboLoaiHoaDon.setPreferredSize(new Dimension(160, 35));
         cboLoaiHoaDon.setBackground(Color.WHITE);
 
-        btnView = new RoundedButton("Xem  （⊙ｏ⊙）");
+        btnView = new RoundedButton("Xem Chi Tiết");
         btnView.setFont(FONT_TEXT);
         btnView.setForeground(Color.DARK_GRAY);
         btnView.setBackground(Color.WHITE);
         btnView.setPreferredSize(new Dimension(80, 35));
 
-        btnHuy = new RoundedButton("Hủy hóa đơn ( ͡° ͜ʖ ͡°)");
+        btnHuy = new RoundedButton("Hủy hóa đơn");
         btnHuy.setFont(FONT_TEXT);
         btnHuy.setForeground(Color.WHITE);
         btnHuy.setBackground(new Color(220, 53, 69)); // Red color

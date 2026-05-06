@@ -295,9 +295,11 @@ public class MoCaPanel extends JPanel implements ActionListener {
         double tienMoCa = Double.parseDouble(tongTienStr);
 
         CaLam caLam = new CaLam();
-        // Generate a simple ID or use a sequence. For now, let's just use
-        // timestamp-based ID or similar.
-        caLam.setMaCa("CL" + Long.toString(System.currentTimeMillis() / 1000, 36).toUpperCase());
+        // Tự động sinh mã ca: CA + Ngày (2 số) + Tháng (2 số) + Năm (2 số cuối) + Số thứ tự (2 chữ số)
+        String prefix = "CA" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("ddMMyy"));
+        int stt = caLamDAO.laySoLuongCaTrongNgay(prefix) + 1;
+        String maCa = String.format("%s%02d", prefix, stt);
+        caLam.setMaCa(maCa);
         caLam.setNhanVien(nhanVien);
         caLam.setGioBatDau(LocalDateTime.now());
         caLam.setTrangThai(TrangThaiCaLam.DANG_MO);
