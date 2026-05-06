@@ -19,10 +19,11 @@ public class QuaTangDAO {
             Statement lenh = ketNoi.createStatement();
             ResultSet ketQua = lenh.executeQuery(truyVan);
 
+            DonViQuyDoiDAO dvDAO = new DonViQuyDoiDAO();
             while (ketQua.next()) {
                 QuaTang qt = new QuaTang();
                 qt.setKhuyenMai(new KhuyenMai(ketQua.getString("maKhuyenMai")));
-                qt.setDonViQuyDoi(new DonViQuyDoi(ketQua.getString("maDonVi")));
+                qt.setDonViQuyDoi(dvDAO.timTheoMa(ketQua.getString("maDonVi")));
                 qt.setSoLuongTang(ketQua.getInt("soLuongTang"));
                 danhSach.add(qt);
             }
@@ -41,10 +42,11 @@ public class QuaTangDAO {
             lenh.setString(1, maKM);
             ResultSet ketQua = lenh.executeQuery();
 
+            DonViQuyDoiDAO dvDAO = new DonViQuyDoiDAO();
             while (ketQua.next()) {
                 QuaTang qt = new QuaTang();
                 qt.setKhuyenMai(new KhuyenMai(ketQua.getString("maKhuyenMai")));
-                qt.setDonViQuyDoi(new DonViQuyDoi(ketQua.getString("maDonVi")));
+                qt.setDonViQuyDoi(dvDAO.timTheoMa(ketQua.getString("maDonVi")));
                 qt.setSoLuongTang(ketQua.getInt("soLuongTang"));
                 danhSach.add(qt);
             }
