@@ -113,19 +113,14 @@ public class DoiHangPanel extends JPanel {
         textField.setText(placeholder);
         textField.setForeground(Color.GRAY);
         textField.addFocusListener(new java.awt.event.FocusAdapter() {
-            @Override
-            public void focusGained(java.awt.event.FocusEvent e) {
+            @Override public void focusGained(java.awt.event.FocusEvent e) {
                 if (textField.getText().equals(placeholder)) {
-                    textField.setText("");
-                    textField.setForeground(Color.BLACK);
+                    textField.setText(""); textField.setForeground(Color.BLACK);
                 }
             }
-
-            @Override
-            public void focusLost(java.awt.event.FocusEvent e) {
+            @Override public void focusLost(java.awt.event.FocusEvent e) {
                 if (textField.getText().trim().isEmpty()) {
-                    textField.setForeground(Color.GRAY);
-                    textField.setText(placeholder);
+                    textField.setForeground(Color.GRAY); textField.setText(placeholder);
                 }
             }
         });
@@ -136,9 +131,7 @@ public class DoiHangPanel extends JPanel {
         modelGoiY = new DefaultListModel<>();
         listGoiY = new JList<>(modelGoiY);
         listGoiY.setCellRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected,
-                    boolean cellHasFocus) {
+            @Override public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
                 if (value instanceof SanPham) {
                     SanPham sp = (SanPham) value;
@@ -150,8 +143,7 @@ public class DoiHangPanel extends JPanel {
         popupGoiY.add(new JScrollPane(listGoiY));
         popupGoiY.setFocusable(false);
         listGoiY.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
+            @Override public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 1) {
                     SanPham selected = listGoiY.getSelectedValue();
                     if (selected != null) {
@@ -165,45 +157,30 @@ public class DoiHangPanel extends JPanel {
 
     private void initEvents() {
         txtSearchHoaDon.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
+            @Override public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                     String kw = txtSearchHoaDon.getText().trim();
-                    if (!kw.isEmpty() && !kw.equals("Nhập mã hóa đơn gốc..."))
-                        timKiemHoaDonGoc(kw);
+                    if (!kw.isEmpty() && !kw.equals("Nhập mã hóa đơn gốc...")) timKiemHoaDonGoc(kw);
                 }
             }
         });
 
         txtSearchSanPham.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent e) {
-                showPopup();
-            }
-
-            public void removeUpdate(DocumentEvent e) {
-                showPopup();
-            }
-
-            public void changedUpdate(DocumentEvent e) {
-                showPopup();
-            }
-
+            public void insertUpdate(DocumentEvent e) { showPopup(); }
+            public void removeUpdate(DocumentEvent e) { showPopup(); }
+            public void changedUpdate(DocumentEvent e) { showPopup(); }
             private void showPopup() {
                 String text = txtSearchSanPham.getText().trim();
                 if (text.isEmpty() || text.equals("Nhập mã/tên sản phẩm...")) {
-                    popupGoiY.setVisible(false);
-                    return;
+                    popupGoiY.setVisible(false); return;
                 }
                 List<SanPham> ds = sanPhamDAO.timTheoMaHoacTen(text);
                 if (!ds.isEmpty()) {
                     modelGoiY.clear();
-                    for (SanPham sp : ds)
-                        modelGoiY.addElement(sp);
+                    for (SanPham sp : ds) modelGoiY.addElement(sp);
                     popupGoiY.show(txtSearchSanPham, 0, txtSearchSanPham.getHeight());
                     txtSearchSanPham.requestFocus();
-                } else {
-                    popupGoiY.setVisible(false);
-                }
+                } else { popupGoiY.setVisible(false); }
             }
         });
 
@@ -215,33 +192,21 @@ public class DoiHangPanel extends JPanel {
 
         tblSanPham.getModel().addTableModelListener(e -> {
             if (e.getType() == TableModelEvent.INSERT || e.getType() == TableModelEvent.UPDATE) {
-                if (e.getColumn() == 2)
-                    xuLyKhiThayDoiDonVi(tblSanPham, e.getFirstRow(), e.getColumn());
-                if (e.getColumn() != 6)
-                    tinhToanToanBoTien();
+                if (e.getColumn() == 2) xuLyKhiThayDoiDonVi(tblSanPham, e.getFirstRow(), e.getColumn());
+                if (e.getColumn() != 6) tinhToanToanBoTien();
             }
         });
 
         txtKhachDua.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent e) {
-                tinhTienThoi();
-            }
-
-            public void removeUpdate(DocumentEvent e) {
-                tinhTienThoi();
-            }
-
-            public void changedUpdate(DocumentEvent e) {
-                tinhTienThoi();
-            }
+            public void insertUpdate(DocumentEvent e) { tinhTienThoi(); }
+            public void removeUpdate(DocumentEvent e) { tinhTienThoi(); }
+            public void changedUpdate(DocumentEvent e) { tinhTienThoi(); }
         });
 
         btnThanhToan.addActionListener(e -> xuLyThanhToan());
     }
 
     private void xuLyKhiThayDoiDonVi(JTable table, int row, int col) {
-        if (col != 2)
-            return;
         DefaultTableModel model = (DefaultTableModel) table.getModel();
         String maSP = model.getValueAt(row, 0).toString();
 
@@ -298,14 +263,10 @@ public class DoiHangPanel extends JPanel {
             return;
         }
         txtMaHoaDonGoc.setText(hoaDonGocHienTai.getMaHoaDon());
-        txtTenKhachHang
-                .setText(hoaDonGocHienTai.getKhachHang() != null ? hoaDonGocHienTai.getKhachHang().getTenKhachHang()
-                        : "Khách vãng lai");
-        txtNgayTao
-                .setText(hoaDonGocHienTai.getThoiGianTao().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
-        txtNguoiTao.setText(
-                hoaDonGocHienTai.getNhanVien() != null ? hoaDonGocHienTai.getNhanVien().getTenNhanVien() : "N/A");
-
+        txtTenKhachHang.setText(hoaDonGocHienTai.getKhachHang() != null ? hoaDonGocHienTai.getKhachHang().getTenKhachHang() : "Khách vãng lai");
+        txtNgayTao.setText(hoaDonGocHienTai.getThoiGianTao().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
+        txtNguoiTao.setText(hoaDonGocHienTai.getNhanVien() != null ? hoaDonGocHienTai.getNhanVien().getTenNhanVien() : "N/A");
+        
         chiTietHoaDonGocList = chiTietHoaDonDAO.layTheoMaHoaDon(maHoaDon);
         DefaultTableModel model = (DefaultTableModel) tblHoaDonGoc.getModel();
         model.setRowCount(0);
@@ -429,26 +390,58 @@ public class DoiHangPanel extends JPanel {
                 return;
             }
         }
-        List<DonViQuyDoi> ds = donViQuyDoiDAO.timTheoMaSanPham(sp.getMaSanPham());
-        String dv = ds.isEmpty() ? "VIEN" : ds.get(0).getTenDonVi().name();
-        model.addRow(
-                new Object[] { sp.getMaSanPham(), sp.getTenSanPham(), dv, 1, sp.getDonGiaCoBan(), sp.getThue(), 0.0 });
-        txtSearchSanPham.setText("");
+        
+        // Lấy mô tả của đơn vị đầu tiên trong danh sách để hiển thị mặc định
+        String dv = dsDV.get(0).getTenDonVi().getMoTa();
+        model.addRow(new Object[]{sp.getMaSanPham(), sp.getTenSanPham(), dv, 1, sp.getDonGiaCoBan(), sp.getThue(), 0.0});
     }
 
     private void tinhToanToanBoTien() {
-        double tongTienMoi = tinhTienChoBang(tblHoaDonGoc) + tinhTienChoBang(tblSanPham);
-        txtTienDoi.setText(String.format("%.0f", tongTienMoi));
-        double chenhLech = tongTienMoi - tongTienHoaDonGocBanDau;
-        txtChenhLech.setText(String.format("%.0f", chenhLech));
+        // 1. Tính tiền hàng giữ lại (Bảng 1)
+        double tongTienGocSauThayDoi = tinhTienChoBang(tblHoaDonGoc); 
+        // 2. Tính tiền hàng mua mới (Bảng 2)
+        double tongTienHangDoiMoi = tinhTienChoBang(tblSanPham); 
+        
+        // TỔNG GIÁ TRỊ HÓA ĐƠN MỚI (Gồm hàng giữ lại + hàng mới)
+        double tongTienHoaDonMoi = tongTienGocSauThayDoi + tongTienHangDoiMoi;
+        
+        // Cập nhật UI: Tiền HĐ đổi chính là tổng giá trị hóa đơn mới
+        txtTienDoi.setText(formatVND(tongTienHoaDonMoi));
+        
+        // Công thức tính chênh lệch đúng như ý bạn: HĐ Mới - HĐ Gốc
+        double chenhLech = tongTienHoaDonMoi - tongTienHoaDonGocBanDau;
+        txtChenhLech.setText(formatVND(chenhLech));
 
-        if (radTienMat.isSelected() && chenhLech > 0) {
-            double lamTron = Math.round(chenhLech / 1000.0) * 1000;
-            txtThanhTienLamTron.setText(String.format("%.0f", lamTron));
+        if (chenhLech < 0) {
+            // TRƯỜNG HỢP HOÀN TIỀN
+            double soTienHoan = Math.abs(chenhLech);
+            txtThanhTienLamTron.setText(formatVND(soTienHoan));
+            txtThanhTienLamTron.setForeground(new Color(220, 53, 69)); // Màu đỏ cảnh báo
+            
+            txtKhachDua.setText("0");
+            txtKhachDua.setEnabled(false); 
+            txtTienThoi.setText(formatVND(soTienHoan));
+            
+            if (pnlThanhTienContainer.getComponentCount() > 0 && pnlThanhTienContainer.getComponent(0) instanceof JLabel) {
+                ((JLabel) pnlThanhTienContainer.getComponent(0)).setText("Số tiền hoàn trả khách:");
+            }
         } else {
-            txtThanhTienLamTron.setText(String.format("%.0f", Math.max(0, chenhLech)));
+            // TRƯỜNG HỢP THU THÊM
+            double lamTron = (radTienMat.isSelected() && chenhLech > 1000) 
+                             ? Math.round(chenhLech / 1000.0) * 1000 
+                             : chenhLech;
+            
+            txtThanhTienLamTron.setText(formatVND(lamTron));
+            txtThanhTienLamTron.setForeground(Color.BLACK);
+            
+            txtKhachDua.setEnabled(true);
+            
+            if (pnlThanhTienContainer.getComponentCount() > 0 && pnlThanhTienContainer.getComponent(0) instanceof JLabel) {
+                ((JLabel) pnlThanhTienContainer.getComponent(0)).setText("Thành tiền (đã làm tròn):");
+            }
+            
+            tinhTienThoi();
         }
-        tinhTienThoi();
     }
 
     private double tinhTienChoBang(JTable table) {
@@ -539,6 +532,7 @@ public class DoiHangPanel extends JPanel {
                 return;
             }
 
+            // 3. KHỞI TẠO THÔNG TIN HÓA ĐƠN MỚI
             LocalDateTime now = LocalDateTime.now();
             String ngayThangNam = now.format(DateTimeFormatter.ofPattern("ddMMyy"));
             int stt = hoaDonDAO.laySoLuongHoaDonTrongNgay("HDD", ngayThangNam) + 1;
@@ -552,8 +546,7 @@ public class DoiHangPanel extends JPanel {
             hdMoi.setLoaiHoaDon(LoaiHoaDon.DOI_HANG);
             hdMoi.setHoaDonDoiTra(hoaDonGocHienTai); 
             hdMoi.setTrangThaiThanhToan(true);
-            hdMoi.setPhuongThucThanhToan(
-                    radTienMat.isSelected() ? PhuongThucThanhToan.TIEN_MAT : PhuongThucThanhToan.CHUYEN_KHOAN);
+            hdMoi.setPhuongThucThanhToan(radTienMat.isSelected() ? PhuongThucThanhToan.TIEN_MAT : PhuongThucThanhToan.CHUYEN_KHOAN);
             hdMoi.setGhiChu(txtGhiChu.getText());
 
             CaLam ca = new CaLamDAO().layCaHienTai(taiKhoanDangNhap.getNhanVien().getMaNhanVien());
@@ -600,39 +593,59 @@ public class DoiHangPanel extends JPanel {
                     ChiTietHoaDon ct = taoChiTietTuDong(modelGoc, i, hdMoi);
                     dsHangGiuLai.add(ct);
                     mapMerge.put(ct.getDonViQuyDoi().getMaDonVi(), ct);
+            }
+            hdMoi.setCa(ca);
+
+            // --- 4. XỬ LÝ HÀNG TRẢ LẠI KHO (Cộng lại tồn kho cho các Lô cũ)---
             List<SuPhanBoLo> dsTraLai = new ArrayList<>();
-            DefaultTableModel modelGoc = (DefaultTableModel) tblHoaDonGoc.getModel();
-
             for (int i = 0; i < modelGoc.getRowCount(); i++) {
-                int slHienTaiTrenBang = Integer.parseInt(modelGoc.getValueAt(i, 3).toString());
-                ChiTietHoaDon ctBanDau = chiTietHoaDonGocList.get(i);
-                int slKhachTraLai = ctBanDau.getSoLuong() - slHienTaiTrenBang;
-
-                if (slKhachTraLai > 0) {
-                    List<SuPhanBoLo> phanBoCu = suPhanBoLoDAO.layPhanBoLoCuaChiTiet(
-                            hoaDonGocHienTai.getMaHoaDon(), ctBanDau.getDonViQuyDoi().getMaDonVi());
-
-                    if (!phanBoCu.isEmpty()) {
-                        SuPhanBoLo spbTra = new SuPhanBoLo();
-                        spbTra.setLo(phanBoCu.get(0).getLo());
-                        spbTra.setSoLuong(slKhachTraLai);
-                        dsTraLai.add(spbTra);
+                int slGiuLai = Integer.parseInt(modelGoc.getValueAt(i, 3).toString());
+                ChiTietHoaDon ctGoc = chiTietHoaDonGocList.get(i);
+                int slTra = ctGoc.getSoLuong() - slGiuLai;
+                
+                if (slTra > 0) {
+                    List<SuPhanBoLo> dsPhanBoGoc = ctGoc.getDsPhanBoLo(); 
+                    int slConLaiDeTra = slTra * ctGoc.getDonViQuyDoi().getHeSoQuyDoi();
+                    
+                    if (dsPhanBoGoc != null) {
+                        for (SuPhanBoLo spb : dsPhanBoGoc) {
+                            if (slConLaiDeTra <= 0) break;
+                            int slHoan = Math.min(slConLaiDeTra, spb.getSoLuong());
+                            SuPhanBoLo traLai = new SuPhanBoLo();
+                            traLai.setLo(spb.getLo());
+                            traLai.setSoLuong(slHoan);
+                            dsTraLai.add(traLai);
+                            slConLaiDeTra -= slHoan;
+                        }
                     }
                 }
             }
 
-            List<ChiTietHoaDon> dsChiTietMoi = new ArrayList<>();
-            List<SuPhanBoLo> dsPhanBoMoi = new ArrayList<>();
+         // --- 5. GỘP CẢ 2 BẢNG VÀO HÓA ĐƠN MỚI (ƯU TIÊN THỨ TỰ HIỂN THỊ) ---
+            Map<String, ChiTietHoaDon> mapMerge = new HashMap<>();
+            List<ChiTietHoaDon> dsHangGiuLai = new ArrayList<>(); // Danh sách chứa hàng từ bảng gốc
+            List<ChiTietHoaDon> dsHangMuaMoi = new ArrayList<>(); // Danh sách chứa hàng mua thêm
 
+            // Thêm hàng giữ lại từ Bảng 1 (Sẽ xuất hiện trước)
+            for (int i = 0; i < modelGoc.getRowCount(); i++) {
+                int sl = Integer.parseInt(modelGoc.getValueAt(i, 3).toString());
+                if (sl > 0) {
+                    ChiTietHoaDon ct = taoChiTietTuDong(modelGoc, i, hdMoi);
+                    dsHangGiuLai.add(ct);
+                    mapMerge.put(ct.getDonViQuyDoi().getMaDonVi(), ct);
+                }
+            }
+
+            // Thêm hàng mới từ Bảng 2
             for (int i = 0; i < modelDoi.getRowCount(); i++) {
-                String maSP = modelDoi.getValueAt(i, 0).toString();
-                String tenDV = modelDoi.getValueAt(i, 2).toString();
-                int slMua = Integer.parseInt(modelDoi.getValueAt(i, 3).toString());
-                double donGia = Double.parseDouble(modelDoi.getValueAt(i, 4).toString());
-
-                DonViQuyDoi dv = donViQuyDoiDAO.timTheoTenVaMaSP(tenDV, maSP);
-                if (dv == null) {
-                    throw new Exception("Đơn vị '" + tenDV + "' không hợp lệ cho sản phẩm " + maSP);
+                ChiTietHoaDon ctMoi = taoChiTietTuDong(modelDoi, i, hdMoi);
+                String maDV = ctMoi.getDonViQuyDoi().getMaDonVi();
+                
+                // Nếu trùng sản phẩm đã có ở bảng gốc (hiếm gặp nhưng vẫn xử lý)
+                if (mapMerge.containsKey(maDV)) {
+                    mapMerge.get(maDV).setSoLuong(mapMerge.get(maDV).getSoLuong() + ctMoi.getSoLuong());
+                } else { 
+                    dsHangMuaMoi.add(ctMoi);
                 }
             }
 
@@ -712,23 +725,50 @@ public class DoiHangPanel extends JPanel {
                     spb.setSoLuong(layTuLo);
                     dsPhanBoMoi.add(spb);
                     slCanTru -= layTuLo;
+
+            // Hợp nhất danh sách: Đưa hàng giữ lại lên đầu danh sách cuối cùng
+            List<ChiTietHoaDon> dsChiTietMoi = new ArrayList<>();
+            dsChiTietMoi.addAll(dsHangGiuLai);
+            dsChiTietMoi.addAll(dsHangMuaMoi);
+            
+            // --- 6. KIỂM TRA LÔ VÀ TRỪ TỒN KHO HÀNG MỚI (FEFO) ---
+            List<SuPhanBoLo> dsPhanBoMoi = new ArrayList<>();
+            LoDAO loDAO = new LoDAO();
+            for (ChiTietHoaDon ct : dsChiTietMoi) {
+                int soLuongCanTru = ct.getSoLuong() * ct.getDonViQuyDoi().getHeSoQuyDoi();
+                List<Lo> dsLo = loDAO.layDanhSachLoKhaDung(ct.getDonViQuyDoi().getMaDonVi());
+                
+                if (dsLo == null || dsLo.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, 
+                        "Sản phẩm '" + ct.getDonViQuyDoi().getSanPham().getTenSanPham() + "' không có lô hàng khả dụng!", 
+                        "Lỗi kho hàng", JOptionPane.ERROR_MESSAGE);
+                    return;
                 }
 
-                if (slCanTru > 0) {
-                    throw new Exception(
-                            "Sản phẩm " + maSP + " (" + tenDV + ") không đủ tồn kho trong hệ thống lô hàng!");
+                int tongTonKho = 0;
+                for (Lo lo : dsLo) {
+                    if (soLuongCanTru <= 0) break;
+                    int tru = Math.min(soLuongCanTru, lo.getSoLuongSanPham());
+                    dsPhanBoMoi.add(new SuPhanBoLo(ct, lo, tru));
+                    soLuongCanTru -= tru;
+                    tongTonKho += lo.getSoLuongSanPham();
                 }
-                dsChiTietMoi.add(ctMoi);
+
+                if (soLuongCanTru > 0) {
+                    JOptionPane.showMessageDialog(this, 
+                        "Sản phẩm '" + ct.getDonViQuyDoi().getSanPham().getTenSanPham() + "' không đủ tồn kho!\n" +
+                        "Thiếu: " + soLuongCanTru + " (đv nhỏ nhất)", 
+                        "Thiếu hàng", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
             }
 
-            if (hoaDonDAO.luuHoaDonDoiHang(hdMoi, dsTraLai, dsChiTietMoi, dsPhanBoMoi)) {
-                JOptionPane.showMessageDialog(this,
-                        "Thanh toán đổi hàng thành công!\nMã hóa đơn: " + hdMoi.getMaHoaDon(), "Thông báo",
-                        JOptionPane.INFORMATION_MESSAGE);
+            // 7. THỰC THI TRANSACTION QUA DAO
+            if (hoaDonDAO.luuGiaoDichDoiHang(hdMoi, dsTraLai, dsChiTietMoi, dsPhanBoMoi)) {
+                JOptionPane.showMessageDialog(this, "Thanh toán thành công hóa đơn đổi: " + maHoaDonMoi);
                 resetForm();
             } else {
-                JOptionPane.showMessageDialog(this, "Giao dịch thất bại! Vui lòng kiểm tra lại kết nối CSDL.", "Lỗi",
-                        JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Lỗi hệ thống: Giao dịch không thể hoàn tất!", "Lỗi SQL", JOptionPane.ERROR_MESSAGE);
             }
             
         } catch (Exception ex) { 
@@ -815,30 +855,19 @@ public class DoiHangPanel extends JPanel {
     }
 
     private JPanel createInfoPanel() {
-        JPanel p = new JPanel(new BorderLayout());
-        p.setPreferredSize(new Dimension(420, 0));
-        p.setBackground(Color.WHITE);
-        p.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220)));
-        JLabel title = new JLabel("Hóa đơn đổi hàng", 0);
-        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        title.setBorder(new EmptyBorder(15, 0, 15, 0));
-        p.add(title, BorderLayout.NORTH);
-        JPanel c = new JPanel(new GridBagLayout());
-        c.setBackground(Color.WHITE);
-        GridBagConstraints g = new GridBagConstraints();
-        g.fill = 1;
-        g.insets = new Insets(6, 15, 6, 15);
-        g.weightx = 1.0;
+        JPanel p = new JPanel(new BorderLayout()); p.setPreferredSize(new Dimension(420, 0));
+        p.setBackground(Color.WHITE); p.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220)));
+        JLabel title = new JLabel("Hóa đơn đổi hàng", 0); title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        title.setBorder(new EmptyBorder(15, 0, 15, 0)); p.add(title, BorderLayout.NORTH);
+        JPanel c = new JPanel(new GridBagLayout()); c.setBackground(Color.WHITE);
+        GridBagConstraints g = new GridBagConstraints(); g.fill = 1; g.insets = new Insets(6, 15, 6, 15); g.weightx = 1.0;
         int r = 0;
         addInputRow(c, "Mã hóa đơn gốc:", txtMaHoaDonGoc = new JTextField(), g, r++);
         addInputRow(c, "Ngày tạo:", txtNgayTao = new JTextField(), g, r++);
         addInputRow(c, "Người tạo:", txtNguoiTao = new JTextField(), g, r++);
         addInputRow(c, "Khách hàng:", txtTenKhachHang = new JTextField(), g, r++);
-        g.gridy = r++;
-        c.add(new JLabel("Ghi chú:"), g);
-        g.gridy = r++;
-        txtGhiChu = new JTextArea(2, 20);
-        txtGhiChu.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        g.gridy = r++; c.add(new JLabel("Ghi chú:"), g);
+        g.gridy = r++; txtGhiChu = new JTextArea(2, 20); txtGhiChu.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
         c.add(new JScrollPane(txtGhiChu), g);
         addInputRow(c, "Tiền HĐ gốc:", txtTienGoc = new JTextField("0 VNĐ"), g, r++);
         addInputRow(c, "Tiền HĐ đổi:", txtTienDoi = new JTextField("0 VNĐ"), g, r++);
@@ -931,35 +960,21 @@ public class DoiHangPanel extends JPanel {
     }
 
     private JPanel createQRPanel() {
-        JPanel p = new JPanel(new BorderLayout());
-        p.setOpaque(false);
-        JLabel l = new JLabel("HÌNH ẢNH MÃ QR", 0);
-        l.setPreferredSize(new Dimension(0, 150));
-        l.setOpaque(true);
-        l.setBackground(Color.WHITE);
-        l.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
-        p.add(l, BorderLayout.CENTER);
-        return p;
+        JPanel p = new JPanel(new BorderLayout()); p.setOpaque(false);
+        JLabel l = new JLabel("HÌNH ẢNH MÃ QR", 0); l.setPreferredSize(new Dimension(0, 150)); l.setOpaque(true);
+        l.setBackground(Color.WHITE); l.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        p.add(l, BorderLayout.CENTER); return p;
     }
 
     private void addInputRow(JPanel p, String lbl, JTextField t, GridBagConstraints g, int r) {
-        g.gridy = r;
-        JPanel row = new JPanel(new BorderLayout(10, 0));
-        row.setOpaque(false);
-        JLabel l = new JLabel(lbl);
-        l.setPreferredSize(new Dimension(120, 25));
-        row.add(l, BorderLayout.WEST);
-        row.add(t, BorderLayout.CENTER);
-        p.add(row, g);
+        g.gridy = r; JPanel row = new JPanel(new BorderLayout(10, 0)); row.setOpaque(false);
+        JLabel l = new JLabel(lbl); l.setPreferredSize(new Dimension(120, 25));
+        row.add(l, BorderLayout.WEST); row.add(t, BorderLayout.CENTER); p.add(row, g);
     }
 
     private void setupReadOnlyFields() {
-        JTextField[] rs = { txtMaHoaDonGoc, txtNgayTao, txtNguoiTao, txtTenKhachHang, txtTienGoc, txtTienDoi,
-                txtChenhLech };
-        for (JTextField f : rs) {
-            f.setEditable(false);
-            f.setBackground(new Color(245, 245, 245));
-        }
+        JTextField[] rs = { txtMaHoaDonGoc, txtNgayTao, txtNguoiTao, txtTenKhachHang, txtTienGoc, txtTienDoi, txtChenhLech };
+        for (JTextField f : rs) { f.setEditable(false); f.setBackground(new Color(245, 245, 245)); }
     }
 
     private String formatVND(double amount) {
@@ -999,30 +1014,26 @@ public class DoiHangPanel extends JPanel {
         public Component getTableCellEditorComponent(JTable t, Object v, boolean s, int r, int c) {
             cb.removeAllItems();
             List<DonViQuyDoi> ds = donViQuyDoiDAO.timTheoMaSanPham(t.getValueAt(r, 0).toString());
-            for (DonViQuyDoi dv : ds)
-                cb.addItem(dv.getTenDonVi().name());
-            cb.setSelectedItem(v);
+            for (DonViQuyDoi dv : ds) cb.addItem(dv.getTenDonVi());
+            for (int i = 0; i < cb.getItemCount(); i++) if (cb.getItemAt(i).getMoTa().equals(v)) { cb.setSelectedIndex(i); break; }
             return cb;
         }
-
-        @Override
-        public Object getCellEditorValue() {
-            return cb.getSelectedItem();
+        
+        // ĐÃ SỬA LỖI NULL POINTER EXCEPTION TẠI ĐÂY
+        @Override public Object getCellEditorValue() { 
+            Object selected = cb.getSelectedItem();
+            if (selected != null && selected instanceof DonVi) {
+                return ((DonVi) selected).getMoTa();
+            }
+            return ""; // Trả về chuỗi rỗng thay vì ném exception
         }
     }
 
     private class QuantitySpinnerEditor extends AbstractCellEditor implements TableCellEditor {
         private JSpinner s = new JSpinner(new SpinnerNumberModel(1, 0, 9999, 1));
-
-        @Override
-        public Component getTableCellEditorComponent(JTable t, Object v, boolean sl, int r, int c) {
-            s.setValue(v);
-            return s;
+        @Override public Component getTableCellEditorComponent(JTable t, Object v, boolean sl, int r, int c) {
+            s.setValue(v); return s;
         }
-
-        @Override
-        public Object getCellEditorValue() {
-            return s.getValue();
-        }
+        @Override public Object getCellEditorValue() { return s.getValue(); }
     }
 }
