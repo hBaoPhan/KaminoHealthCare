@@ -151,4 +151,36 @@ public class DonViQuyDoiDAO {
             e.printStackTrace();
         }
         return dv;
-    }}
+    }
+
+    public String taoMaDonViTuDong() {
+        String prefix = "DV";
+        String sql = "SELECT MAX(CAST(SUBSTRING(maDonVi, 3, LEN(maDonVi) - 2) AS INT)) FROM DonViQuyDoi WHERE maDonVi LIKE 'DV%'";
+        Connection ketNoi = ConnectDB.getConnection();
+        try (PreparedStatement ps = ketNoi.prepareStatement(sql)) {
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int maxId = rs.getInt(1);
+                    return prefix + String.format("%03d", maxId + 1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return "DV001";
+    }
+
+    public boolean xoaTheoMaSanPham(String maSanPham) {
+        int soDongThayDoi = 0;
+        try {
+            Connection ketNoi = ConnectDB.getConnection();
+            String truyVan = "DELETE FROM DonViQuyDoi WHERE maSanPham = ?";
+            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
+            lenh.setString(1, maSanPham);
+            soDongThayDoi = lenh.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return soDongThayDoi > 0;
+    }
+}

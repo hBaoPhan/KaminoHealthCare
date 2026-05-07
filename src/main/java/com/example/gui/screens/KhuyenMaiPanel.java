@@ -8,6 +8,7 @@ import com.example.entity.QuaTang;
 import com.example.entity.SanPham;
 import com.example.entity.DonViQuyDoi;
 import com.example.entity.enums.LoaiKhuyenMai;
+import com.example.entity.enums.DonVi;
 import com.github.lgooddatepicker.components.DatePicker;
 import com.github.lgooddatepicker.components.DatePickerSettings;
 
@@ -47,11 +48,16 @@ public class KhuyenMaiPanel extends JPanel {
     private DatePicker datePickerBatDau;
     private DatePicker datePickerKetThuc;
     private JComboBox<LoaiKhuyenMai> cboLoaiKhuyenMai;
-    private JComboBox<String> cboDonViQuaTang;
+    private JComboBox<DonVi> cboDonViQuaTang;
     private JTextField txtKhuyenMaiPhanTram;
     private JTextField txtSanPhamQuaTang;
     private JTextField txtSoLuongTang;
     private JTextField txtGiaTriDonHangToiThieu;
+    
+    private JPopupMenu popupMenuSuggestions;
+    private JList<String> listSuggestions;
+    private DefaultListModel<String> listModelSuggestions;
+    private boolean isAdjusting = false;
 
     public KhuyenMaiPanel() {
         setLayout(new BorderLayout());
@@ -256,7 +262,20 @@ public class KhuyenMaiPanel extends JPanel {
         txtSoLuongTang       = new JTextField();
         txtGiaTriDonHangToiThieu = new JTextField();
 
-        cboDonViQuaTang = new JComboBox<>(new String[]{"viên", "vỉ", "hộp", "tuýp", "chai", "cái"});
+        setupAutoCompleteForSanPhamTang();
+
+        cboDonViQuaTang = new JComboBox<>(DonVi.values());
+        cboDonViQuaTang.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                                                          boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof DonVi) {
+                    setText(((DonVi) value).getMoTa());
+                }
+                return this;
+            }
+        });
 
         // FIX 2: Khai báo row TRƯỚC khi dùng, thêm field đúng thứ tự, không trùng lặp
         int row = 0;
@@ -367,7 +386,140 @@ public class KhuyenMaiPanel extends JPanel {
         if (!isTangKem) {
             txtSanPhamQuaTang.setText("");
             txtSoLuongTang.setText("");
-            cboDonViQuaTang.setSelectedIndex(0);
+            if (cboDonViQuaTang.getItemCount() > 0) {
+                cboDonViQuaTang.setSelectedIndex(0);
+            }
+        }
+    }
+
+    private void setupAutoCompleteForSanPhamTang() {
+        popupMenuSuggestions = new JPopupMenu();
+        listModelSuggestions = new DefaultListModel<>();
+        listSuggestions = new JList<>(listModelSuggestions);
+        listSuggestions.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        listSuggestions.setVisibleRowCount(5);
+        
+        JScrollPane scrollPane = new JScrollPane(listSuggestions);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        popupMenuSuggestions.add(scrollPane);
+        
+        txtSanPhamQuaTang.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            @Override
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { updateSuggestions(); }
+            @Override
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { updateSuggestions(); }
+            @Override
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { updateSuggestions(); }
+        });
+        
+        txtSanPhamQuaTang.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (!isAdjusting) {
+                    updateDonViCombo(txtSanPhamQuaTang.getText().trim());
+                }
+            }
+        });
+
+        listSuggestions.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 1 || e.getClickCount() == 2) {
+                    selectSuggestion();
+                }
+            }
+        });
+        
+        txtSanPhamQuaTang.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+                    if (popupMenuSuggestions.isVisible() && listModelSuggestions.getSize() > 0) {
+                        listSuggestions.requestFocusInWindow();
+                        listSuggestions.setSelectedIndex(0);
+                    }
+                } else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    if (popupMenuSuggestions.isVisible()) {
+                        selectSuggestion();
+                    }
+                } else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                    popupMenuSuggestions.setVisible(false);
+                }
+            }
+        });
+        
+        listSuggestions.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    selectSuggestion();
+                } else if (e.getKeyCode() == KeyEvent.VK_UP && listSuggestions.getSelectedIndex() == 0) {
+                    txtSanPhamQuaTang.requestFocusInWindow();
+                } else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                    popupMenuSuggestions.setVisible(false);
+                    txtSanPhamQuaTang.requestFocusInWindow();
+                }
+            }
+        });
+    }
+
+    private void updateSuggestions() {
+        if (isAdjusting) return;
+        
+        String keyword = txtSanPhamQuaTang.getText().trim();
+        if (keyword.isEmpty()) {
+            popupMenuSuggestions.setVisible(false);
+            return;
+        }
+        
+        SwingUtilities.invokeLater(() -> {
+            List<SanPham> suggestions = sanPhamDAO.timKiemGoiY(keyword);
+            listModelSuggestions.clear();
+            if (!suggestions.isEmpty()) {
+                for (SanPham sp : suggestions) {
+                    listModelSuggestions.addElement(sp.getTenSanPham());
+                }
+                
+                if (!popupMenuSuggestions.isVisible()) {
+                    popupMenuSuggestions.show(txtSanPhamQuaTang, 0, txtSanPhamQuaTang.getHeight());
+                } else {
+                    popupMenuSuggestions.pack();
+                }
+                txtSanPhamQuaTang.requestFocusInWindow();
+            } else {
+                popupMenuSuggestions.setVisible(false);
+            }
+        });
+    }
+
+    private void selectSuggestion() {
+        String selected = listSuggestions.getSelectedValue();
+        if (selected != null) {
+            isAdjusting = true;
+            txtSanPhamQuaTang.setText(selected);
+            popupMenuSuggestions.setVisible(false);
+            isAdjusting = false;
+            updateDonViCombo(selected);
+        }
+    }
+
+    private void updateDonViCombo(String tenSP) {
+        cboDonViQuaTang.removeAllItems();
+        SanPham sp = findSanPhamByName(tenSP);
+        if (sp != null) {
+            DonViQuyDoiDAO dvqdDAO = new DonViQuyDoiDAO();
+            List<DonViQuyDoi> listDV = dvqdDAO.timTheoMaSanPham(sp.getMaSanPham());
+            for (DonViQuyDoi dv : listDV) {
+                if (dv.getTenDonVi() != null) {
+                    cboDonViQuaTang.addItem(dv.getTenDonVi());
+                }
+            }
+        }
+        
+        if (cboDonViQuaTang.getItemCount() == 0) {
+            for (DonVi dv : DonVi.values()) {
+                cboDonViQuaTang.addItem(dv);
+            }
         }
     }
 
@@ -509,9 +661,9 @@ public class KhuyenMaiPanel extends JPanel {
         if (km.getLoaiKhuyenMai() == LoaiKhuyenMai.TANG_KEM) {
             String tenSP   = txtSanPhamQuaTang.getText().trim();
             String slStr   = txtSoLuongTang.getText().trim();
-            String tenDonVi = (String) cboDonViQuaTang.getSelectedItem();
+            DonVi donVi = (DonVi) cboDonViQuaTang.getSelectedItem();
 
-            if (tenSP.isEmpty() || slStr.isEmpty() || tenDonVi == null) {
+            if (tenSP.isEmpty() || slStr.isEmpty() || donVi == null) {
                 JOptionPane.showMessageDialog(this,
                         "Vui lòng nhập đầy đủ: Sản phẩm tặng, Số lượng và Đơn vị!",
                         "Thiếu thông tin", JOptionPane.WARNING_MESSAGE);
@@ -534,11 +686,11 @@ public class KhuyenMaiPanel extends JPanel {
                 }
 
                 DonViQuyDoiDAO dvqdDAO = new DonViQuyDoiDAO();
-                DonViQuyDoi dvqd = dvqdDAO.timTheoTenVaMaSP(tenDonVi, sp.getMaSanPham());
+                DonViQuyDoi dvqd = dvqdDAO.timTheoTenVaMaSP(donVi.name(), sp.getMaSanPham());
 
                 if (dvqd == null) {
                     JOptionPane.showMessageDialog(this,
-                            "Không tìm thấy đơn vị '" + tenDonVi + "' cho sản phẩm này!\n"
+                            "Không tìm thấy đơn vị '" + donVi.getMoTa() + "' cho sản phẩm này!\n"
                             + "Vui lòng kiểm tra lại đơn vị quy đổi của sản phẩm.",
                             "Lỗi", JOptionPane.ERROR_MESSAGE);
                     return null;
@@ -624,10 +776,12 @@ public class KhuyenMaiPanel extends JPanel {
                     QuaTang qt = km.getQuaTangKem();
                     if (qt.getDonViQuyDoi() != null && qt.getDonViQuyDoi().getSanPham() != null) {
                         DonViQuyDoi dvqd = qt.getDonViQuyDoi();
-                        txtSanPhamQuaTang.setText(dvqd.getSanPham().getTenSanPham());
+                        String tenSP = dvqd.getSanPham().getTenSanPham();
+                        txtSanPhamQuaTang.setText(tenSP);
                         txtSoLuongTang.setText(String.valueOf(qt.getSoLuongTang()));
-                        // FIX 3: Dùng getMoTa() thay vì name() để khớp với item trong combobox
-                        cboDonViQuaTang.setSelectedItem(dvqd.getTenDonVi().getMoTa());
+                        
+                        updateDonViCombo(tenSP);
+                        cboDonViQuaTang.setSelectedItem(dvqd.getTenDonVi());
                     }
                 }
 
@@ -652,7 +806,14 @@ public class KhuyenMaiPanel extends JPanel {
         txtSanPhamQuaTang.setText("");
         txtSoLuongTang.setText("");
         txtGiaTriDonHangToiThieu.setText("");
-        cboDonViQuaTang.setSelectedIndex(0);
+        
+        cboDonViQuaTang.removeAllItems();
+        for (DonVi dv : DonVi.values()) {
+            cboDonViQuaTang.addItem(dv);
+        }
+        if (cboDonViQuaTang.getItemCount() > 0) {
+            cboDonViQuaTang.setSelectedIndex(0);
+        }
         currentSelectedIndex = -1;
         updateFormFieldsByLoai();
         updateButtonStates();
