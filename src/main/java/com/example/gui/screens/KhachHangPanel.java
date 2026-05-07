@@ -333,27 +333,38 @@ public class KhachHangPanel extends JPanel {
     private void xoaKhachHang() {
         int row = table.getSelectedRow();
         if (row == -1) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn khách hàng cần xóa!");
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn khách hàng cần ẩn!");
             return;
         }
+        
         String maKH = txtId.getText();
+        // Không cho phép ẩn khách lẻ mặc định của hệ thống
         if (maKH.equals("KL_LE")) {
-            JOptionPane.showMessageDialog(this, "Không thể xóa Khách lẻ mặc định!");
+            JOptionPane.showMessageDialog(this, "Không thể thao tác trên Khách lẻ mặc định!");
             return;
         }
 
         int confirm = JOptionPane.showConfirmDialog(this, 
-            "Bạn có chắc chắn muốn xóa khách hàng này?\n(Dữ liệu sẽ được ẩn khỏi danh sách nhưng vẫn lưu trong hệ thống để bảo vệ Hóa đơn)", 
-            "Xác nhận xóa", JOptionPane.YES_NO_OPTION);
+            "Bạn có chắc chắn muốn ẩn khách hàng này?\n(Khách hàng sẽ bị chuyển thành Khách lẻ và ẩn khỏi danh sách hiển thị)", 
+            "Xác nhận ẩn khách hàng", JOptionPane.YES_NO_OPTION);
         
         if (confirm == JOptionPane.YES_OPTION) {
-            // MẸO: Không xóa thật, đổi tên thêm chữ [ĐÃ XÓA] để đánh dấu
+            // Lấy đối tượng khách hàng từ database để cập nhật
             KhachHang kh = khDAO.timTheoMa(maKH);
-            kh.setTenKhachHang("[ĐÃ XÓA] " + kh.getTenKhachHang()); 
-            
-            if (khDAO.capNhat(kh)) {
-                JOptionPane.showMessageDialog(this, "Đã xóa khách hàng thành công!");
-                taiLaiDanhSach();
+            if (kh != null) {
+                // 1. Đánh dấu tên để hàm lọc locVaTimKiem() tự động ẩn khỏi bảng
+                kh.setTenKhachHang("[ĐÃ XÓA] " + kh.getTenKhachHang()); 
+                
+                // 2. Chuyển trạng thái sang Khách lẻ theo yêu cầu của bạn
+                kh.setTrangThai(TrangThaiKhachHang.KHACH_LE); 
+                
+                // 3. Gọi hàm cập nhật để lưu thay đổi vào SQL
+                if (khDAO.capNhat(kh)) {
+                    JOptionPane.showMessageDialog(this, "Đã ẩn và chuyển trạng thái khách hàng thành công!");
+                    taiLaiDanhSach(); // Load lại danh sách để cập nhật giao diện
+                } else {
+                    JOptionPane.showMessageDialog(this, "Có lỗi xảy ra khi cập nhật dữ liệu!");
+                }
             }
         }
     }
