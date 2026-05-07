@@ -39,13 +39,13 @@ public class SanPhamPanel extends JPanel {
     private JTextField txtMaSP, txtTenSP, txtHoatChat, txtSoLuong, txtDonGia;
     private JComboBox<String> cbLoaiSP;
     private JTextArea txtMoTa;
-    
+
     // Đơn vị quy đổi UI
     private JTextField txtHeSoQuyDoi;
     private JComboBox<DonVi> cbDonViQuyDoi;
     private JButton btnThemDonVi;
     private JButton btnXoaDonVi;
-    
+
     private JTable tblDonViQuyDoi;
     private DefaultTableModel donViQuyDoiModel;
     private SanPham sanPhamDangChon = null;
@@ -246,17 +246,18 @@ public class SanPhamPanel extends JPanel {
         gbc.gridy = row;
         gbc.weightx = 0.3;
         formPanel.add(new JLabel("Hệ số quy đổi:"), gbc);
-        
+
         JPanel pnlHeSo = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
         pnlHeSo.setBackground(Color.WHITE);
         txtHeSoQuyDoi = new RoundedTextField("", 5);
         txtHeSoQuyDoi.setPreferredSize(new Dimension(60, 32));
-        
+
         DonVi[] dsDonVi = { DonVi.HOP, DonVi.VI, DonVi.VIEN, DonVi.CHAI, DonVi.TUYP, DonVi.CAI };
         cbDonViQuyDoi = new JComboBox<>(dsDonVi);
         cbDonViQuyDoi.setRenderer(new DefaultListCellRenderer() {
             @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected,
+                    boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
                 if (value instanceof DonVi) {
                     setText(hienThiTenDonVi((DonVi) value));
@@ -265,7 +266,7 @@ public class SanPhamPanel extends JPanel {
             }
         });
         cbDonViQuyDoi.setPreferredSize(new Dimension(80, 32));
-        
+
         btnThemDonVi = new RoundedButton("+ Thêm");
         btnThemDonVi.setBackground(new Color(0, 153, 51));
         btnThemDonVi.setForeground(Color.WHITE);
@@ -277,12 +278,12 @@ public class SanPhamPanel extends JPanel {
         btnXoaDonVi.setForeground(Color.WHITE);
         btnXoaDonVi.setPreferredSize(new Dimension(70, 32));
         btnXoaDonVi.addActionListener(e -> xoaDonViKhoiBang());
-        
+
         pnlHeSo.add(txtHeSoQuyDoi);
         pnlHeSo.add(cbDonViQuyDoi);
         pnlHeSo.add(btnThemDonVi);
         pnlHeSo.add(btnXoaDonVi);
-        
+
         gbc.gridx = 1;
         gbc.weightx = 0.7;
         formPanel.add(pnlHeSo, gbc);
@@ -369,7 +370,7 @@ public class SanPhamPanel extends JPanel {
 
     // ====================== LOGIC ======================
 
-    private void loadDanhSachSanPham() {
+    public void loadDanhSachSanPham() {
         danhSachSanPham = sanPhamDAO.layTatCa();
         hienThiSanPhamLenGrid(danhSachSanPham);
     }
@@ -505,16 +506,17 @@ public class SanPhamPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Số lượng quy đổi phải > 0!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        
+
         // Kiểm tra trùng lặp đơn vị trong bảng
         for (int i = 0; i < donViQuyDoiModel.getRowCount(); i++) {
             String tenDVHienTai = donViQuyDoiModel.getValueAt(i, 0).toString();
             if (tenDVHienTai.equals(hienThiTenDonVi(dv))) {
-                JOptionPane.showMessageDialog(this, "Đơn vị này đã tồn tại trong bảng!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Đơn vị này đã tồn tại trong bảng!", "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
         }
-        
+
         donViQuyDoiModel.addRow(new Object[] { hienThiTenDonVi(dv), soLuong });
         txtHeSoQuyDoi.setText("");
     }
@@ -524,7 +526,8 @@ public class SanPhamPanel extends JPanel {
         if (selectedRow >= 0) {
             donViQuyDoiModel.removeRow(selectedRow);
         } else {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn dòng cần xóa trong bảng!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn dòng cần xóa trong bảng!", "Thông báo",
+                    JOptionPane.WARNING_MESSAGE);
         }
     }
 
@@ -556,7 +559,8 @@ public class SanPhamPanel extends JPanel {
     }
 
     private String hienThiTenDonVi(DonVi dv) {
-        if (dv == null) return "";
+        if (dv == null)
+            return "";
         switch (dv) {
             case HOP:
                 return "Hộp";
@@ -654,18 +658,21 @@ public class SanPhamPanel extends JPanel {
                 java.net.URL url = getClass().getResource(absoluteClasspath);
                 if (url == null) {
                     ClassLoader cl = Thread.currentThread().getContextClassLoader();
-                    if (cl == null) cl = getClass().getClassLoader();
+                    if (cl == null)
+                        cl = getClass().getClassLoader();
                     url = (cl != null) ? cl.getResource(relative) : null;
                 }
-                
+
                 if (url != null) {
                     bImage = ImageIO.read(url);
                 } else {
                     // 2) Fallback: load trực tiếp từ filesystem
                     java.nio.file.Path p1 = java.nio.file.Paths.get("src", "main", "resources", relative);
-                    java.nio.file.Path p2 = java.nio.file.Paths.get(System.getProperty("user.dir", ""), "src", "main", "resources", relative);
-                    java.nio.file.Path chosen = java.nio.file.Files.exists(p1) ? p1 : (java.nio.file.Files.exists(p2) ? p2 : null);
-                    
+                    java.nio.file.Path p2 = java.nio.file.Paths.get(System.getProperty("user.dir", ""), "src", "main",
+                            "resources", relative);
+                    java.nio.file.Path chosen = java.nio.file.Files.exists(p1) ? p1
+                            : (java.nio.file.Files.exists(p2) ? p2 : null);
+
                     if (chosen != null) {
                         bImage = ImageIO.read(chosen.toFile());
                     }
@@ -783,18 +790,19 @@ public class SanPhamPanel extends JPanel {
 
     private void luuDonViQuyDoi(String maSP) {
         SanPham sp = sanPhamDAO.timTheoMa(maSP);
-        if (sp == null) return;
-        
+        if (sp == null)
+            return;
+
         for (int i = 0; i < donViQuyDoiModel.getRowCount(); i++) {
             String tenHienThi = donViQuyDoiModel.getValueAt(i, 0).toString();
             int heSo = Integer.parseInt(donViQuyDoiModel.getValueAt(i, 1).toString());
-            
+
             DonViQuyDoi dv = new DonViQuyDoi();
             dv.setMaDonVi(donViQuyDoiDAO.taoMaDonViTuDong());
             dv.setTenDonVi(getDonViTuTenHienThi(tenHienThi));
             dv.setHeSoQuyDoi(heSo);
             dv.setSanPham(sp);
-            
+
             donViQuyDoiDAO.them(dv);
         }
     }

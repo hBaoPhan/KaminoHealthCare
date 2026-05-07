@@ -227,7 +227,7 @@ public class DangNhapPanel extends JFrame implements ActionListener {
 
             // 3. Gọi DAO xử lý (Sử dụng mã admin001 từ script SQL mới của bạn)
             TaiKhoanDAO dao = new TaiKhoanDAO();
-            TaiKhoan tk = dao.timTheoMa("nv");
+            TaiKhoan tk = dao.timTheoMa("baoph");
 
             // if (tk != null) {
             // String dbPassword = tk.getMatKhau();
