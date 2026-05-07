@@ -372,7 +372,7 @@ public class ManHinhChinhPanel extends JPanel {
                 if (loai == LoaiHoaDon.DOI_HANG) {
                     tienHD = tongHienTai - tongGoc;
                 } else if (loai == LoaiHoaDon.TRA_HANG) {
-                    tienHD = tongGoc - tongHienTai;
+                    tienHD = -tongHienTai;
                 } else {
                     tienHD = tongHienTai;
                 }

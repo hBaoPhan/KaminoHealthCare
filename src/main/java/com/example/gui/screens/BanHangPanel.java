@@ -742,6 +742,12 @@ public class BanHangPanel extends JPanel {
         // cboKhuyenMai.setEnabled(false); // Cho phép xổ ra để xem
         cboKhuyenMai.addItem("-- Không áp dụng --");
         dsKhuyenMai = khuyenMaiDAO.layTatCa();
+        
+        // Chỉ lấy các khuyến mãi còn hạn
+        LocalDateTime now = LocalDateTime.now();
+        dsKhuyenMai.removeIf(km -> (km.getThoiGianBatDau() != null && km.getThoiGianBatDau().isAfter(now)) || 
+                                   (km.getThoiGianKetThuc() != null && km.getThoiGianKetThuc().isBefore(now)));
+                                   
         for (KhuyenMai km : dsKhuyenMai) {
             cboKhuyenMai.addItem(km.getTenKhuyenMai());
         }
@@ -1203,20 +1209,21 @@ public class BanHangPanel extends JPanel {
 
     /** Thanh toán: tạo hóa đơn trước, sau đó xác nhận thanh toán + trừ kho */
     private void thanhToan(RoundedButton btnSave) {
-        // Ràng buộc tiền khách trả > tiền hóa đơn (cho Tiền mặt)
-        // if (rdoTienMat.isSelected()) {
-        // String ttStr = lblThanhTien.getText().replaceAll("[^\\d]", "");
-        // double thanhTien = ttStr.isEmpty() ? 0 : Double.parseDouble(ttStr);
-        // String kd = txtTienKhachDua.getText().replaceAll("[^\\d]", "");
-        // double khachDua = kd.isEmpty() ? 0 : Double.parseDouble(kd);
+        
+        if (model.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this, "Không có sản phẩm nào để thanh toán!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
 
-        // if (khachDua < thanhTien) {
-        // JOptionPane.showMessageDialog(this,
-        // "Tiền khách trả phải lớn hơn tiền hóa đơn!",
-        // "Lỗi thanh toán", JOptionPane.ERROR_MESSAGE);
-        // return;
-        // }
-        // }
+        String soTien = lblThanhTien.getText().replace("Thành tiền : ", "");
+        int confirm = JOptionPane.showConfirmDialog(this, 
+                "Bạn có chắc chắn muốn hoàn tất thanh toán hóa đơn này không?\nTổng tiền: " + soTien, 
+                "Xác nhận thanh toán", 
+                JOptionPane.YES_NO_OPTION);
+
+        if (confirm != JOptionPane.YES_OPTION) {
+            return;
+        }
 
         // Lưu hóa đơn trước khi thanh toán (chế độ im lặng)
         if (!luuHoaDon(false)) {

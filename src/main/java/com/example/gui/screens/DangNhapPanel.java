@@ -197,6 +197,9 @@ public class DangNhapPanel extends JFrame implements ActionListener {
                 isPasswordHidden = !isPasswordHidden;
             }
         });
+
+        // Thiết lập phím tắt Enter để kích hoạt nút đăng nhập
+        getRootPane().setDefaultButton(btnLogin);
     }
 
     private ImageIcon loadScaledIcon(String path, int w, int h) {

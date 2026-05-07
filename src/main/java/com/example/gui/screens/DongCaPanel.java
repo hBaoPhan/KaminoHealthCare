@@ -245,9 +245,55 @@ public class DongCaPanel extends JPanel implements ActionListener {
     public void loadDuLieuCa() {
         caHienTai = caLamDAO.layCaHienTai(nhanVien.getMaNhanVien());
         if (caHienTai != null) {
-            double doanhThu = hoaDonDAO.tinhTongDoanhThuCa(caHienTai.getMaCa());
-            double tienHeThong = doanhThu;
-            txtTienHeThong.setText(df.format(tienHeThong));
+            java.time.LocalDate ngayCa = caHienTai.getGioBatDau() != null ? caHienTai.getGioBatDau().toLocalDate() : java.time.LocalDate.now();
+            java.util.List<com.example.entity.HoaDon> dsHoaDon = hoaDonDAO.timKiem(null, ngayCa);
+            
+            // Nếu ca làm việc vắt qua ngày mới
+            if (!ngayCa.isEqual(java.time.LocalDate.now())) {
+                dsHoaDon.addAll(hoaDonDAO.timKiem(null, java.time.LocalDate.now()));
+            }
+
+            double doanhThu = 0;
+            com.example.dao.ChiTietHoaDonDAO chiTietHoaDonDAO = new com.example.dao.ChiTietHoaDonDAO();
+            
+            for (com.example.entity.HoaDon hd : dsHoaDon) {
+                if (hd.getCa() == null || !caHienTai.getMaCa().equals(hd.getCa().getMaCa())) {
+                    continue;
+                }
+                if (!hd.isTrangThaiThanhToan()) {
+                    continue;
+                }
+                
+                double tienHD = 0;
+                double tongHienTai = hd.tinhTongTienThanhToan();
+                com.example.entity.enums.LoaiHoaDon loai = hd.getLoaiHoaDon();
+
+                if (loai == com.example.entity.enums.LoaiHoaDon.BAN_HANG || loai == null) {
+                    tienHD = tongHienTai;
+                } else {
+                    double tongGoc = 0;
+                    if (hd.getHoaDonDoiTra() != null) {
+                        String maGoc = hd.getHoaDonDoiTra().getMaHoaDon();
+                        com.example.entity.HoaDon hdGoc = hoaDonDAO.timTheoMa(maGoc);
+                        if (hdGoc != null) {
+                            hdGoc.setDsChiTiet(chiTietHoaDonDAO.layTheoMaHoaDon(maGoc));
+                            tongGoc = hdGoc.tinhTongTienThanhToan();
+                        }
+                    }
+
+                    if (loai == com.example.entity.enums.LoaiHoaDon.DOI_HANG) {
+                        tienHD = tongHienTai - tongGoc;
+                    } else if (loai == com.example.entity.enums.LoaiHoaDon.TRA_HANG) {
+                        tienHD = -tongHienTai;
+                    } else {
+                        tienHD = tongHienTai;
+                    }
+                }
+                
+                doanhThu += tienHD;
+            }
+            
+            txtTienHeThong.setText(df.format(doanhThu));
             btnDongCa.setEnabled(true);
         } else {
             txtTienHeThong.setText("");
