@@ -18,6 +18,10 @@ import java.awt.event.*;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Comparator;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.InputStream;
 
 public class SanPhamPanel extends JPanel {
 
@@ -35,6 +39,13 @@ public class SanPhamPanel extends JPanel {
     private JTextField txtMaSP, txtTenSP, txtHoatChat, txtSoLuong, txtDonGia;
     private JComboBox<String> cbLoaiSP;
     private JTextArea txtMoTa;
+    
+    // Đơn vị quy đổi UI
+    private JTextField txtHeSoQuyDoi;
+    private JComboBox<DonVi> cbDonViQuyDoi;
+    private JButton btnThemDonVi;
+    private JButton btnXoaDonVi;
+    
     private JTable tblDonViQuyDoi;
     private DefaultTableModel donViQuyDoiModel;
     private SanPham sanPhamDangChon = null;
@@ -230,15 +241,62 @@ public class SanPhamPanel extends JPanel {
         formPanel.add(new JScrollPane(txtMoTa), gbc);
         row++;
 
-        // Bảng đơn vị quy đổi (dưới mô tả)
+        // Hệ số quy đổi (Thêm mới)
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0.3;
+        formPanel.add(new JLabel("Hệ số quy đổi:"), gbc);
+        
+        JPanel pnlHeSo = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        pnlHeSo.setBackground(Color.WHITE);
+        txtHeSoQuyDoi = new RoundedTextField("", 5);
+        txtHeSoQuyDoi.setPreferredSize(new Dimension(60, 32));
+        
+        DonVi[] dsDonVi = { DonVi.HOP, DonVi.VI, DonVi.VIEN, DonVi.CHAI, DonVi.TUYP, DonVi.CAI };
+        cbDonViQuyDoi = new JComboBox<>(dsDonVi);
+        cbDonViQuyDoi.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof DonVi) {
+                    setText(hienThiTenDonVi((DonVi) value));
+                }
+                return this;
+            }
+        });
+        cbDonViQuyDoi.setPreferredSize(new Dimension(80, 32));
+        
+        btnThemDonVi = new RoundedButton("+ Thêm");
+        btnThemDonVi.setBackground(new Color(0, 153, 51));
+        btnThemDonVi.setForeground(Color.WHITE);
+        btnThemDonVi.setPreferredSize(new Dimension(80, 32));
+        btnThemDonVi.addActionListener(e -> themDonViVaoBang());
+
+        btnXoaDonVi = new RoundedButton("- Xóa");
+        btnXoaDonVi.setBackground(new Color(255, 102, 102));
+        btnXoaDonVi.setForeground(Color.WHITE);
+        btnXoaDonVi.setPreferredSize(new Dimension(70, 32));
+        btnXoaDonVi.addActionListener(e -> xoaDonViKhoiBang());
+        
+        pnlHeSo.add(txtHeSoQuyDoi);
+        pnlHeSo.add(cbDonViQuyDoi);
+        pnlHeSo.add(btnThemDonVi);
+        pnlHeSo.add(btnXoaDonVi);
+        
+        gbc.gridx = 1;
+        gbc.weightx = 0.7;
+        formPanel.add(pnlHeSo, gbc);
+        row++;
+
+        // Bảng đơn vị quy đổi (dưới hệ số quy đổi)
         gbc.gridx = 0;
         gbc.gridy = row;
         gbc.weightx = 0.3;
         gbc.anchor = GridBagConstraints.NORTHWEST;
-        formPanel.add(new JLabel("Đơn vị quy đổi:"), gbc);
+        formPanel.add(new JLabel("Đơn vị hiện có:"), gbc);
 
         donViQuyDoiModel = new DefaultTableModel(
-                new Object[] { "Số lượng", "Đơn vị tính", "→", "Số lượng", "Đơn vị quy đổi" }, 0) {
+                new Object[] { "Đơn vị", "Số lượng quy đổi" }, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -440,6 +498,36 @@ public class SanPhamPanel extends JPanel {
         loadBangDonViQuyDoi(sp);
     }
 
+    private void themDonViVaoBang() {
+        DonVi dv = (DonVi) cbDonViQuyDoi.getSelectedItem();
+        int soLuong = parseIntOrZero(txtHeSoQuyDoi.getText());
+        if (soLuong <= 0) {
+            JOptionPane.showMessageDialog(this, "Số lượng quy đổi phải > 0!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        // Kiểm tra trùng lặp đơn vị trong bảng
+        for (int i = 0; i < donViQuyDoiModel.getRowCount(); i++) {
+            String tenDVHienTai = donViQuyDoiModel.getValueAt(i, 0).toString();
+            if (tenDVHienTai.equals(hienThiTenDonVi(dv))) {
+                JOptionPane.showMessageDialog(this, "Đơn vị này đã tồn tại trong bảng!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+        }
+        
+        donViQuyDoiModel.addRow(new Object[] { hienThiTenDonVi(dv), soLuong });
+        txtHeSoQuyDoi.setText("");
+    }
+
+    private void xoaDonViKhoiBang() {
+        int selectedRow = tblDonViQuyDoi.getSelectedRow();
+        if (selectedRow >= 0) {
+            donViQuyDoiModel.removeRow(selectedRow);
+        } else {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn dòng cần xóa trong bảng!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+        }
+    }
+
     private void loadBangDonViQuyDoi(SanPham sp) {
         donViQuyDoiModel.setRowCount(0);
         if (sp == null || sp.getMaSanPham() == null || sp.getMaSanPham().trim().isEmpty()) {
@@ -451,104 +539,20 @@ public class SanPhamPanel extends JPanel {
             return;
         }
 
-        // Map hệ số quy đổi theo đơn vị
-        java.util.Map<DonVi, Integer> heSo = new java.util.EnumMap<>(DonVi.class);
         for (DonViQuyDoi dv : ds) {
             if (dv != null && dv.getTenDonVi() != null) {
-                heSo.put(dv.getTenDonVi(), dv.getHeSoQuyDoi());
-            }
-        }
-
-        DonVi donViNhoNhat = xacDinhDonViNhoNhat(heSo);
-
-        // Nếu là TUYP/CHAI/CAI thì chính nó là đơn vị bán (1-1)
-        if (donViNhoNhat == DonVi.TUYP || donViNhoNhat == DonVi.CHAI || donViNhoNhat == DonVi.CAI) {
-            donViQuyDoiModel.addRow(
-                    new Object[] { 1, hienThiTenDonVi(donViNhoNhat), "→", 1, hienThiTenDonVi(donViNhoNhat) });
-            return;
-        }
-
-        // Thuốc: tồn kho theo VIEN, bảng quy đổi: từ VIEN -> VI/HOP (nếu có)
-        if (donViNhoNhat == DonVi.VIEN) {
-            addRowQuyDoiVe1DonVi(donViNhoNhat, DonVi.VI, heSo);  // ví dụ: 10 Viên -> 1 Vỉ
-            addRowQuyDoiVe1DonVi(donViNhoNhat, DonVi.HOP, heSo); // ví dụ: 100 Viên -> 1 Hộp
-        } else {
-            // Fallback: vẫn hiển thị quy đổi từ đơn vị nhỏ nhất -> các đơn vị còn lại (nếu có)
-            for (DonVi dv : new DonVi[] { DonVi.VI, DonVi.HOP, DonVi.VIEN }) {
-                if (dv != donViNhoNhat) {
-                    addRowQuyDoiVe1DonVi(donViNhoNhat, dv, heSo);
-                }
-            }
-        }
-
-        // Nếu không add được dòng nào (thiếu dữ liệu), fallback: show đơn vị nhỏ nhất đang có
-        if (donViQuyDoiModel.getRowCount() == 0) {
-            DonVi fallback = heSo.entrySet().stream()
-                    .min(Comparator.comparingInt(java.util.Map.Entry::getValue))
-                    .map(java.util.Map.Entry::getKey)
-                    .orElse(null);
-            if (fallback != null) {
-                donViQuyDoiModel.addRow(
-                        new Object[] { 1, hienThiTenDonVi(fallback), "→", 1, hienThiTenDonVi(fallback) });
+                donViQuyDoiModel.addRow(new Object[] { hienThiTenDonVi(dv.getTenDonVi()), dv.getHeSoQuyDoi() });
             }
         }
     }
 
-    private DonVi xacDinhDonViNhoNhat(java.util.Map<DonVi, Integer> heSo) {
-        if (heSo == null || heSo.isEmpty()) {
-            return DonVi.VIEN;
+    private DonVi getDonViTuTenHienThi(String ten) {
+        for (DonVi dv : DonVi.values()) {
+            if (hienThiTenDonVi(dv).equals(ten)) {
+                return dv;
+            }
         }
-
-        // Ưu tiên theo nghiệp vụ:
-        // - TUYP/CHAI/CAI: đơn vị bán luôn, cũng coi là đơn vị "nhỏ nhất" của sản phẩm đó
-        if (heSo.containsKey(DonVi.TUYP)) return DonVi.TUYP;
-        if (heSo.containsKey(DonVi.CHAI)) return DonVi.CHAI;
-        if (heSo.containsKey(DonVi.CAI)) return DonVi.CAI;
-
-        // - Thuốc: tồn kho theo viên (nếu có VIEN)
-        if (heSo.containsKey(DonVi.VIEN)) return DonVi.VIEN;
-
-        // fallback: đơn vị có hệ số nhỏ nhất
-        return heSo.entrySet().stream()
-                .min(Comparator.comparingInt(java.util.Map.Entry::getValue))
-                .map(java.util.Map.Entry::getKey)
-                .orElse(DonVi.VIEN);
-    }
-
-    private void addRowQuyDoiVe1DonVi(DonVi donViTinh, DonVi donViQuyDoi, java.util.Map<DonVi, Integer> heSo) {
-        Integer fTinh = heSo.get(donViTinh);
-        Integer fQuyDoi = heSo.get(donViQuyDoi);
-        if (fTinh == null || fQuyDoi == null || fTinh <= 0 || fQuyDoi <= 0) {
-            return;
-        }
-
-        // Hiển thị dạng: X [đơn vị tính] -> 1 [đơn vị quy đổi]
-        // Nếu fQuyDoi chia hết cho fTinh: X = fQuyDoi / fTinh (VD: VI=10, VIEN=1 => 10 VIEN -> 1 VI)
-        int qtyTinh;
-        int qtyQuyDoi = 1;
-        if (fQuyDoi % fTinh == 0) {
-            qtyTinh = fQuyDoi / fTinh;
-        } else {
-            // Fallback: tối giản theo gcd để ra số nguyên 2 bên
-            int g = gcd(fTinh, fQuyDoi);
-            qtyTinh = fQuyDoi / g;
-            qtyQuyDoi = fTinh / g;
-        }
-
-        donViQuyDoiModel.addRow(new Object[] {
-                qtyTinh, hienThiTenDonVi(donViTinh), "→", qtyQuyDoi, hienThiTenDonVi(donViQuyDoi)
-        });
-    }
-
-    private int gcd(int a, int b) {
-        a = Math.abs(a);
-        b = Math.abs(b);
-        while (b != 0) {
-            int t = a % b;
-            a = b;
-            b = t;
-        }
-        return a == 0 ? 1 : a;
+        return DonVi.VIEN;
     }
 
     private String hienThiTenDonVi(DonVi dv) {
@@ -607,6 +611,7 @@ public class SanPhamPanel extends JPanel {
 
             boolean success = sanPhamDAO.them(sp);
             if (success) {
+                luuDonViQuyDoi(maMoi);
                 JOptionPane.showMessageDialog(this, "Thêm sản phẩm thành công: " + maMoi, "Thành công",
                         JOptionPane.INFORMATION_MESSAGE);
                 loadDanhSachSanPham();
@@ -642,32 +647,36 @@ public class SanPhamPanel extends JPanel {
             String relative = "images/anhSanPham/" + base + "." + ext;
             String absoluteClasspath = "/" + relative;
 
-            // 1) Try classpath (jar/IDE)
-            java.net.URL url = getClass().getResource(absoluteClasspath);
-            if (url == null) {
-                ClassLoader cl = Thread.currentThread().getContextClassLoader();
-                if (cl == null) cl = getClass().getClassLoader();
-                url = (cl != null) ? cl.getResource(relative) : null;
-            }
-            if (url != null) {
-                ImageIcon raw = new ImageIcon(url);
-                if (raw.getIconWidth() > 0 && raw.getIconHeight() > 0) {
-                    Image scaled = raw.getImage().getScaledInstance(w, h, Image.SCALE_SMOOTH);
-                    return new ImageIcon(scaled);
-                }
-            }
+            try {
+                BufferedImage bImage = null;
 
-            // 2) Fallback: load trực tiếp từ filesystem (khi chạy từ source)
-            java.nio.file.Path p1 = java.nio.file.Paths.get("src", "main", "resources", relative);
-            java.nio.file.Path p2 = java.nio.file.Paths.get(System.getProperty("user.dir", ""), "src", "main",
-                    "resources", relative);
-            java.nio.file.Path chosen = java.nio.file.Files.exists(p1) ? p1 : (java.nio.file.Files.exists(p2) ? p2 : null);
-            if (chosen != null) {
-                ImageIcon raw = new ImageIcon(chosen.toAbsolutePath().toString());
-                if (raw.getIconWidth() > 0 && raw.getIconHeight() > 0) {
-                    Image scaled = raw.getImage().getScaledInstance(w, h, Image.SCALE_SMOOTH);
+                // 1) Try classpath (jar/IDE)
+                java.net.URL url = getClass().getResource(absoluteClasspath);
+                if (url == null) {
+                    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+                    if (cl == null) cl = getClass().getClassLoader();
+                    url = (cl != null) ? cl.getResource(relative) : null;
+                }
+                
+                if (url != null) {
+                    bImage = ImageIO.read(url);
+                } else {
+                    // 2) Fallback: load trực tiếp từ filesystem
+                    java.nio.file.Path p1 = java.nio.file.Paths.get("src", "main", "resources", relative);
+                    java.nio.file.Path p2 = java.nio.file.Paths.get(System.getProperty("user.dir", ""), "src", "main", "resources", relative);
+                    java.nio.file.Path chosen = java.nio.file.Files.exists(p1) ? p1 : (java.nio.file.Files.exists(p2) ? p2 : null);
+                    
+                    if (chosen != null) {
+                        bImage = ImageIO.read(chosen.toFile());
+                    }
+                }
+
+                if (bImage != null) {
+                    Image scaled = bImage.getScaledInstance(w, h, Image.SCALE_SMOOTH);
                     return new ImageIcon(scaled);
                 }
+            } catch (Exception e) {
+                // Ignore and try next extension
             }
         }
 
@@ -716,6 +725,8 @@ public class SanPhamPanel extends JPanel {
 
             boolean success = sanPhamDAO.capNhat(sanPhamDangChon);
             if (success) {
+                donViQuyDoiDAO.xoaTheoMaSanPham(sanPhamDangChon.getMaSanPham());
+                luuDonViQuyDoi(sanPhamDangChon.getMaSanPham());
                 JOptionPane.showMessageDialog(this, "Cập nhật sản phẩm thành công!", "Thành công",
                         JOptionPane.INFORMATION_MESSAGE);
                 loadDanhSachSanPham(); // Refresh danh sách
@@ -740,6 +751,7 @@ public class SanPhamPanel extends JPanel {
                 "Xác nhận xóa", JOptionPane.YES_NO_OPTION);
 
         if (confirm == JOptionPane.YES_OPTION) {
+            donViQuyDoiDAO.xoaTheoMaSanPham(sanPhamDangChon.getMaSanPham());
             boolean success = sanPhamDAO.xoa(sanPhamDangChon.getMaSanPham());
             if (success) {
                 JOptionPane.showMessageDialog(this, "Xóa sản phẩm thành công!", "Thành công",
@@ -763,8 +775,27 @@ public class SanPhamPanel extends JPanel {
         cbLoaiSP.setSelectedIndex(0);
         lblImageRight.setIcon(null);
         lblImageRight.setText("Chưa có ảnh");
+        txtHeSoQuyDoi.setText("");
         if (donViQuyDoiModel != null) {
             donViQuyDoiModel.setRowCount(0);
+        }
+    }
+
+    private void luuDonViQuyDoi(String maSP) {
+        SanPham sp = sanPhamDAO.timTheoMa(maSP);
+        if (sp == null) return;
+        
+        for (int i = 0; i < donViQuyDoiModel.getRowCount(); i++) {
+            String tenHienThi = donViQuyDoiModel.getValueAt(i, 0).toString();
+            int heSo = Integer.parseInt(donViQuyDoiModel.getValueAt(i, 1).toString());
+            
+            DonViQuyDoi dv = new DonViQuyDoi();
+            dv.setMaDonVi(donViQuyDoiDAO.taoMaDonViTuDong());
+            dv.setTenDonVi(getDonViTuTenHienThi(tenHienThi));
+            dv.setHeSoQuyDoi(heSo);
+            dv.setSanPham(sp);
+            
+            donViQuyDoiDAO.them(dv);
         }
     }
 
