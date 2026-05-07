@@ -62,8 +62,7 @@ CREATE TABLE KhuyenMai (
     loaiKhuyenMai NVARCHAR(20) CHECK (loaiKhuyenMai IN (N'PHAN_TRAM', N'TANG_KEM')),
     khuyenMaiPhanTram FLOAT,
     giaTriDonHangToiThieu FLOAT
-);
-
+    );
 CREATE TABLE SanPham (
     maSanPham VARCHAR(20) PRIMARY KEY,
     tenSanPham NVARCHAR(200) NOT NULL,
@@ -164,7 +163,7 @@ INSERT INTO TaiKhoan (tenDangNhap, matKhau, maNhanVien) VALUES
 
 -- 4.2. KHÁCH HÀNG
 INSERT INTO KhachHang (maKhachHang, tenKhachHang, sdt, trangThaiKhachHang) VALUES
-('KL_LE', N'Khách vãng lai', '0911111111', N'KHACH_LE'),
+('KH_LE', N'Khách vãng lai', '0911111111', N'KHACH_LE'),
 ('TV000001', N'Ngô Thị Em', '0922222222', N'KHACH_HANG_THANH_VIEN'),
 ('TV000002', N'Vũ Văn Phong', '0933333333', N'KHACH_HANG_THANH_VIEN'),
 ('TV000003', N'Đặng Thị Giang', '0944444444', N'KHACH_HANG_THANH_VIEN'),
@@ -199,7 +198,7 @@ INSERT INTO CaLam (maCa, maNhanVien, gioBatDau, gioKetThuc, trangThaiCaLam, tien
 ('CA02052601', 'QL001', '2026-05-02 08:00:00', '2026-05-02 16:00:00', N'DONG', 1000000, 5000000, 4000000, N'Đang trực');
 
 -- 4.6. SẢN PHẨM & ĐƠN VỊ QUY ĐỔI (SỬA ĐƠN GIÁ CƠ BẢN LÀ GIÁ 1 VIÊN/1 TUÝP)
-INSERT INTO SanPham (maSanPham, tenSanPham, loaiSanPham, soLuongTon, moTa, hoatChat, donGiaCoBasn, trangThaiKinhDoanh, thue) VALUES
+INSERT INTO SanPham (maSanPham, tenSanPham, loaiSanPham, soLuongTon, moTa, hoatChat, donGiaCoBan, trangThaiKinhDoanh, thue) VALUES
 ('OTC-BIA-001', N'Biafine Janssen', N'OTC', 998, N'Kem trị bỏng, vết thương và bỏng nắng', N'Biafine', 95000, 1, 5),
 ('OTC-CON-002', N'Contractubex', N'OTC', 500, N'Kem trị sẹo lồi, sẹo lõm', N'Contractubex', 145000, 1, 5),
 ('OTC-MIN-003', N'Minox 20mg Edol', N'OTC', 100, N'Dung dịch trị rụng tóc Minoxidil', N'Minoxidil 20mg', 185000, 1, 5),
@@ -333,7 +332,7 @@ INSERT INTO QuaTang (maKhuyenMai, maDonVi, soLuongTang) VALUES
 -- 4.9. HÓA ĐƠN & CHI TIẾT 
 INSERT INTO HoaDon (maHoaDon, thoiGianTao, maNhanVien, trangThaiThanhToan, maKhachHang, maKhuyenMai, loaiHoaDon, maCa, ghiChu, maHoaDonDoiTra, maDonThuoc, phuongThucThanhToan) VALUES
 ('HDB200426001', '2026-04-20 10:00:00', 'QL001', 1, 'TV000001', 'KM010401', N'BAN_HANG', 'CA20042601', N'', NULL, NULL, N'TIEN_MAT'),
-('HDB200426002', '2026-04-20 14:00:00', 'QL001', 1, 'KL_LE', NULL, N'BAN_HANG', 'CA20042601', N'', NULL, 'DT200426001', N'CHUYEN_KHOAN'),
+('HDB200426002', '2026-04-20 14:00:00', 'QL001', 1, 'KH_LE', NULL, N'BAN_HANG', 'CA20042601', N'', NULL, 'DT200426001', N'CHUYEN_KHOAN'),
 ('HDB210426001', '2026-04-21 09:00:00', 'DS001', 1, 'TV000002', 'KM150401', N'BAN_HANG', 'CA21042601', N'', NULL, NULL, N'TIEN_MAT'),
 ('HDB210426002', '2026-04-21 11:00:00', 'DS001', 1, 'TV000003', NULL, N'BAN_HANG', 'CA21042601', N'', NULL, 'DT210426001', N'CHUYEN_KHOAN'),
 ('HDB220426001', '2026-04-22 08:30:00', 'DS001', 1, 'TV000004', 'KM010402', N'BAN_HANG', 'CA22042601', N'', NULL, NULL, N'TIEN_MAT'),

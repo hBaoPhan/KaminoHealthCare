@@ -118,7 +118,7 @@ public class SanPhamDAO {
         List<SanPham> ds = new ArrayList<>();
         try {
             Connection con = ConnectDB.getConnection();
-            String sql = "SELECT TOP 10 * FROM SanPham WHERE maSanPham LIKE ? OR tenSanPham LIKE ?";
+            String sql = "SELECT * FROM SanPham WHERE maSanPham LIKE ? OR tenSanPham LIKE ?";
             PreparedStatement stmt = con.prepareStatement(sql);
             stmt.setString(1, "%" + tuKhoa + "%");
             stmt.setString(2, "%" + tuKhoa + "%");
