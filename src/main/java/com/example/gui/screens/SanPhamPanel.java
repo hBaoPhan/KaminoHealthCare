@@ -50,6 +50,8 @@ public class SanPhamPanel extends JPanel {
     private DefaultTableModel donViQuyDoiModel;
     private SanPham sanPhamDangChon = null;
     private File selectedImageFile = null;
+    private JPopupMenu searchPopup;
+    private boolean isUpdatingSearch = false;
 
     public SanPhamPanel() {
         setLayout(new BorderLayout());
@@ -96,31 +98,42 @@ public class SanPhamPanel extends JPanel {
         txtSearch = new JTextField("Tìm kiếm theo mã hoặc tên...");
         txtSearch.setForeground(Color.GRAY);
         txtSearch.setPreferredSize(new Dimension(220, 35));
+        
+        searchPopup = new JPopupMenu();
+        searchPopup.setFocusable(false);
+        
         txtSearch.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
                 if ("Tìm kiếm theo mã hoặc tên...".equals(txtSearch.getText().trim())) {
+                    isUpdatingSearch = true;
                     txtSearch.setText("");
                     txtSearch.setForeground(Color.BLACK);
+                    isUpdatingSearch = false;
                 }
             }
 
             @Override
             public void focusLost(FocusEvent e) {
                 if (txtSearch.getText().trim().isEmpty()) {
+                    isUpdatingSearch = true;
                     txtSearch.setText("Tìm kiếm theo mã hoặc tên...");
                     txtSearch.setForeground(Color.GRAY);
+                    isUpdatingSearch = false;
                 }
             }
         });
-        txtSearch.addActionListener(e -> locVaHienThiSanPham());
+        txtSearch.addActionListener(e -> {
+            searchPopup.setVisible(false);
+            locVaHienThiSanPham();
+        });
         txtSearch.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
             @Override
-            public void insertUpdate(javax.swing.event.DocumentEvent e) { locVaHienThiSanPham(); }
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { updateSearch(); }
             @Override
-            public void removeUpdate(javax.swing.event.DocumentEvent e) { locVaHienThiSanPham(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { updateSearch(); }
             @Override
-            public void changedUpdate(javax.swing.event.DocumentEvent e) { locVaHienThiSanPham(); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { updateSearch(); }
         });
 
         JButton btnSearch = new RoundedButton("Tìm");
@@ -394,8 +407,59 @@ public class SanPhamPanel extends JPanel {
     // ====================== LOGIC ======================
 
     public void loadDanhSachSanPham() {
-        danhSachSanPham = sanPhamDAO.layTatCa();
+        danhSachSanPham = sanPhamDAO.laySanPhamDangKinhDoanh();
         hienThiSanPhamLenGrid(danhSachSanPham);
+    }
+
+    private void updateSearch() {
+        if (isUpdatingSearch) return;
+
+        String text = txtSearch.getText().trim();
+        if (text.isEmpty() || text.equals("Tìm kiếm theo mã hoặc tên...")) {
+            searchPopup.setVisible(false);
+            if (text.isEmpty()) {
+                locVaHienThiSanPham();
+            }
+            return;
+        }
+
+        SwingUtilities.invokeLater(() -> {
+            List<SanPham> results = new ArrayList<>();
+            for (SanPham sp : danhSachSanPham) {
+                if (sp.getMaSanPham().toLowerCase().contains(text.toLowerCase()) ||
+                    sp.getTenSanPham().toLowerCase().contains(text.toLowerCase())) {
+                    results.add(sp);
+                }
+            }
+
+            searchPopup.removeAll();
+            if (results.isEmpty()) {
+                searchPopup.setVisible(false);
+                return;
+            }
+
+            int count = 0;
+            for (SanPham sp : results) {
+                if (count >= 10) break;
+                JMenuItem item = new JMenuItem(sp.getMaSanPham() + " - " + sp.getTenSanPham());
+                item.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                item.addActionListener(e -> {
+                    isUpdatingSearch = true;
+                    txtSearch.setText(sp.getTenSanPham());
+                    isUpdatingSearch = false;
+                    searchPopup.setVisible(false);
+                    hienThiSanPhamLenGrid(List.of(sp));
+                    hienThiChiTietSanPham(sp);
+                });
+                searchPopup.add(item);
+                count++;
+            }
+
+            if (txtSearch.isShowing()) {
+                searchPopup.show(txtSearch, 0, txtSearch.getHeight());
+                txtSearch.requestFocus();
+            }
+        });
     }
 
     private void locVaHienThiSanPham() {
@@ -761,7 +825,6 @@ public class SanPhamPanel extends JPanel {
 
             boolean success = sanPhamDAO.capNhat(sanPhamDangChon);
             if (success) {
-                donViQuyDoiDAO.xoaTheoMaSanPham(sanPhamDangChon.getMaSanPham());
                 luuDonViQuyDoi(sanPhamDangChon.getMaSanPham());
                 luuAnhSanPham(sanPhamDangChon.getMaSanPham());
                 JOptionPane.showMessageDialog(this, "Cập nhật sản phẩm thành công!", "Thành công",
@@ -788,8 +851,8 @@ public class SanPhamPanel extends JPanel {
                 "Xác nhận xóa", JOptionPane.YES_NO_OPTION);
 
         if (confirm == JOptionPane.YES_OPTION) {
-            donViQuyDoiDAO.xoaTheoMaSanPham(sanPhamDangChon.getMaSanPham());
-            boolean success = sanPhamDAO.xoa(sanPhamDangChon.getMaSanPham());
+            sanPhamDangChon.setTrangThaiKinhDoanh(false);
+            boolean success = sanPhamDAO.capNhat(sanPhamDangChon);
             if (success) {
                 JOptionPane.showMessageDialog(this, "Xóa sản phẩm thành công!", "Thành công",
                         JOptionPane.INFORMATION_MESSAGE);
@@ -824,17 +887,39 @@ public class SanPhamPanel extends JPanel {
         if (sp == null)
             return;
 
+        List<DonViQuyDoi> dsHienCo = donViQuyDoiDAO.timTheoMaSanPham(maSP);
+        List<String> dsTenDonViTrenBang = new ArrayList<>();
+
         for (int i = 0; i < donViQuyDoiModel.getRowCount(); i++) {
             String tenHienThi = donViQuyDoiModel.getValueAt(i, 0).toString();
             int heSo = Integer.parseInt(donViQuyDoiModel.getValueAt(i, 1).toString());
+            DonVi donViEnum = getDonViTuTenHienThi(tenHienThi);
+            dsTenDonViTrenBang.add(donViEnum.name());
 
-            DonViQuyDoi dv = new DonViQuyDoi();
-            dv.setMaDonVi(donViQuyDoiDAO.taoMaDonViTuDong());
-            dv.setTenDonVi(getDonViTuTenHienThi(tenHienThi));
-            dv.setHeSoQuyDoi(heSo);
-            dv.setSanPham(sp);
+            DonViQuyDoi dvCu = null;
+            for (DonViQuyDoi dv : dsHienCo) {
+                if (dv.getTenDonVi() == donViEnum) {
+                    dvCu = dv; break;
+                }
+            }
 
-            donViQuyDoiDAO.them(dv);
+            if (dvCu != null) {
+                dvCu.setHeSoQuyDoi(heSo);
+                donViQuyDoiDAO.capNhat(dvCu);
+            } else {
+                DonViQuyDoi dvMoi = new DonViQuyDoi();
+                dvMoi.setMaDonVi(donViQuyDoiDAO.taoMaDonViTuDong());
+                dvMoi.setTenDonVi(donViEnum);
+                dvMoi.setHeSoQuyDoi(heSo);
+                dvMoi.setSanPham(sp);
+                donViQuyDoiDAO.them(dvMoi);
+            }
+        }
+
+        for (DonViQuyDoi dv : dsHienCo) {
+            if (!dsTenDonViTrenBang.contains(dv.getTenDonVi().name())) {
+                donViQuyDoiDAO.xoa(dv.getMaDonVi());
+            }
         }
     }
 

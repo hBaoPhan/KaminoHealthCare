@@ -145,10 +145,30 @@ public class KhuyenMaiPanel extends JPanel {
             @Override
             public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
                 Component c = super.prepareRenderer(renderer, row, column);
+                
+                String maKM = (String) getValueAt(row, 1);
+                boolean isExpired = false;
+                if (danhSachKhuyenMai != null) {
+                    for (KhuyenMai km : danhSachKhuyenMai) {
+                        if (km.getMaKhuyenMai().equals(maKM)) {
+                            // Hết hạn nếu ngày kết thúc trước ngày hiện tại (hoặc cùng ngày nhưng đã qua thời gian, ở đây so sánh ngày)
+                            if (km.getThoiGianKetThuc().toLocalDate().isBefore(java.time.LocalDate.now())) {
+                                isExpired = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+
                 if (!isRowSelected(row)) {
-                    c.setBackground(row == hoveredRow ? new Color(226, 232, 240) :
-                                   (row % 2 == 0 ? Color.WHITE : new Color(248, 249, 250)));
-                    c.setForeground(new Color(51, 51, 51));
+                    if (isExpired) {
+                        c.setBackground(new Color(230, 230, 230)); // Nền xám nhạt
+                        c.setForeground(new Color(150, 150, 150)); // Chữ xám nhạt
+                    } else {
+                        c.setBackground(row == hoveredRow ? new Color(226, 232, 240) :
+                                       (row % 2 == 0 ? Color.WHITE : new Color(248, 249, 250)));
+                        c.setForeground(new Color(51, 51, 51));
+                    }
                 } else {
                     c.setBackground(new Color(203, 213, 225));
                     c.setForeground(Color.BLACK);
@@ -613,6 +633,13 @@ public class KhuyenMaiPanel extends JPanel {
         if (!datePickerKetThuc.getDate().isAfter(datePickerBatDau.getDate())) {
             JOptionPane.showMessageDialog(this,
                     "Ngày kết thúc phải sau ngày bắt đầu!",
+                    "Ngày không hợp lệ", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+
+        if (!datePickerKetThuc.getDate().isAfter(java.time.LocalDate.now().minusDays(1))) {
+            JOptionPane.showMessageDialog(this,
+                    "Ngày kết thúc không được ở trong quá khứ!",
                     "Ngày không hợp lệ", JOptionPane.WARNING_MESSAGE);
             return false;
         }
