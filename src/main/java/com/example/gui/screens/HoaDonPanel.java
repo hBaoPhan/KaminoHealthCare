@@ -146,7 +146,7 @@ public class HoaDonPanel extends JPanel {
         cboLoaiHoaDon.setPreferredSize(new Dimension(160, 35));
         cboLoaiHoaDon.setBackground(Color.WHITE);
 
-        btnView = new RoundedButton("Xem Chi Tiết");
+        btnView = new RoundedButton("Xem");
         btnView.setFont(FONT_TEXT);
         btnView.setForeground(Color.DARK_GRAY);
         btnView.setBackground(Color.WHITE);
