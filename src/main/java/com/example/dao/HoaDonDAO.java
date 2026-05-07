@@ -523,7 +523,7 @@ public class HoaDonDAO {
                 psHoaDon.setTimestamp(2, Timestamp.valueOf(hoaDonMoi.getThoiGianTao()));
                 psHoaDon.setString(3, hoaDonMoi.getNhanVien().getMaNhanVien());
                 psHoaDon.setBoolean(4, hoaDonMoi.isTrangThaiThanhToan());
-                psHoaDon.setString(5, hoaDonMoi.getKhachHang().getMaKhachHang());
+                psHoaDon.setString(5, hoaDonMoi.getKhachHang() != null ? hoaDonMoi.getKhachHang().getMaKhachHang() : null);
                 psHoaDon.setString(6,
                         hoaDonMoi.getKhuyenMai() != null ? hoaDonMoi.getKhuyenMai().getMaKhuyenMai() : null);
                 psHoaDon.setString(7, hoaDonMoi.getLoaiHoaDon().name());
