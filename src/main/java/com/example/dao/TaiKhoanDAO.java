@@ -15,8 +15,8 @@ public class TaiKhoanDAO {
         List<TaiKhoan> danhSach = new ArrayList<>();
         try {
             Connection ketNoi = ConnectDB.getConnection();
-            // Tối ưu: Dùng JOIN để lấy luôn thông tin nhân viên
-            String truyVan = "SELECT tk.*, nv.tenNhanVien, nv.chucVu FROM TaiKhoan tk " +
+            // Lấy thêm cột trangThaiHoatDong của nhân viên
+            String truyVan = "SELECT tk.*, nv.tenNhanVien, nv.chucVu, nv.trangThaiHoatDong FROM TaiKhoan tk " +
                              "JOIN NhanVien nv ON tk.maNhanVien = nv.maNhanVien";
             Statement lenh = ketNoi.createStatement();
             ResultSet ketQua = lenh.executeQuery(truyVan);
@@ -35,8 +35,7 @@ public class TaiKhoanDAO {
         TaiKhoan tk = null;
         try {
             Connection ketNoi = ConnectDB.getConnection();
-            // Tối ưu: Lấy thông tin nhân viên đi kèm để tránh NullPointerException ở GUI
-            String truyVan = "SELECT tk.*, nv.tenNhanVien, nv.chucVu FROM TaiKhoan tk " +
+            String truyVan = "SELECT tk.*, nv.tenNhanVien, nv.chucVu, nv.trangThaiHoatDong FROM TaiKhoan tk " +
                              "JOIN NhanVien nv ON tk.maNhanVien = nv.maNhanVien " +
                              "WHERE tk.tenDangNhap = ?";
             PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
@@ -52,10 +51,6 @@ public class TaiKhoanDAO {
         return tk;
     }
 
-    /**
-     * Hàm hỗ trợ chuyển dữ liệu từ ResultSet sang đối tượng TaiKhoan
-     * Đảm bảo NhanVien không bị null
-     */
     private TaiKhoan parseTaiKhoan(ResultSet rs) throws SQLException {
         TaiKhoan tk = new TaiKhoan();
         tk.setTenDangNhap(rs.getString("tenDangNhap"));
@@ -64,8 +59,10 @@ public class TaiKhoanDAO {
         NhanVien nv = new NhanVien();
         nv.setMaNhanVien(rs.getString("maNhanVien"));
         nv.setTenNhanVien(rs.getString("tenNhanVien"));
-        // Chuyển đổi String từ DB sang Enum ChucVu
         nv.setChucVu(ChucVu.valueOf(rs.getString("chucVu"))); 
+        
+        // FIX: Chuyển đổi giá trị 1 -> true, 0 -> false từ database
+        nv.setTrangThai(rs.getInt("trangThaiHoatDong") == 1); 
         
         tk.setNhanVien(nv);
         return tk;
