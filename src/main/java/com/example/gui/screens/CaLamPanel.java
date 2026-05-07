@@ -415,9 +415,9 @@ public class CaLamPanel extends JPanel {
     // VÙNG 5: LOGIC NGHIỆP VỤ CHÍNH (CORE CRUD LOGIC)
     // =========================================================================
 
-    /** Thêm Ca làm mới */
     private void themCaLam() {
-        if (!validateDuLieu()) return;
+        // TRUYỀN FALSE: Khẳng định đây là thao tác THÊM MỚI
+        if (!validateDuLieu(false)) return; 
         
         LocalDate date = dateNgayLamForm.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         CaLam cl = new CaLam();
@@ -448,7 +448,9 @@ public class CaLamPanel extends JPanel {
         if (cbTrangThai.getSelectedItem() != TrangThaiCaLam.CHUA_MO) {
             JOptionPane.showMessageDialog(this, "Chỉ được phép sửa các ca làm ở trạng thái CHƯA MỞ (Ca tương lai)!"); return;
         }
-        if (!validateDuLieu()) return;
+        
+        // TRUYỀN TRUE: Khẳng định đây là thao tác SỬA
+        if (!validateDuLieu(true)) return; 
 
         LocalDate date = dateNgayLamForm.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         CaLam cl = caLamDAO.timTheoMa(txtMaCa.getText());
@@ -497,7 +499,8 @@ public class CaLamPanel extends JPanel {
     }
 
     /** Ràng buộc dữ liệu đầu vào */
-    private boolean validateDuLieu() {
+    /** Ràng buộc dữ liệu đầu vào (ĐÃ NÂNG CẤP VÁ LỖI TRÙNG CA) */
+    private boolean validateDuLieu(boolean isCapNhat) {
         if (txtMaNV.getText().trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Vui lòng nhập Mã Nhân Viên!"); return false;
         }
@@ -513,10 +516,14 @@ public class CaLamPanel extends JPanel {
         // Kiểm tra trùng ca
         LocalDateTime dtStart = LocalDateTime.of(date, start);
         LocalDateTime dtEnd = LocalDateTime.of(date, end);
-        String maCaCheck = txtMaCa.getText().isEmpty() ? null : txtMaCa.getText();
+        
+        // SỬA LỖI Ở ĐÂY: Nếu là THÊM (isCapNhat = false), ép maCaCheck thành rỗng "" để check toàn bộ.
+        // Nếu là SỬA (isCapNhat = true), mới cho phép lấy mã ca hiện tại để loại trừ.
+        String maCaCheck = isCapNhat ? txtMaCa.getText() : "";
 
         if (caLamDAO.kiemTraTrungCa(txtMaNV.getText().trim(), dtStart, dtEnd, maCaCheck)) {
-            JOptionPane.showMessageDialog(this, "Lỗi: Nhân viên này đã có ca làm việc khác trùng với khung giờ này!"); return false;
+            JOptionPane.showMessageDialog(this, "Lỗi: Nhân viên này đã có ca làm việc khác trùng với khung giờ này!"); 
+            return false;
         }
 
         return true;
