@@ -618,63 +618,80 @@ public class HoaDonDAO {
         }
     }
 
-    public boolean luuHoaDonTraHang(HoaDon hoaDonTra) {
-        Connection con = ConnectDB.getConnection();
-        try {
-            con.setAutoCommit(false); // Bắt đầu Transaction để bảo vệ dữ liệu
+    public boolean luuHoaDonTraHang(HoaDon hoaDonTra, List<SuPhanBoLo> dsPhanBoTra) {
+    Connection con = ConnectDB.getConnection();
+    try {
+        con.setAutoCommit(false); // Bắt đầu Transaction để bảo vệ tính toàn vẹn dữ liệu
 
-            // 1. Lưu hóa đơn trả (Đã sửa đúng 6 tham số, loaiHoaDon gán trực tiếp)
-            String sqlHD = "INSERT INTO HoaDon (maHoaDon, thoiGianTao, maNhanVien, maKhachHang, loaiHoaDon, maHoaDonDoiTra, ghiChu) "
-                    + "VALUES (?, ?, ?, ?, N'TRA_HANG', ?, ?)";
-            PreparedStatement pstmHD = con.prepareStatement(sqlHD);
-            pstmHD.setString(1, hoaDonTra.getMaHoaDon());
-            pstmHD.setTimestamp(2, new Timestamp(System.currentTimeMillis())); // Lấy giờ hệ thống hiện tại
-            pstmHD.setString(3, hoaDonTra.getNhanVien().getMaNhanVien());
-            pstmHD.setString(4, hoaDonTra.getKhachHang() != null ? hoaDonTra.getKhachHang().getMaKhachHang() : null);
-            pstmHD.setString(5, hoaDonTra.getHoaDonDoiTra().getMaHoaDon());
-            pstmHD.setString(6, hoaDonTra.getGhiChu());
-            pstmHD.executeUpdate();
+        // 1. Lưu thông tin Hóa đơn trả hàng
+        String sqlHD = "INSERT INTO HoaDon (maHoaDon, thoiGianTao, maNhanVien, maKhachHang, trangThaiThanhToan, loaiHoaDon, maHoaDonDoiTra, ghiChu) "
+             + "VALUES (?, ?, ?, ?, ?, N'TRA_HANG', ?, ?)"; // Thêm 1 dấu ? cho cột trangThaiThanhToan
 
-            // 2. Lưu chi tiết và cập nhật kho
-            for (ChiTietHoaDon ct : hoaDonTra.getDsChiTiet()) {
-                // A. Lưu ChiTietHoaDon (Bỏ cột 'thue' vì DB của bạn không có)
-                String sqlCT = "INSERT INTO ChiTietHoaDon (maHoaDon, maDonVi, soLuong, donGia, laQuaTangKem) VALUES (?, ?, ?, ?, 0)";
-                PreparedStatement pstmCT = con.prepareStatement(sqlCT);
-                pstmCT.setString(1, hoaDonTra.getMaHoaDon());
-                pstmCT.setString(2, ct.getDonViQuyDoi().getMaDonVi());
-                pstmCT.setInt(3, ct.getSoLuong());
-                pstmCT.setDouble(4, ct.getDonGia());
-                pstmCT.executeUpdate();
+        PreparedStatement pstmHD = con.prepareStatement(sqlHD);
+        pstmHD.setString(1, hoaDonTra.getMaHoaDon());
+        pstmHD.setTimestamp(2, Timestamp.valueOf(hoaDonTra.getThoiGianTao())); 
+        pstmHD.setString(3, hoaDonTra.getNhanVien().getMaNhanVien());
+        pstmHD.setString(4, hoaDonTra.getKhachHang() != null ? hoaDonTra.getKhachHang().getMaKhachHang() : null);
 
-                // B. Cập nhật tồn kho (Cộng lại số lượng vào bảng SanPham)
-                String sqlUpdateKho = "UPDATE SanPham SET soLuongTon = soLuongTon + ? WHERE maSanPham = ?";
-                PreparedStatement pstmKho = con.prepareStatement(sqlUpdateKho);
-                int soLuongGoc = ct.getSoLuong() * ct.getDonViQuyDoi().getHeSoQuyDoi();
-                pstmKho.setInt(1, soLuongGoc);
-                pstmKho.setString(2, ct.getDonViQuyDoi().getSanPham().getMaSanPham());
-                pstmKho.executeUpdate();
-            }
+        // THÊM DÒNG NÀY: Gán giá trị 1 (Đã thanh toán) cho cột số 5
+        pstmHD.setBoolean(5, true); 
 
-            con.commit(); // Chốt dữ liệu xuống database
-            return true;
-        } catch (SQLException e) {
-            try {
-                if (con != null)
-                    con.rollback();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
-            e.printStackTrace();
-            return false;
-        } finally {
-            try {
-                if (con != null)
-                    con.setAutoCommit(true);
-            } catch (SQLException e) {
-                e.printStackTrace();
+        pstmHD.setString(6, hoaDonTra.getHoaDonDoiTra().getMaHoaDon());
+        pstmHD.setString(7, hoaDonTra.getGhiChu());
+        pstmHD.executeUpdate();
+
+        // 2. Lưu các Chi tiết hóa đơn trả
+        String sqlCT = "INSERT INTO ChiTietHoaDon (maHoaDon, maDonVi, soLuong, donGia, laQuaTangKem) VALUES (?, ?, ?, ?, 0)";
+        PreparedStatement pstmCT = con.prepareStatement(sqlCT);
+        for (ChiTietHoaDon ct : hoaDonTra.getDsChiTiet()) {
+            pstmCT.setString(1, hoaDonTra.getMaHoaDon());
+            pstmCT.setString(2, ct.getDonViQuyDoi().getMaDonVi());
+            pstmCT.setInt(3, ct.getSoLuong());
+            pstmCT.setDouble(4, ct.getDonGia());
+            pstmCT.executeUpdate();
+        }
+
+        // 3. Cập nhật lại số lượng vào bảng Lo và lưu thông tin Phân bổ lô
+        // LƯU Ý: Khi bạn cập nhật bảng Lo, Trigger trong SQL sẽ tự động cập nhật bảng SanPham
+        String sqlUpdateLo = "UPDATE Lo SET soLuongSanPham = soLuongSanPham + ? WHERE maLo = ?";
+        String sqlSPBL = "INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong) VALUES (?, ?, ?, ?)";
+        
+        try (PreparedStatement pstLo = con.prepareStatement(sqlUpdateLo);
+             PreparedStatement pstSPBL = con.prepareStatement(sqlSPBL)) {
+            
+            for (SuPhanBoLo sp : dsPhanBoTra) {
+                // Cộng lại số lượng vào Lô tương ứng
+                pstLo.setInt(1, sp.getSoLuong());
+                pstLo.setString(2, sp.getLo().getMaLo());
+                pstLo.executeUpdate();
+
+                // Ghi nhận lịch sử phân bổ lô cho hóa đơn trả này
+                pstSPBL.setString(1, hoaDonTra.getMaHoaDon());
+                pstSPBL.setString(2, sp.getChiTietHoaDon().getDonViQuyDoi().getMaDonVi());
+                pstSPBL.setString(3, sp.getLo().getMaLo());
+                pstSPBL.setInt(4, sp.getSoLuong());
+                pstSPBL.executeUpdate();
             }
         }
+
+        con.commit(); // Chốt dữ liệu xuống database nếu tất cả các bước thành công
+        return true;
+    } catch (SQLException e) {
+        try {
+            if (con != null) con.rollback(); // Hoàn tác nếu có lỗi xảy ra
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        e.printStackTrace();
+        return false;
+    } finally {
+        try {
+            if (con != null) con.setAutoCommit(true);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
+}
 
     // Hàm hỗ trợ tự sinh mã hóa đơn
     public int laySoLuongHoaDonTrongNgay() {

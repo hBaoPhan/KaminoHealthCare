@@ -102,6 +102,7 @@ public class DangNhapPanel extends JFrame implements ActionListener {
 
         form.add(Box.createVerticalStrut(30));
 
+        // --- Ô TÀI KHOẢN ---
         txtUsername = new RoundedTextField("Tài khoản", 20);
         txtUsername.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         txtUsername.setMaximumSize(new Dimension(362, 40));
@@ -111,33 +112,48 @@ public class DangNhapPanel extends JFrame implements ActionListener {
 
         form.add(Box.createVerticalStrut(15));
 
-        JPanel passwordRow = new JPanel(new BorderLayout(8, 0));
-        passwordRow.setOpaque(false);
-        passwordRow.setMaximumSize(new Dimension(400, 38));
-        passwordRow.setPreferredSize(new Dimension(400, 38));
-        passwordRow.setAlignmentX(Component.LEFT_ALIGNMENT);
-
+        // --- Ô MẬT KHẨU CÓ CON MẮT BÊN TRONG ---
+        // --- Ô MẬT KHẨU CÓ CON MẮT BÊN TRONG ---
         txtPassword = new RoundedPasswordField("Mật khẩu", 20);
         txtPassword.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        passwordRow.add(txtPassword, BorderLayout.CENTER);
+        txtPassword.setMaximumSize(new Dimension(362, 40));
+        txtPassword.setPreferredSize(new Dimension(362, 40));
+        txtPassword.setAlignmentX(Component.LEFT_ALIGNMENT);
+        
+        // 1. TẮT LAYOUT (Sử dụng tọa độ tuyệt đối)
+        txtPassword.setLayout(null);
+        
+        // 2. Vẫn giữ padding 35px bên phải để chữ gõ không đâm xuyên qua con mắt
+        txtPassword.setBorder(BorderFactory.createCompoundBorder(
+            txtPassword.getBorder(), 
+            BorderFactory.createEmptyBorder(0, 0, 0, 35) 
+        ));
 
+        // 3. Khởi tạo icon mắt (Đồng bộ kích thước 24x24 cho đẹp)
         ImageIcon eyeIcon = loadIcon("/images/icon/hide.png");
         if (eyeIcon != null) {
-            Image scaledEye = eyeIcon.getImage().getScaledInstance(25, 25, Image.SCALE_SMOOTH);
+            Image scaledEye = eyeIcon.getImage().getScaledInstance(24, 24, Image.SCALE_SMOOTH);
             lblHidePassword = new JLabel(new ImageIcon(scaledEye));
         } else {
             lblHidePassword = new JLabel("👁");
+            lblHidePassword.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         }
         lblHidePassword.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        lblHidePassword.setPreferredSize(new Dimension(30, 45));
-        passwordRow.add(lblHidePassword, BorderLayout.EAST);
+        
+        // 4. SET TỌA ĐỘ THỦ CÔNG CHO CON MẮT (X, Y, Width, Height)
+        // Chiều ngang ô là 362. Rộng icon 24. Cách lề phải 10px -> X = 362 - 24 - 10 = 328
+        // Chiều cao ô là 40. Cao icon 24. Căn giữa dọc -> Y = (40 - 24) / 2 = 8
+        lblHidePassword.setBounds(328, 8, 24, 24);
 
-        form.add(passwordRow);
-        form.add(Box.createVerticalStrut(10));
+        // 5. Thêm con mắt vào text field
+        txtPassword.add(lblHidePassword);
 
+        form.add(txtPassword);
+
+        // --- QUÊN MẬT KHẨU ---
         JPanel forgotRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         forgotRow.setOpaque(false);
-        forgotRow.setMaximumSize(new Dimension(400, 25));
+        forgotRow.setMaximumSize(new Dimension(362, 25)); // Chỉnh lại cho bằng kích thước ô text
         forgotRow.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         lblForgotPassword = new JLabel("Quên mật khẩu?");
@@ -149,11 +165,12 @@ public class DangNhapPanel extends JFrame implements ActionListener {
 
         form.add(Box.createVerticalStrut(25));
 
+        // --- NÚT ĐĂNG NHẬP ---
         btnLogin = new RoundedButton("Đăng Nhập");
         btnLogin.setFont(new Font("Segoe UI", Font.BOLD, 18));
         btnLogin.setBackground(COLOR_PRIMARY);
-        btnLogin.setMaximumSize(new Dimension(400, 50));
-        btnLogin.setPreferredSize(new Dimension(400, 50));
+        btnLogin.setMaximumSize(new Dimension(362, 50));
+        btnLogin.setPreferredSize(new Dimension(362, 50));
         btnLogin.setAlignmentX(Component.LEFT_ALIGNMENT);
         btnLogin.addActionListener(this);
         form.add(btnLogin);
@@ -167,10 +184,10 @@ public class DangNhapPanel extends JFrame implements ActionListener {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 if (isPasswordHidden) {
                     txtPassword.setEchoChar((char) 0);
-                    lblHidePassword.setIcon(loadScaledIcon("/images/icon/view.png", 25, 25));
+                    lblHidePassword.setIcon(loadScaledIcon("/images/icon/view.png", 24, 24));
                 } else {
                     txtPassword.setEchoChar('\u2022');
-                    lblHidePassword.setIcon(loadScaledIcon("/images/icon/hide.png", 25, 25));
+                    lblHidePassword.setIcon(loadScaledIcon("/images/icon/hide.png", 24, 24));
                 }
                 isPasswordHidden = !isPasswordHidden;
             }

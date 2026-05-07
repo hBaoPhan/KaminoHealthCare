@@ -22,6 +22,8 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.sql.Timestamp;
 
+import javax.swing.table.TableCellEditor;
+
 public class TraHangPanel extends JPanel {
 
     private JTextField txtMaHoaGoc, txtMaHoaDon, txtNgayTao, txtNguoiTao, txtTenKhachHang;
@@ -133,7 +135,7 @@ public class TraHangPanel extends JPanel {
         };
         JTable table = new JTable(model);
         table.setRowHeight(30);
-
+        table.getColumnModel().getColumn(3).setCellEditor(new QuantitySpinnerEditor());
         // 2. Lắng nghe sự kiện người dùng gõ sửa số lượng
         model.addTableModelListener(new TableModelListener() {
             @Override
@@ -249,7 +251,7 @@ public class TraHangPanel extends JPanel {
         btnThanhToan.setFont(new Font("Segoe UI", Font.BOLD, 18));
         btnThanhToan.setFocusPainted(false);
         btnThanhToan.setPreferredSize(new Dimension(0, 45));
-        btnThanhToan.addActionListener(e -> {
+        btnThanhToan.addActionListener(e -> {  
             if (model.getRowCount() == 0) {
                 JOptionPane.showMessageDialog(this, "Không có sản phẩm nào để trả hàng!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
                 return;
@@ -262,6 +264,7 @@ public class TraHangPanel extends JPanel {
 
             if (confirm == JOptionPane.YES_OPTION) {
                 HoaDon hoaDonTra = new HoaDon();
+                hoaDonTra.setThoiGianTao(java.time.LocalDateTime.now());
                 hoaDonTra.setMaHoaDon(txtMaHoaDon.getText()); // Mã mới: HDT...
                 if (hd != null) {
                 hoaDonTra.setKhachHang(hd.getKhachHang());
@@ -295,17 +298,62 @@ public class TraHangPanel extends JPanel {
         }
         hoaDonTra.setDsChiTiet(dsTra);
 
-        // 3. Gọi DAO để lưu xuống SQL Server
-        if (hoaDonDAO.luuHoaDonTraHang(hoaDonTra)) {
-            JOptionPane.showMessageDialog(this, "Thanh toán và hoàn kho thành công!");
-            
-            // Xóa sạch dữ liệu trên giao diện để làm hóa đơn mới
-            lamMoiGiaoDien(); 
-        } else {
-            JOptionPane.showMessageDialog(this, "Lỗi khi lưu dữ liệu vào hệ thống!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+        // =========================================================================
+            // BƯỚC BỔ SUNG: Truy vấn CSDL lấy danh sách các Lô đã bán của Hóa đơn gốc
+            // để hoàn trả số lượng đúng vào Lô đó.
+            // =========================================================================
+            List<com.example.entity.SuPhanBoLo> dsPhanBoTra = new ArrayList<>();
+            try {
+                java.sql.Connection con = com.example.connectDB.ConnectDB.getConnection();
+                // Lấy các lô mà hóa đơn gốc đã xuất cho một đơn vị sản phẩm cụ thể
+                String sql = "SELECT maLo, soLuong FROM SuPhanBoLo WHERE maHoaDon = ? AND maDonVi = ?";
+                java.sql.PreparedStatement ps = con.prepareStatement(sql);
+                
+                for (ChiTietHoaDon ctMoi : dsTra) {
+                    int soLuongCanTra = ctMoi.getSoLuong();
+                    
+                    ps.setString(1, txtMaHoaGoc.getText().trim()); // Lấy mã hóa đơn gốc
+                    ps.setString(2, ctMoi.getDonViQuyDoi().getMaDonVi());
+                    
+                    java.sql.ResultSet rs = ps.executeQuery();
+                    
+                    // Nếu 1 sản phẩm bị lấy từ 2 Lô khác nhau, vòng lặp này sẽ chia đúng số lượng trả về từng Lô
+                    while (rs.next() && soLuongCanTra > 0) {
+                        String maLoGoc = rs.getString("maLo");
+                        int slGocTrongLo = rs.getInt("soLuong");
+                        
+                        // Tính toán số lượng trả vào lô này (không được vượt quá số lượng đã lấy từ lô)
+                        int slTraVaoLo = Math.min(soLuongCanTra, slGocTrongLo);
+                        
+                        com.example.entity.SuPhanBoLo sp = new com.example.entity.SuPhanBoLo();
+                        com.example.entity.Lo lo = new com.example.entity.Lo();
+                        lo.setMaLo(maLoGoc);
+                        sp.setLo(lo);
+                        sp.setChiTietHoaDon(ctMoi);
+                        sp.setSoLuong(slTraVaoLo); // Số lượng hoàn trả
+                        
+                        dsPhanBoTra.add(sp);
+                        
+                        soLuongCanTra -= slTraVaoLo; // Trừ đi phần đã trả vào lô này
+                    }
+                    rs.close();
+                }
+                ps.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+
+            // 3. Gọi DAO để lưu xuống SQL Server (ĐÃ TRUYỀN ĐỦ 2 THAM SỐ)
+            if (hoaDonDAO.luuHoaDonTraHang(hoaDonTra, dsPhanBoTra)) {
+                JOptionPane.showMessageDialog(TraHangPanel.this, "Thanh toán và hoàn kho thành công!");
+                
+                // Xóa sạch dữ liệu trên giao diện để làm hóa đơn mới
+                lamMoiGiaoDien(); 
+            } else {
+                JOptionPane.showMessageDialog(TraHangPanel.this, "Lỗi khi lưu dữ liệu vào hệ thống!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
         }
-    }
-});
+    }); // Kết thúc sự kiện btnThanhToan
 
         JPanel pnlBottom = new JPanel(new BorderLayout());
         pnlBottom.setOpaque(false);
@@ -341,18 +389,31 @@ public class TraHangPanel extends JPanel {
         }
     }
     private void hienThiSanPhamHoaDon(String maHD) {
-        if (hoaDonDAO.daTungDoiTra(maHD)) {
+        // 1. Kiểm tra xem hóa đơn này đã từng đổi trả lần nào chưa
+    if (hoaDonDAO.daTungDoiTra(maHD)) {
+        JOptionPane.showMessageDialog(this, 
+            "Hóa đơn này đã thực hiện đổi/trả trước đó. Mỗi hóa đơn chỉ được đổi trả 01 lần duy nhất!", 
+            "Thông báo", JOptionPane.WARNING_MESSAGE);
+        lamMoiGiaoDien();
+        return;
+    }
+
+    // 2. Lấy hóa đơn kèm kiểm tra điều kiện (Thanh toán = 1 và Hạn = 7 ngày)
+    this.hd = hoaDonDAO.layHoaDonDeDoi(maHD);
+
+    if (this.hd == null) {
+        // Kiểm tra xem thực sự là không có mã này hay là do vi phạm điều kiện 7 ngày
+        HoaDon hdCheck = hoaDonDAO.timTheoMa(maHD);
+        if (hdCheck == null) {
+            JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn có mã: " + maHD, "Lỗi", JOptionPane.ERROR_MESSAGE);
+        } else {
             JOptionPane.showMessageDialog(this, 
-                "Hóa đơn này đã thực hiện đổi/trả một lần trước đó. Theo quy định, mỗi hóa đơn chỉ được đổi trả 01 lần duy nhất!", 
-                "Thông báo", JOptionPane.WARNING_MESSAGE);
-            lamMoiGiaoDien();
-            return;
+                "Hóa đơn này không đủ điều kiện đổi trả!\n(Lý do: Có thể đã quá hạn 7 ngày hoặc chưa được thanh toán)", 
+                "Từ chối", JOptionPane.WARNING_MESSAGE);
         }
-        this.hd = hoaDonDAO.timTheoMa(maHD);
-        if (this.hd == null) {
-            JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn: " + maHD);
-            return;
-        }
+        lamMoiGiaoDien();
+        return;
+    }
 
         dsChiTietGoc = ctHDPDAO.layTheoMaHoaDon(maHD);
         this.hd.setDsChiTiet(dsChiTietGoc);
@@ -445,6 +506,40 @@ public class TraHangPanel extends JPanel {
         this.hd = null;
         if (dsChiTietGoc != null) {
             dsChiTietGoc.clear();
+        }
+    }
+    // ====================================================================
+    // Lớp hỗ trợ tạo nút Tăng/Giảm (Spinner) cho cột Số lượng trong bảng
+    // ====================================================================
+    private class QuantitySpinnerEditor extends AbstractCellEditor implements TableCellEditor {
+        private JSpinner spinner = new JSpinner();
+
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+            String maSP = table.getValueAt(row, 0).toString();
+            int soLuongGoc = 9999; 
+            
+            // Tìm số lượng tối đa khách đã mua trong hóa đơn gốc
+            for (ChiTietHoaDon ct : dsChiTietGoc) {
+                if (ct.getDonViQuyDoi().getSanPham().getMaSanPham().equals(maSP)) {
+                    soLuongGoc = ct.getSoLuong();
+                    break;
+                }
+            }
+            
+            int currentVal = 1;
+            try {
+                currentVal = Integer.parseInt(value.toString());
+            } catch (Exception ex) {}
+
+            // Cấu hình Spinner: (Giá trị hiện tại, Min = 1, Max = soLuongGoc, Bước nhảy = 1)
+            spinner.setModel(new SpinnerNumberModel(currentVal, 1, soLuongGoc, 1));
+            return spinner;
+        }
+
+        @Override
+        public Object getCellEditorValue() {
+            return spinner.getValue();
         }
     }
 }
