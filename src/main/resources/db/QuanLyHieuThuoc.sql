@@ -62,8 +62,7 @@ CREATE TABLE KhuyenMai (
     loaiKhuyenMai NVARCHAR(20) CHECK (loaiKhuyenMai IN (N'PHAN_TRAM', N'TANG_KEM')),
     khuyenMaiPhanTram FLOAT,
     giaTriDonHangToiThieu FLOAT
-);
-
+    );
 CREATE TABLE SanPham (
     maSanPham VARCHAR(20) PRIMARY KEY,
     tenSanPham NVARCHAR(200) NOT NULL,
@@ -199,7 +198,7 @@ INSERT INTO CaLam (maCa, maNhanVien, gioBatDau, gioKetThuc, trangThaiCaLam, tien
 ('CA02052601', 'QL001', '2026-05-02 08:00:00', '2026-05-02 16:00:00', N'DONG', 1000000, 5000000, 4000000, N'Đang trực');
 
 -- 4.6. SẢN PHẨM & ĐƠN VỊ QUY ĐỔI (SỬA ĐƠN GIÁ CƠ BẢN LÀ GIÁ 1 VIÊN/1 TUÝP)
-INSERT INTO SanPham (maSanPham, tenSanPham, loaiSanPham, soLuongTon, moTa, hoatChat, donGiaCoBasn, trangThaiKinhDoanh, thue) VALUES
+INSERT INTO SanPham (maSanPham, tenSanPham, loaiSanPham, soLuongTon, moTa, hoatChat, donGiaCoBan, trangThaiKinhDoanh, thue) VALUES
 ('OTC-BIA-001', N'Biafine Janssen', N'OTC', 998, N'Kem trị bỏng, vết thương và bỏng nắng', N'Biafine', 95000, 1, 5),
 ('OTC-CON-002', N'Contractubex', N'OTC', 500, N'Kem trị sẹo lồi, sẹo lõm', N'Contractubex', 145000, 1, 5),
 ('OTC-MIN-003', N'Minox 20mg Edol', N'OTC', 100, N'Dung dịch trị rụng tóc Minoxidil', N'Minoxidil 20mg', 185000, 1, 5),
