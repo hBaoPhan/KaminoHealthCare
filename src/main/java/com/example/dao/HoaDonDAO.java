@@ -623,15 +623,20 @@ public class HoaDonDAO {
         con.setAutoCommit(false); // Bắt đầu Transaction để bảo vệ tính toàn vẹn dữ liệu
 
         // 1. Lưu thông tin Hóa đơn trả hàng
-        String sqlHD = "INSERT INTO HoaDon (maHoaDon, thoiGianTao, maNhanVien, maKhachHang, loaiHoaDon, maHoaDonDoiTra, ghiChu) "
-                + "VALUES (?, ?, ?, ?, N'TRA_HANG', ?, ?)";
+        String sqlHD = "INSERT INTO HoaDon (maHoaDon, thoiGianTao, maNhanVien, maKhachHang, trangThaiThanhToan, loaiHoaDon, maHoaDonDoiTra, ghiChu) "
+             + "VALUES (?, ?, ?, ?, ?, N'TRA_HANG', ?, ?)"; // Thêm 1 dấu ? cho cột trangThaiThanhToan
+
         PreparedStatement pstmHD = con.prepareStatement(sqlHD);
         pstmHD.setString(1, hoaDonTra.getMaHoaDon());
         pstmHD.setTimestamp(2, Timestamp.valueOf(hoaDonTra.getThoiGianTao())); 
         pstmHD.setString(3, hoaDonTra.getNhanVien().getMaNhanVien());
         pstmHD.setString(4, hoaDonTra.getKhachHang() != null ? hoaDonTra.getKhachHang().getMaKhachHang() : null);
-        pstmHD.setString(5, hoaDonTra.getHoaDonDoiTra().getMaHoaDon());
-        pstmHD.setString(6, hoaDonTra.getGhiChu());
+
+        // THÊM DÒNG NÀY: Gán giá trị 1 (Đã thanh toán) cho cột số 5
+        pstmHD.setBoolean(5, true); 
+
+        pstmHD.setString(6, hoaDonTra.getHoaDonDoiTra().getMaHoaDon());
+        pstmHD.setString(7, hoaDonTra.getGhiChu());
         pstmHD.executeUpdate();
 
         // 2. Lưu các Chi tiết hóa đơn trả
