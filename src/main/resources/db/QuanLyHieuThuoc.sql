@@ -40,7 +40,7 @@ CREATE TABLE CaLam (
     maNhanVien VARCHAR(10) FOREIGN KEY REFERENCES NhanVien(maNhanVien),
     gioBatDau DATETIME,
     gioKetThuc DATETIME,
-    trangThaiCaLam NVARCHAR(20) CHECK (trangThaiCaLam IN (N'DANG_MO', N'DONG')),
+    trangThaiCaLam NVARCHAR(20) CHECK (trangThaiCaLam IN (N'DANG_MO', N'DONG', N'CHUA_MO')),
     tienMoCa FLOAT,
     tienKetCa FLOAT,
     tienHeThong FLOAT,
