@@ -156,10 +156,10 @@ INSERT INTO NhanVien (maNhanVien, tenNhanVien, cccd, sdt, chucVu, trangThaiHoatD
 
 INSERT INTO TaiKhoan (tenDangNhap, matKhau, maNhanVien) VALUES
 ('baoph', '$2a$12$bfiVg8.pufHx/TEcJYISSeteaaAWStGxzGbIzNkwdgY.2HFhp79Ym', 'QL001'),
-('taitr', '$2a$12$bfiVg8.pufHx/TEcJYISSeteaaAWStGxzGbIzNkwdgY.2HFhp79Y', 'QL002'),
-('truongng', '$2a$12$bfiVg8.pufHx/TEcJYISSeteaaAWStGxzGbIzNkwdgY.2HFhp79Y', 'QL003'),
-('nhatng', '$2a$12$bfiVg8.pufHx/TEcJYISSeteaaAWStGxzGbIzNkwdgY.2HFhp79Y', 'QL004'),
-('nv', '$2a$12$bfiVg8.pufHx/TEcJYISSeteaaAWStGxzGbIzNkwdgY.2HFhp79Y', 'DS001');
+('taitr', '$2a$12$bfiVg8.pufHx/TEcJYISSeteaaAWStGxzGbIzNkwdgY.2HFhp79Ym', 'QL002'),
+('truongng', '$2a$12$bfiVg8.pufHx/TEcJYISSeteaaAWStGxzGbIzNkwdgY.2HFhp79Ym', 'QL003'),
+('nhatng', '$2a$12$bfiVg8.pufHx/TEcJYISSeteaaAWStGxzGbIzNkwdgY.2HFhp79Ym', 'QL004'),
+('nv', '$2a$12$bfiVg8.pufHx/TEcJYISSeteaaAWStGxzGbIzNkwdgY.2HFhp79Ym', 'DS001');
 
 -- 4.2. KHÁCH HÀNG
 INSERT INTO KhachHang (maKhachHang, tenKhachHang, sdt, trangThaiKhachHang) VALUES
