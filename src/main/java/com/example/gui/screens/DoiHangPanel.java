@@ -244,7 +244,8 @@ public class DoiHangPanel extends JPanel {
             double giaMoi = dv.getSanPham().getDonGiaCoBan() * dv.getHeSoQuyDoi();
             SwingUtilities.invokeLater(() -> {
                 model.setValueAt(giaMoi, row, 4);
-                int sl = Integer.parseInt(model.getValueAt(row, 3).toString());
+                Object slValue = model.getValueAt(row, 3);
+                int sl = (slValue != null && !slValue.toString().trim().isEmpty()) ? Integer.parseInt(slValue.toString()) : 0;
                 double thueTiLe = Double.parseDouble(model.getValueAt(row, 5).toString());
                 model.setValueAt(sl * giaMoi * (1 + thueTiLe / 100.0), row, 6);
                 tinhToanToanBoTien();
@@ -371,12 +372,16 @@ public class DoiHangPanel extends JPanel {
         double total = 0;
         DefaultTableModel model = (DefaultTableModel) table.getModel();
         for (int i = 0; i < model.getRowCount(); i++) {
-            int sl = Integer.parseInt(model.getValueAt(i, 3).toString());
-            double gia = Double.parseDouble(model.getValueAt(i, 4).toString());
-            double thueTiLe = Double.parseDouble(model.getValueAt(i, 5).toString());
-            double tt = sl * gia * (1 + thueTiLe / 100.0);
-            model.setValueAt(tt, i, 6);
-            total += tt;
+            try {
+                int sl = Integer.parseInt(String.valueOf(model.getValueAt(i, 3)));
+                double gia = Double.parseDouble(String.valueOf(model.getValueAt(i, 4)));
+                double thueTiLe = Double.parseDouble(String.valueOf(model.getValueAt(i, 5)));
+                
+                double tt = sl * gia * (1 + thueTiLe / 100.0);
+                model.setValueAt(tt, i, 6);
+                total += tt;
+            } catch (Exception ignored) {
+            }
         }
         return total;
     }
@@ -395,9 +400,11 @@ public class DoiHangPanel extends JPanel {
     }
 
     private ChiTietHoaDon taoChiTietTuDong(DefaultTableModel model, int row, HoaDon hd) throws Exception {
-        String maSP = model.getValueAt(row, 0).toString();
-        String tenDV = model.getValueAt(row, 2).toString();
-        int sl = Integer.parseInt(model.getValueAt(row, 3).toString());
+  
+        String maSP = String.valueOf(model.getValueAt(row, 0));
+        String tenDV = String.valueOf(model.getValueAt(row, 2));
+        int sl = Integer.parseInt(String.valueOf(model.getValueAt(row, 3)));
+        
         DonViQuyDoi dv = donViQuyDoiDAO.timTheoTenVaMaSP(DonVi.tuMoTa(tenDV).name(), maSP);
         if (dv == null) throw new Exception("Đơn vị '" + tenDV + "' không hợp lệ!");
         
@@ -421,8 +428,11 @@ public class DoiHangPanel extends JPanel {
         if (modelGoc.getRowCount() == 0) return;
 
         try {
-            double chenhLech = Double.parseDouble(txtChenhLech.getText().replaceAll("[^\\d-]", ""));
-            double thanhTienPhaiTra = Double.parseDouble(txtThanhTienLamTron.getText().replaceAll("[^\\d]", ""));
+        	String rawChenhLech = txtChenhLech.getText().replaceAll("[^\\d-]", "");
+            double chenhLech = rawChenhLech.isEmpty() ? 0 : Double.parseDouble(rawChenhLech);
+            
+            String rawThanhTien = txtThanhTienLamTron.getText().replaceAll("[^\\d]", "");
+            double thanhTienPhaiTra = rawThanhTien.isEmpty() ? 0 : Double.parseDouble(rawThanhTien);
             
             // 2. KIỂM TRA TIỀN KHÁCH ĐƯA
             if (radTienMat.isSelected() && chenhLech > 0) {
@@ -545,7 +555,7 @@ public class DoiHangPanel extends JPanel {
                 }
             }
 
-            // 5. THỰC THI GIAO DỊCH QUA DAO
+         // 5. THỰC THI GIAO DỊCH QUA DAO
             if (hoaDonDAO.luuHoaDonDoiHang(hdMoi, dsTraLai, dsChiTietMoi, dsPhanBoMoi)) {
                 JOptionPane.showMessageDialog(this, "Thanh toán thành công hóa đơn đổi: " + maHoaDonMoi);
                 resetForm();
@@ -554,8 +564,7 @@ public class DoiHangPanel extends JPanel {
             }
             
         } catch (Exception ex) { 
-            JOptionPane.showMessageDialog(this, "Đã xảy ra lỗi: " + ex.getMessage(), "Lỗi thực thi", JOptionPane.ERROR_MESSAGE);
-            ex.printStackTrace(); 
+        	JOptionPane.showMessageDialog(this, "Đã xảy ra lỗi nghiệp vụ: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE); 
         }
     }
   
@@ -664,10 +673,32 @@ public class DoiHangPanel extends JPanel {
     }
 
     private JPanel createQRPanel() {
-        JPanel p = new JPanel(new BorderLayout()); p.setOpaque(false);
-        JLabel l = new JLabel("HÌNH ẢNH MÃ QR", 0); l.setPreferredSize(new Dimension(0, 150)); l.setOpaque(true);
-        l.setBackground(Color.WHITE); l.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
-        p.add(l, BorderLayout.CENTER); return p;
+        JPanel p = new JPanel(new BorderLayout()); 
+        p.setOpaque(false);
+        
+        JLabel l = new JLabel("", SwingConstants.CENTER); // Bỏ chữ mặc định, căn giữa
+        l.setPreferredSize(new Dimension(0, 150)); 
+        l.setOpaque(true);
+        l.setBackground(Color.WHITE); 
+        l.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        
+        // Load và hiển thị ảnh QR
+        try {
+            java.net.URL imgURL = getClass().getResource("/images/QR.jpg");
+            if (imgURL != null) {
+                ImageIcon icon = new ImageIcon(imgURL);
+                // Thu nhỏ ảnh về kích thước 140x140 cho vừa vặn với chiều cao 150 của Panel
+                Image img = icon.getImage().getScaledInstance(140, 140, Image.SCALE_SMOOTH);
+                l.setIcon(new ImageIcon(img));
+            } else {
+                l.setText("Không tìm thấy ảnh QR"); // Báo lỗi trên UI nếu mất file
+            }
+        } catch (Exception e) {
+            l.setText("Lỗi tải ảnh");
+        }
+
+        p.add(l, BorderLayout.CENTER); 
+        return p;
     }
 
     private void addInputRow(JPanel p, String lbl, JTextField t, GridBagConstraints g, int r) {
