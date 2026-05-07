@@ -128,12 +128,12 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		if (isQuanLy) {
 			contentPanel.add(pnlLo = new LoPanel(), "Quản Lý Lô");
 			contentPanel.add(pnlKhuyenMai = new KhuyenMaiPanel(), "Khuyến Mãi");
-			contentPanel.add(pnlDonThuoc = new DonThuocPanel(), "Quản Lý Đơn Thuốc");
 			contentPanel.add(pnlNhanVien = new NhanVienPanel(), "Quản Lý Nhân Viên");
 			contentPanel.add(pnlTaiKhoan = new TaiKhoanPanel(), "Quản Lý Tài Khoản");
 			contentPanel.add(pnlCaLam = new CaLamPanel(), "Quản Lý Ca Làm");
-			contentPanel.add(pnlThongKe = new ThongKePanel(), "Thống Kê");
 		}
+		contentPanel.add(pnlDonThuoc = new DonThuocPanel(), "Quản Lý Đơn Thuốc");
+		contentPanel.add(pnlThongKe = new ThongKePanel(), "Thống Kê");
 		contentPanel.add(pnlMoCa = new MoCaPanel(taiKhoan), "Mở Ca");
 		contentPanel.add(pnlDongCa = new DongCaPanel(taiKhoan), "Kết Ca");
 		contentPanel.add(pnlTroGiup = new TroGiupPanel(), "Trợ Giúp");
@@ -237,9 +237,9 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		if (isQuanLy) {
 			if (pnlNhanVien != null)
 				pnlNhanVien.taiLaiDanhSach();
-			if (pnlThongKe != null)
-				pnlThongKe.capNhatDuLieuThongKe();
 		}
+		if (pnlThongKe != null)
+			pnlThongKe.capNhatDuLieuThongKe();
 	}
 
 	@Override
@@ -309,11 +309,13 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		sanPham.children.add(new MenuItem("Quản Lý Sản Phẩm", null, true));
 		if (isQuanLy) {
 			sanPham.children.add(new MenuItem("Quản Lý Lô", null, true));
-			sanPham.children.add(new MenuItem("Quản Lý Đơn Thuốc", null, true));
 		}
+		sanPham.children.add(new MenuItem("Quản Lý Đơn Thuốc", null, true));
 		menuStructure.add(sanPham);
 
-		menuStructure.add(new MenuItem("Khuyến Mãi", "coupon.png"));
+		if (isQuanLy) {
+			menuStructure.add(new MenuItem("Khuyến Mãi", "coupon.png"));
+		}
 		menuStructure.add(new MenuItem("Khách Hàng", "customer.png"));
 
 		if (isQuanLy) {
@@ -322,8 +324,8 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 			nhanVien.children.add(new MenuItem("Quản Lý Tài Khoản", null, true));
 			nhanVien.children.add(new MenuItem("Quản Lý Ca Làm", null, true));
 			menuStructure.add(nhanVien);
-			menuStructure.add(new MenuItem("Thống Kê", "chart.png"));
 		}
+		menuStructure.add(new MenuItem("Thống Kê", "chart.png"));
 		menuStructure.add(new MenuItem("Trợ Giúp", "help.png"));
 	}
 
