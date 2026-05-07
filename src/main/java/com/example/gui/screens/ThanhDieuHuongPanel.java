@@ -26,6 +26,7 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 	private Color sidebarColor = Color.WHITE;
 	private HoaDonPanel pnlHoaDon;
 	private ManHinhChinhPanel pnlTrangChu;
+	private ManHinhChinhNhanVienPanel pnlTrangChuNhanVien;
 	private ThongKePanel pnlThongKe;
 	private boolean isQuanLy;
 	private List<MenuLabel> menuLabels = new ArrayList<>();
@@ -112,7 +113,11 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		cardLayout = new CardLayout();
 		contentPanel = new JPanel(cardLayout);
 
-		contentPanel.add(pnlTrangChu = new ManHinhChinhPanel(taiKhoan), "Màn Hình Chính");
+		if (isQuanLy) {
+			contentPanel.add(pnlTrangChu = new ManHinhChinhPanel(taiKhoan), "Màn Hình Chính");
+		} else {
+			contentPanel.add(pnlTrangChuNhanVien = new ManHinhChinhNhanVienPanel(taiKhoan), "Màn Hình Chính");
+		}
 		contentPanel.add(pnlHoaDon = new HoaDonPanel(taiKhoan), "Quản Lý Hóa Đơn");
 		contentPanel.add(pnlBanHang = new BanHangPanel(taiKhoan), "Bán Hàng");
 		contentPanel.add(pnlDoiHang = new DoiHangPanel(taiKhoan), "Đổi Hàng");
@@ -218,6 +223,9 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		if (pnlTrangChu != null) {
 			pnlTrangChu.loadThongKeData();
 			pnlTrangChu.layDuLieuChoHoatDongGanDay();
+		}
+		if (pnlTrangChuNhanVien != null) {
+			pnlTrangChuNhanVien.refreshData();
 		}
 		if (pnlMoCa != null)
 			pnlMoCa.loadDuLieuCa();

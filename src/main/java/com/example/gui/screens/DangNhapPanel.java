@@ -119,15 +119,14 @@ public class DangNhapPanel extends JFrame implements ActionListener {
         txtPassword.setMaximumSize(new Dimension(362, 40));
         txtPassword.setPreferredSize(new Dimension(362, 40));
         txtPassword.setAlignmentX(Component.LEFT_ALIGNMENT);
-        
+
         // 1. TẮT LAYOUT (Sử dụng tọa độ tuyệt đối)
         txtPassword.setLayout(null);
-        
+
         // 2. Vẫn giữ padding 35px bên phải để chữ gõ không đâm xuyên qua con mắt
         txtPassword.setBorder(BorderFactory.createCompoundBorder(
-            txtPassword.getBorder(), 
-            BorderFactory.createEmptyBorder(0, 0, 0, 35) 
-        ));
+                txtPassword.getBorder(),
+                BorderFactory.createEmptyBorder(0, 0, 0, 35)));
 
         // 3. Khởi tạo icon mắt (Đồng bộ kích thước 24x24 cho đẹp)
         ImageIcon eyeIcon = loadIcon("/images/icon/hide.png");
@@ -139,9 +138,10 @@ public class DangNhapPanel extends JFrame implements ActionListener {
             lblHidePassword.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         }
         lblHidePassword.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
+
         // 4. SET TỌA ĐỘ THỦ CÔNG CHO CON MẮT (X, Y, Width, Height)
-        // Chiều ngang ô là 362. Rộng icon 24. Cách lề phải 10px -> X = 362 - 24 - 10 = 328
+        // Chiều ngang ô là 362. Rộng icon 24. Cách lề phải 10px -> X = 362 - 24 - 10 =
+        // 328
         // Chiều cao ô là 40. Cao icon 24. Căn giữa dọc -> Y = (40 - 24) / 2 = 8
         lblHidePassword.setBounds(328, 8, 24, 24);
 
@@ -227,7 +227,7 @@ public class DangNhapPanel extends JFrame implements ActionListener {
 
             // 3. Gọi DAO xử lý (Sử dụng mã admin001 từ script SQL mới của bạn)
             TaiKhoanDAO dao = new TaiKhoanDAO();
-            TaiKhoan tk = dao.timTheoMa("baoph");
+            TaiKhoan tk = dao.timTheoMa("nv");
 
             // if (tk != null) {
             // String dbPassword = tk.getMatKhau();
