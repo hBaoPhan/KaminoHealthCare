@@ -354,3 +354,47 @@ INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong) VALUES
 ('HDB300426001', 'DV015', 'LO200326001', 2),
 ('HDB020526001', 'DV017', 'LO200326001', 5);
 GO
+
+--- =================================================== ---
+--- 5. Trigger
+--- =================================================== ---
+
+CREATE TRIGGER trg_Lo_UpdateTonKho
+ON Lo
+AFTER INSERT, UPDATE, DELETE
+AS
+BEGIN
+    -- Ngăn việc trả về số dòng bị ảnh hưởng, giúp tăng hiệu suất
+    SET NOCOUNT ON;
+
+    -- BƯỚC 1: Xử lý phần dữ liệu bị mất đi (Dành cho sự kiện DELETE và UPDATE)
+    -- Lấy số lượng cũ từ bảng ảo 'deleted' trừ khỏi kho
+    IF EXISTS (SELECT 1 FROM deleted)
+    BEGIN
+        UPDATE sp
+        SET sp.soLuongTon = ISNULL(sp.soLuongTon, 0) - d.TongSoLuongCu
+        FROM SanPham sp
+        INNER JOIN (
+            -- Tính tổng số lượng lô bị xóa/cũ theo từng mã sản phẩm
+            SELECT maSanPham, SUM(soLuongSanPham) AS TongSoLuongCu
+            FROM deleted
+            GROUP BY maSanPham
+        ) d ON sp.maSanPham = d.maSanPham;
+    END
+
+    -- BƯỚC 2: Xử lý phần dữ liệu mới được thêm (Dành cho sự kiện INSERT và UPDATE)
+    -- Lấy số lượng mới từ bảng ảo 'inserted' cộng vào kho
+    IF EXISTS (SELECT 1 FROM inserted)
+    BEGIN
+        UPDATE sp
+        SET sp.soLuongTon = ISNULL(sp.soLuongTon, 0) + i.TongSoLuongMoi
+        FROM SanPham sp
+        INNER JOIN (
+            -- Tính tổng số lượng lô mới theo từng mã sản phẩm
+            SELECT maSanPham, SUM(soLuongSanPham) AS TongSoLuongMoi
+            FROM inserted
+            GROUP BY maSanPham
+        ) i ON sp.maSanPham = i.maSanPham;
+    END
+END;
+GO

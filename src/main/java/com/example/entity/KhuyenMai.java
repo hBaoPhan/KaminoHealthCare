@@ -21,7 +21,9 @@ public class KhuyenMai {
         this.maKhuyenMai = maKhuyenMai;
     }
 
-    public KhuyenMai(String maKhuyenMai, String tenKhuyenMai, LocalDateTime thoiGianBatDau, LocalDateTime thoiGianKetThuc, LoaiKhuyenMai loaiKhuyenMai, double khuyenMaiPhanTram, QuaTang quaTangKem, double giaTriDonHangToiThieu) {
+    public KhuyenMai(String maKhuyenMai, String tenKhuyenMai, LocalDateTime thoiGianBatDau,
+            LocalDateTime thoiGianKetThuc, LoaiKhuyenMai loaiKhuyenMai, double khuyenMaiPhanTram, QuaTang quaTangKem,
+            double giaTriDonHangToiThieu) {
         this.maKhuyenMai = maKhuyenMai;
         this.tenKhuyenMai = tenKhuyenMai;
         this.thoiGianBatDau = thoiGianBatDau;
@@ -102,8 +104,10 @@ public class KhuyenMai {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         KhuyenMai khuyenMai = (KhuyenMai) o;
         return Objects.equals(maKhuyenMai, khuyenMai.maKhuyenMai);
     }

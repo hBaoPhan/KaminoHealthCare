@@ -87,6 +87,25 @@ public class BanHangPanel extends JPanel {
             maHoaDonHienTai = sinhMaHoaDon();
             if (lblMaHoaDon != null)
                 lblMaHoaDon.setText(maHoaDonHienTai);
+
+            // Xóa trắng các trường thông tin
+            if (txtSoDienThoai != null)
+                txtSoDienThoai.setText("");
+            if (txtTenKhachHang != null)
+                txtTenKhachHang.setText("");
+            if (areaNotes != null)
+                areaNotes.setText("");
+            if (txtTienKhachDua != null)
+                txtTienKhachDua.setText("");
+            // if (cboKhuyenMai != null)
+            // cboKhuyenMai.setSelectedIndex(0);
+            if (cboDonThuoc != null)
+                cboDonThuoc.setSelectedIndex(0);
+            // if (model != null)
+            // model.setRowCount(0);
+
+            khachHangHienTai = null;
+            updateSummary();
             return;
         }
 
@@ -135,22 +154,9 @@ public class BanHangPanel extends JPanel {
 
         updateSummary();
 
-        // 2. Áp dụng khuyến mãi sau khi đã có dữ liệu sản phẩm và tổng tiền
-        if (hd.getKhuyenMai() != null && cboKhuyenMai != null) {
-            isAutoSelectingPromotion = true;
-            try {
-                for (int i = 0; i < dsKhuyenMai.size(); i++) {
-                    if (dsKhuyenMai.get(i).getMaKhuyenMai().equals(hd.getKhuyenMai().getMaKhuyenMai())) {
-                        cboKhuyenMai.setSelectedIndex(i + 1);
-                        break;
-                    }
-                }
-            } finally {
-                isAutoSelectingPromotion = false;
-            }
-        }
+        if (hd.getDonThuoc() != null && cboDonThuoc != null)
 
-        if (hd.getDonThuoc() != null && cboDonThuoc != null) {
+        {
             for (int i = 0; i < dsDonThuoc.size(); i++) {
                 if (dsDonThuoc.get(i).getMaDonThuoc().equals(hd.getDonThuoc().getMaDonThuoc())) {
                     cboDonThuoc.setSelectedIndex(i + 1);
@@ -170,7 +176,7 @@ public class BanHangPanel extends JPanel {
         JLabel lblTitle = new JLabel("Danh sách sản phẩm");
         lblTitle.setFont(FONT_TITLE);
 
-        RoundedTextField txtSearch = new RoundedTextField("Mã/Tên sản phẩm", 15);
+        RoundedTextField txtSearch = new RoundedTextField("Tìm Mã/Tên sản phẩm", 15);
         txtSearch.setPreferredSize(new Dimension(250, 35));
         txtSearch.setFont(FONT_TEXT);
 
@@ -694,6 +700,7 @@ public class BanHangPanel extends JPanel {
 
         // Khuyến mãi
         cboKhuyenMai = new JComboBox<>();
+        // cboKhuyenMai.setEnabled(false); // Cho phép xổ ra để xem
         cboKhuyenMai.addItem("-- Không áp dụng --");
         dsKhuyenMai = khuyenMaiDAO.layTatCa();
         for (KhuyenMai km : dsKhuyenMai) {
@@ -704,7 +711,15 @@ public class BanHangPanel extends JPanel {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected,
                     boolean cellHasFocus) {
-                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                // Truyền isSelected và cellHasFocus là false để không hiện màu xanh khi hover
+                super.getListCellRendererComponent(list, value, index, false, false);
+
+                if (index >= 0) {
+                    setEnabled(false); // Làm mờ các dòng trong danh sách xổ xuống
+                } else {
+                    setEnabled(true); // Ô hiển thị chính vẫn rõ nét
+                }
+
                 if (index > 0 && dsKhuyenMai != null && index - 1 < dsKhuyenMai.size()) {
                     double tongTienHang = 0;
                     if (model != null) {
@@ -735,7 +750,14 @@ public class BanHangPanel extends JPanel {
             }
         });
 
-        cboKhuyenMai.addActionListener(e -> capNhatQuaTang());
+        cboKhuyenMai.addActionListener(e -> {
+            if (!isAutoSelectingPromotion) {
+                // Nếu người dùng cố tình chọn, hệ thống tự động chọn lại cái tốt nhất
+                autoSelectBestKhuyenMai();
+            } else {
+                capNhatQuaTang();
+            }
+        });
         sidebar.add(createFieldGroup("Khuyến mãi", cboKhuyenMai));
 
         // Đơn thuốc
@@ -830,11 +852,23 @@ public class BanHangPanel extends JPanel {
 
         JPanel pnlChuyenKhoan = new JPanel(new BorderLayout());
         pnlChuyenKhoan.setOpaque(false);
-        JLabel lblQR = new JLabel("Mã QR", SwingConstants.CENTER);
+        JLabel lblQR = new JLabel();
+        try {
+            ImageIcon icon = new ImageIcon(getClass().getResource("/images/QR.jpg"));
+            Image img = icon.getImage().getScaledInstance(80, 80, Image.SCALE_SMOOTH);
+            lblQR.setIcon(new ImageIcon(img));
+        } catch (Exception e) {
+            lblQR.setText("Mã QR");
+        }
         lblQR.setPreferredSize(new Dimension(80, 80));
         lblQR.setBorder(BorderFactory.createLineBorder(COLOR_PRIMARY, 2, true));
-        lblQR.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        lblQR.setForeground(COLOR_PRIMARY);
+        lblQR.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        lblQR.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                showQRDialog();
+            }
+        });
         JPanel qrContainer = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         qrContainer.setOpaque(false);
         qrContainer.add(lblQR);
@@ -1128,6 +1162,21 @@ public class BanHangPanel extends JPanel {
 
     /** Thanh toán: tạo hóa đơn trước, sau đó xác nhận thanh toán + trừ kho */
     private void thanhToan(RoundedButton btnSave) {
+        // Ràng buộc tiền khách trả > tiền hóa đơn (cho Tiền mặt)
+        // if (rdoTienMat.isSelected()) {
+        // String ttStr = lblThanhTien.getText().replaceAll("[^\\d]", "");
+        // double thanhTien = ttStr.isEmpty() ? 0 : Double.parseDouble(ttStr);
+        // String kd = txtTienKhachDua.getText().replaceAll("[^\\d]", "");
+        // double khachDua = kd.isEmpty() ? 0 : Double.parseDouble(kd);
+
+        // if (khachDua < thanhTien) {
+        // JOptionPane.showMessageDialog(this,
+        // "Tiền khách trả phải lớn hơn tiền hóa đơn!",
+        // "Lỗi thanh toán", JOptionPane.ERROR_MESSAGE);
+        // return;
+        // }
+        // }
+
         // Lưu hóa đơn trước khi thanh toán (chế độ im lặng)
         luuHoaDon(false);
 
@@ -1137,22 +1186,29 @@ public class BanHangPanel extends JPanel {
             return;
         java.util.List<ChiTietHoaDon> dsChiTiet = thuThapChiTiet(hd);
 
-        if (hoaDonDAO.xacNhanThanhToan(maHoaDonHienTai, dsChiTiet)) {
-            JOptionPane.showMessageDialog(this, "Thanh toán thành công!", "Thành công",
-                    JOptionPane.INFORMATION_MESSAGE);
-            // Reset form
-            model.setRowCount(0);
-            maHoaDonHienTai = sinhMaHoaDon();
-            lblMaHoaDon.setText(maHoaDonHienTai);
-            txtSoDienThoai.setText("");
-            txtTenKhachHang.setText("");
-            cboKhuyenMai.setSelectedIndex(0);
-            if (cboDonThuoc != null)
-                cboDonThuoc.setSelectedIndex(0);
-            areaNotes.setText("");
-            khachHangHienTai = null;
-        } else {
-            JOptionPane.showMessageDialog(this, "Lỗi khi thanh toán!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+        try {
+            if (hoaDonDAO.xacNhanThanhToan(maHoaDonHienTai, dsChiTiet)) {
+                JOptionPane.showMessageDialog(this, "Thanh toán thành công!", "Thành công",
+                        JOptionPane.INFORMATION_MESSAGE);
+                // Reset form
+                model.setRowCount(0);
+                maHoaDonHienTai = sinhMaHoaDon();
+                lblMaHoaDon.setText(maHoaDonHienTai);
+                txtSoDienThoai.setText("");
+                txtTenKhachHang.setText("");
+                cboKhuyenMai.setSelectedIndex(0);
+                if (cboDonThuoc != null)
+                    cboDonThuoc.setSelectedIndex(0);
+                areaNotes.setText("");
+                txtTienKhachDua.setText("");
+                khachHangHienTai = null;
+            } else {
+                JOptionPane.showMessageDialog(this, "Lỗi khi thanh toán!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (java.sql.SQLException e) {
+            JOptionPane.showMessageDialog(this, e.getMessage(), "Lỗi thanh toán",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
     }
 
@@ -1231,6 +1287,45 @@ public class BanHangPanel extends JPanel {
         datePicker.setBackground(Color.WHITE);
         datePicker.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1, true));
         datePicker.getComponentDateTextField().setHorizontalAlignment(JTextField.CENTER);
+    }
+
+    private void showQRDialog() {
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Mã QR Thanh Toán", true);
+        dialog.setLayout(new BorderLayout(15, 15));
+        dialog.getContentPane().setBackground(Color.WHITE);
+
+        // Tải ảnh QR
+        JLabel lblImg = new JLabel();
+        try {
+            ImageIcon icon = new ImageIcon(getClass().getResource("/images/QR.jpg"));
+            Image img = icon.getImage().getScaledInstance(450, 450, Image.SCALE_SMOOTH);
+            lblImg.setIcon(new ImageIcon(img));
+        } catch (Exception e) {
+            lblImg.setText("Không tìm thấy ảnh QR");
+            lblImg.setHorizontalAlignment(SwingConstants.CENTER);
+        }
+
+        dialog.add(lblImg, BorderLayout.CENTER);
+
+        RoundedButton btnConfirm = new RoundedButton("Xác nhận thanh toán");
+        btnConfirm.setBackground(COLOR_PRIMARY);
+        btnConfirm.setForeground(Color.WHITE);
+        btnConfirm.setFont(FONT_LABEL);
+        btnConfirm.setPreferredSize(new Dimension(250, 45));
+        btnConfirm.addActionListener(e -> {
+            dialog.dispose();
+            thanhToan(null); // Thực hiện thanh toán
+        });
+
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        btnPanel.setOpaque(false);
+        btnPanel.add(btnConfirm);
+        btnPanel.setBorder(new EmptyBorder(0, 0, 15, 0));
+        dialog.add(btnPanel, BorderLayout.SOUTH);
+
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
     }
 
     private RoundedButton createActionButton(String text, Color bg) {
