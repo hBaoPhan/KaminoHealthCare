@@ -49,6 +49,7 @@ public class SanPhamPanel extends JPanel {
     private JTable tblDonViQuyDoi;
     private DefaultTableModel donViQuyDoiModel;
     private SanPham sanPhamDangChon = null;
+    private File selectedImageFile = null;
 
     public SanPhamPanel() {
         setLayout(new BorderLayout());
@@ -113,6 +114,14 @@ public class SanPhamPanel extends JPanel {
             }
         });
         txtSearch.addActionListener(e -> locVaHienThiSanPham());
+        txtSearch.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            @Override
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { locVaHienThiSanPham(); }
+            @Override
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { locVaHienThiSanPham(); }
+            @Override
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { locVaHienThiSanPham(); }
+        });
 
         JButton btnSearch = new RoundedButton("Tìm");
         btnSearch.setPreferredSize(new Dimension(80, 35));
@@ -131,7 +140,11 @@ public class SanPhamPanel extends JPanel {
         gridPanel = new JPanel(gridLayout);
         gridPanel.setBackground(new Color(245, 245, 245));
 
-        JScrollPane scrollPane = new JScrollPane(gridPanel);
+        JPanel wrapperPanel = new JPanel(new BorderLayout());
+        wrapperPanel.setBackground(new Color(245, 245, 245));
+        wrapperPanel.add(gridPanel, BorderLayout.NORTH);
+
+        JScrollPane scrollPane = new JScrollPane(wrapperPanel);
         scrollPane.setBorder(null);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
@@ -190,11 +203,21 @@ public class SanPhamPanel extends JPanel {
 
         JButton btnSelectImage = new RoundedButton("Chọn ảnh");
         btnSelectImage.setBackground(new Color(153, 225, 255));
-        btnSelectImage.addActionListener(e -> JOptionPane.showMessageDialog(this,
-                "Ảnh được lấy tự động theo mã sản phẩm.\n"
-                        + "Bạn có thể thay ảnh bằng cách thay file tại:\n"
-                        + "src/main/resources/images/anhSanPham/{maSanPham}.png",
-                "Thông báo", JOptionPane.INFORMATION_MESSAGE));
+        btnSelectImage.addActionListener(e -> {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Images", "jpg", "png", "jpeg"));
+            if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                selectedImageFile = fileChooser.getSelectedFile();
+                try {
+                    BufferedImage bImage = ImageIO.read(selectedImageFile);
+                    Image scaled = bImage.getScaledInstance(150, 100, Image.SCALE_SMOOTH);
+                    lblImageRight.setIcon(new ImageIcon(scaled));
+                    lblImageRight.setText("");
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "Lỗi khi tải ảnh!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
 
         JPanel btnWrapper = new JPanel();
         btnWrapper.setBackground(Color.WHITE);
@@ -430,11 +453,15 @@ public class SanPhamPanel extends JPanel {
         lblImage.setOpaque(true);
         lblImage.setBackground(new Color(230, 230, 230));
         lblImage.setPreferredSize(new Dimension(160, 80));
+        lblImage.setMaximumSize(new Dimension(160, 80));
+        lblImage.setMinimumSize(new Dimension(160, 80));
         lblImage.setAlignmentX(Component.CENTER_ALIGNMENT);
         ImageIcon icon = loadProductImageIcon(sp.getMaSanPham(), 160, 80);
         if (icon != null) {
             lblImage.setIcon(icon);
+            lblImage.setText("");
         } else {
+            lblImage.setIcon(null);
             lblImage.setText("Ảnh SP");
         }
 
@@ -476,6 +503,7 @@ public class SanPhamPanel extends JPanel {
 
     private void hienThiChiTietSanPham(SanPham sp) {
         sanPhamDangChon = sp;
+        selectedImageFile = null;
 
         txtMaSP.setText(sp.getMaSanPham());
         txtTenSP.setText(sp.getTenSanPham());
@@ -616,6 +644,7 @@ public class SanPhamPanel extends JPanel {
             boolean success = sanPhamDAO.them(sp);
             if (success) {
                 luuDonViQuyDoi(maMoi);
+                luuAnhSanPham(maMoi);
                 JOptionPane.showMessageDialog(this, "Thêm sản phẩm thành công: " + maMoi, "Thành công",
                         JOptionPane.INFORMATION_MESSAGE);
                 loadDanhSachSanPham();
@@ -734,6 +763,7 @@ public class SanPhamPanel extends JPanel {
             if (success) {
                 donViQuyDoiDAO.xoaTheoMaSanPham(sanPhamDangChon.getMaSanPham());
                 luuDonViQuyDoi(sanPhamDangChon.getMaSanPham());
+                luuAnhSanPham(sanPhamDangChon.getMaSanPham());
                 JOptionPane.showMessageDialog(this, "Cập nhật sản phẩm thành công!", "Thành công",
                         JOptionPane.INFORMATION_MESSAGE);
                 loadDanhSachSanPham(); // Refresh danh sách
@@ -773,6 +803,7 @@ public class SanPhamPanel extends JPanel {
 
     private void lamMoiForm() {
         sanPhamDangChon = null;
+        selectedImageFile = null;
         txtMaSP.setText("");
         txtTenSP.setText("");
         txtHoatChat.setText("");
@@ -804,6 +835,25 @@ public class SanPhamPanel extends JPanel {
             dv.setSanPham(sp);
 
             donViQuyDoiDAO.them(dv);
+        }
+    }
+
+    private void luuAnhSanPham(String maSanPham) {
+        if (selectedImageFile == null) return;
+        try {
+            File dir1 = new File("src/main/resources/images/anhSanPham");
+            if (!dir1.exists()) dir1.mkdirs();
+            File dest1 = new File(dir1, maSanPham + ".png");
+            BufferedImage bImage = ImageIO.read(selectedImageFile);
+            ImageIO.write(bImage, "png", dest1);
+
+            File dir2 = new File("target/classes/images/anhSanPham");
+            if (dir2.exists() || dir2.mkdirs()) {
+                File dest2 = new File(dir2, maSanPham + ".png");
+                ImageIO.write(bImage, "png", dest2);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 
