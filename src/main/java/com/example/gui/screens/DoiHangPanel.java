@@ -256,6 +256,7 @@ public class DoiHangPanel extends JPanel {
         hoaDonGocHienTai = hoaDonDAO.layHoaDonDeDoi(maHoaDon);
         if (hoaDonGocHienTai == null) {
             JOptionPane.showMessageDialog(this, "Hóa đơn không hợp lệ hoặc quá hạn!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            resetForm();
             return;
         }
         txtMaHoaDonGoc.setText(hoaDonGocHienTai.getMaHoaDon());
@@ -330,49 +331,38 @@ public class DoiHangPanel extends JPanel {
     }
 
     private void tinhToanToanBoTien() {
-        // 1. Tính tiền hàng giữ lại (Bảng 1)
         double tongTienGocSauThayDoi = tinhTienChoBang(tblHoaDonGoc); 
-        // 2. Tính tiền hàng mua mới (Bảng 2)
         double tongTienHangDoiMoi = tinhTienChoBang(tblSanPham); 
-        
-        // TỔNG GIÁ TRỊ HÓA ĐƠN MỚI (Gồm hàng giữ lại + hàng mới)
         double tongTienHoaDonMoi = tongTienGocSauThayDoi + tongTienHangDoiMoi;
         
-        // Cập nhật UI: Tiền HĐ đổi chính là tổng giá trị hóa đơn mới
         txtTienDoi.setText(formatVND(tongTienHoaDonMoi));
-        
-        // Công thức tính chênh lệch đúng như ý bạn: HĐ Mới - HĐ Gốc
         double chenhLech = tongTienHoaDonMoi - tongTienHoaDonGocBanDau;
         txtChenhLech.setText(formatVND(chenhLech));
 
+        // Logic làm tròn về đơn vị 1.000 VNĐ
+        double soTienLamTron = Math.round(Math.abs(chenhLech) / 1000.0) * 1000;
+
         if (chenhLech < 0) {
             // TRƯỜNG HỢP HOÀN TIỀN
-            double soTienHoan = Math.abs(chenhLech);
-            txtThanhTienLamTron.setText(formatVND(soTienHoan));
-            txtThanhTienLamTron.setForeground(new Color(220, 53, 69)); // Màu đỏ cảnh báo
+            txtThanhTienLamTron.setText(formatVND(soTienLamTron));
+            txtThanhTienLamTron.setForeground(new Color(220, 53, 69)); // Màu đỏ
             
             txtKhachDua.setText("0");
-            txtKhachDua.setEnabled(false); 
-            txtTienThoi.setText(formatVND(soTienHoan));
+            txtKhachDua.setEnabled(false); // Khóa ô nhập tiền khi hoàn tiền
+            txtTienThoi.setText(formatVND(soTienLamTron));
             
             if (pnlThanhTienContainer.getComponentCount() > 0 && pnlThanhTienContainer.getComponent(0) instanceof JLabel) {
                 ((JLabel) pnlThanhTienContainer.getComponent(0)).setText("Số tiền hoàn trả khách:");
             }
         } else {
             // TRƯỜNG HỢP THU THÊM
-            double lamTron = (radTienMat.isSelected() && chenhLech > 1000) 
-                             ? Math.round(chenhLech / 1000.0) * 1000 
-                             : chenhLech;
-            
-            txtThanhTienLamTron.setText(formatVND(lamTron));
+            txtThanhTienLamTron.setText(formatVND(soTienLamTron));
             txtThanhTienLamTron.setForeground(Color.BLACK);
             
             txtKhachDua.setEnabled(true);
-            
             if (pnlThanhTienContainer.getComponentCount() > 0 && pnlThanhTienContainer.getComponent(0) instanceof JLabel) {
                 ((JLabel) pnlThanhTienContainer.getComponent(0)).setText("Thành tiền (đã làm tròn):");
             }
-            
             tinhTienThoi();
         }
     }
@@ -421,21 +411,20 @@ public class DoiHangPanel extends JPanel {
         DefaultTableModel modelGoc = (DefaultTableModel) tblHoaDonGoc.getModel();
         DefaultTableModel modelDoi = (DefaultTableModel) tblSanPham.getModel();
         
-        // 1. CHẶN NGHIỆP VỤ: Nếu bảng đổi mới trống thì không cho thanh toán (Đây là trả hàng, không phải đổi)
+        // 1. CHẶN NGHIỆP VỤ
         if (modelDoi.getRowCount() == 0) {
             JOptionPane.showMessageDialog(this, 
                 "Vui lòng chọn ít nhất 1 sản phẩm mới để tiến hành Đổi hàng!\n(Nếu chỉ trả lại hàng, vui lòng sử dụng chức năng Trả hàng).", 
                 "Cảnh báo nghiệp vụ", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        
         if (modelGoc.getRowCount() == 0) return;
 
         try {
             double chenhLech = Double.parseDouble(txtChenhLech.getText().replaceAll("[^\\d-]", ""));
             double thanhTienPhaiTra = Double.parseDouble(txtThanhTienLamTron.getText().replaceAll("[^\\d]", ""));
             
-            // 2. KIỂM TRA TIỀN KHÁCH ĐƯA: Chỉ bắt buộc nếu khách phải bù thêm tiền
+            // 2. KIỂM TRA TIỀN KHÁCH ĐƯA
             if (radTienMat.isSelected() && chenhLech > 0) {
                 String txtDuaRaw = txtKhachDua.getText().trim().replaceAll("[^\\d]", "");
                 double khachDua = txtDuaRaw.isEmpty() ? 0 : Double.parseDouble(txtDuaRaw);
@@ -464,102 +453,99 @@ public class DoiHangPanel extends JPanel {
 
             CaLam ca = new CaLamDAO().layCaHienTai(taiKhoanDangNhap.getNhanVien().getMaNhanVien());
             if (ca == null) { 
-                JOptionPane.showMessageDialog(this, "Chưa mở ca làm việc!"); 
-                return; 
+                JOptionPane.showMessageDialog(this, "Chưa mở ca làm việc!"); return; 
             }
             hdMoi.setCa(ca);
 
-            // --- 4. XỬ LÝ HÀNG TRẢ LẠI KHO (Cộng lại tồn kho cho các Lô cũ)---
+            // --- 4. THUẬT TOÁN "DELTA": CHỈ TÁC ĐỘNG PHẦN CHÊNH LỆCH ---
             List<SuPhanBoLo> dsTraLai = new ArrayList<>();
+            List<ChiTietHoaDon> dsChiTietMoi = new ArrayList<>();
+            List<SuPhanBoLo> dsPhanBoMoi = new ArrayList<>();
+
+         // BƯỚC A: XỬ LÝ HÀNG BẢNG GỐC (Hoàn đúng số lượng trả)
             for (int i = 0; i < modelGoc.getRowCount(); i++) {
                 int slGiuLai = Integer.parseInt(modelGoc.getValueAt(i, 3).toString());
                 ChiTietHoaDon ctGoc = chiTietHoaDonGocList.get(i);
-                int slTra = ctGoc.getSoLuong() - slGiuLai;
-                
+                int slDaMua = ctGoc.getSoLuong();
+                int slTra = slDaMua - slGiuLai;
+
+                // 1. Ghi nhận hàng giữ lại vào Hóa đơn mới (không đụng đến Lô)
+                if (slGiuLai > 0) {
+                    dsChiTietMoi.add(taoChiTietTuDong(modelGoc, i, hdMoi));
+                }
+
+                // 2. Trả lại kho CHÍNH XÁC số lượng khách không lấy
                 if (slTra > 0) {
-                    List<SuPhanBoLo> dsPhanBoGoc = ctGoc.getDsPhanBoLo(); 
-                    int slConLaiDeTra = slTra * ctGoc.getDonViQuyDoi().getHeSoQuyDoi();
+                    int heSoQuyDoi = ctGoc.getDonViQuyDoi().getHeSoQuyDoi();
+                    int slCanHoanNhoNhat = slTra * heSoQuyDoi; // Quy đổi số lượng trả ra Viên/Vỉ
                     
-                    if (dsPhanBoGoc != null) {
-                        for (SuPhanBoLo spb : dsPhanBoGoc) {
-                            if (slConLaiDeTra <= 0) break;
-                            int slHoan = Math.min(slConLaiDeTra, spb.getSoLuong());
+                    List<SuPhanBoLo> dsPhanBoBanDau = ctGoc.getDsPhanBoLo();
+                    
+                    if (dsPhanBoBanDau != null) {
+                        for (SuPhanBoLo pbGoc : dsPhanBoBanDau) {
+                            if (slCanHoanNhoNhat <= 0) break;
+                            
+                            // ĐÃ FIX: Nhân số lượng lưu trong SuPhanBoLo (đơn vị bán) với hệ số quy đổi
+                            // Để biết chính xác Lô này ngày xưa đã xuất đi bao nhiêu Viên/Vỉ
+                            int luongGocTrongDBDaQuyDoi = pbGoc.getSoLuong() * heSoQuyDoi;
+                            
+                            int hoanThucTe = Math.min(slCanHoanNhoNhat, luongGocTrongDBDaQuyDoi);
+                            
                             SuPhanBoLo traLai = new SuPhanBoLo();
-                            traLai.setLo(spb.getLo());
-                            traLai.setSoLuong(slHoan);
+                            traLai.setLo(pbGoc.getLo());
+                            traLai.setSoLuong(hoanThucTe); // Gửi xuống DAO số lượng theo Đơn vị nhỏ nhất để cộng kho
                             dsTraLai.add(traLai);
-                            slConLaiDeTra -= slHoan;
+                            
+                            slCanHoanNhoNhat -= hoanThucTe;
                         }
                     }
                 }
             }
 
-         // --- 5. GỘP CẢ 2 BẢNG VÀO HÓA ĐƠN MỚI (ƯU TIÊN THỨ TỰ HIỂN THỊ) ---
-            Map<String, ChiTietHoaDon> mapMerge = new HashMap<>();
-            List<ChiTietHoaDon> dsHangGiuLai = new ArrayList<>(); // Danh sách chứa hàng từ bảng gốc
-            List<ChiTietHoaDon> dsHangMuaMoi = new ArrayList<>(); // Danh sách chứa hàng mua thêm
-
-            // Thêm hàng giữ lại từ Bảng 1 (Sẽ xuất hiện trước)
-            for (int i = 0; i < modelGoc.getRowCount(); i++) {
-                int sl = Integer.parseInt(modelGoc.getValueAt(i, 3).toString());
-                if (sl > 0) {
-                    ChiTietHoaDon ct = taoChiTietTuDong(modelGoc, i, hdMoi);
-                    dsHangGiuLai.add(ct);
-                    mapMerge.put(ct.getDonViQuyDoi().getMaDonVi(), ct);
-                }
-            }
-
-            // Thêm hàng mới từ Bảng 2
+            // BƯỚC B: XỬ LÝ HÀNG MUA MỚI (Trừ kho đúng số mua thêm)
+            LoDAO loDAO = new LoDAO();
             for (int i = 0; i < modelDoi.getRowCount(); i++) {
                 ChiTietHoaDon ctMoi = taoChiTietTuDong(modelDoi, i, hdMoi);
-                String maDV = ctMoi.getDonViQuyDoi().getMaDonVi();
+                ChiTietHoaDon targetCt = ctMoi;
                 
-                // Nếu trùng sản phẩm đã có ở bảng gốc (hiếm gặp nhưng vẫn xử lý)
-                if (mapMerge.containsKey(maDV)) {
-                    mapMerge.get(maDV).setSoLuong(mapMerge.get(maDV).getSoLuong() + ctMoi.getSoLuong());
-                } else { 
-                    dsHangMuaMoi.add(ctMoi);
+                // Kiểm tra gộp dòng (Nếu mua thêm sản phẩm trùng với SP giữ lại)
+                boolean isMerged = false;
+                for (ChiTietHoaDon existing : dsChiTietMoi) {
+                    if (existing.getDonViQuyDoi().getMaDonVi().equals(ctMoi.getDonViQuyDoi().getMaDonVi())) {
+                        existing.setSoLuong(existing.getSoLuong() + ctMoi.getSoLuong());
+                        targetCt = existing; 
+                        isMerged = true;
+                        break;
+                    }
                 }
-            }
+                
+                if (!isMerged) {
+                    dsChiTietMoi.add(ctMoi);
+                }
 
-            // Hợp nhất danh sách: Đưa hàng giữ lại lên đầu danh sách cuối cùng
-            List<ChiTietHoaDon> dsChiTietMoi = new ArrayList<>();
-            dsChiTietMoi.addAll(dsHangGiuLai);
-            dsChiTietMoi.addAll(dsHangMuaMoi);
-            
-            // --- 6. KIỂM TRA LÔ VÀ TRỪ TỒN KHO HÀNG MỚI (FEFO) ---
-            List<SuPhanBoLo> dsPhanBoMoi = new ArrayList<>();
-            LoDAO loDAO = new LoDAO();
-            for (ChiTietHoaDon ct : dsChiTietMoi) {
-                int soLuongCanTru = ct.getSoLuong() * ct.getDonViQuyDoi().getHeSoQuyDoi();
-                List<Lo> dsLo = loDAO.layDanhSachLoKhaDung(ct.getDonViQuyDoi().getMaDonVi());
+                // Chạy FEFO lấy Lô ĐÚNG bằng số lượng mới mua thêm
+                int soLuongCanTru = ctMoi.getSoLuong() * ctMoi.getDonViQuyDoi().getHeSoQuyDoi();
+                List<Lo> dsLo = loDAO.layDanhSachLoKhaDung(ctMoi.getDonViQuyDoi().getMaDonVi());
                 
                 if (dsLo == null || dsLo.isEmpty()) {
-                    JOptionPane.showMessageDialog(this, 
-                        "Sản phẩm '" + ct.getDonViQuyDoi().getSanPham().getTenSanPham() + "' không có lô hàng khả dụng!", 
-                        "Lỗi kho hàng", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Sản phẩm '" + ctMoi.getDonViQuyDoi().getSanPham().getTenSanPham() + "' không có lô khả dụng!");
                     return;
                 }
-
-                int tongTonKho = 0;
+                
                 for (Lo lo : dsLo) {
                     if (soLuongCanTru <= 0) break;
                     int tru = Math.min(soLuongCanTru, lo.getSoLuongSanPham());
-                    dsPhanBoMoi.add(new SuPhanBoLo(ct, lo, tru));
+                    dsPhanBoMoi.add(new SuPhanBoLo(targetCt, lo, tru));
                     soLuongCanTru -= tru;
-                    tongTonKho += lo.getSoLuongSanPham();
                 }
-
+                
                 if (soLuongCanTru > 0) {
-                    JOptionPane.showMessageDialog(this, 
-                        "Sản phẩm '" + ct.getDonViQuyDoi().getSanPham().getTenSanPham() + "' không đủ tồn kho!\n" +
-                        "Thiếu: " + soLuongCanTru + " (đv nhỏ nhất)", 
-                        "Thiếu hàng", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Sản phẩm '" + ctMoi.getDonViQuyDoi().getSanPham().getTenSanPham() + "' không đủ tồn kho!");
                     return;
                 }
             }
 
-            // 7. THỰC THI TRANSACTION QUA DAO
+            // 5. THỰC THI GIAO DỊCH QUA DAO
             if (hoaDonDAO.luuHoaDonDoiHang(hdMoi, dsTraLai, dsChiTietMoi, dsPhanBoMoi)) {
                 JOptionPane.showMessageDialog(this, "Thanh toán thành công hóa đơn đổi: " + maHoaDonMoi);
                 resetForm();
@@ -588,9 +574,16 @@ public class DoiHangPanel extends JPanel {
         String[] cols = { "Mã SP", "Tên sản phẩm", "Đơn vị", "Số lượng", "Đơn giá", "Thuế", "Thành tiền" };
         DefaultTableModel model = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int row, int col) {
-                if (chiTietHoaDonGocList != null && row < chiTietHoaDonGocList.size()) {
+                // Xác định xem bảng này có phải là tblHoaDonGoc không dựa vào đối tượng
+                boolean isBangGoc = (this == tblHoaDonGoc.getModel());
+                
+                if (chiTietHoaDonGocList != null && isBangGoc && row < chiTietHoaDonGocList.size()) {
+                    // Thuốc ETC không được sửa bất cứ gì ở bảng gốc
                     if (chiTietHoaDonGocList.get(row).getDonViQuyDoi().getSanPham().getLoaiSanPham().name().equals("ETC")) return false;
+                    // Vấn đề 3: Bảng gốc chỉ được sửa số lượng (cột 3), khóa đơn vị (cột 2)
+                    return col == 3; 
                 }
+                // Bảng sản phẩm mới thì được sửa đơn vị và số lượng
                 return col == 2 || col == 3;
             }
         };
