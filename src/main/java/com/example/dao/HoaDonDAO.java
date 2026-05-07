@@ -21,7 +21,7 @@ public class HoaDonDAO {
         List<HoaDon> danhSach = new ArrayList<>();
         try {
             Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "SELECT * FROM HoaDon";
+            String truyVan = "SELECT * FROM HoaDon ORDER BY thoiGianTao DESC";
             Statement lenh = ketNoi.createStatement();
             ResultSet ketQua = lenh.executeQuery(truyVan);
 
@@ -337,7 +337,7 @@ public class HoaDonDAO {
             if (ngayTao != null) {
                 truyVan.append(" AND thoiGianTao >= ? AND thoiGianTao < ?");
             }
-
+            truyVan.append(" ORDER BY thoiGianTao DESC");
             PreparedStatement lenh = ketNoi.prepareStatement(truyVan.toString());
             int paramIndex = 1;
             if (maHD != null && !maHD.trim().isEmpty()) {
