@@ -306,7 +306,7 @@ public class LoPanel extends JPanel {
             lo.setSanPham(new SanPham(txtMaSanPham.getText().trim()));
             lo.setGiaNhap(Double.parseDouble(txtGiaNhap.getText().trim().replace(",", "")));
 
-            if (loDAO.themLoVaCapNhatTonKho(lo)) {
+            if (loDAO.themLo(lo)) {
                 JOptionPane.showMessageDialog(this, "Thêm thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
                 loadDataToTable();
                 lamMoi();
@@ -333,7 +333,7 @@ public class LoPanel extends JPanel {
             lo.setSanPham(new SanPham(txtMaSanPham.getText().trim()));
             lo.setGiaNhap(Double.parseDouble(txtGiaNhap.getText().trim().replace(",", "")));
 
-            if (loDAO.capNhatLoVaCapNhatTonKho(lo)) {
+            if (loDAO.capNhatLo(lo)) {
                 JOptionPane.showMessageDialog(this, "Cập nhật lô hàng thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
                 loadDataToTable();
             }
@@ -348,7 +348,7 @@ public class LoPanel extends JPanel {
 
         String maLo = (String) model.getValueAt(row, 1);
         int confirm = JOptionPane.showConfirmDialog(this, "Xóa lô " + maLo + "?", "Xác nhận", JOptionPane.YES_NO_OPTION);
-        if (confirm == JOptionPane.YES_OPTION && loDAO.xoaLoVaCapNhatTonKho(maLo)) {
+        if (confirm == JOptionPane.YES_OPTION && loDAO.xoaLo(maLo)) {
             loadDataToTable();
             lamMoi();
         }
