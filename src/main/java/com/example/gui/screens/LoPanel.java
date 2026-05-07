@@ -65,7 +65,7 @@ public class LoPanel extends JPanel {
         lblDanhSachLo.setFont(new Font("Segoe UI", Font.BOLD, 20));
         lblDanhSachLo.setForeground(new Color(50, 50, 50));
 
-        JTextField txtSearch = new JTextField("Tìm kiếm theo mã sản phẩm...");
+        JTextField txtSearch = new JTextField("Tìm kiếm theo mã lô hoặc mã SP...");
         txtSearch.setForeground(Color.GRAY);
         txtSearch.setPreferredSize(new Dimension(280, 35));
 
@@ -75,7 +75,7 @@ public class LoPanel extends JPanel {
         txtSearch.addFocusListener(new java.awt.event.FocusAdapter() {
             @Override
             public void focusGained(java.awt.event.FocusEvent e) {
-                if ("Tìm kiếm theo mã sản phẩm...".equals(txtSearch.getText().trim())) {
+                if ("Tìm kiếm theo mã lô hoặc mã SP...".equals(txtSearch.getText().trim())) {
                     isUpdatingSearch = true;
                     txtSearch.setText("");
                     txtSearch.setForeground(Color.BLACK);
@@ -87,7 +87,7 @@ public class LoPanel extends JPanel {
             public void focusLost(java.awt.event.FocusEvent e) {
                 if (txtSearch.getText().trim().isEmpty()) {
                     isUpdatingSearch = true;
-                    txtSearch.setText("Tìm kiếm theo mã sản phẩm...");
+                    txtSearch.setText("Tìm kiếm theo mã lô hoặc mã SP...");
                     txtSearch.setForeground(Color.GRAY);
                     isUpdatingSearch = false;
                 }
@@ -382,7 +382,7 @@ public class LoPanel extends JPanel {
             return;
 
         String text = txtSearch.getText().trim();
-        if (text.isEmpty() || text.equals("Tìm kiếm lô theo mã sản phẩm...")) {
+        if (text.isEmpty() || text.equals("Tìm kiếm theo mã lô hoặc mã SP...")) {
             searchPopup.setVisible(false);
             if (text.isEmpty()) {
                 hienThiLoLenBang(danhSachLo);
@@ -391,12 +391,14 @@ public class LoPanel extends JPanel {
         }
 
         SwingUtilities.invokeLater(() -> {
-            List<SanPham> results = new java.util.ArrayList<>();
-            if (danhSachSanPham == null)
-                danhSachSanPham = sanPhamDAO.layTatCa();
-            for (SanPham sp : danhSachSanPham) {
-                if (sp.getMaSanPham().toLowerCase().contains(text.toLowerCase())) {
-                    results.add(sp);
+            List<Lo> results = new java.util.ArrayList<>();
+            if (danhSachLo == null)
+                danhSachLo = loDAO.layTatCa();
+            
+            for (Lo lo : danhSachLo) {
+                if (lo.getMaLo().toLowerCase().contains(text.toLowerCase()) || 
+                    lo.getSanPham().getMaSanPham().toLowerCase().contains(text.toLowerCase())) {
+                    results.add(lo);
                 }
             }
 
@@ -407,25 +409,19 @@ public class LoPanel extends JPanel {
             }
 
             int count = 0;
-            for (SanPham sp : results) {
+            for (Lo lo : results) {
                 if (count >= 10)
                     break;
-                JMenuItem item = new JMenuItem(sp.getMaSanPham() + " - " + sp.getTenSanPham());
+                JMenuItem item = new JMenuItem("Lô: " + lo.getMaLo() + " - SP: " + lo.getSanPham().getMaSanPham());
                 item.setFont(new Font("Segoe UI", Font.PLAIN, 14));
                 item.addActionListener(e -> {
                     isUpdatingSearch = true;
-                    txtSearch.setText(sp.getMaSanPham());
+                    txtSearch.setText(lo.getMaLo());
                     isUpdatingSearch = false;
                     searchPopup.setVisible(false);
 
                     List<Lo> locKetQua = new java.util.ArrayList<>();
-                    if (danhSachLo != null) {
-                        for (Lo lo : danhSachLo) {
-                            if (lo.getSanPham().getMaSanPham().equals(sp.getMaSanPham())) {
-                                locKetQua.add(lo);
-                            }
-                        }
-                    }
+                    locKetQua.add(lo);
                     hienThiLoLenBang(locKetQua);
                 });
                 searchPopup.add(item);
@@ -440,7 +436,7 @@ public class LoPanel extends JPanel {
     }
 
     private void locVaHienThiLo(String text) {
-        if (text.isEmpty() || text.equals("Tìm kiếm lô theo mã sản phẩm...")) {
+        if (text.isEmpty() || text.equals("Tìm kiếm theo mã lô hoặc mã SP...")) {
             hienThiLoLenBang(danhSachLo);
             return;
         }
@@ -449,7 +445,8 @@ public class LoPanel extends JPanel {
         if (danhSachLo != null) {
             for (Lo lo : danhSachLo) {
                 String maSP = lo.getSanPham().getMaSanPham().toLowerCase();
-                if (maSP.contains(text.toLowerCase())) {
+                String maLo = lo.getMaLo().toLowerCase();
+                if (maSP.contains(text.toLowerCase()) || maLo.contains(text.toLowerCase())) {
                     locKetQua.add(lo);
                 }
             }
