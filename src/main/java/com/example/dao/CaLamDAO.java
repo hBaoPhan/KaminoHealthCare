@@ -168,22 +168,29 @@ public class CaLamDAO {
     }
 
     public int laySoLuongCaTrongNgay(String prefix) {
-        int count = 0;
-        String sql = "SELECT COUNT(*) FROM CaLam WHERE maCa LIKE ?";
+        int maxStt = 0;
+        // Sử dụng MAX(maCa) thay vì COUNT(*) để không bị trùng lặp khi có dòng bị xóa
+        String sql = "SELECT MAX(maCa) FROM CaLam WHERE maCa LIKE ?";
         try {
-            Connection con = com.example.connectDB.ConnectDB.getConnection();
+            Connection con = ConnectDB.getConnection();
             try (PreparedStatement pst = con.prepareStatement(sql)) {
                 pst.setString(1, prefix + "%");
                 try (ResultSet rs = pst.executeQuery()) {
                     if (rs.next()) {
-                        count = rs.getInt(1);
+                        String maxMaCa = rs.getString(1); // Lấy ra mã lớn nhất (VD: CA09052602)
+                        // Nếu có mã, tiến hành cắt bỏ phần chữ (prefix) để lấy phần số đuôi
+                        if (maxMaCa != null && maxMaCa.length() > prefix.length()) {
+                            String sttStr = maxMaCa.substring(prefix.length());
+                            maxStt = Integer.parseInt(sttStr); // maxStt = 2
+                        }
                     }
                 }
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        return count;
+        // Trả về số thứ tự lớn nhất hiện tại (Nếu chưa có thì trả về 0)
+        return maxStt; 
     }
     // 1. Lấy danh sách ca làm theo ngày và tìm kiếm tên nhân viên (nếu có)
     public List<CaLam> layCaTheoNgayVaTen(java.time.LocalDate ngay, String tenNV) {

@@ -50,9 +50,30 @@ public class KhachHangDAO {
                 if (trangThaiStr != null) {
                     kh.setTrangThai(TrangThaiKhachHang.valueOf(trangThaiStr));
                 } else {
-                    // Gán giá trị mặc định nếu cần
                     kh.setTrangThai(TrangThaiKhachHang.KHACH_LE); 
                 }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return kh;
+    }
+
+    public KhachHang timTheoSdt(String sdt) {
+        KhachHang kh = null;
+        try {
+            Connection ketNoi = ConnectDB.getConnection();
+            String truyVan = "SELECT * FROM KhachHang WHERE sdt = ?";
+            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
+            lenh.setString(1, sdt);
+            ResultSet ketQua = lenh.executeQuery();
+
+            if (ketQua.next()) {
+                kh = new KhachHang();
+                kh.setMaKhachHang(ketQua.getString("maKhachHang"));
+                kh.setTenKhachHang(ketQua.getString("tenKhachHang"));
+                kh.setSdt(ketQua.getString("sdt"));
+                kh.setTrangThai(TrangThaiKhachHang.valueOf(ketQua.getString("trangThaiKhachHang")));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -92,28 +113,6 @@ public class KhachHangDAO {
             e.printStackTrace();
         }
         return soDongThayDoi > 0;
-    }
-
-    public KhachHang timTheoSdt(String sdt) {
-        KhachHang kh = null;
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "SELECT * FROM KhachHang WHERE sdt = ?";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
-            lenh.setString(1, sdt);
-            ResultSet ketQua = lenh.executeQuery();
-
-            if (ketQua.next()) {
-                kh = new KhachHang();
-                kh.setMaKhachHang(ketQua.getString("maKhachHang"));
-                kh.setTenKhachHang(ketQua.getString("tenKhachHang"));
-                kh.setSdt(ketQua.getString("sdt"));
-                kh.setTrangThai(TrangThaiKhachHang.valueOf(ketQua.getString("trangThaiKhachHang")));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return kh;
     }
 
     public boolean xoa(String maKH) {

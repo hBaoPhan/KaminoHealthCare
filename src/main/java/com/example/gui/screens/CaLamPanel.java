@@ -23,6 +23,10 @@ import java.util.ArrayList;
 
 public class CaLamPanel extends JPanel {
 
+    // =========================================================================
+    // VÙNG 1: KHAI BÁO BIẾN (UI COMPONENTS & DATA)
+    // =========================================================================
+
     // --- UI Components ---
     private JTextField txtSearch, txtMaCa, txtMaNV, txtTenNV;
     private JDateChooser dateChooserFilter, dateNgayLamForm;
@@ -39,10 +43,16 @@ public class CaLamPanel extends JPanel {
     private LocalDate selectedDate = LocalDate.now();
     private List<CaLam> listCaTuan = new ArrayList<>();
 
+
+    // =========================================================================
+    // VÙNG 2: HÀM KHỞI TẠO (CONSTRUCTOR)
+    // =========================================================================
+
     public CaLamPanel() {
         setLayout(new BorderLayout());
         setBackground(new Color(245, 245, 245));
 
+        // Bố cục chính
         add(createTopBar(), BorderLayout.NORTH);
 
         JPanel centerArea = new JPanel(new BorderLayout(20, 0));
@@ -53,6 +63,7 @@ public class CaLamPanel extends JPanel {
         centerArea.add(createRightPanel(), BorderLayout.CENTER);
         add(centerArea, BorderLayout.CENTER);
 
+        // Gắn sự kiện và load dữ liệu ban đầu
         setupListeners();
         
         // Mặc định load dữ liệu hôm nay
@@ -60,8 +71,12 @@ public class CaLamPanel extends JPanel {
         loadDuLieu();
     }
 
-    // ================== GIAO DIỆN (UI) ==================
 
+    // =========================================================================
+    // VÙNG 3: KHỞI TẠO GIAO DIỆN (UI BUILDING)
+    // =========================================================================
+
+    /** Tạo thanh công cụ tìm kiếm và lọc phía trên */
     private JPanel createTopBar() {
         JPanel topBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 15));
         topBar.setBackground(Color.WHITE);
@@ -92,13 +107,14 @@ public class CaLamPanel extends JPanel {
         return topBar;
     }
 
+    /** Tạo Form nhập liệu bên trái */
     private JPanel createFormPanel() {
         // Panel bọc ngoài cùng bên trái
         JPanel leftWrapper = new JPanel(new BorderLayout());
         leftWrapper.setPreferredSize(new Dimension(430, 0));
         leftWrapper.setBackground(new Color(245, 245, 245));
         
-        // CHIÊU THỨ 1: Cắt bớt phần đáy 180px để form "ngang với chữ Mở ca"
+        // Cắt bớt phần đáy 180px để form "ngang với chữ Mở ca"
         leftWrapper.setBorder(new EmptyBorder(0, 0, 40, 0)); 
 
         // Khung trắng chứa nội dung
@@ -165,11 +181,12 @@ public class CaLamPanel extends JPanel {
         return leftWrapper;
     }
 
+    /** Tạo khu vực chứa bảng danh sách và lịch biểu bên phải */
     private JPanel createRightPanel() {
         JPanel rightPanel = new JPanel(new BorderLayout(0, 20)); 
         rightPanel.setBackground(new Color(245, 245, 245));
 
-        // CẬP NHẬT QUAN TRỌNG: Thêm khoảng trống đáy 180px giống hệt khung bên trái
+        // Thêm khoảng trống đáy 180px giống hệt khung bên trái
         // Việc này ép đáy của bảng Lịch làm việc nâng lên ngang bằng với form Thông tin
         rightPanel.setBorder(new EmptyBorder(0, 0, 50, 0));
 
@@ -189,7 +206,7 @@ public class CaLamPanel extends JPanel {
         pnlLich.setBackground(Color.WHITE);
         pnlLich.setBorder(BorderFactory.createTitledBorder(new LineBorder(Color.LIGHT_GRAY), "LỊCH LÀM TRONG TUẦN", TitledBorder.LEFT, TitledBorder.TOP, new Font("Segoe UI", Font.BOLD, 16)));
         
-        // CẬP NHẬT: Giảm chiều cao khung lịch từ 420px xuống 240px 
+        // Giảm chiều cao khung lịch từ 420px xuống 240px 
         // Lịch xẹp xuống sẽ tự động nhường chỗ cho Danh sách ca làm phía trên cao lên
         pnlLich.setPreferredSize(new Dimension(0, 300)); 
         
@@ -228,8 +245,12 @@ public class CaLamPanel extends JPanel {
         return rightPanel;
     }
 
-    // ================== LOGIC NGHIỆP VỤ (EVENTS & DAO) ==================
 
+    // =========================================================================
+    // VÙNG 4: SỰ KIỆN & LOAD DỮ LIỆU (EVENTS & DATA BINDING)
+    // =========================================================================
+
+    /** Khởi tạo các sự kiện Click, Change... */
     private void setupListeners() {
         // Combobox filter
         cbFilterTime.addActionListener(e -> {
@@ -272,7 +293,8 @@ public class CaLamPanel extends JPanel {
                 }
             }
         });
-        // 6. Click Table Lịch Tuần -> Đổi ngày, Đổ dữ liệu lên Danh Sách và Form
+        
+        // Click Table Lịch Tuần -> Đổi ngày, Đổ dữ liệu lên Danh Sách và Form
         tblLichTuan.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -323,6 +345,7 @@ public class CaLamPanel extends JPanel {
         });
     }
 
+    /** Load dữ liệu từ DB lên bảng */
     private void loadDuLieu() {
         if (dateChooserFilter.getDate() == null) return;
         selectedDate = dateChooserFilter.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
@@ -374,6 +397,12 @@ public class CaLamPanel extends JPanel {
         }
     }
 
+    /** Phương thức public để tải lại danh sách ca làm */
+    public void taiLaiDanhSach() {
+        loadDuLieu();
+    }
+
+    /** Xóa trắng form nhập liệu */
     private void lamMoiForm() {
         txtMaCa.setText(""); txtMaNV.setText(""); txtTenNV.setText("");
         dateNgayLamForm.setDate(new Date());
@@ -381,41 +410,14 @@ public class CaLamPanel extends JPanel {
         tblDanhSach.clearSelection();
     }
 
-    // --- YÊU CẦU: HÀM SINH MÃ TỰ ĐỘNG ---
-    public String taoMaCa(LocalDate ngayLam) {
-        String prefix = "CA" + ngayLam.format(DateTimeFormatter.ofPattern("ddMMyy"));
-        int stt = caLamDAO.laySoLuongCaTrongNgay(prefix) + 1;
-        return prefix + String.format("%02d", stt);
-    }
 
-    // --- RÀNG BUỘC (VALIDATE) ---
-    private boolean validateDuLieu() {
-        if (txtMaNV.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập Mã Nhân Viên!"); return false;
-        }
-        
-        LocalDate date = dateNgayLamForm.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-        LocalTime start = LocalTime.parse(new java.text.SimpleDateFormat("HH:mm").format(spinGioBatDau.getValue()));
-        LocalTime end = LocalTime.parse(new java.text.SimpleDateFormat("HH:mm").format(spinGioKetThuc.getValue()));
-        
-        if (!start.isBefore(end)) {
-            JOptionPane.showMessageDialog(this, "Lỗi: Giờ bắt đầu phải nhỏ hơn Giờ kết thúc!"); return false;
-        }
-        
-        // Kiểm tra trùng ca
-        LocalDateTime dtStart = LocalDateTime.of(date, start);
-        LocalDateTime dtEnd = LocalDateTime.of(date, end);
-        String maCaCheck = txtMaCa.getText().isEmpty() ? null : txtMaCa.getText();
-
-        if (caLamDAO.kiemTraTrungCa(txtMaNV.getText().trim(), dtStart, dtEnd, maCaCheck)) {
-            JOptionPane.showMessageDialog(this, "Lỗi: Nhân viên này đã có ca làm việc khác trùng với khung giờ này!"); return false;
-        }
-
-        return true;
-    }
+    // =========================================================================
+    // VÙNG 5: LOGIC NGHIỆP VỤ CHÍNH (CORE CRUD LOGIC)
+    // =========================================================================
 
     private void themCaLam() {
-        if (!validateDuLieu()) return;
+        // TRUYỀN FALSE: Khẳng định đây là thao tác THÊM MỚI
+        if (!validateDuLieu(false)) return; 
         
         LocalDate date = dateNgayLamForm.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         CaLam cl = new CaLam();
@@ -438,6 +440,7 @@ public class CaLamPanel extends JPanel {
         }
     }
 
+    /** Cập nhật Ca làm */
     private void suaCaLam() {
         if (tblDanhSach.getSelectedRow() < 0) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn ca làm cần sửa!"); return;
@@ -445,7 +448,9 @@ public class CaLamPanel extends JPanel {
         if (cbTrangThai.getSelectedItem() != TrangThaiCaLam.CHUA_MO) {
             JOptionPane.showMessageDialog(this, "Chỉ được phép sửa các ca làm ở trạng thái CHƯA MỞ (Ca tương lai)!"); return;
         }
-        if (!validateDuLieu()) return;
+        
+        // TRUYỀN TRUE: Khẳng định đây là thao tác SỬA
+        if (!validateDuLieu(true)) return; 
 
         LocalDate date = dateNgayLamForm.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         CaLam cl = caLamDAO.timTheoMa(txtMaCa.getText());
@@ -464,6 +469,7 @@ public class CaLamPanel extends JPanel {
         }
     }
 
+    /** Xóa Ca làm */
     private void xoaCaLam() {
         if (tblDanhSach.getSelectedRow() < 0) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn ca làm cần xóa!"); return;
@@ -480,6 +486,50 @@ public class CaLamPanel extends JPanel {
         }
     }
 
+
+    // =========================================================================
+    // VÙNG 6: CÁC HÀM HỖ TRỢ (HELPER LOGIC)
+    // =========================================================================
+
+    /** Sinh mã ca tự động */
+    public String taoMaCa(LocalDate ngayLam) {
+        String prefix = "CA" + ngayLam.format(DateTimeFormatter.ofPattern("ddMMyy"));
+        int stt = caLamDAO.laySoLuongCaTrongNgay(prefix) + 1;
+        return prefix + String.format("%02d", stt);
+    }
+
+    /** Ràng buộc dữ liệu đầu vào */
+    /** Ràng buộc dữ liệu đầu vào (ĐÃ NÂNG CẤP VÁ LỖI TRÙNG CA) */
+    private boolean validateDuLieu(boolean isCapNhat) {
+        if (txtMaNV.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập Mã Nhân Viên!"); return false;
+        }
+        
+        LocalDate date = dateNgayLamForm.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalTime start = LocalTime.parse(new java.text.SimpleDateFormat("HH:mm").format(spinGioBatDau.getValue()));
+        LocalTime end = LocalTime.parse(new java.text.SimpleDateFormat("HH:mm").format(spinGioKetThuc.getValue()));
+        
+        if (!start.isBefore(end)) {
+            JOptionPane.showMessageDialog(this, "Lỗi: Giờ bắt đầu phải nhỏ hơn Giờ kết thúc!"); return false;
+        }
+        
+        // Kiểm tra trùng ca
+        LocalDateTime dtStart = LocalDateTime.of(date, start);
+        LocalDateTime dtEnd = LocalDateTime.of(date, end);
+        
+        // SỬA LỖI Ở ĐÂY: Nếu là THÊM (isCapNhat = false), ép maCaCheck thành rỗng "" để check toàn bộ.
+        // Nếu là SỬA (isCapNhat = true), mới cho phép lấy mã ca hiện tại để loại trừ.
+        String maCaCheck = isCapNhat ? txtMaCa.getText() : "";
+
+        if (caLamDAO.kiemTraTrungCa(txtMaNV.getText().trim(), dtStart, dtEnd, maCaCheck)) {
+            JOptionPane.showMessageDialog(this, "Lỗi: Nhân viên này đã có ca làm việc khác trùng với khung giờ này!"); 
+            return false;
+        }
+
+        return true;
+    }
+
+    /** Tạo giao diện nút bấm màu sắc */
     private JButton createColorButton(String txt, Color c) {
         JButton b = new JButton(txt);
         b.setBackground(c); b.setFont(new Font("Segoe UI", Font.BOLD, 13)); b.setFocusPainted(false); b.setBorderPainted(false);
