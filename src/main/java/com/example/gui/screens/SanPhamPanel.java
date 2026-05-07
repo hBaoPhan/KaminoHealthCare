@@ -208,7 +208,8 @@ public class SanPhamPanel extends JPanel {
         addFormField(formPanel, gbc, row++, "Mã sản phẩm:", txtMaSP, false);
         addFormField(formPanel, gbc, row++, "Tên sản phẩm:", txtTenSP, true);
         addFormField(formPanel, gbc, row++, "Hoạt chất:", txtHoatChat, true);
-        addFormField(formPanel, gbc, row++, "Số lượng tồn:", txtSoLuong, true);
+        // Tồn kho được cập nhật từ Lô, không nhập tay ở màn Sản phẩm
+        addFormField(formPanel, gbc, row++, "Số lượng tồn:", txtSoLuong, false);
         addFormField(formPanel, gbc, row++, "Đơn giá:", txtDonGia, true);
         addFormField(formPanel, gbc, row++, "Loại:", cbLoaiSP, true);
 
@@ -415,7 +416,6 @@ public class SanPhamPanel extends JPanel {
                 return;
             }
 
-            int soLuong = parseIntOrZero(txtSoLuong.getText());
             double donGia = parseDoubleOrZero(txtDonGia.getText());
 
             SanPham sp = new SanPham();
@@ -423,7 +423,8 @@ public class SanPhamPanel extends JPanel {
             sp.setTenSanPham(ten);
             sp.setLoaiSanPham(phanLoai);
             sp.setHoatChat(txtHoatChat.getText().trim());
-            sp.setSoLuongTon(soLuong);
+            // Sản phẩm mới: tồn kho mặc định = 0 (cập nhật từ Lô)
+            sp.setSoLuongTon(0);
             sp.setDonGiaCoBan(donGia);
             sp.setMoTa(txtMoTa.getText().trim());
 
@@ -461,17 +462,28 @@ public class SanPhamPanel extends JPanel {
         if (maSanPham == null || maSanPham.trim().isEmpty()) {
             return null;
         }
-        String imagePath = "/images/anhSanPham/" + maSanPham.trim() + ".png";
-        java.net.URL url = getClass().getResource(imagePath);
-        if (url == null) {
-            return null;
+        String base = maSanPham.trim();
+        String[] exts = new String[] { "png", "jpg", "jpeg" };
+
+        for (String ext : exts) {
+            String classpathPath = "/images/anhSanPham/" + base + "." + ext;
+            java.net.URL url = getClass().getResource(classpathPath);
+
+            ImageIcon raw;
+            if (url != null) {
+                raw = new ImageIcon(url);
+            } else {
+                // Fallback khi chạy trực tiếp từ source (resources chưa lên classpath)
+                raw = new ImageIcon("src/main/resources" + classpathPath);
+            }
+
+            if (raw.getIconWidth() > 0 && raw.getIconHeight() > 0) {
+                Image scaled = raw.getImage().getScaledInstance(w, h, Image.SCALE_SMOOTH);
+                return new ImageIcon(scaled);
+            }
         }
-        ImageIcon raw = new ImageIcon(url);
-        if (raw.getIconWidth() <= 0) {
-            return null;
-        }
-        Image scaled = raw.getImage().getScaledInstance(w, h, Image.SCALE_SMOOTH);
-        return new ImageIcon(scaled);
+
+        return null;
     }
 
     private int parseIntOrZero(String s) {
