@@ -273,7 +273,7 @@ public class TraHangPanel extends JPanel {
                 hoaDonTra.setGhiChu(txtGhiChu.getText());
             // hoaDonTra.setNhanVien(nhanVienDangNhap); // Nếu bạn có thông tin nhân viên đăng nhập
                 com.example.entity.NhanVien nvTemp = new com.example.entity.NhanVien();
-                nvTemp.setMaNhanVien("NV01"); // Tạm thời gán NV01 để test
+                nvTemp.setMaNhanVien("QL001"); // Tạm thời gán QL001 để test
                 hoaDonTra.setNhanVien(nvTemp);
         // 2. Gom danh sách sản phẩm thực tế từ bảng vào hóa đơn
         List<ChiTietHoaDon> dsTra = new ArrayList<>();
@@ -341,103 +341,110 @@ public class TraHangPanel extends JPanel {
         }
     }
     private void hienThiSanPhamHoaDon(String maHD) {
-    this.hd = hoaDonDAO.timTheoMa(maHD);
-    if (this.hd == null) {
-        JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn: " + maHD);
-        return;
-    }
-
-    dsChiTietGoc = ctHDPDAO.layTheoMaHoaDon(maHD);
-    this.hd.setDsChiTiet(dsChiTietGoc);
-
-    // Điền thông tin lên giao diện
-    txtMaHoaGoc.setText(this.hd.getMaHoaDon());
-    txtTenKhachHang.setText(this.hd.getKhachHang() != null ? this.hd.getKhachHang().getTenKhachHang() : "Khách lẻ");
-    txtTienGoc.setText(df.format(this.hd.tinhTongTienThanhToan()));
-
-    // CẬP NHẬT: Ngày tạo hiện tại và Tự sinh mã trả
-    txtNgayTao.setText(new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(new java.util.Date()));
-    txtMaHoaDon.setText(tuSinhMaHoaDonTra());
-
-    // Đổ dữ liệu vào bảng
-    model.setRowCount(0);
-    for (ChiTietHoaDon ct : dsChiTietGoc) {
-        model.addRow(new Object[]{
-            ct.getDonViQuyDoi().getSanPham().getMaSanPham(),
-            ct.getDonViQuyDoi().getSanPham().getTenSanPham(),
-            ct.getDonViQuyDoi().getTenDonVi().getMoTa(),
-            ct.getSoLuong(),
-            df.format(ct.getDonGia()),
-            df.format(ct.tinhTienThue()),
-            df.format(ct.tinhThanhTien())
-        });
-    }
-    tinhToanTienHoanTra();
-}
-
-// 2. Hàm tự sinh mã hóa đơn trả định dạng HDTddMMyyXXX
-private String tuSinhMaHoaDonTra() {
-    String ngayThangNam = new java.text.SimpleDateFormat("ddMMyy").format(new java.util.Date());
-    int soThuTuMoi = hoaDonDAO.laySoLuongHoaDonTrongNgay() + 1;
-    return "HDT" + ngayThangNam + String.format("%03d", soThuTuMoi);
-}
-    private void tinhToanTienHoanTra() {
-        double tongTienTra = 0;
-        double tongThueTra = 0;
-
-        // Lặp qua tất cả các dòng còn lại trên bảng
-        for (int i = 0; i < model.getRowCount(); i++) {
-            String maSP = model.getValueAt(i, 0).toString();
-            int soLuongTra = Integer.parseInt(model.getValueAt(i, 3).toString());
-
-            // Tìm đối tượng gốc tương ứng để lấy đơn giá và thuế suất
-            for (ChiTietHoaDon ct : dsChiTietGoc) {
-                if (ct.getDonViQuyDoi().getSanPham().getMaSanPham().equals(maSP)) {
-                    double donGia = ct.getDonGia();
-                    double thueSuat = ct.getDonViQuyDoi().getSanPham().getThue();
-
-                    double tienTra = soLuongTra * donGia;
-                    double thue = tienTra * (thueSuat / 100.0);
-
-                    tongTienTra += tienTra;
-                    tongThueTra += thue;
-                    break;
-                }
-            }
+        if (hoaDonDAO.daTungDoiTra(maHD)) {
+            JOptionPane.showMessageDialog(this, 
+                "Hóa đơn này đã thực hiện đổi/trả một lần trước đó. Theo quy định, mỗi hóa đơn chỉ được đổi trả 01 lần duy nhất!", 
+                "Thông báo", JOptionPane.WARNING_MESSAGE);
+            lamMoiGiaoDien();
+            return;
+        }
+        this.hd = hoaDonDAO.timTheoMa(maHD);
+        if (this.hd == null) {
+            JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn: " + maHD);
+            return;
         }
 
-        double thanhTien = tongTienTra + tongThueTra;
+        dsChiTietGoc = ctHDPDAO.layTheoMaHoaDon(maHD);
+        this.hd.setDsChiTiet(dsChiTietGoc);
 
-        // Cập nhật lên các ô nhập liệu bên phải
-        txtTienTra.setText(df.format(tongTienTra));
-        txtThue.setText(df.format(tongThueTra));
-        txtThanhTien.setText(df.format(thanhTien));
-        txtTienTraLai.setText(df.format(thanhTien));
-        txtChenhLech.setText(df.format(thanhTien)); 
+        // Điền thông tin lên giao diện
+        txtMaHoaGoc.setText(this.hd.getMaHoaDon());
+        txtTenKhachHang.setText(this.hd.getKhachHang() != null ? this.hd.getKhachHang().getTenKhachHang() : "Khách lẻ");
+        txtTienGoc.setText(df.format(this.hd.tinhTongTienThanhToan()));
+
+        // CẬP NHẬT: Ngày tạo hiện tại và Tự sinh mã trả
+        txtNgayTao.setText(new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(new java.util.Date()));
+        txtMaHoaDon.setText(tuSinhMaHoaDonTra());
+
+        // Đổ dữ liệu vào bảng
+        model.setRowCount(0);
+        for (ChiTietHoaDon ct : dsChiTietGoc) {
+            model.addRow(new Object[]{
+                ct.getDonViQuyDoi().getSanPham().getMaSanPham(),
+                ct.getDonViQuyDoi().getSanPham().getTenSanPham(),
+                ct.getDonViQuyDoi().getTenDonVi().getMoTa(),
+                ct.getSoLuong(),
+                df.format(ct.getDonGia()),
+                df.format(ct.tinhTienThue()),
+                df.format(ct.tinhThanhTien())
+            });
+        }
+        tinhToanTienHoanTra();
     }
-    private void lamMoiGiaoDien() {
-    txtSearch.setText("Mã hóa đơn");
-    txtSearch.setForeground(Color.GRAY); // Trả về màu nhạt để gợi ý nhập tiếp
-    
-    txtMaHoaGoc.setText("");
-    txtMaHoaDon.setText("");
-    txtTenKhachHang.setText("");
-    txtGhiChu.setText("");
-    
-    // Reset các ô tiền
-    String zero = "0 VND";
-    txtTienGoc.setText(zero);
-    txtTienTra.setText(zero);
-    txtThue.setText(zero);
-    txtThanhTien.setText(zero);
-    txtTienTraLai.setText(zero);
-    txtChenhLech.setText(zero);
-    
-    // Dọn dẹp dữ liệu logic
-    model.setRowCount(0);
-    this.hd = null;
-    if (dsChiTietGoc != null) {
-        dsChiTietGoc.clear();
+
+// 2. Hàm tự sinh mã hóa đơn trả định dạng HDTddMMyyXXX
+    private String tuSinhMaHoaDonTra() {
+        String ngayThangNam = new java.text.SimpleDateFormat("ddMMyy").format(new java.util.Date());
+        int soThuTuMoi = hoaDonDAO.laySoLuongHoaDonTrongNgay() + 1;
+        return "HDT" + ngayThangNam + String.format("%03d", soThuTuMoi);
     }
-}
+        private void tinhToanTienHoanTra() {
+            double tongTienTra = 0;
+            double tongThueTra = 0;
+
+            // Lặp qua tất cả các dòng còn lại trên bảng
+            for (int i = 0; i < model.getRowCount(); i++) {
+                String maSP = model.getValueAt(i, 0).toString();
+                int soLuongTra = Integer.parseInt(model.getValueAt(i, 3).toString());
+
+                // Tìm đối tượng gốc tương ứng để lấy đơn giá và thuế suất
+                for (ChiTietHoaDon ct : dsChiTietGoc) {
+                    if (ct.getDonViQuyDoi().getSanPham().getMaSanPham().equals(maSP)) {
+                        double donGia = ct.getDonGia();
+                        double thueSuat = ct.getDonViQuyDoi().getSanPham().getThue();
+
+                        double tienTra = soLuongTra * donGia;
+                        double thue = tienTra * (thueSuat / 100.0);
+
+                        tongTienTra += tienTra;
+                        tongThueTra += thue;
+                        break;
+                    }
+                }
+            }
+
+            double thanhTien = tongTienTra + tongThueTra;
+
+            // Cập nhật lên các ô nhập liệu bên phải
+            txtTienTra.setText(df.format(tongTienTra));
+            txtThue.setText(df.format(tongThueTra));
+            txtThanhTien.setText(df.format(thanhTien));
+            txtTienTraLai.setText(df.format(thanhTien));
+            txtChenhLech.setText(df.format(thanhTien)); 
+        }
+        private void lamMoiGiaoDien() {
+        txtSearch.setText("Mã hóa đơn");
+        txtSearch.setForeground(Color.GRAY); // Trả về màu nhạt để gợi ý nhập tiếp
+        
+        txtMaHoaGoc.setText("");
+        txtMaHoaDon.setText("");
+        txtTenKhachHang.setText("");
+        txtGhiChu.setText("");
+        
+        // Reset các ô tiền
+        String zero = "0 VND";
+        txtTienGoc.setText(zero);
+        txtTienTra.setText(zero);
+        txtThue.setText(zero);
+        txtThanhTien.setText(zero);
+        txtTienTraLai.setText(zero);
+        txtChenhLech.setText(zero);
+        
+        // Dọn dẹp dữ liệu logic
+        model.setRowCount(0);
+        this.hd = null;
+        if (dsChiTietGoc != null) {
+            dsChiTietGoc.clear();
+        }
+    }
 }

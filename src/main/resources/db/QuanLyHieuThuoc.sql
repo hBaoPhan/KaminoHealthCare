@@ -146,7 +146,7 @@ GO
 --- 4. CHÈN DỮ LIỆU MẪU (ÁP DỤNG QUY TẮC MÃ ĐỊNH DANH MỚI)
 --- =================================================== ---
 
--- 4.1. NHÂN VIÊN & TÀI KHOẢN (Mã: Chức vụ + 3 số)
+-- 4.1. NHÂN VIÊN & TÀI KHOẢN
 INSERT INTO NhanVien (maNhanVien, tenNhanVien, cccd, sdt, chucVu, trangThaiHoatDong) VALUES
 ('QL001', N'Phan Hoài Bảo', '079200000001', '0901234567', N'NHAN_VIEN_QUAN_LY', 1),
 ('DS001', N'Nguyễn Văn An', '079200000002', '0901234568', N'DUOC_SI', 1),
@@ -161,7 +161,7 @@ INSERT INTO TaiKhoan (tenDangNhap, matKhau, maNhanVien) VALUES
 ('duocsi_DS003', '123456', 'DS003'),
 ('duocsi_DS004', '123456', 'DS004');
 
--- 4.2. KHÁCH HÀNG (Mã: TV/KL + 6 số)
+-- 4.2. KHÁCH HÀNG
 INSERT INTO KhachHang (maKhachHang, tenKhachHang, sdt, trangThaiKhachHang) VALUES
 ('KL000001', N'Khách vãng lai 1', '0911111111', N'KHACH_LE'),
 ('TV000001', N'Ngô Thị Em', '0922222222', N'KHACH_HANG_THANH_VIEN'),
@@ -169,7 +169,7 @@ INSERT INTO KhachHang (maKhachHang, tenKhachHang, sdt, trangThaiKhachHang) VALUE
 ('TV000003', N'Đặng Thị Giang', '0944444444', N'KHACH_HANG_THANH_VIEN'),
 ('TV000004', N'Bùi Văn Hùng', '0955555555', N'KHACH_HANG_THANH_VIEN');
 
--- 4.3. KHUYẾN MÃI (Mã: KM + Ngày Tháng + Số)
+-- 4.3. KHUYẾN MÃI
 INSERT INTO KhuyenMai (maKhuyenMai, tenKhuyenMai, thoiGianBatDau, thoiGianKetThuc, loaiKhuyenMai, khuyenMaiPhanTram, giaTriDonHangToiThieu) VALUES
 ('KM010401', N'Giảm 10% đơn từ 500k', '2026-04-01', '2026-05-01', N'PHAN_TRAM', 10, 500000),
 ('KM150401', N'Mua 1 tặng 1 Vitamin C', '2026-04-15', '2026-04-30', N'TANG_KEM', 0, 0),
@@ -177,7 +177,7 @@ INSERT INTO KhuyenMai (maKhuyenMai, tenKhuyenMai, thoiGianBatDau, thoiGianKetThu
 ('KM010402', N'Tặng khẩu trang đơn 100k', '2026-04-01', '2026-12-31', N'TANG_KEM', 0, 100000),
 ('KM011001', N'Sale sinh nhật 20%', '2026-10-01', '2026-10-31', N'PHAN_TRAM', 20, 1000000);
 
--- 4.4. ĐƠN THUỐC (Mã: DT + DDMMYY + 3 số)
+-- 4.4. ĐƠN THUỐC
 INSERT INTO DonThuoc (maDonThuoc, tenBacSi, coSoKhamBenh, ngayKeDon) VALUES
 ('DT200426001', N'BS. Nguyễn Văn A', N'Bệnh viện Chợ Rẫy', '2026-04-20'),
 ('DT210426001', N'BS. Trần Thị B', N'Bệnh viện 115', '2026-04-21'),
@@ -186,7 +186,7 @@ INSERT INTO DonThuoc (maDonThuoc, tenBacSi, coSoKhamBenh, ngayKeDon) VALUES
 ('DT240426001', N'BS. Ngô Văn E', N'Bệnh viện Nhi Đồng', '2026-04-24'),
 ('DT300426001', N'BS. Hoàng Trọng E', N'Bệnh viện Nhân dân Gia Định', '2026-04-30');
 
--- 4.5. CA LÀM (Mã: CA + DDMMYY + 2 số)
+-- 4.5. CA LÀM
 INSERT INTO CaLam (maCa, maNhanVien, gioBatDau, gioKetThuc, trangThaiCaLam, tienMoCa, tienKetCa, tienHeThong, ghiChu) VALUES
 ('CA20042601', 'QL001', '2026-04-20 08:00:00', '2026-04-20 16:00:00', N'DONG', 1000000, 5000000, 4000000, N'Ca bình thường'),
 ('CA20042602', 'DS001', '2026-04-20 16:00:00', '2026-04-20 22:00:00', N'DONG', 5000000, 8000000, 3000000, N'Ca bình thường'),
@@ -197,70 +197,68 @@ INSERT INTO CaLam (maCa, maNhanVien, gioBatDau, gioKetThuc, trangThaiCaLam, tien
 ('CA30042601', 'DS002', '2026-04-30 08:00:00', '2026-04-30 16:00:00', N'DONG', 1000000, 6000000, 5000000, N'Ca bình thường'),
 ('CA02052601', 'DS001', '2026-05-02 08:00:00', '2026-05-02 16:00:00', N'DANG_MO', 1000000, 5000000, 4000000, N'Đang trực');
 
-
-
--- 4.6. SẢN PHẨM & ĐƠN VỊ QUY ĐỔI
+-- 4.6. SẢN PHẨM & ĐƠN VỊ QUY ĐỔI (SỬA ĐƠN GIÁ CƠ BẢN LÀ GIÁ 1 VIÊN/1 TUÝP)
 INSERT INTO SanPham (maSanPham, tenSanPham, loaiSanPham, soLuongTon, moTa, hoatChat, donGiaCoBan, trangThaiKinhDoanh, thue) VALUES
 ('OTC-BIA-001', 'Biafine Janssen', 'OTC', 120, 'Kem trị bỏng, vết thương và bỏng nắng', 'Biafine', 95000, 1, 0.05),
 ('OTC-CON-002', 'Contractubex', 'OTC', 90, 'Kem trị sẹo lồi, sẹo lõm', 'Contractubex', 145000, 1, 0.05),
 ('OTC-MIN-003', 'Minox 20mg Edol', 'OTC', 80, 'Dung dịch trị rụng tóc Minoxidil', 'Minoxidil 20mg', 185000, 1, 0.05),
 ('OTC-NIZ-004', 'Nizoral Shampoo Janssen', 'OTC', 95, 'Dầu gội trị nấm da đầu', 'Ketoconazole', 125000, 1, 0.05),
 ('OTC-REM-005', 'Remowart Farmalabor', 'OTC', 75, 'Thuốc bôi trị mụn cóc, u mềm', 'Acid Salicylic', 98000, 1, 0.05),
-('OTC-ALL-006', 'Allerphast 180mg', 'OTC', 180, 'Thuốc chống dị ứng thế hệ mới', 'Fexofenadine', 85000, 1, 0.05),
-('OTC-CET-007', 'Cetirizin 10mg', 'OTC', 420, 'Thuốc chống dị ứng', 'Cetirizine 10mg', 55000, 1, 0.05),
-('OTC-CLO-008', 'Clorpheniramin 4mg', 'OTC', 300, 'Thuốc kháng histamine trị dị ứng', 'Chlorpheniramine', 45000, 1, 0.05),
-('OTC-EXO-009', 'Exopadin 60mg', 'OTC', 150, 'Thuốc chống dị ứng', 'Fexofenadine 60mg', 92000, 1, 0.05),
-('OTC-HIS-010', 'Histalong L 5mg', 'OTC', 200, 'Thuốc chống dị ứng', 'Loratadine 5mg', 68000, 1, 0.05),
-('OTC-ATS-011', 'Atsirox 1 An Thiên', 'OTC', 110, 'Thuốc kháng sinh trị nhiễm khuẩn', 'Amoxicillin', 75000, 1, 0.05),
+('OTC-ALL-006', 'Allerphast 180mg', 'OTC', 180, 'Thuốc chống dị ứng thế hệ mới', 'Fexofenadine', 850, 1, 0.05),  -- Sửa thành 850đ/viên
+('OTC-CET-007', 'Cetirizin 10mg', 'OTC', 420, 'Thuốc chống dị ứng', 'Cetirizine 10mg', 550, 1, 0.05),    -- Sửa thành 550đ/viên
+('OTC-CLO-008', 'Clorpheniramin 4mg', 'OTC', 300, 'Thuốc kháng histamine trị dị ứng', 'Chlorpheniramine', 450, 1, 0.05), -- Sửa thành 450đ/viên
+('OTC-EXO-009', 'Exopadin 60mg', 'OTC', 150, 'Thuốc chống dị ứng', 'Fexofenadine 60mg', 920, 1, 0.05),   -- Sửa thành 920đ/viên
+('OTC-HIS-010', 'Histalong L 5mg', 'OTC', 200, 'Thuốc chống dị ứng', 'Loratadine 5mg', 680, 1, 0.05),    -- Sửa thành 680đ/viên
+('OTC-ATS-011', 'Atsirox 1 An Thiên', 'OTC', 110, 'Thuốc kháng sinh trị nhiễm khuẩn', 'Amoxicillin', 750, 1, 0.05),    -- Sửa thành 750đ/viên
 ('OTC-FUG-012', 'Fugacar Janssen', 'OTC', 130, 'Thuốc tẩy giun Fugacar', 'Mebendazole', 62000, 1, 0.05),
 ('OTC-CIC-013', 'Shampoo Ciclopirox VCP', 'OTC', 85, 'Dầu gội trị nấm da đầu', 'Ciclopirox', 115000, 1, 0.05),
 ('OTC-TRI-014', 'Thuốc trị vảy nến da đầu', 'OTC', 70, 'Thuốc trị vảy nến da đầu', 'Coal Tar + Salicylic Acid', 98000, 1, 0.05),
 ('OTC-TIM-015', 'Timbov Farmaprim', 'OTC', 95, 'Thuốc kháng sinh', 'Amoxicillin/Clavulanic acid', 135000, 1, 0.05),
-('OTC-CAL-016', 'Calcid Soft', 'OTC', 240, 'Canxi mềm bổ sung xương', 'Calcium', 148000, 1, 0.05),
+('OTC-CAL-016', 'Calcid Soft', 'OTC', 240, 'Canxi mềm bổ sung xương', 'Calcium', 1480, 1, 0.05),
 ('OTC-COR-017', 'Calcium Corbiere Kids', 'OTC', 180, 'Canxi cho trẻ em Extra Sanofi', 'Calcium', 165000, 1, 0.05),
-('OTC-CST-018', 'Calcium Stada 500mg', 'OTC', 220, 'Canxi Stada bổ sung xương', 'Calcium Carbonate 500mg', 92000, 1, 0.05),
+('OTC-CST-018', 'Calcium Stada 500mg', 'OTC', 220, 'Canxi Stada bổ sung xương', 'Calcium Carbonate 500mg', 920, 1, 0.05),
 ('OTC-KID-019', 'KiddieCal Catalent', 'OTC', 190, 'Canxi cho trẻ em', 'Calcium', 135000, 1, 0.05),
-('OTC-XKH-020', 'Xương Khớp Trương Phúc', 'OTC', 160, 'Hỗ trợ xương khớp', 'Glucosamine & Chondroitin', 210000, 1, 0.05),
+('OTC-XKH-020', 'Xương Khớp Trương Phúc', 'OTC', 160, 'Hỗ trợ xương khớp', 'Glucosamine & Chondroitin', 2100, 1, 0.05),
 ('ETC-BET-019', 'Betamethason 0.064% Medipharco', 'ETC', 65, 'Corticoid bôi da điều trị viêm da', 'Betamethason 0.064%', 85000, 1, 0.1),
-('ETC-DEX-020', 'Dexamethasone', 'ETC', 70, 'Thuốc chống viêm, dị ứng mạnh', 'Dexamethasone', 65000, 1, 0.1),
+('ETC-DEX-020', 'Dexamethasone', 'ETC', 70, 'Thuốc chống viêm, dị ứng mạnh', 'Dexamethasone', 650, 1, 0.1), -- Sửa thành 650đ/viên
 ('ETC-MAX-021', 'Maxx Acne AC Ampharco', 'ETC', 55, 'Thuốc trị mụn nặng isotretinoin', 'Isotretinoin', 320000, 0, 0.1),
 ('ETC-SRI-022', 'Srinron 10g Mipharco', 'ETC', 80, 'Kem trị viêm da, eczema', 'Betamethason + Gentamicin', 95000, 1, 0.1),
 ('ETC-TOM-023', 'Tomax Genta Detapharm', 'ETC', 45, 'Kem kháng sinh da', 'Gentamicin', 78000, 1, 0.1),
-('ETC-BIL-024', 'Bilaxiten 20mg Menarini', 'ETC', 90, 'Thuốc chống dị ứng', 'Bilastine 20mg', 115000, 1, 0.1),
-('ETC-LOD-025', 'Lodax 20mg', 'ETC', 85, 'Thuốc chống dị ứng', 'Loratadine 20mg', 92000, 1, 0.1),
-('ETC-RUP-026', 'Rupafin 10mg', 'ETC', 110, 'Thuốc chống dị ứng', 'Rupatadine 10mg', 105000, 1, 0.1),
-('ETC-RUT-027', 'Rutadin 10mg', 'ETC', 100, 'Thuốc chống dị ứng', 'Rupatadine', 98000, 1, 0.1),
-('ETC-ZYR-028', 'Zyrtec GSK', 'ETC', 120, 'Thuốc chống dị ứng', 'Cetirizine', 88000, 1, 0.1),
-('ETC-CLE-029', 'Cledomox 625 Tenamyd', 'ETC', 75, 'Kháng sinh Amoxicillin/Clavulanic acid', 'Amoxicillin 625mg', 135000, 1, 0.1),
+('ETC-BIL-024', 'Bilaxiten 20mg Menarini', 'ETC', 90, 'Thuốc chống dị ứng', 'Bilastine 20mg', 1150, 1, 0.1), -- Sửa thành 1150đ/viên
+('ETC-LOD-025', 'Lodax 20mg', 'ETC', 85, 'Thuốc chống dị ứng', 'Loratadine 20mg', 920, 1, 0.1), -- Sửa thành 920đ/viên
+('ETC-RUP-026', 'Rupafin 10mg', 'ETC', 110, 'Thuốc chống dị ứng', 'Rupatadine 10mg', 1050, 1, 0.1), -- Sửa thành 1050đ/viên
+('ETC-RUT-027', 'Rutadin 10mg', 'ETC', 100, 'Thuốc chống dị ứng', 'Rupatadine', 980, 1, 0.1),
+('ETC-ZYR-028', 'Zyrtec GSK', 'ETC', 120, 'Thuốc chống dị ứng', 'Cetirizine', 880, 1, 0.1),
+('ETC-CLE-029', 'Cledomox 625 Tenamyd', 'ETC', 75, 'Kháng sinh Amoxicillin/Clavulanic acid', 'Amoxicillin 625mg', 1350, 1, 0.1),
 ('ETC-FLU-030', 'Flucona-Denk 150mg', 'ETC', 60, 'Thuốc trị nấm', 'Fluconazole 150mg', 125000, 1, 0.1),
-('ETC-IME-031', 'Imexime 100 Imexpharm', 'ETC', 80, 'Kháng sinh Cefixime', 'Cefixime 100mg', 95000, 1, 0.1),
-('ETC-IME-032', 'Imexime 200 Imexpharm', 'ETC', 70, 'Kháng sinh Cefixime', 'Cefixime 200mg', 145000, 1, 0.1),
-('ETC-LEC-033', 'Lecifex 500mg Abbott', 'ETC', 65, 'Kháng sinh Levofloxacin', 'Levofloxacin 500mg', 168000, 1, 0.1),
-('ETC-FEB-034', 'Febuxotid VK 40mg', 'ETC', 85, 'Điều trị gout', 'Febuxostat 40mg', 195000, 1, 0.1),
-('ETC-FEB-035', 'Febuxotid VK 80mg', 'ETC', 75, 'Điều trị gout', 'Febuxostat 80mg', 245000, 1, 0.1),
-('ETC-MET-036', 'Methocarbamol 500mg Khapharco', 'ETC', 90, 'Thuốc giãn cơ', 'Methocarbamol 500mg', 115000, 1, 0.1),
-('ETC-OPE-037', 'Opedulox 40 OPV', 'ETC', 80, 'Thuốc giảm đau thần kinh', 'Duloxetine 40mg', 178000, 1, 0.1),
-('ETC-OPE-038', 'Opedulox 80 OPV', 'ETC', 70, 'Thuốc giảm đau thần kinh', 'Duloxetine 80mg', 225000, 1, 0.1),
-('TPCN-BPK-039', 'Bio Plus Kenko', 'TPCN', 180, 'Bổ sung vitamin và khoáng chất tổng hợp', 'Multi Vitamin & Minerals', 195000, 1, 0.1),
-('TPCN-BNI-040', 'Bổ Não Ích Trí Gold', 'TPCN', 140, 'Bổ não, tăng cường trí nhớ', 'Ginkgo Biloba & Thảo dược', 245000, 1, 0.1),
+('ETC-IME-031', 'Imexime 100 Imexpharm', 'ETC', 80, 'Kháng sinh Cefixime', 'Cefixime 100mg', 950, 1, 0.1),
+('ETC-IME-032', 'Imexime 200 Imexpharm', 'ETC', 70, 'Kháng sinh Cefixime', 'Cefixime 200mg', 1450, 1, 0.1),
+('ETC-LEC-033', 'Lecifex 500mg Abbott', 'ETC', 65, 'Kháng sinh Levofloxacin', 'Levofloxacin 500mg', 1680, 1, 0.1),
+('ETC-FEB-034', 'Febuxotid VK 40mg', 'ETC', 85, 'Điều trị gout', 'Febuxostat 40mg', 1950, 1, 0.1),
+('ETC-FEB-035', 'Febuxotid VK 80mg', 'ETC', 75, 'Điều trị gout', 'Febuxostat 80mg', 2450, 1, 0.1),
+('ETC-MET-036', 'Methocarbamol 500mg Khapharco', 'ETC', 90, 'Thuốc giãn cơ', 'Methocarbamol 500mg', 1150, 1, 0.1),
+('ETC-OPE-037', 'Opedulox 40 OPV', 'ETC', 80, 'Thuốc giảm đau thần kinh', 'Duloxetine 40mg', 1780, 1, 0.1),
+('ETC-OPE-038', 'Opedulox 80 OPV', 'ETC', 70, 'Thuốc giảm đau thần kinh', 'Duloxetine 80mg', 2250, 1, 0.1),
+('TPCN-BPK-039', 'Bio Plus Kenko', 'TPCN', 180, 'Bổ sung vitamin và khoáng chất tổng hợp', 'Multi Vitamin & Minerals', 1950, 1, 0.1),
+('TPCN-BNI-040', 'Bổ Não Ích Trí Gold', 'TPCN', 140, 'Bổ não, tăng cường trí nhớ', 'Ginkgo Biloba & Thảo dược', 2450, 1, 0.1),
 ('TPCN-BPL-041', 'Bổ Phế Labebe', 'TPCN', 160, 'Bổ phế, hỗ trợ hô hấp', 'Thảo dược', 168000, 1, 0.1),
-('TPCN-CDK-042', 'Canxi D3 K2 Kingphar', 'TPCN', 220, 'Canxi kết hợp Vitamin D3 và K2', 'Calcium, Vitamin D3, K2', 175000, 1, 0.1),
+('TPCN-CDK-042', 'Canxi D3 K2 Kingphar', 'TPCN', 220, 'Canxi kết hợp Vitamin D3 và K2', 'Calcium, Vitamin D3, K2', 1750, 1, 0.1),
 ('TPCN-D3D-043', 'D3 Drops DAO Nordic Health', 'TPCN', 190, 'Vitamin D3 dạng giọt', 'Vitamin D3', 135000, 1, 0.1),
 ('TPCN-HPM-044', 'High Potency MK-7 Drops', 'TPCN', 130, 'Vitamin K2 MK-7 cao cấp', 'Vitamin K2 MK-7', 225000, 1, 0.1),
 ('TPCN-HHT-045', 'Hoạt Huyết Thống Mạch Gold TW3', 'TPCN', 150, 'Hoạt huyết thông mạch', 'Thảo dược', 265000, 1, 0.1),
-('TPCN-IMU-046', 'Immuvita Easylife', 'TPCN', 170, 'Tăng cường sức đề kháng', 'Vitamin & Immuno Support', 189000, 1, 0.1),
+('TPCN-IMU-046', 'Immuvita Easylife', 'TPCN', 170, 'Tăng cường sức đề kháng', 'Vitamin & Immuno Support', 1890, 1, 0.1),
 ('TPCN-KAN-047', 'Kanzo Gold', 'TPCN', 145, 'Bổ gan Kanzo', 'Thảo dược', 198000, 1, 0.1),
 ('TPCN-KID-048', 'KID GROW Kenko', 'TPCN', 200, 'Vitamin tăng trưởng cho trẻ em', 'Multi Vitamin', 172000, 1, 0.1),
 ('TPCN-LBG-049', 'Lacto Biomin Gold', 'TPCN', 160, 'Men vi sinh Biomin', 'Probiotics', 168000, 1, 0.1),
-('TPCN-LAC-050', 'Lactobact Intima 30V', 'TPCN', 95, 'Men vi sinh phụ khoa', 'Lactobacillus', 245000, 1, 0.1),
+('TPCN-LAC-050', 'Lactobact Intima 30V', 'TPCN', 95, 'Men vi sinh phụ khoa', 'Lactobacillus', 2450, 1, 0.1),
 ('TPCN-NUT-051', 'NutriGrow Nutrimed', 'TPCN', 175, 'Bổ sung dinh dưỡng trẻ em', 'Multi Vitamin', 165000, 1, 0.1),
-('TPCN-OMP-052', 'Omega 3 Plus Kenko', 'TPCN', 210, 'Omega 3 cao cấp', 'Omega-3 Fish Oil', 235000, 1, 0.1),
+('TPCN-OMP-052', 'Omega 3 Plus Kenko', 'TPCN', 210, 'Omega 3 cao cấp', 'Omega-3 Fish Oil', 2350, 1, 0.1),
 ('TPCN-OPD-053', 'Omega 3 Power DAO Nordic Health', 'TPCN', 155, 'Omega 3 Nordic Health', 'Omega-3', 258000, 1, 0.1),
 ('TPCN-OMX-054', 'Omexxel 3-6-9 Premium', 'TPCN', 180, 'Omega 3-6-9 Premium', 'Omega 3,6,9', 275000, 1, 0.1),
-('TPCN-OMG-055', 'Omexxel Ginkgo 120 Premium', 'TPCN', 140, 'Ginkgo Biloba 120mg', 'Ginkgo Biloba', 245000, 1, 0.1),
-('TPCN-PIK-056', 'Pikolin Ocavill', 'TPCN', 165, 'Sắt Pikolin dễ hấp thu', 'Iron Pikolin', 198000, 1, 0.1),
-('TPCN-POB-057', 'Premium Omexxel Bone Health', 'TPCN', 135, 'Hỗ trợ xương khớp cao cấp', 'Calcium + Vitamin D & K2', 289000, 1, 0.1),
-('TPCN-SKI-058', 'SkillMax Ocavill', 'TPCN', 130, 'Hỗ trợ trí não', 'Ginkgo & Phosphatidylserine', 215000, 1, 0.1);
+('TPCN-OMG-055', 'Omexxel Ginkgo 120 Premium', 'TPCN', 140, 'Ginkgo Biloba 120mg', 'Ginkgo Biloba', 2450, 1, 0.1),
+('TPCN-PIK-056', 'Pikolin Ocavill', 'TPCN', 165, 'Sắt Pikolin dễ hấp thu', 'Iron Pikolin', 1980, 1, 0.1),
+('TPCN-POB-057', 'Premium Omexxel Bone Health', 'TPCN', 135, 'Hỗ trợ xương khớp cao cấp', 'Calcium + Vitamin D & K2', 2890, 1, 0.1),
+('TPCN-SKI-058', 'SkillMax Ocavill', 'TPCN', 130, 'Hỗ trợ trí não', 'Ginkgo & Phosphatidylserine', 2150, 1, 0.1);
 
 INSERT INTO DonViQuyDoi (maDonVi, tenDonVi, heSoQuyDoi, maSanPham) VALUES
 ('DV001', 'TUYP', 1, 'OTC-BIA-001'),
@@ -307,15 +305,15 @@ INSERT INTO DonViQuyDoi (maDonVi, tenDonVi, heSoQuyDoi, maSanPham) VALUES
 ('DV096', 'VIEN', 1, 'TPCN-PIK-056'), ('DV097', 'VI', 10, 'TPCN-PIK-056'), ('DV098', 'HOP', 30, 'TPCN-PIK-056'),
 ('DV099', 'VIEN', 1, 'TPCN-SKI-058'), ('DV100', 'VI', 10, 'TPCN-SKI-058'), ('DV101', 'HOP', 30, 'TPCN-SKI-058');
 
--- 4.7. LÔ HÀNG (Mã: LO + DDMMYY + 3 số)
+-- 4.7. LÔ HÀNG (SỬA LẠI GIÁ NHẬP CHO CÓ LÃI VÀ KHỚP ĐƠN VỊ CƠ BẢN)
 INSERT INTO Lo (maLo, soLo, ngayHetHan, soLuongSanPham, maSanPham, giaNhap) VALUES
-('LO010126001', 'L001', '2028-01-01', 500, 'OTC-BIA-001', 10000),
-('LO010226001', 'L002', '2027-06-01', 500, 'OTC-BIA-001', 11000),
-('LO150326001', 'L003', '2027-12-31', 500, 'OTC-CON-002', 35000),
-('LO200326001', 'L004', '2026-10-01', 2000, 'OTC-ALL-006', 15000),
-('LO250326001', 'L005', '2029-01-01', 3000, 'ETC-DEX-020', 3000);
+('LO010126001', 'L001', '2028-01-01', 500, 'OTC-BIA-001', 60000), -- Tuýp 95k, nhập 60k
+('LO010226001', 'L002', '2027-06-01', 500, 'OTC-BIA-001', 62000), 
+('LO150326001', 'L003', '2027-12-31', 500, 'OTC-CON-002', 90000), -- Tuýp 145k, nhập 90k
+('LO200326001', 'L004', '2026-10-01', 2000, 'OTC-ALL-006', 500),   -- Viên 850đ, nhập 500đ
+('LO250326001', 'L005', '2029-01-01', 3000, 'ETC-DEX-020', 400);   -- Viên 650đ, nhập 400đ
 
--- 4.8. QUÀ TẶNG (Khớp mã Khuyến Mãi và Đơn Vị mới)
+-- 4.8. QUÀ TẶNG 
 INSERT INTO QuaTang (maKhuyenMai, maDonVi, soLuongTang) VALUES
 ('KM150401', 'DV015', 1),
 ('KM010402', 'DV017', 1),
@@ -323,7 +321,7 @@ INSERT INTO QuaTang (maKhuyenMai, maDonVi, soLuongTang) VALUES
 ('KM010402', 'DV016', 1),
 ('KM011001', 'DV002', 5);
 
--- 4.9. HÓA ĐƠN & CHI TIẾT (Mã: HD + B/D/T + DDMMYY + 3 số)
+-- 4.9. HÓA ĐƠN & CHI TIẾT 
 INSERT INTO HoaDon (maHoaDon, thoiGianTao, maNhanVien, trangThaiThanhToan, maKhachHang, maKhuyenMai, loaiHoaDon, maCa, ghiChu, maHoaDonDoiTra, maDonThuoc, phuongThucThanhToan) VALUES
 ('HDB200426001', '2026-04-20 10:00:00', 'QL001', 1, 'TV000001', 'KM010401', N'BAN_HANG', 'CA20042601', N'', NULL, NULL, N'TIEN_MAT'),
 ('HDB200426002', '2026-04-20 14:00:00', 'QL001', 1, 'KL000001', NULL, N'BAN_HANG', 'CA20042601', N'', NULL, 'DT200426001', N'CHUYEN_KHOAN'),
@@ -334,15 +332,16 @@ INSERT INTO HoaDon (maHoaDon, thoiGianTao, maNhanVien, trangThaiThanhToan, maKha
 ('HDB300426001', '2026-04-30 11:00:00', 'DS002', 1, 'TV000003', NULL, N'BAN_HANG', 'CA30042601', N'', NULL, 'DT300426001', N'CHUYEN_KHOAN'),
 ('HDB020526001', '2026-05-02 08:30:00', 'DS001', 1, 'TV000004', 'KM010402', N'BAN_HANG', 'CA02052601', N'', NULL, NULL, N'TIEN_MAT');
 
+-- SỬA LẠI TOÀN BỘ ĐƠN GIÁ (BẰNG DONGIACOBAN * HESOQUYDOI)
 INSERT INTO ChiTietHoaDon (maHoaDon, maDonVi, soLuong, donGia, laQuaTangKem) VALUES
-('HDB200426001', 'DV001', 2, 15000, 0),
-('HDB200426001', 'DV015', 1, 50000, 0),
-('HDB200426002', 'DV016', 10, 20000, 0),
-('HDB210426001', 'DV015', 2, 50000, 0),
-('HDB210426002', 'DV017', 5, 5000, 0),
-('HDB260426001', 'DV016', 10, 20000, 0),
-('HDB300426001', 'DV015', 2, 50000, 0),
-('HDB020526001', 'DV017', 5, 5000, 0);
+('HDB200426001', 'DV001', 2, 95000, 0), -- Biafine (Hệ số 1): 95.000 x 1
+('HDB200426001', 'DV015', 1, 850, 0),   -- Allerphast Viên (Hệ số 1): 850 x 1
+('HDB200426002', 'DV016', 10, 8500, 0), -- Allerphast Vỉ (Hệ số 10): 850 x 10
+('HDB210426001', 'DV015', 2, 850, 0),
+('HDB210426002', 'DV017', 5, 85000, 0), -- Allerphast Hộp (Hệ số 100): 850 x 100
+('HDB260426001', 'DV016', 10, 8500, 0),
+('HDB300426001', 'DV015', 2, 850, 0),
+('HDB020526001', 'DV017', 5, 85000, 0);
 
 INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong) VALUES
 ('HDB200426001', 'DV001', 'LO010126001', 2),
@@ -358,7 +357,6 @@ GO
 --- =================================================== ---
 --- 5. Trigger
 --- =================================================== ---
-
 CREATE TRIGGER trg_Lo_UpdateTonKho
 ON Lo
 AFTER INSERT, UPDATE, DELETE
