@@ -298,6 +298,7 @@ public class NhanVienPanel extends JPanel {
         if (txtTen.getText().trim().isEmpty() || txtSdt.getText().trim().isEmpty() || txtCccd.getText().trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ thông tin!"); return;
         }
+        
         com.example.entity.NhanVien nv = new com.example.entity.NhanVien();
         nv.setMaNhanVien(txtId.getText());
         nv.setTenNhanVien(txtTen.getText().trim());
@@ -307,16 +308,8 @@ public class NhanVienPanel extends JPanel {
         nv.setTrangThai(cbTrangThai.getSelectedIndex() == 0);
 
         if (nvDAO.them(nv)) {
-            // Tự sinh tài khoản 
-            String username = (cbChucVu.getSelectedIndex() == 0 ? "duocsi_" : "admin_") + nv.getMaNhanVien();
-            try {
-                java.sql.Connection con = com.example.connectDB.ConnectDB.getConnection();
-                java.sql.PreparedStatement pst = con.prepareStatement("INSERT INTO TaiKhoan (tenDangNhap, matKhau, maNhanVien) VALUES (?, ?, ?)");
-                pst.setString(1, username); pst.setString(2, "123456"); pst.setString(3, nv.getMaNhanVien());
-                pst.executeUpdate();
-            } catch (Exception ex) { ex.printStackTrace(); }
-            
-            JOptionPane.showMessageDialog(this, "Thêm nhân viên và tạo tài khoản (" + username + ") thành công!");
+            // Đã xóa phần tự động tạo tài khoản ở đây
+            JOptionPane.showMessageDialog(this, "Thêm nhân viên thành công!");
             taiLaiDanhSach();
         } else {
             JOptionPane.showMessageDialog(this, "Lỗi! CCCD có thể bị trùng lặp.");
