@@ -15,16 +15,15 @@ public class KhuyenMaiDAO {
 
     private final QuaTangDAO quaTangDAO = new QuaTangDAO();
 
-    // ==================== SINH MÃ KHUYẾN MÃI (KM + MMdd + Số thứ tự)
-    // ====================
+    // ==================== SINH MÃ KHUYẾN MÃI ====================
     public String generateNextMaKhuyenMai() {
         LocalDate today = LocalDate.now();
-        String datePart = today.format(DateTimeFormatter.ofPattern("MMdd")); // Ví dụ: 0506
+        String datePart = today.format(DateTimeFormatter.ofPattern("MMdd"));
         String prefix = "KM" + datePart;
 
         String maxMa = null;
         try (PreparedStatement lenh = ConnectDB.getConnection().prepareStatement(
-                        "SELECT TOP 1 maKhuyenMai FROM KhuyenMai WHERE maKhuyenMai LIKE ? ORDER BY maKhuyenMai DESC")) {
+                "SELECT TOP 1 maKhuyenMai FROM KhuyenMai WHERE maKhuyenMai LIKE ? ORDER BY maKhuyenMai DESC")) {
 
             lenh.setString(1, prefix + "%");
             try (ResultSet rs = lenh.executeQuery()) {
@@ -41,21 +40,19 @@ public class KhuyenMaiDAO {
             try {
                 String seqStr = maxMa.substring(prefix.length());
                 nextSeq = Integer.parseInt(seqStr) + 1;
-            } catch (Exception ignored) {
-            }
+            } catch (Exception ignored) {}
         }
 
-        return prefix + String.format("%02d", nextSeq); // Ví dụ: KM050601
+        return prefix + String.format("%02d", nextSeq);
     }
 
     public List<KhuyenMai> layTatCa() {
         List<KhuyenMai> danhSach = new ArrayList<>();
         try (Statement lenh = ConnectDB.getConnection().createStatement();
-                ResultSet ketQua = lenh.executeQuery("SELECT * FROM KhuyenMai ORDER BY maKhuyenMai")) {
+             ResultSet ketQua = lenh.executeQuery("SELECT * FROM KhuyenMai ORDER BY maKhuyenMai")) {
 
             while (ketQua.next()) {
                 KhuyenMai km = mapResultSetToKhuyenMai(ketQua);
-                // Load quà tặng nếu có
                 List<QuaTang> dsQt = quaTangDAO.timTheoKhuyenMai(km.getMaKhuyenMai());
                 if (!dsQt.isEmpty()) {
                     km.setQuaTangKem(dsQt.get(0));
@@ -69,8 +66,8 @@ public class KhuyenMaiDAO {
     }
 
     public KhuyenMai timTheoMa(String maKM) {
-        try (PreparedStatement lenh = ConnectDB.getConnection().prepareStatement("SELECT * FROM KhuyenMai WHERE maKhuyenMai = ?")) {
-
+        try (PreparedStatement lenh = ConnectDB.getConnection().prepareStatement(
+                "SELECT * FROM KhuyenMai WHERE maKhuyenMai = ?")) {
             lenh.setString(1, maKM);
             try (ResultSet ketQua = lenh.executeQuery()) {
                 if (ketQua.next()) {
@@ -89,14 +86,13 @@ public class KhuyenMaiDAO {
     }
 
     public boolean them(KhuyenMai km) {
-        // Tự động sinh mã nếu chưa có
         if (km.getMaKhuyenMai() == null || km.getMaKhuyenMai().trim().isEmpty()) {
             km.setMaKhuyenMai(generateNextMaKhuyenMai());
         }
 
         try (PreparedStatement lenh = ConnectDB.getConnection().prepareStatement(
-                        "INSERT INTO KhuyenMai (maKhuyenMai, tenKhuyenMai, thoiGianBatDau, thoiGianKetThuc, " +
-                                "loaiKhuyenMai, khuyenMaiPhanTram, giaTriDonHangToiThieu) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
+                "INSERT INTO KhuyenMai (maKhuyenMai, tenKhuyenMai, thoiGianBatDau, thoiGianKetThuc, " +
+                        "loaiKhuyenMai, khuyenMaiPhanTram, giaTriDonHangToiThieu) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
 
             lenh.setString(1, km.getMaKhuyenMai());
             lenh.setString(2, km.getTenKhuyenMai());
@@ -108,11 +104,12 @@ public class KhuyenMaiDAO {
 
             boolean success = lenh.executeUpdate() > 0;
 
-            // Thêm Quà tặng nếu là loại TẶNG KÈM
             if (success && km.getLoaiKhuyenMai() == LoaiKhuyenMai.TANG_KEM && km.getQuaTangKem() != null) {
-                QuaTang quatang = km.getQuaTangKem();
-                quatang.setKhuyenMai(km);
-                quaTangDAO.them(km.getQuaTangKem());
+                QuaTang qt = km.getQuaTangKem();
+                qt.setKhuyenMai(km);
+                if (qt.getDonViQuyDoi() != null) {
+                    quaTangDAO.them(qt);
+                }
             }
             return success;
         } catch (SQLException e) {
@@ -123,8 +120,8 @@ public class KhuyenMaiDAO {
 
     public boolean capNhat(KhuyenMai km) {
         try (PreparedStatement lenh = ConnectDB.getConnection().prepareStatement(
-                        "UPDATE KhuyenMai SET tenKhuyenMai = ?, thoiGianBatDau = ?, thoiGianKetThuc = ?, " +
-                                "loaiKhuyenMai = ?, khuyenMaiPhanTram = ?, giaTriDonHangToiThieu = ? WHERE maKhuyenMai = ?")) {
+                "UPDATE KhuyenMai SET tenKhuyenMai = ?, thoiGianBatDau = ?, thoiGianKetThuc = ?, " +
+                        "loaiKhuyenMai = ?, khuyenMaiPhanTram = ?, giaTriDonHangToiThieu = ? WHERE maKhuyenMai = ?")) {
 
             lenh.setString(1, km.getTenKhuyenMai());
             lenh.setTimestamp(2, Timestamp.valueOf(km.getThoiGianBatDau()));
@@ -137,12 +134,13 @@ public class KhuyenMaiDAO {
             boolean success = lenh.executeUpdate() > 0;
 
             if (success) {
-                // Xử lý quà tặng theo loại khuyến mãi
                 if (km.getLoaiKhuyenMai() == LoaiKhuyenMai.TANG_KEM && km.getQuaTangKem() != null) {
-                    km.getQuaTangKem().setKhuyenMai(km);
-                    quaTangDAO.capNhat(km.getQuaTangKem());
+                    QuaTang qt = km.getQuaTangKem();
+                    qt.setKhuyenMai(km);
+                    if (qt.getDonViQuyDoi() != null) {
+                        quaTangDAO.capNhat(qt);
+                    }
                 } else {
-                    // Xóa quà tặng cũ nếu chuyển sang loại Phần trăm
                     quaTangDAO.xoaTheoKhuyenMai(km.getMaKhuyenMai());
                 }
             }
@@ -155,11 +153,11 @@ public class KhuyenMaiDAO {
 
     public boolean xoa(String maKM) {
         try {
-            Connection ketNoi = ConnectDB.getConnection();
             // Xóa quà tặng trước
             quaTangDAO.xoaTheoKhuyenMai(maKM);
 
-            try (PreparedStatement lenh = ketNoi.prepareStatement("DELETE FROM KhuyenMai WHERE maKhuyenMai = ?")) {
+            try (PreparedStatement lenh = ConnectDB.getConnection().prepareStatement(
+                    "DELETE FROM KhuyenMai WHERE maKhuyenMai = ?")) {
                 lenh.setString(1, maKM);
                 return lenh.executeUpdate() > 0;
             }
