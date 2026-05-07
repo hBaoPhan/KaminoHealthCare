@@ -27,6 +27,12 @@ import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 
 public class NhanVienPanel extends JPanel {
+
+    // =========================================================================
+    // VÙNG 1: KHAI BÁO BIẾN (UI COMPONENTS & DATA)
+    // =========================================================================
+
+    // --- Các thành phần giao diện ---
     private JTextField txtSearch, txtId, txtTen, txtSdt, txtCccd;
     private JComboBox<String> cbChucVuFilter, cbChucVu, cbTrangThai;
     private JTable table;
@@ -34,11 +40,16 @@ public class NhanVienPanel extends JPanel {
     private JLabel lblTongSo;
     private JButton btnThem, btnSua, btnXoa, btnLamMoi;
 
-    // Biến kết nối Database
+    // --- Biến kết nối Database và lưu trữ dữ liệu ---
     private com.example.dao.NhanVienDAO nvDAO = new com.example.dao.NhanVienDAO();
     private java.util.List<com.example.entity.NhanVien> dsNhanVien = new java.util.ArrayList<>();
+
+
+    // =========================================================================
+    // VÙNG 2: HÀM KHỞI TẠO (CONSTRUCTOR)
+    // =========================================================================
+
     public NhanVienPanel() {
-        
         // 1. Thiết lập layout chính
         setLayout(new BorderLayout());
         setBackground(new Color(245, 245, 245));
@@ -55,11 +66,19 @@ public class NhanVienPanel extends JPanel {
         centerArea.add(createTablePanel());
 
         add(centerArea, BorderLayout.CENTER);
+        
+        // 4. Load dữ liệu và cài đặt sự kiện
         taiLaiDanhSach();
         setupListeners();
     }
 
-   private JPanel createTopBar() {
+
+    // =========================================================================
+    // VÙNG 3: KHỞI TẠO GIAO DIỆN (UI BUILDING)
+    // =========================================================================
+
+    /** Tạo thanh công cụ tìm kiếm và lọc phía trên */
+    private JPanel createTopBar() {
         JPanel topBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 15));
         topBar.setBackground(Color.WHITE);
 
@@ -75,6 +94,7 @@ public class NhanVienPanel extends JPanel {
         return topBar;
     }
 
+    /** Tạo Form nhập liệu thông tin nhân viên bên trái */
     private JPanel createFormPanel() {
         JPanel formPanel = new JPanel(new BorderLayout());
         formPanel.setBackground(Color.WHITE);
@@ -112,6 +132,7 @@ public class NhanVienPanel extends JPanel {
 
         formPanel.add(inputPanel, BorderLayout.NORTH);
 
+        // Panel chứa các nút bấm
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
         buttonPanel.setBackground(Color.WHITE);
         buttonPanel.setBorder(new EmptyBorder(30, 0, 0, 0));
@@ -125,6 +146,7 @@ public class NhanVienPanel extends JPanel {
         return formPanel;
     }
 
+    /** Tạo bảng danh sách nhân viên bên phải */
     private JPanel createTablePanel() {
         JPanel tableContainer = new JPanel(new BorderLayout());
         tableContainer.setBackground(Color.WHITE);
@@ -154,40 +176,12 @@ public class NhanVienPanel extends JPanel {
         return tableContainer;
     }
 
-    // --- HÀM TẠO NÚT BẤM (HOVER & COLOR) ---
-    private JButton createColorButton(String text, Color bgColor) {
-        JButton btn = new JButton(text);
-        btn.setBackground(bgColor);
-        btn.setForeground(Color.BLACK); // Giữ chữ đen theo phong cách hình ảnh
 
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        btn.setPreferredSize(new Dimension(100, 35));
+    // =========================================================================
+    // VÙNG 4: SỰ KIỆN & LOAD DỮ LIỆU (EVENTS & DATA BINDING)
+    // =========================================================================
 
-        btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
-        btn.setOpaque(true);
-        btn.setContentAreaFilled(true);
-        btn.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
-
-        btn.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                btn.setBackground(bgColor.darker());
-                btn.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                btn.setBackground(bgColor);
-            }
-        });
-
-        return btn;
-    }
-
-   // ==========================================
-    // PHẦN LOGIC: SỰ KIỆN VÀ THAO TÁC DATABASE
-    // ==========================================
+    /** Cài đặt bộ lắng nghe sự kiện chuột, phím và combo box */
     private void setupListeners() {
         // 1. Click vào bảng hiện lên form
         table.addMouseListener(new MouseAdapter() {
@@ -232,7 +226,7 @@ public class NhanVienPanel extends JPanel {
             }
         });
 
-        // 5. Gắn sự kiện cho nút
+        // 5. Gắn sự kiện cho các nút
         btnLamMoi.addActionListener(e -> lamMoiForm());
         btnThem.addActionListener(e -> themNhanVien());
         btnSua.addActionListener(e -> suaNhanVien());
@@ -244,12 +238,14 @@ public class NhanVienPanel extends JPanel {
         });
     }
 
+    /** Lấy toàn bộ nhân viên từ CSDL và vẽ lên giao diện */
     public void taiLaiDanhSach() {
         dsNhanVien = nvDAO.layTatCa();
         locVaTimKiem();
         lamMoiForm();
     }
 
+    /** Lọc dữ liệu trên bảng theo từ khóa tìm kiếm và vai trò */
     private void locVaTimKiem() {
         String keyword = txtSearch.getText().toLowerCase().trim();
         if (keyword.equals("tìm theo tên...")) keyword = "";
@@ -272,28 +268,12 @@ public class NhanVienPanel extends JPanel {
         lblTongSo.setText("Tổng số nhân viên: " + count);
     }
 
-    private void lamMoiForm() {
-        txtSearch.setText("  Tìm theo tên...");
-        txtTen.setText(""); txtSdt.setText(""); txtCccd.setText("");
-        cbChucVu.setSelectedIndex(0); cbTrangThai.setSelectedIndex(0); cbChucVuFilter.setSelectedIndex(0);
-        table.clearSelection();
-        phatSinhMaTuDong();
-    }
 
-    private void phatSinhMaTuDong() {
-        String prefix = cbChucVu.getSelectedIndex() == 0 ? "DS" : "QL";
-        int maxId = 0;
-        for (com.example.entity.NhanVien nv : dsNhanVien) {
-            if (nv.getMaNhanVien().startsWith(prefix)) {
-                try {
-                    int num = Integer.parseInt(nv.getMaNhanVien().substring(2));
-                    if (num > maxId) maxId = num;
-                } catch (Exception e) {}
-            }
-        }
-        txtId.setText(String.format("%s%03d", prefix, maxId + 1));
-    }
+    // =========================================================================
+    // VÙNG 5: LOGIC NGHIỆP VỤ CHÍNH (CORE CRUD LOGIC)
+    // =========================================================================
 
+    /** Thêm một nhân viên mới vào CSDL */
     private void themNhanVien() {
         if (txtTen.getText().trim().isEmpty() || txtSdt.getText().trim().isEmpty() || txtCccd.getText().trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ thông tin!"); return;
@@ -316,6 +296,7 @@ public class NhanVienPanel extends JPanel {
         }
     }
 
+    /** Cập nhật thông tin nhân viên đang được chọn */
     private void suaNhanVien() {
         if (table.getSelectedRow() == -1) { JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên từ bảng!"); return; }
         if (JOptionPane.showConfirmDialog(this, "Xác nhận cập nhật?", "Xác nhận", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
@@ -333,6 +314,7 @@ public class NhanVienPanel extends JPanel {
         }
     }
 
+    /** Khóa nhân viên (Xóa mềm) */
     private void khoaNhanVien() {
         if (table.getSelectedRow() == -1) { JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên!"); return; }
         if (txtId.getText().equals("QL001")) { JOptionPane.showMessageDialog(this, "Cảnh báo: Không thể khóa tài khoản Quản lý gốc!"); return; }
@@ -344,5 +326,65 @@ public class NhanVienPanel extends JPanel {
                 JOptionPane.showMessageDialog(this, "Đã khóa thành công!"); taiLaiDanhSach();
             }
         }
+    }
+
+
+    // =========================================================================
+    // VÙNG 6: CÁC HÀM HỖ TRỢ (HELPER LOGIC)
+    // =========================================================================
+
+    /** Làm mới các ô nhập liệu về trạng thái ban đầu */
+    private void lamMoiForm() {
+        txtSearch.setText("  Tìm theo tên...");
+        txtTen.setText(""); txtSdt.setText(""); txtCccd.setText("");
+        cbChucVu.setSelectedIndex(0); cbTrangThai.setSelectedIndex(0); cbChucVuFilter.setSelectedIndex(0);
+        table.clearSelection();
+        phatSinhMaTuDong();
+    }
+
+    /** Sinh mã tự động DSxxx hoặc QLxxx cho nhân viên mới */
+    private void phatSinhMaTuDong() {
+        String prefix = cbChucVu.getSelectedIndex() == 0 ? "DS" : "QL";
+        int maxId = 0;
+        for (com.example.entity.NhanVien nv : dsNhanVien) {
+            if (nv.getMaNhanVien().startsWith(prefix)) {
+                try {
+                    int num = Integer.parseInt(nv.getMaNhanVien().substring(2));
+                    if (num > maxId) maxId = num;
+                } catch (Exception e) {}
+            }
+        }
+        txtId.setText(String.format("%s%03d", prefix, maxId + 1));
+    }
+
+    /** Hàm tiện ích tạo giao diện cho nút bấm (màu sắc, hiệu ứng hover) */
+    private JButton createColorButton(String text, Color bgColor) {
+        JButton btn = new JButton(text);
+        btn.setBackground(bgColor);
+        btn.setForeground(Color.BLACK); // Giữ chữ đen theo phong cách hình ảnh
+
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btn.setPreferredSize(new Dimension(100, 35));
+
+        btn.setFocusPainted(false);
+        btn.setBorderPainted(false);
+        btn.setOpaque(true);
+        btn.setContentAreaFilled(true);
+        btn.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+
+        btn.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                btn.setBackground(bgColor.darker());
+                btn.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                btn.setBackground(bgColor);
+            }
+        });
+
+        return btn;
     }
 }

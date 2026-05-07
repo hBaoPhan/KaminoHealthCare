@@ -241,10 +241,14 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 			case "Mở Ca" -> {
 				if (pnlMoCa != null)
 					pnlMoCa.loadDuLieuCa();
+				if (pnlCaLam != null)
+					pnlCaLam.taiLaiDanhSach();
 			}
 			case "Kết Ca" -> {
 				if (pnlDongCa != null)
 					pnlDongCa.loadDuLieuCa();
+				if (pnlCaLam != null)
+					pnlCaLam.taiLaiDanhSach();
 			}
 			case "Bán Hàng" -> {
 				if (pnlBanHang != null)
@@ -262,9 +266,9 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 				if (isQuanLy && pnlTaiKhoan != null)
 					pnlTaiKhoan.taiLaiDanhSach();
 			}
-			case "Thống Kê" -> {
-				if (pnlThongKe != null)
-					pnlThongKe.capNhatDuLieuThongKe();
+			case "Quản Lý Ca Làm" -> {
+				if (pnlCaLam != null)
+					pnlCaLam.taiLaiDanhSach();
 			}
 		}
 	}

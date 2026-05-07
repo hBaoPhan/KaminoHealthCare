@@ -9,7 +9,6 @@ import com.example.dao.HoaDonDAO;
 
 import java.awt.*;
 import java.text.DecimalFormat;
-import com.example.dao.HoaDonDAO;
 import com.example.entity.ChiTietHoaDon;
 import com.example.entity.HoaDon;
 import java.awt.event.KeyAdapter;
@@ -26,6 +25,11 @@ import javax.swing.table.TableCellEditor;
 
 public class TraHangPanel extends JPanel {
 
+    // =========================================================================
+    // VÙNG 1: KHAI BÁO BIẾN (UI COMPONENTS & DATA)
+    // =========================================================================
+
+    // --- Các thành phần giao diện ---
     private JTextField txtMaHoaGoc, txtMaHoaDon, txtNgayTao, txtNguoiTao, txtTenKhachHang;
     private JTextField txtTienGoc, txtTienTra, txtChenhLech, txtThue, txtThanhTien, txtTienTraLai;
     private JTextField txtSearch;
@@ -33,12 +37,19 @@ public class TraHangPanel extends JPanel {
     private JButton btnThanhToan;
     private JCheckBox chkTienMat, chkChuyenKhoan;
 
+    // --- Biến xử lý dữ liệu và Database ---
     private HoaDonDAO hoaDonDAO = new HoaDonDAO();
     private ChiTietHoaDonDAO ctHDPDAO = new ChiTietHoaDonDAO();
     private DefaultTableModel model; // Để đổ dữ liệu vào bảng
     private List<ChiTietHoaDon> dsChiTietGoc = new ArrayList<>();
     private DecimalFormat df = new DecimalFormat("###,###,### VND");
-	private HoaDon hd;
+    private HoaDon hd;
+
+
+    // =========================================================================
+    // VÙNG 2: HÀM KHỞI TẠO (CONSTRUCTOR)
+    // =========================================================================
+
     public TraHangPanel() {
         setLayout(new BorderLayout(15, 10));
         setBorder(new EmptyBorder(15, 15, 15, 15));
@@ -50,6 +61,11 @@ public class TraHangPanel extends JPanel {
         // --- PHẦN BÊN PHẢI: THÔNG TIN HÓA ĐƠN TRẢ HÀNG ---
         add(createInfoPanel(), BorderLayout.EAST);
     }
+
+
+    // =========================================================================
+    // VÙNG 3: KHỞI TẠO GIAO DIỆN (UI BUILDING)
+    // =========================================================================
 
     /**
      * Tạo Panel chứa bảng dữ liệu và thanh tìm kiếm phía trên
@@ -81,8 +97,8 @@ public class TraHangPanel extends JPanel {
                         hienThiSanPhamHoaDon(ma);
                     }
                 }
-        }
-    });
+            }
+        });
         txtSearch.setPreferredSize(new Dimension(180, 30));
         txtSearch.setText(placeholder);
         txtSearch.setForeground(Color.GRAY);
@@ -124,19 +140,18 @@ public class TraHangPanel extends JPanel {
 
         // Bảng dữ liệu
         String[] columns = { "Mã sản phẩm", "Tên sản phẩm", "Đơn vị", "Số lượng", "Đơn giá", "Thuế", "Thành tiền" };
-        // Dữ liệu mẫu
-        Object[][] data = {
-        };
+        Object[][] data = {};
         model = new DefaultTableModel(data, columns){
-        @Override
+            @Override
             public boolean isCellEditable(int row, int column) {
-                return column == 3; 
+                return column == 3; // Chỉ cho phép sửa cột số lượng
             }
         };
         JTable table = new JTable(model);
         table.setRowHeight(30);
         table.getColumnModel().getColumn(3).setCellEditor(new QuantitySpinnerEditor());
-        // 2. Lắng nghe sự kiện người dùng gõ sửa số lượng
+        
+        // Lắng nghe sự kiện người dùng gõ sửa số lượng
         model.addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
@@ -172,7 +187,7 @@ public class TraHangPanel extends JPanel {
             }
         });
 
-        // 3. Menu chuột phải để XÓA mặt hàng khỏi danh sách trả
+        // Menu chuột phải để XÓA mặt hàng khỏi danh sách trả
         JPopupMenu popupMenu = new JPopupMenu();
         JMenuItem menuXoa = new JMenuItem("Xóa khỏi danh sách trả");
         popupMenu.add(menuXoa);
@@ -185,11 +200,15 @@ public class TraHangPanel extends JPanel {
                 tinhToanTienHoanTra(); // Xóa xong phải tính lại tiền
             }
         });
+        
         pnl.add(pnlHeader, BorderLayout.NORTH);
         pnl.add(new JScrollPane(table), BorderLayout.CENTER);
         return pnl;
     }
 
+    /**
+     * Tạo Panel chứa thông tin hóa đơn và thanh toán bên phải
+     */
     private JPanel createInfoPanel() {
         JPanel pnlMain = new JPanel(new BorderLayout());
         pnlMain.setPreferredSize(new Dimension(380, 0));
@@ -251,6 +270,8 @@ public class TraHangPanel extends JPanel {
         btnThanhToan.setFont(new Font("Segoe UI", Font.BOLD, 18));
         btnThanhToan.setFocusPainted(false);
         btnThanhToan.setPreferredSize(new Dimension(0, 45));
+        
+        // Sự kiện Thanh toán và Trả hàng
         btnThanhToan.addActionListener(e -> {  
             if (model.getRowCount() == 0) {
                 JOptionPane.showMessageDialog(this, "Không có sản phẩm nào để trả hàng!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
@@ -266,94 +287,96 @@ public class TraHangPanel extends JPanel {
                 HoaDon hoaDonTra = new HoaDon();
                 hoaDonTra.setThoiGianTao(java.time.LocalDateTime.now());
                 hoaDonTra.setMaHoaDon(txtMaHoaDon.getText()); // Mã mới: HDT...
+                
                 if (hd != null) {
-                hoaDonTra.setKhachHang(hd.getKhachHang());
-            }
+                    hoaDonTra.setKhachHang(hd.getKhachHang());
+                }
+                
                 // Tạo đối tượng hóa đơn gốc và gán mã HD01 vào
                 HoaDon hdGoc = new HoaDon();
                 hdGoc.setMaHoaDon(txtMaHoaGoc.getText()); 
                 hoaDonTra.setHoaDonDoiTra(hdGoc);
                 hoaDonTra.setGhiChu(txtGhiChu.getText());
-            // hoaDonTra.setNhanVien(nhanVienDangNhap); // Nếu bạn có thông tin nhân viên đăng nhập
+                
                 com.example.entity.NhanVien nvTemp = new com.example.entity.NhanVien();
                 nvTemp.setMaNhanVien("QL001"); // Tạm thời gán QL001 để test
                 hoaDonTra.setNhanVien(nvTemp);
-        // 2. Gom danh sách sản phẩm thực tế từ bảng vào hóa đơn
-        List<ChiTietHoaDon> dsTra = new ArrayList<>();
-        for (int i = 0; i < model.getRowCount(); i++) {
-            String maSP = model.getValueAt(i, 0).toString();
-            int slTra = Integer.parseInt(model.getValueAt(i, 3).toString());
-            
-            // Tìm lại thông tin gốc để lấy Đơn vị quy đổi và Đơn giá
-            for (ChiTietHoaDon ctGoc : dsChiTietGoc) {
-                if (ctGoc.getDonViQuyDoi().getSanPham().getMaSanPham().equals(maSP)) {
-                    ChiTietHoaDon ctMoi = new ChiTietHoaDon();
-                    ctMoi.setDonViQuyDoi(ctGoc.getDonViQuyDoi());
-                    ctMoi.setSoLuong(slTra);
-                    ctMoi.setDonGia(ctGoc.getDonGia());
-                    dsTra.add(ctMoi);
-                    break;
-                }
-            }
-        }
-        hoaDonTra.setDsChiTiet(dsTra);
-
-        // =========================================================================
-            // BƯỚC BỔ SUNG: Truy vấn CSDL lấy danh sách các Lô đã bán của Hóa đơn gốc
-            // để hoàn trả số lượng đúng vào Lô đó.
-            // =========================================================================
-            List<com.example.entity.SuPhanBoLo> dsPhanBoTra = new ArrayList<>();
-            try {
-                java.sql.Connection con = com.example.connectDB.ConnectDB.getConnection();
-                // Lấy các lô mà hóa đơn gốc đã xuất cho một đơn vị sản phẩm cụ thể
-                String sql = "SELECT maLo, soLuong FROM SuPhanBoLo WHERE maHoaDon = ? AND maDonVi = ?";
-                java.sql.PreparedStatement ps = con.prepareStatement(sql);
                 
-                for (ChiTietHoaDon ctMoi : dsTra) {
-                    int soLuongCanTra = ctMoi.getSoLuong();
+                // 2. Gom danh sách sản phẩm thực tế từ bảng vào hóa đơn
+                List<ChiTietHoaDon> dsTra = new ArrayList<>();
+                for (int i = 0; i < model.getRowCount(); i++) {
+                    String maSP = model.getValueAt(i, 0).toString();
+                    int slTra = Integer.parseInt(model.getValueAt(i, 3).toString());
                     
-                    ps.setString(1, txtMaHoaGoc.getText().trim()); // Lấy mã hóa đơn gốc
-                    ps.setString(2, ctMoi.getDonViQuyDoi().getMaDonVi());
-                    
-                    java.sql.ResultSet rs = ps.executeQuery();
-                    
-                    // Nếu 1 sản phẩm bị lấy từ 2 Lô khác nhau, vòng lặp này sẽ chia đúng số lượng trả về từng Lô
-                    while (rs.next() && soLuongCanTra > 0) {
-                        String maLoGoc = rs.getString("maLo");
-                        int slGocTrongLo = rs.getInt("soLuong");
-                        
-                        // Tính toán số lượng trả vào lô này (không được vượt quá số lượng đã lấy từ lô)
-                        int slTraVaoLo = Math.min(soLuongCanTra, slGocTrongLo);
-                        
-                        com.example.entity.SuPhanBoLo sp = new com.example.entity.SuPhanBoLo();
-                        com.example.entity.Lo lo = new com.example.entity.Lo();
-                        lo.setMaLo(maLoGoc);
-                        sp.setLo(lo);
-                        sp.setChiTietHoaDon(ctMoi);
-                        sp.setSoLuong(slTraVaoLo); // Số lượng hoàn trả
-                        
-                        dsPhanBoTra.add(sp);
-                        
-                        soLuongCanTra -= slTraVaoLo; // Trừ đi phần đã trả vào lô này
+                    // Tìm lại thông tin gốc để lấy Đơn vị quy đổi và Đơn giá
+                    for (ChiTietHoaDon ctGoc : dsChiTietGoc) {
+                        if (ctGoc.getDonViQuyDoi().getSanPham().getMaSanPham().equals(maSP)) {
+                            ChiTietHoaDon ctMoi = new ChiTietHoaDon();
+                            ctMoi.setDonViQuyDoi(ctGoc.getDonViQuyDoi());
+                            ctMoi.setSoLuong(slTra);
+                            ctMoi.setDonGia(ctGoc.getDonGia());
+                            dsTra.add(ctMoi);
+                            break;
+                        }
                     }
-                    rs.close();
                 }
-                ps.close();
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
+                hoaDonTra.setDsChiTiet(dsTra);
 
-            // 3. Gọi DAO để lưu xuống SQL Server (ĐÃ TRUYỀN ĐỦ 2 THAM SỐ)
-            if (hoaDonDAO.luuHoaDonTraHang(hoaDonTra, dsPhanBoTra)) {
-                JOptionPane.showMessageDialog(TraHangPanel.this, "Thanh toán và hoàn kho thành công!");
-                
-                // Xóa sạch dữ liệu trên giao diện để làm hóa đơn mới
-                lamMoiGiaoDien(); 
-            } else {
-                JOptionPane.showMessageDialog(TraHangPanel.this, "Lỗi khi lưu dữ liệu vào hệ thống!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                // =========================================================================
+                // BƯỚC BỔ SUNG: Truy vấn CSDL lấy danh sách các Lô đã bán của Hóa đơn gốc
+                // để hoàn trả số lượng đúng vào Lô đó.
+                // =========================================================================
+                List<com.example.entity.SuPhanBoLo> dsPhanBoTra = new ArrayList<>();
+                try {
+                    java.sql.Connection con = com.example.connectDB.ConnectDB.getConnection();
+                    // Lấy các lô mà hóa đơn gốc đã xuất cho một đơn vị sản phẩm cụ thể
+                    String sql = "SELECT maLo, soLuong FROM SuPhanBoLo WHERE maHoaDon = ? AND maDonVi = ?";
+                    java.sql.PreparedStatement ps = con.prepareStatement(sql);
+                    
+                    for (ChiTietHoaDon ctMoi : dsTra) {
+                        int soLuongCanTra = ctMoi.getSoLuong();
+                        
+                        ps.setString(1, txtMaHoaGoc.getText().trim()); // Lấy mã hóa đơn gốc
+                        ps.setString(2, ctMoi.getDonViQuyDoi().getMaDonVi());
+                        
+                        java.sql.ResultSet rs = ps.executeQuery();
+                        
+                        // Nếu 1 sản phẩm bị lấy từ 2 Lô khác nhau, vòng lặp này sẽ chia đúng số lượng trả về từng Lô
+                        while (rs.next() && soLuongCanTra > 0) {
+                            String maLoGoc = rs.getString("maLo");
+                            int slGocTrongLo = rs.getInt("soLuong");
+                            
+                            // Tính toán số lượng trả vào lô này (không được vượt quá số lượng đã lấy từ lô)
+                            int slTraVaoLo = Math.min(soLuongCanTra, slGocTrongLo);
+                            
+                            com.example.entity.SuPhanBoLo sp = new com.example.entity.SuPhanBoLo();
+                            com.example.entity.Lo lo = new com.example.entity.Lo();
+                            lo.setMaLo(maLoGoc);
+                            sp.setLo(lo);
+                            sp.setChiTietHoaDon(ctMoi);
+                            sp.setSoLuong(slTraVaoLo); // Số lượng hoàn trả
+                            
+                            dsPhanBoTra.add(sp);
+                            
+                            soLuongCanTra -= slTraVaoLo; // Trừ đi phần đã trả vào lô này
+                        }
+                        rs.close();
+                    }
+                    ps.close();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+
+                // 3. Gọi DAO để lưu xuống SQL Server
+                if (hoaDonDAO.luuHoaDonTraHang(hoaDonTra, dsPhanBoTra)) {
+                    JOptionPane.showMessageDialog(TraHangPanel.this, "Thanh toán và hoàn kho thành công!");
+                    // Xóa sạch dữ liệu trên giao diện để làm hóa đơn mới
+                    lamMoiGiaoDien(); 
+                } else {
+                    JOptionPane.showMessageDialog(TraHangPanel.this, "Lỗi khi lưu dữ liệu vào hệ thống!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                }
             }
-        }
-    }); // Kết thúc sự kiện btnThanhToan
+        }); // Kết thúc sự kiện btnThanhToan
 
         JPanel pnlBottom = new JPanel(new BorderLayout());
         pnlBottom.setOpaque(false);
@@ -367,53 +390,38 @@ public class TraHangPanel extends JPanel {
         return pnlMain;
     }
 
-    private void addInputRow(JPanel pnl, String labelText, JTextField txt, GridBagConstraints gbc, int row) {
-        gbc.gridy = row;
-        JPanel rowPanel = new JPanel(new BorderLayout(10, 0));
-        rowPanel.setOpaque(false);
-        JLabel lbl = new JLabel(labelText);
-        lbl.setPreferredSize(new Dimension(130, 25));
-        rowPanel.add(lbl, BorderLayout.WEST);
-        rowPanel.add(txt, BorderLayout.CENTER);
-        pnl.add(rowPanel, gbc);
-    }
 
-    private void setupStyles() {
-        JTextField[] readonly = { txtMaHoaGoc, txtMaHoaDon, txtNgayTao, txtNguoiTao, txtTenKhachHang,
-                txtTienGoc, txtTienTra, txtChenhLech, txtThue, txtThanhTien, txtTienTraLai };
-        for (JTextField f : readonly) {
-            f.setEditable(false);
-            f.setBackground(new Color(200, 200, 200));
-            f.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-            f.setHorizontalAlignment(JTextField.LEFT);
-        }
-    }
+    // =========================================================================
+    // VÙNG 4: XỬ LÝ DỮ LIỆU & TÍNH TOÁN (DATA PROCESSING)
+    // =========================================================================
+
+    /** Hiển thị sản phẩm của hóa đơn gốc lên bảng dựa vào mã nhập */
     private void hienThiSanPhamHoaDon(String maHD) {
         // 1. Kiểm tra xem hóa đơn này đã từng đổi trả lần nào chưa
-    if (hoaDonDAO.daTungDoiTra(maHD)) {
-        JOptionPane.showMessageDialog(this, 
-            "Hóa đơn này đã thực hiện đổi/trả trước đó. Mỗi hóa đơn chỉ được đổi trả 01 lần duy nhất!", 
-            "Thông báo", JOptionPane.WARNING_MESSAGE);
-        lamMoiGiaoDien();
-        return;
-    }
-
-    // 2. Lấy hóa đơn kèm kiểm tra điều kiện (Thanh toán = 1 và Hạn = 7 ngày)
-    this.hd = hoaDonDAO.layHoaDonDeDoi(maHD);
-
-    if (this.hd == null) {
-        // Kiểm tra xem thực sự là không có mã này hay là do vi phạm điều kiện 7 ngày
-        HoaDon hdCheck = hoaDonDAO.timTheoMa(maHD);
-        if (hdCheck == null) {
-            JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn có mã: " + maHD, "Lỗi", JOptionPane.ERROR_MESSAGE);
-        } else {
+        if (hoaDonDAO.daTungDoiTra(maHD)) {
             JOptionPane.showMessageDialog(this, 
-                "Hóa đơn này không đủ điều kiện đổi trả!\n(Lý do: Có thể đã quá hạn 7 ngày hoặc chưa được thanh toán)", 
-                "Từ chối", JOptionPane.WARNING_MESSAGE);
+                "Hóa đơn này đã thực hiện đổi/trả trước đó. Mỗi hóa đơn chỉ được đổi trả 01 lần duy nhất!", 
+                "Thông báo", JOptionPane.WARNING_MESSAGE);
+            lamMoiGiaoDien();
+            return;
         }
-        lamMoiGiaoDien();
-        return;
-    }
+
+        // 2. Lấy hóa đơn kèm kiểm tra điều kiện (Thanh toán = 1 và Hạn = 7 ngày)
+        this.hd = hoaDonDAO.layHoaDonDeDoi(maHD);
+
+        if (this.hd == null) {
+            // Kiểm tra xem thực sự là không có mã này hay là do vi phạm điều kiện 7 ngày
+            HoaDon hdCheck = hoaDonDAO.timTheoMa(maHD);
+            if (hdCheck == null) {
+                JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn có mã: " + maHD, "Lỗi", JOptionPane.ERROR_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, 
+                    "Hóa đơn này không đủ điều kiện đổi trả!\n(Lý do: Có thể đã quá hạn 7 ngày hoặc chưa được thanh toán)", 
+                    "Từ chối", JOptionPane.WARNING_MESSAGE);
+            }
+            lamMoiGiaoDien();
+            return;
+        }
 
         dsChiTietGoc = ctHDPDAO.layTheoMaHoaDon(maHD);
         this.hd.setDsChiTiet(dsChiTietGoc);
@@ -423,7 +431,7 @@ public class TraHangPanel extends JPanel {
         txtTenKhachHang.setText(this.hd.getKhachHang() != null ? this.hd.getKhachHang().getTenKhachHang() : "Khách lẻ");
         txtTienGoc.setText(df.format(this.hd.tinhTongTienThanhToan()));
 
-        // CẬP NHẬT: Ngày tạo hiện tại và Tự sinh mã trả
+        // Ngày tạo hiện tại và Tự sinh mã trả
         txtNgayTao.setText(new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(new java.util.Date()));
         txtMaHoaDon.setText(tuSinhMaHoaDonTra());
 
@@ -443,47 +451,49 @@ public class TraHangPanel extends JPanel {
         tinhToanTienHoanTra();
     }
 
-// 2. Hàm tự sinh mã hóa đơn trả định dạng HDTddMMyyXXX
-    private String tuSinhMaHoaDonTra() {
-        String ngayThangNam = new java.text.SimpleDateFormat("ddMMyy").format(new java.util.Date());
-        int soThuTuMoi = hoaDonDAO.laySoLuongHoaDonTrongNgay() + 1;
-        return "HDT" + ngayThangNam + String.format("%03d", soThuTuMoi);
-    }
-        private void tinhToanTienHoanTra() {
-            double tongTienTra = 0;
-            double tongThueTra = 0;
+    /** Tính toán tổng số tiền hoàn trả lại cho khách */
+    private void tinhToanTienHoanTra() {
+        double tongTienTra = 0;
+        double tongThueTra = 0;
 
-            // Lặp qua tất cả các dòng còn lại trên bảng
-            for (int i = 0; i < model.getRowCount(); i++) {
-                String maSP = model.getValueAt(i, 0).toString();
-                int soLuongTra = Integer.parseInt(model.getValueAt(i, 3).toString());
+        // Lặp qua tất cả các dòng còn lại trên bảng
+        for (int i = 0; i < model.getRowCount(); i++) {
+            String maSP = model.getValueAt(i, 0).toString();
+            int soLuongTra = Integer.parseInt(model.getValueAt(i, 3).toString());
 
-                // Tìm đối tượng gốc tương ứng để lấy đơn giá và thuế suất
-                for (ChiTietHoaDon ct : dsChiTietGoc) {
-                    if (ct.getDonViQuyDoi().getSanPham().getMaSanPham().equals(maSP)) {
-                        double donGia = ct.getDonGia();
-                        double thueSuat = ct.getDonViQuyDoi().getSanPham().getThue();
+            // Tìm đối tượng gốc tương ứng để lấy đơn giá và thuế suất
+            for (ChiTietHoaDon ct : dsChiTietGoc) {
+                if (ct.getDonViQuyDoi().getSanPham().getMaSanPham().equals(maSP)) {
+                    double donGia = ct.getDonGia();
+                    double thueSuat = ct.getDonViQuyDoi().getSanPham().getThue();
 
-                        double tienTra = soLuongTra * donGia;
-                        double thue = tienTra * (thueSuat / 100.0);
+                    double tienTra = soLuongTra * donGia;
+                    double thue = tienTra * (thueSuat / 100.0);
 
-                        tongTienTra += tienTra;
-                        tongThueTra += thue;
-                        break;
-                    }
+                    tongTienTra += tienTra;
+                    tongThueTra += thue;
+                    break;
                 }
             }
-
-            double thanhTien = tongTienTra + tongThueTra;
-
-            // Cập nhật lên các ô nhập liệu bên phải
-            txtTienTra.setText(df.format(tongTienTra));
-            txtThue.setText(df.format(tongThueTra));
-            txtThanhTien.setText(df.format(thanhTien));
-            txtTienTraLai.setText(df.format(thanhTien));
-            txtChenhLech.setText(df.format(thanhTien)); 
         }
-        private void lamMoiGiaoDien() {
+
+        double thanhTien = tongTienTra + tongThueTra;
+
+        // Cập nhật lên các ô nhập liệu bên phải
+        txtTienTra.setText(df.format(tongTienTra));
+        txtThue.setText(df.format(tongThueTra));
+        txtThanhTien.setText(df.format(thanhTien));
+        txtTienTraLai.setText(df.format(thanhTien));
+        txtChenhLech.setText(df.format(thanhTien)); 
+    }
+
+
+    // =========================================================================
+    // VÙNG 5: LOGIC LÀM MỚI (RESET LOGIC)
+    // =========================================================================
+
+    /** Làm mới toàn bộ giao diện về trạng thái rỗng */
+    private void lamMoiGiaoDien() {
         txtSearch.setText("Mã hóa đơn");
         txtSearch.setForeground(Color.GRAY); // Trả về màu nhạt để gợi ý nhập tiếp
         
@@ -508,6 +518,43 @@ public class TraHangPanel extends JPanel {
             dsChiTietGoc.clear();
         }
     }
+
+
+    // =========================================================================
+    // VÙNG 6: CÁC HÀM HỖ TRỢ VÀ INNER CLASS (HELPERS & COMPONENT)
+    // =========================================================================
+
+    /** Hỗ trợ thêm từng dòng input có nhãn vào Panel */
+    private void addInputRow(JPanel pnl, String labelText, JTextField txt, GridBagConstraints gbc, int row) {
+        gbc.gridy = row;
+        JPanel rowPanel = new JPanel(new BorderLayout(10, 0));
+        rowPanel.setOpaque(false);
+        JLabel lbl = new JLabel(labelText);
+        lbl.setPreferredSize(new Dimension(130, 25));
+        rowPanel.add(lbl, BorderLayout.WEST);
+        rowPanel.add(txt, BorderLayout.CENTER);
+        pnl.add(rowPanel, gbc);
+    }
+
+    /** Cấu hình màu nền mờ cho các textfield chỉ đọc */
+    private void setupStyles() {
+        JTextField[] readonly = { txtMaHoaGoc, txtMaHoaDon, txtNgayTao, txtNguoiTao, txtTenKhachHang,
+                txtTienGoc, txtTienTra, txtChenhLech, txtThue, txtThanhTien, txtTienTraLai };
+        for (JTextField f : readonly) {
+            f.setEditable(false);
+            f.setBackground(new Color(200, 200, 200));
+            f.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+            f.setHorizontalAlignment(JTextField.LEFT);
+        }
+    }
+
+    /** Hàm tự sinh mã hóa đơn trả định dạng HDTddMMyyXXX */
+    private String tuSinhMaHoaDonTra() {
+        String ngayThangNam = new java.text.SimpleDateFormat("ddMMyy").format(new java.util.Date());
+        int soThuTuMoi = hoaDonDAO.laySoLuongHoaDonTrongNgay() + 1;
+        return "HDT" + ngayThangNam + String.format("%03d", soThuTuMoi);
+    }
+
     // ====================================================================
     // Lớp hỗ trợ tạo nút Tăng/Giảm (Spinner) cho cột Số lượng trong bảng
     // ====================================================================

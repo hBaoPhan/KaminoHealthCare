@@ -16,6 +16,11 @@ import javax.swing.table.DefaultTableModel;
 
 public class KhachHangPanel extends JPanel {
 
+    // =========================================================================
+    // VÙNG 1: KHAI BÁO BIẾN (UI COMPONENTS & DATA)
+    // =========================================================================
+
+    // --- Khai báo các thành phần giao diện ---
     private JTextField txtSearch, txtId, txtTen, txtSdt;
     private JComboBox<String> cbFilter;
     private JTable table;
@@ -23,8 +28,14 @@ public class KhachHangPanel extends JPanel {
     private JLabel lblTongSo;
     private JButton btnThem, btnSua, btnXoa, btnLamMoi;
 
+    // --- Khai báo biến xử lý Database và Dữ liệu ---
     private KhachHangDAO khDAO = new KhachHangDAO();
     private List<KhachHang> dsKhachHang = new ArrayList<>();
+
+
+    // =========================================================================
+    // VÙNG 2: HÀM KHỞI TẠO (CONSTRUCTOR)
+    // =========================================================================
 
     public KhachHangPanel() {
         // 1. Thiết lập layout chính
@@ -43,11 +54,18 @@ public class KhachHangPanel extends JPanel {
         centerArea.add(createTablePanel());
 
         add(centerArea, BorderLayout.CENTER);
+        
+        // 4. Load dữ liệu và cài đặt các sự kiện
         taiLaiDanhSach();
         setupListeners();
     }
 
-    // --- PHẦN TÌM KIẾM ---
+
+    // =========================================================================
+    // VÙNG 3: KHỞI TẠO GIAO DIỆN (UI BUILDING)
+    // =========================================================================
+
+    /** Tạo thanh công cụ tìm kiếm và lọc phía trên */
     private JPanel createTopBar() {
         JPanel topBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 15));
         topBar.setBackground(Color.WHITE);
@@ -68,7 +86,7 @@ public class KhachHangPanel extends JPanel {
         return topBar;
     }
 
-    // --- FORM NHẬP LIỆU ---
+    /** Tạo Form nhập liệu thông tin khách hàng (Bên trái) */
     private JPanel createFormPanel() {
         JPanel formPanel = new JPanel(new BorderLayout());
         formPanel.setBackground(Color.WHITE);
@@ -93,8 +111,6 @@ public class KhachHangPanel extends JPanel {
         inputPanel.add(new JLabel("Số điện thoại:"));
         inputPanel.add(txtSdt = new JTextField());
 
-    
-
         formPanel.add(inputPanel, BorderLayout.NORTH);
 
         // Panel chứa các nút bấm
@@ -115,7 +131,7 @@ public class KhachHangPanel extends JPanel {
         return formPanel;
     }
 
-    // --- BẢNG DỮ LIỆU ---
+    /** Tạo bảng danh sách khách hàng (Bên phải) */
     private JPanel createTablePanel() {
         JPanel tableContainer = new JPanel(new BorderLayout());
         tableContainer.setBackground(Color.WHITE);
@@ -147,9 +163,14 @@ public class KhachHangPanel extends JPanel {
         return tableContainer;
     }
 
-    // --- SỰ KIỆN ---
 
+    // =========================================================================
+    // VÙNG 4: SỰ KIỆN & LOAD DỮ LIỆU (EVENTS & DATA BINDING)
+    // =========================================================================
+
+    /** Cài đặt các bộ lắng nghe sự kiện (Click, Nhập liệu,...) */
     private void setupListeners() {
+        // Sự kiện click chọn dòng trên bảng
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -162,14 +183,17 @@ public class KhachHangPanel extends JPanel {
             }
         });
 
+        // Sự kiện đổi bộ lọc
         cbFilter.addActionListener(e -> locVaTimKiem());
 
+        // Sự kiện gõ phím tìm kiếm (Live Search)
         txtSearch.getDocument().addDocumentListener(new DocumentListener() {
             public void insertUpdate(DocumentEvent e) { locVaTimKiem(); }
             public void removeUpdate(DocumentEvent e) { locVaTimKiem(); }
             public void changedUpdate(DocumentEvent e) { locVaTimKiem(); }
         });
 
+        // Sự kiện nhấn Enter trên ô tìm kiếm
         txtSearch.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -184,20 +208,21 @@ public class KhachHangPanel extends JPanel {
             }
         });
 
+        // Sự kiện các nút chức năng
         btnLamMoi.addActionListener(e -> lamMoiForm());
         btnThem.addActionListener(e -> themKhachHang());
         btnSua.addActionListener(e -> suaKhachHang());
         btnXoa.addActionListener(e -> xoaKhachHang());
     }
 
-    // --- LOGIC NGHIỆP VỤ ---
-
+    /** Lấy dữ liệu mới nhất từ CSDL và hiển thị lại lên bảng */
     public void taiLaiDanhSach() {
         dsKhachHang = khDAO.layTatCa();
         locVaTimKiem();
         lamMoiForm();
     }
 
+    /** Xử lý logic lọc khách hàng theo chữ tìm kiếm và trạng thái */
     private void locVaTimKiem() {
         String keyword = txtSearch.getText().toLowerCase().trim();
         String filter = cbFilter.getSelectedItem().toString();
@@ -230,6 +255,7 @@ public class KhachHangPanel extends JPanel {
         lblTongSo.setText("Tổng số khách hàng: " + count);
     }
 
+    /** Xóa trắng form nhập liệu để chuẩn bị nhập mới */
     private void lamMoiForm() {
         txtSearch.setText("");
         txtTen.setText("");
@@ -240,31 +266,12 @@ public class KhachHangPanel extends JPanel {
         txtTen.requestFocus();
     }
 
-    private void phatSinhMaTuDong() {
-        int maxId = 0;
-        for (KhachHang kh : dsKhachHang) {
-            if (kh.getMaKhachHang().startsWith("TV")) {
-                try {
-                    int num = Integer.parseInt(kh.getMaKhachHang().substring(2));
-                    if (num > maxId) maxId = num;
-                } catch (Exception e) {}
-            }
-        }
-        txtId.setText(String.format("TV%06d", maxId + 1)); 
-    }
 
-    private boolean validateData() {
-        if (txtTen.getText().trim().isEmpty() || txtSdt.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ Tên và Số điện thoại!");
-            return false;
-        }
-        if (!txtSdt.getText().matches("\\d{10}")) {
-            JOptionPane.showMessageDialog(this, "Số điện thoại phải bao gồm đúng 10 chữ số!");
-            return false;
-        }
-        return true;
-    }
+    // =========================================================================
+    // VÙNG 5: LOGIC NGHIỆP VỤ CHÍNH (CORE CRUD LOGIC)
+    // =========================================================================
 
+    /** Thêm khách hàng mới vào hệ thống */
     private void themKhachHang() {
         if (!validateData()) return;
         
@@ -289,6 +296,7 @@ public class KhachHangPanel extends JPanel {
         }
     }
 
+    /** Cập nhật thông tin khách hàng đang được chọn */
     private void suaKhachHang() {
         int row = table.getSelectedRow();
         if (row == -1) {
@@ -330,6 +338,7 @@ public class KhachHangPanel extends JPanel {
         }
     }
 
+    /** Ẩn khách hàng (chuyển sang khách lẻ và đánh dấu đã xóa) */
     private void xoaKhachHang() {
         int row = table.getSelectedRow();
         if (row == -1) {
@@ -369,6 +378,39 @@ public class KhachHangPanel extends JPanel {
         }
     }
 
+
+    // =========================================================================
+    // VÙNG 6: CÁC HÀM HỖ TRỢ (HELPER LOGIC)
+    // =========================================================================
+
+    /** Tự động sinh mã khách hàng tiếp theo (VD: TV000005) */
+    private void phatSinhMaTuDong() {
+        int maxId = 0;
+        for (KhachHang kh : dsKhachHang) {
+            if (kh.getMaKhachHang().startsWith("TV")) {
+                try {
+                    int num = Integer.parseInt(kh.getMaKhachHang().substring(2));
+                    if (num > maxId) maxId = num;
+                } catch (Exception e) {}
+            }
+        }
+        txtId.setText(String.format("TV%06d", maxId + 1)); 
+    }
+
+    /** Kiểm tra tính hợp lệ của dữ liệu trước khi thêm/sửa */
+    private boolean validateData() {
+        if (txtTen.getText().trim().isEmpty() || txtSdt.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ Tên và Số điện thoại!");
+            return false;
+        }
+        if (!txtSdt.getText().matches("\\d{10}")) {
+            JOptionPane.showMessageDialog(this, "Số điện thoại phải bao gồm đúng 10 chữ số!");
+            return false;
+        }
+        return true;
+    }
+
+    /** Hàm tiện ích tạo nút bấm có màu nền và hiệu ứng Hover */
     private JButton createColorButton(String text, Color bgColor) {
         JButton btn = new JButton(text);
         btn.setBackground(bgColor);
