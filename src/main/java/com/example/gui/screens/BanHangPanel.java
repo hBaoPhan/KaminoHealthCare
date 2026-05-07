@@ -1138,17 +1138,18 @@ public class BanHangPanel extends JPanel {
     }
 
     /** Tạo / Lưu hóa đơn (không trừ kho) */
-    private void luuHoaDon(boolean hienThongBao) {
+    private boolean luuHoaDon(boolean hienThongBao) {
         // Nếu đang cập nhật UI hoặc bảng trống thì không lưu tự động
         if (model.getRowCount() == 0)
-            return;
+            return false;
 
         HoaDon hd = xayDungHoaDon(hienThongBao);
         if (hd == null)
-            return;
+            return false;
         List<ChiTietHoaDon> dsChiTiet = thuThapChiTiet(hd);
 
-        if (hoaDonDAO.luuHoaDonBanHang(hd, dsChiTiet)) {
+        boolean success = hoaDonDAO.luuHoaDonBanHang(hd, dsChiTiet);
+        if (success) {
             if (hienThongBao) {
                 JOptionPane.showMessageDialog(this, "Lưu hóa đơn thành công!", "Thành công",
                         JOptionPane.INFORMATION_MESSAGE);
@@ -1158,6 +1159,7 @@ public class BanHangPanel extends JPanel {
                 JOptionPane.showMessageDialog(this, "Lỗi khi lưu hóa đơn!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
         }
+        return success;
     }
 
     /** Thanh toán: tạo hóa đơn trước, sau đó xác nhận thanh toán + trừ kho */
@@ -1178,7 +1180,11 @@ public class BanHangPanel extends JPanel {
         // }
 
         // Lưu hóa đơn trước khi thanh toán (chế độ im lặng)
-        luuHoaDon(false);
+        if (!luuHoaDon(false)) {
+            JOptionPane.showMessageDialog(this, "Không thể lưu hóa đơn trước khi thanh toán. Vui lòng kiểm tra lại!",
+                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
         // Kiểm tra hóa đơn đã được lưu chưa
         HoaDon hd = xayDungHoaDon(true);

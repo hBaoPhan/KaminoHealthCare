@@ -33,7 +33,7 @@ public class ChiTietHoaDonDAO {
                 ct.setDonViQuyDoi(dvDAO.timTheoMa(maDV));
                 
                 SuPhanBoLoDAO spbDAO = new SuPhanBoLoDAO();
-                ct.setDsPhanBoLo(spbDAO.layPhanBoLoCuaChiTiet(maHD, maDV));
+                ct.setDsPhanBoLo(spbDAO.layPhanBoLoCuaChiTiet(maHD, maDV, ct.isLaQuaTangKem()));
                 
                 ds.add(ct);
             }
@@ -56,16 +56,16 @@ public class ChiTietHoaDonDAO {
 
     public boolean capNhat(ChiTietHoaDon ct) {
         int soDongThayDoi = 0;
-        String truyVan = "UPDATE ChiTietHoaDon SET soLuong = ?, donGia = ?, laQuaTangKem = ? WHERE maHoaDon = ? AND maDonVi = ?";
+        String truyVan = "UPDATE ChiTietHoaDon SET soLuong = ?, donGia = ? WHERE maHoaDon = ? AND maDonVi = ? AND laQuaTangKem = ?";
         
         Connection ketNoi = ConnectDB.getConnection();
         try (PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
             
             lenh.setInt(1, ct.getSoLuong());
             lenh.setDouble(2, ct.getDonGia());
-            lenh.setBoolean(3, ct.isLaQuaTangKem());
-            lenh.setString(4, ct.getHoaDon().getMaHoaDon());
-            lenh.setString(5, ct.getDonViQuyDoi().getMaDonVi());
+            lenh.setString(3, ct.getHoaDon().getMaHoaDon());
+            lenh.setString(4, ct.getDonViQuyDoi().getMaDonVi());
+            lenh.setBoolean(5, ct.isLaQuaTangKem());
             
             soDongThayDoi = lenh.executeUpdate();
         } catch (SQLException e) {
@@ -74,15 +74,16 @@ public class ChiTietHoaDonDAO {
         return soDongThayDoi > 0;
     }
 
-    public boolean xoa(String maHD, String maDV) {
+    public boolean xoa(String maHD, String maDV, boolean laQuaTangKem) {
         int soDongThayDoi = 0;
-        String truyVan = "DELETE FROM ChiTietHoaDon WHERE maHoaDon = ? AND maDonVi = ?";
+        String truyVan = "DELETE FROM ChiTietHoaDon WHERE maHoaDon = ? AND maDonVi = ? AND laQuaTangKem = ?";
         
         Connection ketNoi = ConnectDB.getConnection();
         try (PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
             
             lenh.setString(1, maHD);
             lenh.setString(2, maDV);
+            lenh.setBoolean(3, laQuaTangKem);
             
             soDongThayDoi = lenh.executeUpdate();
         } catch (SQLException e) {

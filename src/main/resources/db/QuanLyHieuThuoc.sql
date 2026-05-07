@@ -127,7 +127,7 @@ CREATE TABLE ChiTietHoaDon (
     soLuong INT,
     donGia FLOAT,
     laQuaTangKem BIT DEFAULT 0,
-    PRIMARY KEY (maHoaDon, maDonVi)
+    PRIMARY KEY (maHoaDon, maDonVi, laQuaTangKem)
 );
 
 CREATE TABLE SuPhanBoLo (
@@ -135,10 +135,11 @@ CREATE TABLE SuPhanBoLo (
     maDonVi VARCHAR(20),
     maLo VARCHAR(20) FOREIGN KEY REFERENCES Lo(maLo),
     soLuong INT,
+    laQuaTangKem BIT DEFAULT 0,
     CONSTRAINT FK_SuPhanBoLo_ChiTiet 
-        FOREIGN KEY (maHoaDon, maDonVi) 
-        REFERENCES ChiTietHoaDon(maHoaDon, maDonVi),
-    PRIMARY KEY (maHoaDon, maDonVi, maLo)
+        FOREIGN KEY (maHoaDon, maDonVi, laQuaTangKem) 
+        REFERENCES ChiTietHoaDon(maHoaDon, maDonVi, laQuaTangKem),
+    PRIMARY KEY (maHoaDon, maDonVi, maLo, laQuaTangKem)
 );
 GO
 
@@ -350,15 +351,15 @@ INSERT INTO ChiTietHoaDon (maHoaDon, maDonVi, soLuong, donGia, laQuaTangKem) VAL
 ('HDB300426001', 'DV015', 2, 850, 0),
 ('HDB020526001', 'DV017', 5, 85000, 0);
 
-INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong) VALUES
-('HDB200426001', 'DV001', 'LO010126001', 2),
-('HDB200426001', 'DV015', 'LO200326001', 1),
-('HDB200426002', 'DV016', 'LO200326001', 10),
-('HDB210426001', 'DV015', 'LO200326001', 2),
-('HDB210426002', 'DV017', 'LO200326001', 5),
-('HDB260426001', 'DV016', 'LO200326001', 10),
-('HDB300426001', 'DV015', 'LO200326001', 2),
-('HDB020526001', 'DV017', 'LO200326001', 5);
+INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong, laQuaTangKem) VALUES
+('HDB200426001', 'DV001', 'LO010126001', 2, 0),
+('HDB200426001', 'DV015', 'LO200326001', 1, 0),
+('HDB200426002', 'DV016', 'LO200326001', 10, 0),
+('HDB210426001', 'DV015', 'LO200326001', 2, 0),
+('HDB210426002', 'DV017', 'LO200326001', 5, 0),
+('HDB260426001', 'DV016', 'LO200326001', 10, 0),
+('HDB300426001', 'DV015', 'LO200326001', 2, 0),
+('HDB020526001', 'DV017', 'LO200326001', 5, 0);
 GO
 
 --- =================================================== ---

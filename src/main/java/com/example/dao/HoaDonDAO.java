@@ -586,6 +586,7 @@ public class HoaDonDAO {
                         psPhanBo.setString(2, spMoi.getChiTietHoaDon().getDonViQuyDoi().getMaDonVi());
                         psPhanBo.setString(3, spMoi.getLo().getMaLo());
                         psPhanBo.setInt(4, spMoi.getSoLuong());
+                        psPhanBo.setBoolean(5, spMoi.getChiTietHoaDon().isLaQuaTangKem());
                         psPhanBo.addBatch();
                     }
                     psLoMoi.executeBatch();
@@ -836,7 +837,7 @@ public class HoaDonDAO {
 
             // Trừ kho và ghi nhận SuPhanBoLo
             String sqlLo = "UPDATE Lo SET soLuongSanPham = soLuongSanPham - ? WHERE maLo = ?";
-            String sqlSPBL = "INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong) VALUES (?, ?, ?, ?)";
+            String sqlSPBL = "INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong, laQuaTangKem) VALUES (?, ?, ?, ?, ?)";
 
             try (PreparedStatement pstLo = con.prepareStatement(sqlLo);
                     PreparedStatement pstSPBL = con.prepareStatement(sqlSPBL)) {
@@ -858,6 +859,7 @@ public class HoaDonDAO {
                         pstSPBL.setString(2, ct.getDonViQuyDoi().getMaDonVi());
                         pstSPBL.setString(3, lo.getMaLo());
                         pstSPBL.setInt(4, tru);
+                        pstSPBL.setBoolean(5, ct.isLaQuaTangKem());
                         pstSPBL.executeUpdate();
 
                         soLuongCanTru -= tru;

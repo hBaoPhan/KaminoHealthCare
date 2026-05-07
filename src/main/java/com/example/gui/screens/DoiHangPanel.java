@@ -560,7 +560,7 @@ public class DoiHangPanel extends JPanel {
             }
 
             // 7. THỰC THI TRANSACTION QUA DAO
-            if (hoaDonDAO.luuGiaoDichDoiHang(hdMoi, dsTraLai, dsChiTietMoi, dsPhanBoMoi)) {
+            if (hoaDonDAO.luuHoaDonDoiHang(hdMoi, dsTraLai, dsChiTietMoi, dsPhanBoMoi)) {
                 JOptionPane.showMessageDialog(this, "Thanh toán thành công hóa đơn đổi: " + maHoaDonMoi);
                 resetForm();
             } else {
