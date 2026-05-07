@@ -1214,7 +1214,7 @@ public class BanHangPanel extends JPanel {
         } catch (java.sql.SQLException e) {
             JOptionPane.showMessageDialog(this, e.getMessage(), "Lỗi thanh toán",
                     JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
+            // e.printStackTrace();
         }
     }
 

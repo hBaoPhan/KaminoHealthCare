@@ -246,7 +246,7 @@ public class DoiHangPanel extends JPanel {
                 model.setValueAt(giaMoi, row, 4);
                 int sl = Integer.parseInt(model.getValueAt(row, 3).toString());
                 double thueTiLe = Double.parseDouble(model.getValueAt(row, 5).toString());
-                model.setValueAt(sl * giaMoi * (1 + thueTiLe), row, 6);
+                model.setValueAt(sl * giaMoi * (1 + thueTiLe / 100.0), row, 6);
                 tinhToanToanBoTien();
             });
         }
@@ -270,7 +270,7 @@ public class DoiHangPanel extends JPanel {
 
         for(ChiTietHoaDon ct : chiTietHoaDonGocList) {
             double thueTiLe = ct.getDonViQuyDoi().getSanPham().getThue();
-            double tt = ct.getSoLuong() * ct.getDonGia() * (1 + thueTiLe);
+            double tt = ct.getSoLuong() * ct.getDonGia() * (1 + thueTiLe / 100.0);
             model.addRow(new Object[]{
                 ct.getDonViQuyDoi().getSanPham().getMaSanPham(), 
                 ct.getDonViQuyDoi().getSanPham().getTenSanPham(), 
@@ -384,7 +384,7 @@ public class DoiHangPanel extends JPanel {
             int sl = Integer.parseInt(model.getValueAt(i, 3).toString());
             double gia = Double.parseDouble(model.getValueAt(i, 4).toString());
             double thueTiLe = Double.parseDouble(model.getValueAt(i, 5).toString());
-            double tt = sl * gia * (1 + thueTiLe);
+            double tt = sl * gia * (1 + thueTiLe / 100.0);
             model.setValueAt(tt, i, 6);
             total += tt;
         }
@@ -607,7 +607,7 @@ public class DoiHangPanel extends JPanel {
         
         table.getColumnModel().getColumn(5).setCellRenderer(new DefaultTableCellRenderer() {
             @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean h, int r, int c) {
-                if (v != null) v = String.format("%.1f %%", Double.parseDouble(v.toString()) * 100);
+                if (v != null) v = String.format("%.1f %%", Double.parseDouble(v.toString()));
                 setHorizontalAlignment(JLabel.CENTER);
                 return super.getTableCellRendererComponent(t, v, s, h, r, c);
             }

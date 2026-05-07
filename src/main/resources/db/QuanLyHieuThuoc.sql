@@ -200,67 +200,68 @@ INSERT INTO CaLam (maCa, maNhanVien, gioBatDau, gioKetThuc, trangThaiCaLam, tien
 
 -- 4.6. SẢN PHẨM & ĐƠN VỊ QUY ĐỔI (SỬA ĐƠN GIÁ CƠ BẢN LÀ GIÁ 1 VIÊN/1 TUÝP)
 INSERT INTO SanPham (maSanPham, tenSanPham, loaiSanPham, soLuongTon, moTa, hoatChat, donGiaCoBan, trangThaiKinhDoanh, thue) VALUES
-('OTC-BIA-001', 'Biafine Janssen', 'OTC', 998, 'Kem trị bỏng, vết thương và bỏng nắng', 'Biafine', 95000, 1, 0.05),
-('OTC-CON-002', 'Contractubex', 'OTC', 500, 'Kem trị sẹo lồi, sẹo lõm', 'Contractubex', 145000, 1, 0.05),
-('OTC-MIN-003', 'Minox 20mg Edol', 'OTC', 100, 'Dung dịch trị rụng tóc Minoxidil', 'Minoxidil 20mg', 185000, 1, 0.05),
-('OTC-NIZ-004', 'Nizoral Shampoo Janssen', 'OTC', 100, 'Dầu gội trị nấm da đầu', 'Ketoconazole', 125000, 1, 0.05),
-('OTC-REM-005', 'Remowart Farmalabor', 'OTC', 0, 'Thuốc bôi trị mụn cóc, u mềm', 'Acid Salicylic', 98000, 1, 0.05),
-('OTC-ALL-006', 'Allerphast 180mg', 'OTC', 795, 'Thuốc chống dị ứng thế hệ mới', 'Fexofenadine', 850, 1, 0.05),  -- Sửa thành 850đ/viên
-('OTC-CET-007', 'Cetirizin 10mg', 'OTC', 0, 'Thuốc chống dị ứng', 'Cetirizine 10mg', 550, 1, 0.05),    -- Sửa thành 550đ/viên
-('OTC-CLO-008', 'Clorpheniramin 4mg', 'OTC', 0, 'Thuốc kháng histamine trị dị ứng', 'Chlorpheniramine', 450, 1, 0.05), -- Sửa thành 450đ/viên
-('OTC-EXO-009', 'Exopadin 60mg', 'OTC', 0, 'Thuốc chống dị ứng', 'Fexofenadine 60mg', 920, 1, 0.05),   -- Sửa thành 920đ/viên
-('OTC-HIS-010', 'Histalong L 5mg', 'OTC', 0, 'Thuốc chống dị ứng', 'Loratadine 5mg', 680, 1, 0.05),    -- Sửa thành 680đ/viên
-('OTC-ATS-011', 'Atsirox 1 An Thiên', 'OTC', 0, 'Thuốc kháng sinh trị nhiễm khuẩn', 'Amoxicillin', 750, 1, 0.05),    -- Sửa thành 750đ/viên
-('OTC-FUG-012', 'Fugacar Janssen', 'OTC', 0, 'Thuốc tẩy giun Fugacar', 'Mebendazole', 62000, 1, 0.05),
-('OTC-CIC-013', 'Shampoo Ciclopirox VCP', 'OTC', 0, 'Dầu gội trị nấm da đầu', 'Ciclopirox', 115000, 1, 0.05),
-('OTC-TRI-014', 'Thuốc trị vảy nến da đầu', 'OTC', 0, 'Thuốc trị vảy nến da đầu', 'Coal Tar + Salicylic Acid', 98000, 1, 0.05),
-('OTC-TIM-015', 'Timbov Farmaprim', 'OTC', 0, 'Thuốc kháng sinh', 'Amoxicillin/Clavulanic acid', 135000, 1, 0.05),
-('OTC-CAL-016', 'Calcid Soft', 'OTC', 0, 'Canxi mềm bổ sung xương', 'Calcium', 1480, 1, 0.05),
-('OTC-COR-017', 'Calcium Corbiere Kids', 'OTC', 0, 'Canxi cho trẻ em Extra Sanofi', 'Calcium', 165000, 1, 0.05),
-('OTC-CST-018', 'Calcium Stada 500mg', 'OTC', 0, 'Canxi Stada bổ sung xương', 'Calcium Carbonate 500mg', 920, 1, 0.05),
-('OTC-KID-019', 'KiddieCal Catalent', 'OTC', 0, 'Canxi cho trẻ em', 'Calcium', 135000, 1, 0.05),
-('OTC-XKH-020', 'Xương Khớp Trương Phúc', 'OTC', 0, 'Hỗ trợ xương khớp', 'Glucosamine & Chondroitin', 2100, 1, 0.05),
-('ETC-BET-019', 'Betamethason 0.064% Medipharco', 'ETC', 0, 'Corticoid bôi da điều trị viêm da', 'Betamethason 0.064%', 85000, 1, 0.1),
-('ETC-DEX-020', 'Dexamethasone', 'ETC', 3000, 'Thuốc chống viêm, dị ứng mạnh', 'Dexamethasone', 650, 1, 0.1), -- Sửa thành 650đ/viên
-('ETC-MAX-021', 'Maxx Acne AC Ampharco', 'ETC', 0, 'Thuốc trị mụn nặng isotretinoin', 'Isotretinoin', 320000, 0, 0.1),
-('ETC-SRI-022', 'Srinron 10g Mipharco', 'ETC', 0, 'Kem trị viêm da, eczema', 'Betamethason + Gentamicin', 95000, 1, 0.1),
-('ETC-TOM-023', 'Tomax Genta Detapharm', 'ETC', 0, 'Kem kháng sinh da', 'Gentamicin', 78000, 1, 0.1),
-('ETC-BIL-024', 'Bilaxiten 20mg Menarini', 'ETC', 0, 'Thuốc chống dị ứng', 'Bilastine 20mg', 1150, 1, 0.1), -- Sửa thành 1150đ/viên
-('ETC-LOD-025', 'Lodax 20mg', 'ETC', 0, 'Thuốc chống dị ứng', 'Loratadine 20mg', 920, 1, 0.1), -- Sửa thành 920đ/viên
-('ETC-RUP-026', 'Rupafin 10mg', 'ETC', 0, 'Thuốc chống dị ứng', 'Rupatadine 10mg', 1050, 1, 0.1), -- Sửa thành 1050đ/viên
-('ETC-RUT-027', 'Rutadin 10mg', 'ETC', 0, 'Thuốc chống dị ứng', 'Rupatadine', 980, 1, 0.1),
-('ETC-ZYR-028', 'Zyrtec GSK', 'ETC', 0, 'Thuốc chống dị ứng', 'Cetirizine', 880, 1, 0.1),
-('ETC-CLE-029', 'Cledomox 625 Tenamyd', 'ETC', 0, 'Kháng sinh Amoxicillin/Clavulanic acid', 'Amoxicillin 625mg', 1350, 1, 0.1),
-('ETC-FLU-030', 'Flucona-Denk 150mg', 'ETC', 0, 'Thuốc trị nấm', 'Fluconazole 150mg', 125000, 1, 0.1),
-('ETC-IME-031', 'Imexime 100 Imexpharm', 'ETC', 0, 'Kháng sinh Cefixime', 'Cefixime 100mg', 950, 1, 0.1),
-('ETC-IME-032', 'Imexime 200 Imexpharm', 'ETC', 0, 'Kháng sinh Cefixime', 'Cefixime 200mg', 1450, 1, 0.1),
-('ETC-LEC-033', 'Lecifex 500mg Abbott', 'ETC', 0, 'Kháng sinh Levofloxacin', 'Levofloxacin 500mg', 1680, 1, 0.1),
-('ETC-FEB-034', 'Febuxotid VK 40mg', 'ETC', 0, 'Điều trị gout', 'Febuxostat 40mg', 1950, 1, 0.1),
-('ETC-FEB-035', 'Febuxotid VK 80mg', 'ETC', 0, 'Điều trị gout', 'Febuxostat 80mg', 2450, 1, 0.1),
-('ETC-MET-036', 'Methocarbamol 500mg Khapharco', 'ETC', 0, 'Thuốc giãn cơ', 'Methocarbamol 500mg', 1150, 1, 0.1),
-('ETC-OPE-037', 'Opedulox 40 OPV', 'ETC', 0, 'Thuốc giảm đau thần kinh', 'Duloxetine 40mg', 1780, 1, 0.1),
-('ETC-OPE-038', 'Opedulox 80 OPV', 'ETC', 0, 'Thuốc giảm đau thần kinh', 'Duloxetine 80mg', 2250, 1, 0.1),
-('TPCN-BPK-039', 'Bio Plus Kenko', 'TPCN', 500, 'Bổ sung vitamin và khoáng chất tổng hợp', 'Multi Vitamin & Minerals', 1950, 1, 0.1),
-('TPCN-BNI-040', 'Bổ Não Ích Trí Gold', 'TPCN', 0, 'Bổ não, tăng cường trí nhớ', 'Ginkgo Biloba & Thảo dược', 2450, 1, 0.1),
-('TPCN-BPL-041', 'Bổ Phế Labebe', 'TPCN', 0, 'Bổ phế, hỗ trợ hô hấp', 'Thảo dược', 168000, 1, 0.1),
-('TPCN-CDK-042', 'Canxi D3 K2 Kingphar', 'TPCN', 220, 'Canxi kết hợp Vitamin D3 và K2', 'Calcium, Vitamin D3, K2', 1750, 1, 0.1),
-('TPCN-D3D-043', 'D3 Drops DAO Nordic Health', 'TPCN', 0, 'Vitamin D3 dạng giọt', 'Vitamin D3', 135000, 1, 0.1),
-('TPCN-HPM-044', 'High Potency MK-7 Drops', 'TPCN', 0, 'Vitamin K2 MK-7 cao cấp', 'Vitamin K2 MK-7', 225000, 1, 0.1),
-('TPCN-HHT-045', 'Hoạt Huyết Thống Mạch Gold TW3', 'TPCN', 0, 'Hoạt huyết thông mạch', 'Thảo dược', 265000, 1, 0.1),
-('TPCN-IMU-046', 'Immuvita Easylife', 'TPCN', 0, 'Tăng cường sức đề kháng', 'Vitamin & Immuno Support', 1890, 1, 0.1),
-('TPCN-KAN-047', 'Kanzo Gold', 'TPCN', 0, 'Bổ gan Kanzo', 'Thảo dược', 198000, 1, 0.1),
-('TPCN-KID-048', 'KID GROW Kenko', 'TPCN', 0, 'Vitamin tăng trưởng cho trẻ em', 'Multi Vitamin', 172000, 1, 0.1),
-('TPCN-LBG-049', 'Lacto Biomin Gold', 'TPCN', 0, 'Men vi sinh Biomin', 'Probiotics', 168000, 1, 0.1),
-('TPCN-LAC-050', 'Lactobact Intima 30V', 'TPCN', 0, 'Men vi sinh phụ khoa', 'Lactobacillus', 2450, 1, 0.1),
-('TPCN-NUT-051', 'NutriGrow Nutrimed', 'TPCN', 0, 'Bổ sung dinh dưỡng trẻ em', 'Multi Vitamin', 165000, 1, 0.1),
-('TPCN-OMP-052', 'Omega 3 Plus Kenko', 'TPCN', 0, 'Omega 3 cao cấp', 'Omega-3 Fish Oil', 2350, 1, 0.1),
-('TPCN-OPD-053', 'Omega 3 Power DAO Nordic Health', 'TPCN', 0, 'Omega 3 Nordic Health', 'Omega-3', 258000, 1, 0.1),
-('TPCN-OMX-054', 'Omexxel 3-6-9 Premium', 'TPCN', 0, 'Omega 3-6-9 Premium', 'Omega 3,6,9', 275000, 1, 0.1),
-('TPCN-OMG-055', 'Omexxel Ginkgo 120 Premium', 'TPCN', 300, 'Ginkgo Biloba 120mg', 'Ginkgo Biloba', 2450, 1, 0.1),
-('TPCN-PIK-056', 'Pikolin Ocavill', 'TPCN', 0, 'Sắt Pikolin dễ hấp thu', 'Iron Pikolin', 1980, 1, 0.1),
-('TPCN-POB-057', 'Premium Omexxel Bone Health', 'TPCN', 0, 'Hỗ trợ xương khớp cao cấp', 'Calcium + Vitamin D & K2', 2890, 1, 0.1),
-('TPCN-SKI-058', 'SkillMax Ocavill', 'TPCN', 0, 'Hỗ trợ trí não', 'Ginkgo & Phosphatidylserine', 2150, 1, 0.1),
-('TPCN-VTC-059', N'Vitamin C 500mg Enervon', 'TPCN', 1000, N'Bổ sung Vitamin C và Vitamin B', 'Vitamin C 500mg', 35000, 1, 0.1);
+('OTC-BIA-001', 'Biafine Janssen', 'OTC', 998, 'Kem trị bỏng, vết thương và bỏng nắng', 'Biafine', 95000, 1, 5),
+('OTC-CON-002', 'Contractubex', 'OTC', 500, 'Kem trị sẹo lồi, sẹo lõm', 'Contractubex', 145000, 1, 5),
+('OTC-MIN-003', 'Minox 20mg Edol', 'OTC', 100, 'Dung dịch trị rụng tóc Minoxidil', 'Minoxidil 20mg', 185000, 1, 5),
+('OTC-NIZ-004', 'Nizoral Shampoo Janssen', 'OTC', 100, 'Dầu gội trị nấm da đầu', 'Ketoconazole', 125000, 1, 5),
+('OTC-REM-005', 'Remowart Farmalabor', 'OTC', 0, 'Thuốc bôi trị mụn cóc, u mềm', 'Acid Salicylic', 98000, 1, 5),
+('OTC-ALL-006', 'Allerphast 180mg', 'OTC', 795, 'Thuốc chống dị ứng thế hệ mới', 'Fexofenadine', 850, 1, 5),  -- Sửa thành 850đ/viên
+('OTC-CET-007', 'Cetirizin 10mg', 'OTC', 0, 'Thuốc chống dị ứng', 'Cetirizine 10mg', 550, 1, 5),    -- Sửa thành 550đ/viên
+('OTC-CLO-008', 'Clorpheniramin 4mg', 'OTC', 0, 'Thuốc kháng histamine trị dị ứng', 'Chlorpheniramine', 450, 1, 5), -- Sửa thành 450đ/viên
+('OTC-EXO-009', 'Exopadin 60mg', 'OTC', 0, 'Thuốc chống dị ứng', 'Fexofenadine 60mg', 920, 1, 5),   -- Sửa thành 920đ/viên
+('OTC-HIS-010', 'Histalong L 5mg', 'OTC', 0, 'Thuốc chống dị ứng', 'Loratadine 5mg', 680, 1, 5),    -- Sửa thành 680đ/viên
+('OTC-ATS-011', 'Atsirox 1 An Thiên', 'OTC', 0, 'Thuốc kháng sinh trị nhiễm khuẩn', 'Amoxicillin', 750, 1, 5),    -- Sửa thành 750đ/viên
+('OTC-FUG-012', 'Fugacar Janssen', 'OTC', 0, 'Thuốc tẩy giun Fugacar', 'Mebendazole', 62000, 1, 5),
+('OTC-CIC-013', 'Shampoo Ciclopirox VCP', 'OTC', 0, 'Dầu gội trị nấm da đầu', 'Ciclopirox', 115000, 1, 5),
+('OTC-TRI-014', 'Thuốc trị vảy nến da đầu', 'OTC', 0, 'Thuốc trị vảy nến da đầu', 'Coal Tar + Salicylic Acid', 98000, 1, 5),
+('OTC-TIM-015', 'Timbov Farmaprim', 'OTC', 0, 'Thuốc kháng sinh', 'Amoxicillin/Clavulanic acid', 135000, 1, 5),
+('OTC-CAL-016', 'Calcid Soft', 'OTC', 0, 'Canxi mềm bổ sung xương', 'Calcium', 1480, 1, 5),
+('OTC-COR-017', 'Calcium Corbiere Kids', 'OTC', 0, 'Canxi cho trẻ em Extra Sanofi', 'Calcium', 165000, 1, 5),
+('OTC-CST-018', 'Calcium Stada 500mg', 'OTC', 0, 'Canxi Stada bổ sung xương', 'Calcium Carbonate 500mg', 920, 1, 5),
+('OTC-KID-019', 'KiddieCal Catalent', 'OTC', 0, 'Canxi cho trẻ em', 'Calcium', 135000, 1, 5),
+('OTC-XKH-020', 'Xương Khớp Trương Phúc', 'OTC', 0, 'Hỗ trợ xương khớp', 'Glucosamine & Chondroitin', 2100, 1, 5),
+('ETC-BET-019', 'Betamethason 0.064% Medipharco', 'ETC', 0, 'Corticoid bôi da điều trị viêm da', 'Betamethason 0.064%', 85000, 1, 10),
+('ETC-DEX-020', 'Dexamethasone', 'ETC', 3000, 'Thuốc chống viêm, dị ứng mạnh', 'Dexamethasone', 650, 1, 10), -- Sửa thành 650đ/viên
+('ETC-MAX-021', 'Maxx Acne AC Ampharco', 'ETC', 0, 'Thuốc trị mụn nặng isotretinoin', 'Isotretinoin', 320000, 0, 10),
+('ETC-SRI-022', 'Srinron 10g Mipharco', 'ETC', 0, 'Kem trị viêm da, eczema', 'Betamethason + Gentamicin', 95000, 1, 10),
+('ETC-TOM-023', 'Tomax Genta Detapharm', 'ETC', 0, 'Kem kháng sinh da', 'Gentamicin', 78000, 1, 10),
+('ETC-BIL-024', 'Bilaxiten 20mg Menarini', 'ETC', 0, 'Thuốc chống dị ứng', 'Bilastine 20mg', 1150, 1, 10), -- Sửa thành 1150đ/viên
+('ETC-LOD-025', 'Lodax 20mg', 'ETC', 0, 'Thuốc chống dị ứng', 'Loratadine 20mg', 920, 1, 10), -- Sửa thành 920đ/viên
+('ETC-RUP-026', 'Rupafin 10mg', 'ETC', 0, 'Thuốc chống dị ứng', 'Rupatadine 10mg', 1050, 1, 10), -- Sửa thành 1050đ/viên
+('ETC-RUT-027', 'Rutadin 10mg', 'ETC', 0, 'Thuốc chống dị ứng', 'Rupatadine', 980, 1, 10),
+('ETC-ZYR-028', 'Zyrtec GSK', 'ETC', 0, 'Thuốc chống dị ứng', 'Cetirizine', 880, 1, 10),
+('ETC-ZYR-029', 'Zyrtec GSK', 'ETC', 0, 'Thuốc chống dị ứng', 'Cetirizine', 880, 1, 10),
+('ETC-CLE-029', 'Cledomox 625 Tenamyd', 'ETC', 0, 'Kháng sinh Amoxicillin/Clavulanic acid', 'Amoxicillin 625mg', 1350, 1, 10),
+('ETC-FLU-030', 'Flucona-Denk 150mg', 'ETC', 0, 'Thuốc trị nấm', 'Fluconazole 150mg', 125000, 1, 10),
+('ETC-IME-031', 'Imexime 100 Imexpharm', 'ETC', 0, 'Kháng sinh Cefixime', 'Cefixime 100mg', 950, 1, 10),
+('ETC-IME-032', 'Imexime 200 Imexpharm', 'ETC', 0, 'Kháng sinh Cefixime', 'Cefixime 200mg', 1450, 1, 10),
+('ETC-LEC-033', 'Lecifex 500mg Abbott', 'ETC', 0, 'Kháng sinh Levofloxacin', 'Levofloxacin 500mg', 1680, 1, 10),
+('ETC-FEB-034', 'Febuxotid VK 40mg', 'ETC', 0, 'Điều trị gout', 'Febuxostat 40mg', 1950, 1, 10),
+('ETC-FEB-035', 'Febuxotid VK 80mg', 'ETC', 0, 'Điều trị gout', 'Febuxostat 80mg', 2450, 1, 10),
+('ETC-MET-036', 'Methocarbamol 500mg Khapharco', 'ETC', 0, 'Thuốc giãn cơ', 'Methocarbamol 500mg', 1150, 1, 10),
+('ETC-OPE-037', 'Opedulox 40 OPV', 'ETC', 0, 'Thuốc giảm đau thần kinh', 'Duloxetine 40mg', 1780, 1, 10),
+('ETC-OPE-038', 'Opedulox 80 OPV', 'ETC', 0, 'Thuốc giảm đau thần kinh', 'Duloxetine 80mg', 2250, 1, 10),
+('TPCN-BPK-039', 'Bio Plus Kenko', 'TPCN', 500, 'Bổ sung vitamin và khoáng chất tổng hợp', 'Multi Vitamin & Minerals', 1950, 1, 10),
+('TPCN-BNI-040', 'Bổ Não Ích Trí Gold', 'TPCN', 0, 'Bổ não, tăng cường trí nhớ', 'Ginkgo Biloba & Thảo dược', 2450, 1, 10),
+('TPCN-BPL-041', 'Bổ Phế Labebe', 'TPCN', 0, 'Bổ phế, hỗ trợ hô hấp', 'Thảo dược', 168000, 1, 10),
+('TPCN-CDK-042', 'Canxi D3 K2 Kingphar', 'TPCN', 220, 'Canxi kết hợp Vitamin D3 và K2', 'Calcium, Vitamin D3, K2', 1750, 1, 10),
+('TPCN-D3D-043', 'D3 Drops DAO Nordic Health', 'TPCN', 0, 'Vitamin D3 dạng giọt', 'Vitamin D3', 135000, 1, 10),
+('TPCN-HPM-044', 'High Potency MK-7 Drops', 'TPCN', 0, 'Vitamin K2 MK-7 cao cấp', 'Vitamin K2 MK-7', 225000, 1, 10),
+('TPCN-HHT-045', 'Hoạt Huyết Thống Mạch Gold TW3', 'TPCN', 0, 'Hoạt huyết thông mạch', 'Thảo dược', 265000, 1, 10),
+('TPCN-IMU-046', 'Immuvita Easylife', 'TPCN', 0, 'Tăng cường sức đề kháng', 'Vitamin & Immuno Support', 1890, 1, 10),
+('TPCN-KAN-047', 'Kanzo Gold', 'TPCN', 0, 'Bổ gan Kanzo', 'Thảo dược', 198000, 1, 10),
+('TPCN-KID-048', 'KID GROW Kenko', 'TPCN', 0, 'Vitamin tăng trưởng cho trẻ em', 'Multi Vitamin', 172000, 1, 10),
+('TPCN-LBG-049', 'Lacto Biomin Gold', 'TPCN', 0, 'Men vi sinh Biomin', 'Probiotics', 168000, 1, 10),
+('TPCN-LAC-050', 'Lactobact Intima 30V', 'TPCN', 0, 'Men vi sinh phụ khoa', 'Lactobacillus', 2450, 1, 10),
+('TPCN-NUT-051', 'NutriGrow Nutrimed', 'TPCN', 0, 'Bổ sung dinh dưỡng trẻ em', 'Multi Vitamin', 165000, 1, 10),
+('TPCN-OMP-052', 'Omega 3 Plus Kenko', 'TPCN', 0, 'Omega 3 cao cấp', 'Omega-3 Fish Oil', 2350, 1, 10),
+('TPCN-OPD-053', 'Omega 3 Power DAO Nordic Health', 'TPCN', 0, 'Omega 3 Nordic Health', 'Omega-3', 258000, 1, 10),
+('TPCN-OMX-054', 'Omexxel 3-6-9 Premium', 'TPCN', 0, 'Omega 3-6-9 Premium', 'Omega 3,6,9', 275000, 1, 10),
+('TPCN-OMG-055', 'Omexxel Ginkgo 120 Premium', 'TPCN', 300, 'Ginkgo Biloba 120mg', 'Ginkgo Biloba', 2450, 1, 10),
+('TPCN-PIK-056', 'Pikolin Ocavill', 'TPCN', 0, 'Sắt Pikolin dễ hấp thu', 'Iron Pikolin', 1980, 1, 10),
+('TPCN-POB-057', 'Premium Omexxel Bone Health', 'TPCN', 0, 'Hỗ trợ xương khớp cao cấp', 'Calcium + Vitamin D & K2', 2890, 1, 10),
+('TPCN-SKI-058', 'SkillMax Ocavill', 'TPCN', 0, 'Hỗ trợ trí não', 'Ginkgo & Phosphatidylserine', 2150, 1, 10),
+('TPCN-VTC-059', N'Vitamin C 500mg Enervon', 'TPCN', 1000, N'Bổ sung Vitamin C và Vitamin B', 'Vitamin C 500mg', 35000, 1, 10);
 
 INSERT INTO DonViQuyDoi (maDonVi, tenDonVi, heSoQuyDoi, maSanPham) VALUES
 ('DV001', 'TUYP', 1, 'OTC-BIA-001'),

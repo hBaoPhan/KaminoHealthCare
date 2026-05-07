@@ -6,9 +6,11 @@ import com.example.entity.TaiKhoan;
 import com.example.entity.ChiTietHoaDon;
 import com.example.entity.HoaDon;
 import com.example.entity.Lo;
+import com.example.entity.enums.LoaiHoaDon;
 import com.example.entity.enums.LoaiSanPham;
 import com.example.dao.HoaDonDAO;
 import com.example.dao.LoDAO;
+import com.example.dao.ChiTietHoaDonDAO;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -51,10 +53,12 @@ public class ManHinhChinhPanel extends JPanel {
 
     private HoaDonDAO hoaDonDAO;
     private LoDAO loDAO;
+    private ChiTietHoaDonDAO chiTietHoaDonDAO;
 
     public ManHinhChinhPanel(TaiKhoan taiKhoan) {
         hoaDonDAO = new HoaDonDAO();
         loDAO = new LoDAO();
+        chiTietHoaDonDAO = new ChiTietHoaDonDAO();
 
         setLayout(new BorderLayout(20, 20));
         setBackground(COLOR_BG);
@@ -348,7 +352,32 @@ public class ManHinhChinhPanel extends JPanel {
             if (!hd.isTrangThaiThanhToan())
                 continue;
 
-            double tienHD = hd.tinhTongTienThanhToan();
+            double tienHD = 0;
+            double tongHienTai = hd.tinhTongTienThanhToan();
+            LoaiHoaDon loai = hd.getLoaiHoaDon();
+
+            if (loai == LoaiHoaDon.BAN_HANG || loai == null) {
+                tienHD = tongHienTai;
+            } else {
+                double tongGoc = 0;
+                if (hd.getHoaDonDoiTra() != null) {
+                    String maGoc = hd.getHoaDonDoiTra().getMaHoaDon();
+                    HoaDon hdGoc = hoaDonDAO.timTheoMa(maGoc);
+                    if (hdGoc != null) {
+                        hdGoc.setDsChiTiet(chiTietHoaDonDAO.layTheoMaHoaDon(maGoc));
+                        tongGoc = hdGoc.tinhTongTienThanhToan();
+                    }
+                }
+
+                if (loai == LoaiHoaDon.DOI_HANG) {
+                    tienHD = tongHienTai - tongGoc;
+                } else if (loai == LoaiHoaDon.TRA_HANG) {
+                    tienHD = tongGoc - tongHienTai;
+                } else {
+                    tienHD = tongHienTai;
+                }
+            }
+
             doanhThu += tienHD;
 
             if (hd.getThoiGianTao() != null) {
@@ -359,7 +388,16 @@ public class ManHinhChinhPanel extends JPanel {
             if (hd.getDsChiTiet() != null) {
                 for (ChiTietHoaDon ct : hd.getDsChiTiet()) {
                     if (ct.getDonViQuyDoi() != null && ct.getDonViQuyDoi().getSanPham() != null) {
+                        // Phân bổ doanh thu của chi tiết theo tỷ lệ đóng góp vào tổng hóa đơn
+                        // Nếu là Đổi/Trả thì dùng doanh thu hiệu chỉnh
                         double tienCT = ct.tinhThanhTien();
+                        if (tongHienTai > 0) {
+                            tienCT = (tienCT / tongHienTai) * tienHD;
+                        } else if (tienHD < 0) {
+                            // Trường hợp hiếm khi tổng hiện tại = 0 nhưng có doanh thu âm
+                            tienCT = tienHD / hd.getDsChiTiet().size();
+                        }
+
                         LoaiSanPham pl = ct.getDonViQuyDoi().getSanPham().getLoaiSanPham();
                         if (pl == LoaiSanPham.ETC)
                             dtETC += tienCT;
@@ -450,5 +488,33 @@ public class ManHinhChinhPanel extends JPanel {
                 });
             }
         }
+    }
+
+    private double tinhDoanhThuHieuChinh(HoaDon hd) {
+        if (hd == null)
+            return 0;
+        double tongHienTai = hd.tinhTongTienThanhToan();
+        LoaiHoaDon loai = hd.getLoaiHoaDon();
+
+        if (loai == LoaiHoaDon.BAN_HANG || loai == null) {
+            return tongHienTai;
+        }
+
+        double tongGoc = 0;
+        if (hd.getHoaDonDoiTra() != null) {
+            String maGoc = hd.getHoaDonDoiTra().getMaHoaDon();
+            HoaDon hdGoc = hoaDonDAO.timTheoMa(maGoc);
+            if (hdGoc != null) {
+                hdGoc.setDsChiTiet(chiTietHoaDonDAO.layTheoMaHoaDon(maGoc));
+                tongGoc = hdGoc.tinhTongTienThanhToan();
+            }
+        }
+
+        if (loai == LoaiHoaDon.DOI_HANG) {
+            return tongHienTai - tongGoc;
+        } else if (loai == LoaiHoaDon.TRA_HANG) {
+            return tongGoc - tongHienTai;
+        }
+        return tongHienTai;
     }
 }
