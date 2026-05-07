@@ -166,4 +166,23 @@ public class CaLamDAO {
         }
         return cl;
     }
+
+    public int laySoLuongCaTrongNgay(String prefix) {
+        int count = 0;
+        String sql = "SELECT COUNT(*) FROM CaLam WHERE maCa LIKE ?";
+        try {
+            Connection con = com.example.connectDB.ConnectDB.getConnection();
+            try (PreparedStatement pst = con.prepareStatement(sql)) {
+                pst.setString(1, prefix + "%");
+                try (ResultSet rs = pst.executeQuery()) {
+                    if (rs.next()) {
+                        count = rs.getInt(1);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return count;
+    }
 }
