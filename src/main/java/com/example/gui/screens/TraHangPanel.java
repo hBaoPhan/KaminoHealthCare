@@ -389,18 +389,31 @@ public class TraHangPanel extends JPanel {
         }
     }
     private void hienThiSanPhamHoaDon(String maHD) {
-        if (hoaDonDAO.daTungDoiTra(maHD)) {
+        // 1. Kiểm tra xem hóa đơn này đã từng đổi trả lần nào chưa
+    if (hoaDonDAO.daTungDoiTra(maHD)) {
+        JOptionPane.showMessageDialog(this, 
+            "Hóa đơn này đã thực hiện đổi/trả trước đó. Mỗi hóa đơn chỉ được đổi trả 01 lần duy nhất!", 
+            "Thông báo", JOptionPane.WARNING_MESSAGE);
+        lamMoiGiaoDien();
+        return;
+    }
+
+    // 2. Lấy hóa đơn kèm kiểm tra điều kiện (Thanh toán = 1 và Hạn = 7 ngày)
+    this.hd = hoaDonDAO.layHoaDonDeDoi(maHD);
+
+    if (this.hd == null) {
+        // Kiểm tra xem thực sự là không có mã này hay là do vi phạm điều kiện 7 ngày
+        HoaDon hdCheck = hoaDonDAO.timTheoMa(maHD);
+        if (hdCheck == null) {
+            JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn có mã: " + maHD, "Lỗi", JOptionPane.ERROR_MESSAGE);
+        } else {
             JOptionPane.showMessageDialog(this, 
-                "Hóa đơn này đã thực hiện đổi/trả một lần trước đó. Theo quy định, mỗi hóa đơn chỉ được đổi trả 01 lần duy nhất!", 
-                "Thông báo", JOptionPane.WARNING_MESSAGE);
-            lamMoiGiaoDien();
-            return;
+                "Hóa đơn này không đủ điều kiện đổi trả!\n(Lý do: Có thể đã quá hạn 7 ngày hoặc chưa được thanh toán)", 
+                "Từ chối", JOptionPane.WARNING_MESSAGE);
         }
-        this.hd = hoaDonDAO.timTheoMa(maHD);
-        if (this.hd == null) {
-            JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn: " + maHD);
-            return;
-        }
+        lamMoiGiaoDien();
+        return;
+    }
 
         dsChiTietGoc = ctHDPDAO.layTheoMaHoaDon(maHD);
         this.hd.setDsChiTiet(dsChiTietGoc);
