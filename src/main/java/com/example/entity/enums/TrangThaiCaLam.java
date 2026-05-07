@@ -2,7 +2,8 @@ package com.example.entity.enums;
 
 public enum TrangThaiCaLam {
     DANG_MO("Đang mở"),
-    DONG("Đóng");
+    DONG("Đóng"),
+    CHUA_MO("Chưa mở");
 
     private final String moTa;
 
