@@ -3,7 +3,7 @@ package com.example.gui.screens;
 import com.example.dao.LoDAO;
 import com.example.entity.Lo;
 import com.example.entity.SanPham;
-import com.toedter.calendar.JDateChooser;   // ← Cần import này
+import com.toedter.calendar.JDateChooser; // ← Cần import này
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -21,17 +21,23 @@ import java.util.List;
 public class LoPanel extends JPanel {
 
     private final LoDAO loDAO = new LoDAO();
+    private final com.example.dao.SanPhamDAO sanPhamDAO = new com.example.dao.SanPhamDAO();
     private JTable table;
     private DefaultTableModel model;
 
     private JTextField txtMaLo, txtSoLo, txtMaSanPham, txtSoLuong, txtGiaNhap;
-    private JDateChooser dateChooserNgayHetHan;   // ← Thay thế cho JTextField ngày
+    private JDateChooser dateChooserNgayHetHan; // ← Thay thế cho JTextField ngày
+
+    private List<Lo> danhSachLo;
+    private List<SanPham> danhSachSanPham;
+    private JPopupMenu searchPopup;
+    private boolean isUpdatingSearch = false;
 
     public LoPanel() {
         setLayout(new BorderLayout());
         setBackground(new Color(245, 245, 245));
 
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, 
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
                 createLeftPanel(), createRightPanel());
         splitPane.setResizeWeight(0.65);
         splitPane.setBorder(null);
@@ -59,15 +65,64 @@ public class LoPanel extends JPanel {
         lblDanhSachLo.setFont(new Font("Segoe UI", Font.BOLD, 20));
         lblDanhSachLo.setForeground(new Color(50, 50, 50));
 
-        JTextField txtSearch = new JTextField("Tìm kiếm mã lô...");
+        JTextField txtSearch = new JTextField("Tìm kiếm theo mã sản phẩm...");
         txtSearch.setForeground(Color.GRAY);
-        txtSearch.setPreferredSize(new Dimension(250, 35));
+        txtSearch.setPreferredSize(new Dimension(280, 35));
+
+        searchPopup = new JPopupMenu();
+        searchPopup.setFocusable(false);
+
+        txtSearch.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusGained(java.awt.event.FocusEvent e) {
+                if ("Tìm kiếm theo mã sản phẩm...".equals(txtSearch.getText().trim())) {
+                    isUpdatingSearch = true;
+                    txtSearch.setText("");
+                    txtSearch.setForeground(Color.BLACK);
+                    isUpdatingSearch = false;
+                }
+            }
+
+            @Override
+            public void focusLost(java.awt.event.FocusEvent e) {
+                if (txtSearch.getText().trim().isEmpty()) {
+                    isUpdatingSearch = true;
+                    txtSearch.setText("Tìm kiếm theo mã sản phẩm...");
+                    txtSearch.setForeground(Color.GRAY);
+                    isUpdatingSearch = false;
+                }
+            }
+        });
+
+        txtSearch.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            @Override
+            public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                updateSearch(txtSearch);
+            }
+
+            @Override
+            public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                updateSearch(txtSearch);
+            }
+
+            @Override
+            public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                updateSearch(txtSearch);
+            }
+        });
 
         JButton btnSearch = new RoundedButton("Tìm");
         btnSearch.setPreferredSize(new Dimension(80, 35));
         btnSearch.setBackground(new Color(0, 123, 255));
         btnSearch.setForeground(Color.WHITE);
-        btnSearch.addActionListener(e -> loadDataToTable()); // tạm thời load lại
+        btnSearch.addActionListener(e -> {
+            searchPopup.setVisible(false);
+            locVaHienThiLo(txtSearch.getText().trim());
+        });
+        txtSearch.addActionListener(e -> {
+            searchPopup.setVisible(false);
+            locVaHienThiLo(txtSearch.getText().trim());
+        });
 
         JPanel searchWrapper = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
         searchWrapper.setBackground(new Color(245, 245, 245));
@@ -78,12 +133,47 @@ public class LoPanel extends JPanel {
         topBar.add(searchWrapper, BorderLayout.EAST);
 
         // Bảng
-        String[] columns = {"STT", "Mã lô", "Số lô", "Mã SP", "Ngày hết hạn", "SL tồn", "Giá nhập"};
+        String[] columns = { "STT", "Mã lô", "Số lô", "Mã SP", "Ngày hết hạn", "SL tồn", "Giá nhập" };
         model = new DefaultTableModel(columns, 0) {
-            @Override public boolean isCellEditable(int row, int column) { return false; }
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
         };
 
-        table = new JTable(model);
+        table = new JTable(model) {
+            @Override
+            public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+                Component c = super.prepareRenderer(renderer, row, column);
+                String maLo = (String) getValueAt(row, 1);
+                boolean isExpiredOrNear = false;
+                if (danhSachLo != null) {
+                    for (Lo lo : danhSachLo) {
+                        if (lo.getMaLo().equals(maLo)) {
+                            // Hết hạn hoặc gần hết hạn (<= 30 ngày)
+                            if (!lo.getNgayHetHan().isAfter(java.time.LocalDate.now().plusDays(30))) {
+                                isExpiredOrNear = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                if (!isRowSelected(row)) {
+                    if (isExpiredOrNear) {
+                        c.setBackground(new Color(230, 230, 230)); // Xám
+                        c.setForeground(new Color(150, 150, 150)); // Chữ xám
+                    } else {
+                        c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 249, 250));
+                        c.setForeground(Color.BLACK);
+                    }
+                } else {
+                    c.setBackground(new Color(203, 213, 225));
+                    c.setForeground(Color.BLACK);
+                }
+                return c;
+            }
+        };
         table.setRowHeight(35);
         table.setShowGrid(true);
         table.setGridColor(new Color(230, 230, 230));
@@ -94,7 +184,7 @@ public class LoPanel extends JPanel {
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                loadSelectedRowToForm();   // Load dữ liệu khi click
+                loadSelectedRowToForm(); // Load dữ liệu khi click
             }
         });
 
@@ -111,8 +201,10 @@ public class LoPanel extends JPanel {
         table.getColumnModel().getColumn(6).setPreferredWidth(110);
 
         for (int i = 0; i < 7; i++) {
-            if (i == 5 || i == 6) table.getColumnModel().getColumn(i).setCellRenderer(right);
-            else table.getColumnModel().getColumn(i).setCellRenderer(center);
+            if (i == 5 || i == 6)
+                table.getColumnModel().getColumn(i).setCellRenderer(right);
+            else
+                table.getColumnModel().getColumn(i).setCellRenderer(center);
         }
 
         JScrollPane scrollPane = new JScrollPane(table);
@@ -193,31 +285,40 @@ public class LoPanel extends JPanel {
         return rightPanel;
     }
 
-    private void addResponsiveFormField(JPanel panel, GridBagConstraints gbc, int row, 
+    private void addResponsiveFormField(JPanel panel, GridBagConstraints gbc, int row,
             String labelText, JComponent inputComp, boolean isEditable) {
-        gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0;
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0;
         JLabel lbl = new JLabel(labelText);
         lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
         panel.add(lbl, gbc);
 
         if (inputComp instanceof JTextField txt) {
             txt.setEditable(isEditable);
-            if (!isEditable) txt.setBackground(new Color(235, 235, 235));
+            if (!isEditable)
+                txt.setBackground(new Color(235, 235, 235));
             txt.setPreferredSize(new Dimension(200, 32));
         }
 
-        gbc.gridx = 1; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         panel.add(inputComp, gbc);
     }
 
-    private void addDateField(JPanel panel, GridBagConstraints gbc, int row, 
+    private void addDateField(JPanel panel, GridBagConstraints gbc, int row,
             String labelText, JDateChooser dateChooser) {
-        gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0;
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0;
         JLabel lbl = new JLabel(labelText);
         lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
         panel.add(lbl, gbc);
 
-        gbc.gridx = 1; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         panel.add(dateChooser, gbc);
     }
 
@@ -235,13 +336,36 @@ public class LoPanel extends JPanel {
     // ====================== CÁC HÀM XỬ LÝ ======================
 
     private void loadDataToTable() {
+        if (danhSachSanPham == null)
+            danhSachSanPham = sanPhamDAO.layTatCa();
+        danhSachLo = loDAO.layTatCa();
+        
+        boolean hasChanged = false;
+        java.time.LocalDate now = java.time.LocalDate.now();
+        for (Lo lo : danhSachLo) {
+            if (lo.getSoLuongSanPham() > 0 && !lo.getNgayHetHan().isAfter(now.plusDays(30))) {
+                lo.setSoLuongSanPham(0);
+                loDAO.capNhatLo(lo);
+                hasChanged = true;
+            }
+        }
+        
+        if (hasChanged) {
+            danhSachLo = loDAO.layTatCa();
+        }
+        
+        hienThiLoLenBang(danhSachLo);
+    }
+
+    private void hienThiLoLenBang(List<Lo> list) {
         model.setRowCount(0);
-        List<Lo> list = loDAO.layTatCa();
+        if (list == null)
+            return;
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 
         int stt = 1;
         for (Lo lo : list) {
-            model.addRow(new Object[]{
+            model.addRow(new Object[] {
                     stt++,
                     lo.getMaLo(),
                     lo.getSoLo(),
@@ -251,6 +375,86 @@ public class LoPanel extends JPanel {
                     String.format("%,.0f", lo.getGiaNhap())
             });
         }
+    }
+
+    private void updateSearch(JTextField txtSearch) {
+        if (isUpdatingSearch)
+            return;
+
+        String text = txtSearch.getText().trim();
+        if (text.isEmpty() || text.equals("Tìm kiếm lô theo mã sản phẩm...")) {
+            searchPopup.setVisible(false);
+            if (text.isEmpty()) {
+                hienThiLoLenBang(danhSachLo);
+            }
+            return;
+        }
+
+        SwingUtilities.invokeLater(() -> {
+            List<SanPham> results = new java.util.ArrayList<>();
+            if (danhSachSanPham == null)
+                danhSachSanPham = sanPhamDAO.layTatCa();
+            for (SanPham sp : danhSachSanPham) {
+                if (sp.getMaSanPham().toLowerCase().contains(text.toLowerCase())) {
+                    results.add(sp);
+                }
+            }
+
+            searchPopup.removeAll();
+            if (results.isEmpty()) {
+                searchPopup.setVisible(false);
+                return;
+            }
+
+            int count = 0;
+            for (SanPham sp : results) {
+                if (count >= 10)
+                    break;
+                JMenuItem item = new JMenuItem(sp.getMaSanPham() + " - " + sp.getTenSanPham());
+                item.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                item.addActionListener(e -> {
+                    isUpdatingSearch = true;
+                    txtSearch.setText(sp.getMaSanPham());
+                    isUpdatingSearch = false;
+                    searchPopup.setVisible(false);
+
+                    List<Lo> locKetQua = new java.util.ArrayList<>();
+                    if (danhSachLo != null) {
+                        for (Lo lo : danhSachLo) {
+                            if (lo.getSanPham().getMaSanPham().equals(sp.getMaSanPham())) {
+                                locKetQua.add(lo);
+                            }
+                        }
+                    }
+                    hienThiLoLenBang(locKetQua);
+                });
+                searchPopup.add(item);
+                count++;
+            }
+
+            if (txtSearch.isShowing()) {
+                searchPopup.show(txtSearch, 0, txtSearch.getHeight());
+                txtSearch.requestFocus();
+            }
+        });
+    }
+
+    private void locVaHienThiLo(String text) {
+        if (text.isEmpty() || text.equals("Tìm kiếm lô theo mã sản phẩm...")) {
+            hienThiLoLenBang(danhSachLo);
+            return;
+        }
+
+        List<Lo> locKetQua = new java.util.ArrayList<>();
+        if (danhSachLo != null) {
+            for (Lo lo : danhSachLo) {
+                String maSP = lo.getSanPham().getMaSanPham().toLowerCase();
+                if (maSP.contains(text.toLowerCase())) {
+                    locKetQua.add(lo);
+                }
+            }
+        }
+        hienThiLoLenBang(locKetQua);
     }
 
     private void loadNewMaLo() {
@@ -270,7 +474,8 @@ public class LoPanel extends JPanel {
     /** Load dữ liệu từ bảng lên form để sửa */
     private void loadSelectedRowToForm() {
         int row = table.getSelectedRow();
-        if (row == -1) return;
+        if (row == -1)
+            return;
 
         try {
             txtMaLo.setText((String) model.getValueAt(row, 1));
@@ -289,11 +494,12 @@ public class LoPanel extends JPanel {
         }
     }
 
-    private void themLo() { /* giữ nguyên như cũ */ 
+    private void themLo() { /* giữ nguyên như cũ */
         // ... (code thêm lô giống trước)
         try {
             if (txtSoLo.getText().trim().isEmpty() || txtMaSanPham.getText().trim().isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ thông tin!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ thông tin!", "Cảnh báo",
+                        JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
@@ -334,7 +540,8 @@ public class LoPanel extends JPanel {
             lo.setGiaNhap(Double.parseDouble(txtGiaNhap.getText().trim().replace(",", "")));
 
             if (loDAO.capNhatLo(lo)) {
-                JOptionPane.showMessageDialog(this, "Cập nhật lô hàng thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Cập nhật lô hàng thành công!", "Thành công",
+                        JOptionPane.INFORMATION_MESSAGE);
                 loadDataToTable();
             }
         } catch (Exception ex) {
@@ -344,10 +551,12 @@ public class LoPanel extends JPanel {
 
     private void xoaLo() {
         int row = table.getSelectedRow();
-        if (row == -1) return;
+        if (row == -1)
+            return;
 
         String maLo = (String) model.getValueAt(row, 1);
-        int confirm = JOptionPane.showConfirmDialog(this, "Xóa lô " + maLo + "?", "Xác nhận", JOptionPane.YES_NO_OPTION);
+        int confirm = JOptionPane.showConfirmDialog(this, "Xóa lô " + maLo + "?", "Xác nhận",
+                JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION && loDAO.xoaLo(maLo)) {
             loadDataToTable();
             lamMoi();
