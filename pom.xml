@@ -57,11 +57,18 @@
                         <version>0.4</version>
                 </dependency>
 
-                <dependency>
-                    <groupId>com.toedter</groupId>
-                    <artifactId>jcalendar</artifactId>
-                    <version>1.4</version>
-                </dependency>
+		<dependency>
+			<groupId>com.toedter</groupId>
+			<artifactId>jcalendar</artifactId>
+			<version>1.4</version>
+		</dependency>
+
+		<!-- Hỗ trợ đọc ảnh định dạng WebP (nhiều file .png thực chất là WebP) -->
+		<dependency>
+			<groupId>org.sejda.imageio</groupId>
+			<artifactId>webp-imageio</artifactId>
+			<version>0.1.6</version>
+		</dependency>
 
 
         </dependencies>

@@ -8,6 +8,7 @@ import com.example.entity.enums.ChucVu;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import org.mindrot.jbcrypt.BCrypt;
 
 public class TaiKhoanDAO {
 
@@ -74,7 +75,7 @@ public class TaiKhoanDAO {
             String truyVan = "INSERT INTO TaiKhoan (tenDangNhap, matKhau, maNhanVien) VALUES (?, ?, ?)";
             PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
             lenh.setString(1, tk.getTenDangNhap());
-            lenh.setString(2, tk.getMatKhau());
+            lenh.setString(2, BCrypt.hashpw(tk.getMatKhau(), BCrypt.gensalt()));
             lenh.setString(3, tk.getNhanVien().getMaNhanVien());
             return lenh.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -88,7 +89,7 @@ public class TaiKhoanDAO {
             Connection ketNoi = ConnectDB.getConnection();
             String truyVan = "UPDATE TaiKhoan SET matKhau = ? WHERE tenDangNhap = ?";
             PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
-            lenh.setString(1, tk.getMatKhau());
+            lenh.setString(1, BCrypt.hashpw(tk.getMatKhau(), BCrypt.gensalt()));
             lenh.setString(2, tk.getTenDangNhap());
             return lenh.executeUpdate() > 0;
         } catch (SQLException e) {

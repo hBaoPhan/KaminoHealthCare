@@ -131,9 +131,12 @@ public class BanHangPanel extends JPanel {
         }
 
         // 1. Tải danh sách sản phẩm vào bảng trước
+        // Chỉ load các dòng KHÔNG phải quà tặng; capNhatQuaTang() sẽ tự thêm lại
+        // dòng quà đúng theo khuyến mãi, tránh trùng lặp dòng quà khi load lại.
         if (model != null && hd.getDsChiTiet() != null) {
             model.setRowCount(0);
             for (ChiTietHoaDon ct : hd.getDsChiTiet()) {
+                if (ct.isLaQuaTangKem()) continue; // bỏ qua dòng quà, sẽ được tái tạo bởi capNhatQuaTang()
                 DonViQuyDoi dv = ct.getDonViQuyDoi();
                 String tenDonVi = dv.getTenDonVi() != null ? dv.getTenDonVi().getMoTa() : dv.getMaDonVi();
                 double thue = dv.getSanPham() != null ? dv.getSanPham().getThue() : 0;
@@ -182,6 +185,7 @@ public class BanHangPanel extends JPanel {
 
         searchPopup = new JPopupMenu();
         searchPopup.setFocusable(false);
+        searchPopup.setPreferredSize(new Dimension(450, 250));
 
         txtSearch.getDocument().addDocumentListener(new DocumentListener() {
             @Override
@@ -216,17 +220,20 @@ public class BanHangPanel extends JPanel {
                     for (SanPham sp : results) {
                         JMenu item = new JMenu(sp.getMaSanPham() + " - " + sp.getTenSanPham());
                         item.setFont(FONT_TEXT);
+                        item.setPreferredSize(new Dimension(430, 36));
+                        item.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
 
                         List<DonViQuyDoi> donVis = donViQuyDoiDAO.timTheoMaSanPham(sp.getMaSanPham());
                         if (donVis.isEmpty()) {
                             JMenuItem defaultUnit = new JMenuItem("Chưa có đơn vị quy đổi, vui lòng thêm");
                             defaultUnit.setFont(FONT_TEXT);
-
+                            defaultUnit.setPreferredSize(new Dimension(430, 36));
                             item.add(defaultUnit);
                         } else {
                             for (DonViQuyDoi dv : donVis) {
                                 JMenuItem unitItem = new JMenuItem(dv.getTenDonVi().getMoTa());
                                 unitItem.setFont(FONT_TEXT);
+                                unitItem.setPreferredSize(new Dimension(430, 36));
                                 unitItem.addActionListener(ev -> {
                                     txtSearch.setText("");
                                     searchPopup.setVisible(false);
@@ -482,8 +489,40 @@ public class BanHangPanel extends JPanel {
             }
         };
 
+        // Renderer riêng cho cột "Thành tiền" (index 6): kế thừa màu sắc + format VND
+        TableCellRenderer vndRenderer = new DefaultTableCellRenderer() {
+            private final DecimalFormat df = new DecimalFormat("#,### đ");
+
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+                    boolean hasFocus, int row, int column) {
+                // Format số thành chuỗi VND trước khi truyền lên super
+                String formatted = value != null ? df.format(((Number) value).doubleValue()) : "";
+                Component c = super.getTableCellRendererComponent(table, formatted, isSelected, hasFocus, row, column);
+                setHorizontalAlignment(SwingConstants.RIGHT);
+
+                Boolean isGift = (Boolean) table.getModel().getValueAt(row, 8);
+                if (isGift != null && isGift) {
+                    c.setForeground(COLOR_PRIMARY);
+                    c.setFont(c.getFont().deriveFont(Font.ITALIC));
+                } else {
+                    if (!isSelected) c.setForeground(Color.BLACK);
+                    c.setFont(c.getFont().deriveFont(Font.PLAIN));
+                }
+                if (isSelected) {
+                    c.setBackground(table.getSelectionBackground());
+                } else {
+                    c.setBackground(table.getBackground());
+                }
+                return c;
+            }
+        };
+
         for (int i = 0; i < table.getColumnCount(); i++) {
-            if (i != 3) { // Không áp dụng cho cột Spinner (số lượng) vì nó có renderer riêng
+            if (i == 3) continue; // Spinner renderer riêng
+            if (i == 6) {
+                table.getColumnModel().getColumn(i).setCellRenderer(vndRenderer);
+            } else {
                 table.getColumnModel().getColumn(i).setCellRenderer(giftRenderer);
             }
         }

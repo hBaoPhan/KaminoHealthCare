@@ -97,7 +97,7 @@ public class SanPhamDAO {
         List<SanPham> danhSach = new ArrayList<>();
         Connection ketNoi = ConnectDB.getConnection();
         try (PreparedStatement lenh = ketNoi.prepareStatement(
-                "SELECT * FROM SanPham WHERE maSanPham LIKE ? OR tenSanPham LIKE ?")) {
+                "SELECT TOP 10 * FROM SanPham WHERE maSanPham LIKE ? OR tenSanPham LIKE ?")) {
 
             String keyword = "%" + tuKhoa + "%";
             lenh.setString(1, keyword);
@@ -118,7 +118,7 @@ public class SanPhamDAO {
         List<SanPham> ds = new ArrayList<>();
         try {
             Connection con = ConnectDB.getConnection();
-            String sql = "SELECT * FROM SanPham WHERE maSanPham LIKE ? OR tenSanPham LIKE ?";
+            String sql = "SELECT TOP 10 * FROM SanPham WHERE maSanPham LIKE ? OR tenSanPham LIKE ?";
             PreparedStatement stmt = con.prepareStatement(sql);
             stmt.setString(1, "%" + tuKhoa + "%");
             stmt.setString(2, "%" + tuKhoa + "%");

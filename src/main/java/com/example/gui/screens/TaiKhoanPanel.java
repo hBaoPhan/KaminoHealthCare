@@ -22,7 +22,7 @@ public class TaiKhoanPanel extends JPanel {
     private JTextField txtTimKiem;
     private JComboBox<String> cboLocVaiTro, cboLocTrangThai;
     private JTextField txtTenDangNhap, txtMatKhau;
-    private JComboBox<String> cboNhanVien, cboVaiTro, cboTrangThai;
+    private JComboBox<String> cboNhanVien, cboTrangThai;
     private JButton btnThem, btnSua, btnXoa, btnLamMoi;
     private JTable tableTaiKhoan;
     private DefaultTableModel tableModel;
@@ -62,7 +62,7 @@ public class TaiKhoanPanel extends JPanel {
                 "THÔNG TIN TÀI KHOẢN", TitledBorder.CENTER, TitledBorder.TOP, 
                 new Font("Arial", Font.BOLD, 14)));
 
-        JPanel pnlForm = new JPanel(new GridLayout(5, 2, 10, 25));
+        JPanel pnlForm = new JPanel(new GridLayout(4, 2, 10, 25));
         pnlForm.setBorder(new EmptyBorder(30, 20, 30, 20));
         
         pnlForm.add(new JLabel("Tên đăng nhập:"));
@@ -76,10 +76,6 @@ public class TaiKhoanPanel extends JPanel {
         pnlForm.add(new JLabel("Nhân viên:"));
         cboNhanVien = new JComboBox<>();
         pnlForm.add(cboNhanVien);
-
-        pnlForm.add(new JLabel("Vai trò:"));
-        cboVaiTro = new JComboBox<>();
-        pnlForm.add(cboVaiTro);
 
         pnlForm.add(new JLabel("Trạng thái:"));
         cboTrangThai = new JComboBox<>(new String[]{"Đang hoạt động", "Bị khóa"});
@@ -139,14 +135,21 @@ public class TaiKhoanPanel extends JPanel {
         for (NhanVien nv : dsNV) {
             cboNhanVien.addItem(nv.getMaNhanVien() + " - " + nv.getTenNhanVien());
         }
-        cboVaiTro.addItem(ChucVu.DUOC_SI.getMoTa());
-        cboVaiTro.addItem(ChucVu.NHAN_VIEN_QUAN_LY.getMoTa());
         loadDataToTable();
     }
 
     private void loadDataToTable() {
         danhSachTaiKhoanFull = taiKhoanDAO.layTatCa();
         locDuLieu();
+    }
+
+    public void taiLaiDanhSach() {
+        cboNhanVien.removeAllItems();
+        List<NhanVien> dsNV = nhanVienDAO.layTatCa();
+        for (NhanVien nv : dsNV) {
+            cboNhanVien.addItem(nv.getMaNhanVien() + " - " + nv.getTenNhanVien());
+        }
+        loadDataToTable();
     }
 
     private void addEvents() {
@@ -201,17 +204,17 @@ public class TaiKhoanPanel extends JPanel {
             TaiKhoan tk = taiKhoanDAO.timTheoMa(tableTaiKhoan.getValueAt(row, 0).toString());
             txtTenDangNhap.setText(tk.getTenDangNhap());
             txtTenDangNhap.setEnabled(false);
-            txtMatKhau.setText(tk.getMatKhau());
+            txtMatKhau.setText("********");
+            txtMatKhau.setEnabled(false);
             cboNhanVien.setSelectedItem(tk.getNhanVien().getMaNhanVien() + " - " + tk.getNhanVien().getTenNhanVien());
             cboNhanVien.setEnabled(false);
-            cboVaiTro.setSelectedItem(tk.getNhanVien().getChucVu().getMoTa());
             cboTrangThai.setSelectedItem(tk.getNhanVien().isTrangThai() ? "Đang hoạt động" : "Bị khóa");
         }
     }
 
     private void lamMoiForm() {
         txtTenDangNhap.setText(""); txtTenDangNhap.setEnabled(true);
-        txtMatKhau.setText(""); cboNhanVien.setEnabled(true);
+        txtMatKhau.setText(""); txtMatKhau.setEnabled(true); cboNhanVien.setEnabled(true);
         tableTaiKhoan.clearSelection();
         loadDataToTable();
     }
@@ -234,9 +237,7 @@ public class TaiKhoanPanel extends JPanel {
 
     private void suaTaiKhoan() {
         if (tableTaiKhoan.getSelectedRow() < 0) return;
-        if (JOptionPane.showConfirmDialog(this, "Xác nhận sửa?", "Sửa", 0) == 0) {
-            TaiKhoan tk = new TaiKhoan(txtTenDangNhap.getText(), txtMatKhau.getText(), null);
-            taiKhoanDAO.capNhat(tk);
+        if (JOptionPane.showConfirmDialog(this, "Xác nhận sửa trạng thái tài khoản?", "Sửa", 0) == 0) {
             NhanVien nv = nhanVienDAO.timTheoMa(cboNhanVien.getSelectedItem().toString().split(" - ")[0]);
             nv.setTrangThai(cboTrangThai.getSelectedItem().equals("Đang hoạt động"));
             nhanVienDAO.capNhat(nv);

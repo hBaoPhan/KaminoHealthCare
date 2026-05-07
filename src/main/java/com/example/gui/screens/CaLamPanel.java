@@ -289,7 +289,8 @@ public class CaLamPanel extends JPanel {
                         // Tìm Ca Làm tương ứng trong listCaTuan
                         for (CaLam cl : listCaTuan) {
                             int colIndex = cl.getGioBatDau().getDayOfWeek().getValue() - 1;
-                            String text = cl.getNhanVien().getMaNhanVien() + " (" + cl.getGioBatDau().format(timeFormatter) + "-" + cl.getGioKetThuc().format(timeFormatter) + ")";
+                            String ketThucStr = cl.getGioKetThuc() != null ? cl.getGioKetThuc().format(timeFormatter) : "--:--";
+                            String text = cl.getNhanVien().getMaNhanVien() + " (" + cl.getGioBatDau().format(timeFormatter) + "-" + ketThucStr + ")";
                             
                             // Khớp đúng cột (thứ) và đúng chuỗi văn bản hiển thị
                             if (colIndex == c && text.equals(cellText)) {
@@ -365,7 +366,8 @@ public class CaLamPanel extends JPanel {
         int[] rowIndexes = new int[7]; 
         for (CaLam cl : listCaTuan) {
             int colIndex = cl.getGioBatDau().getDayOfWeek().getValue() - 1;
-            String text = cl.getNhanVien().getMaNhanVien() + " (" + cl.getGioBatDau().format(timeFormatter) + "-" + cl.getGioKetThuc().format(timeFormatter) + ")";
+            String ketThucStr = cl.getGioKetThuc() != null ? cl.getGioKetThuc().format(timeFormatter) : "--:--";
+            String text = cl.getNhanVien().getMaNhanVien() + " (" + cl.getGioBatDau().format(timeFormatter) + "-" + ketThucStr + ")";
             if(rowIndexes[colIndex] < maxRows) {
                 modelLichTuan.setValueAt(text, rowIndexes[colIndex]++, colIndex);
             }

@@ -1,8 +1,11 @@
 package com.example.gui.screens;
 
 import com.example.gui.components.*;
+import com.example.entity.NhanVien;
 import com.example.entity.TaiKhoan;
+import com.example.entity.enums.ChucVu;
 import com.example.connectDB.ConnectDB;
+import com.example.dao.NhanVienDAO;
 import com.example.dao.TaiKhoanDAO;
 import org.mindrot.jbcrypt.BCrypt;
 
@@ -12,6 +15,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
+import com.example.entity.enums.ChucVu;
 
 public class DangNhapPanel extends JFrame implements ActionListener {
 
@@ -26,6 +30,7 @@ public class DangNhapPanel extends JFrame implements ActionListener {
     private final Color COLOR_PRIMARY = new Color(0x54ACD2);
     private final Color COLOR_TEXT_HINT = new Color(150, 150, 150);
     private final Color COLOR_LINK = new Color(0, 102, 204);
+    private NhanVienDAO nhanVienDAO;
 
     public DangNhapPanel() {
         // 1. Cấu hình cửa sổ chính
@@ -218,41 +223,51 @@ public class DangNhapPanel extends JFrame implements ActionListener {
             String password = new String(txtPassword.getPassword());
 
             // 2. Kiểm tra rỗng
-            // if (username.isEmpty() || username.equals("Tài khoản") || password.isEmpty()
-            // || password.equals("Mật khẩu")) {
-            // JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ tài khoản và mật
-            // khẩu!", "Thông báo", JOptionPane.WARNING_MESSAGE);
-            // return;
-            // }
+            if (username.isEmpty() || username.equals("Tài khoản") || password.isEmpty()
+                    || password.equals("Mật khẩu")) {
+                JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ tài khoản và mật khẩu!", "Thông báo",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
 
-            // 3. Gọi DAO xử lý (Sử dụng mã admin001 từ script SQL mới của bạn)
+            // 3. Gọi DAO xử lý
             TaiKhoanDAO dao = new TaiKhoanDAO();
-            TaiKhoan tk = dao.timTheoMa("baoph");
+            TaiKhoan tk = dao.timTheoMa(username);
 
-            // if (tk != null) {
-            // String dbPassword = tk.getMatKhau();
-            // boolean isMatch = false;
-            //
-            // // Kiểm tra BCrypt hoặc so sánh thường
-            // if (dbPassword != null && dbPassword.startsWith("$2")) {
-            // try { isMatch = BCrypt.checkpw(password, dbPassword); } catch (Exception ex)
-            // { isMatch = false; }
-            // } else {
-            // isMatch = password.equals(dbPassword);
-            // }
-            boolean isMatch = true;
-            if (isMatch) {
-                SwingUtilities.invokeLater(() -> {
-                    ThanhDieuHuongPanel mainFrame = new ThanhDieuHuongPanel(tk);
-                    mainFrame.setVisible(true);
-                });
-                dispose();
+            if (tk.getNhanVien().isTrangThai() == false) {
+                JOptionPane.showMessageDialog(this, "Tài khoản đã bị khóa, vui lòng liên hệ quản lý", "Lỗi đăng nhập",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            if (tk != null) {
+                String dbPassword = tk.getMatKhau();
+                boolean isMatch = false;
+
+                // Kiểm tra BCrypt hoặc so sánh thường
+                if (dbPassword != null && dbPassword.startsWith("$2")) {
+                    try {
+                        isMatch = BCrypt.checkpw(password, dbPassword);
+                    } catch (Exception ex) {
+                        isMatch = false;
+                    }
+                } else {
+                    isMatch = password.equals(dbPassword);
+                }
+                if (isMatch) {
+                    SwingUtilities.invokeLater(() -> {
+                        ThanhDieuHuongPanel mainFrame = new ThanhDieuHuongPanel(tk);
+                        mainFrame.setVisible(true);
+                    });
+                    dispose();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Mật khẩu không chính xác!", "Lỗi đăng nhập",
+                            JOptionPane.ERROR_MESSAGE);
+                }
             } else {
-                JOptionPane.showMessageDialog(this, "Mật khẩu không chính xác!", "Lỗi đăng nhập",
+                JOptionPane.showMessageDialog(this, "Tài khoản không tồn tại!", "Lỗi đăng nhập",
                         JOptionPane.ERROR_MESSAGE);
             }
-        } else {
-            JOptionPane.showMessageDialog(this, "Tài khoản không tồn tại!", "Lỗi đăng nhập", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

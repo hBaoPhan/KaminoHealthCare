@@ -477,7 +477,7 @@ public class ManHinhChinhPanel extends JPanel {
         List<Lo> dsLo = loDAO.layTatCa();
         modelLoThuoc.setRowCount(0);
         DateTimeFormatter dtfDate = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        LocalDate nextMonth = today.plusMonths(1);
+        LocalDate nextMonth = today.plusMonths(1).plusDays(7);
 
         for (Lo lo : dsLo) {
             if (lo.getNgayHetHan() != null && lo.getNgayHetHan().isBefore(nextMonth)) {

@@ -677,33 +677,35 @@ public class SanPhamPanel extends JPanel {
         String[] exts = new String[] { "png", "jpg", "jpeg" };
 
         for (String ext : exts) {
-            String relative = "images/anhSanPham/" + base + "." + ext;
-            String absoluteClasspath = "/" + relative;
+            String fileName = base + "." + ext;
+            
+            // 1) Thử load từ Classpath (Jar/Target)
+            // Lưu ý: ClassLoader.getResource không bắt đầu bằng /
+            String resourcePath = "images/anhSanPham/" + fileName;
+            java.net.URL url = getClass().getClassLoader().getResource(resourcePath);
+            if (url == null) {
+                // Thử thêm / nếu dùng getClass().getResource()
+                url = getClass().getResource("/" + resourcePath);
+            }
 
             try {
                 BufferedImage bImage = null;
-
-                // 1) Try classpath (jar/IDE)
-                java.net.URL url = getClass().getResource(absoluteClasspath);
-                if (url == null) {
-                    ClassLoader cl = Thread.currentThread().getContextClassLoader();
-                    if (cl == null)
-                        cl = getClass().getClassLoader();
-                    url = (cl != null) ? cl.getResource(relative) : null;
-                }
-
                 if (url != null) {
                     bImage = ImageIO.read(url);
                 } else {
-                    // 2) Fallback: load trực tiếp từ filesystem
-                    java.nio.file.Path p1 = java.nio.file.Paths.get("src", "main", "resources", relative);
-                    java.nio.file.Path p2 = java.nio.file.Paths.get(System.getProperty("user.dir", ""), "src", "main",
-                            "resources", relative);
-                    java.nio.file.Path chosen = java.nio.file.Files.exists(p1) ? p1
-                            : (java.nio.file.Files.exists(p2) ? p2 : null);
+                    // 2) Fallback: Load trực tiếp từ Filesystem (Dùng cho môi trường dev)
+                    // Sử dụng Paths.get để tự động xử lý dấu gạch chéo hệ điều hành
+                    java.nio.file.Path[] paths = {
+                        java.nio.file.Paths.get("src", "main", "resources", "images", "anhSanPham", fileName),
+                        java.nio.file.Paths.get(System.getProperty("user.dir", ""), "src", "main", "resources", "images", "anhSanPham", fileName),
+                        java.nio.file.Paths.get("target", "classes", "images", "anhSanPham", fileName)
+                    };
 
-                    if (chosen != null) {
-                        bImage = ImageIO.read(chosen.toFile());
+                    for (java.nio.file.Path p : paths) {
+                        if (java.nio.file.Files.exists(p)) {
+                            bImage = ImageIO.read(p.toFile());
+                            break;
+                        }
                     }
                 }
 
@@ -712,10 +714,9 @@ public class SanPhamPanel extends JPanel {
                     return new ImageIcon(scaled);
                 }
             } catch (Exception e) {
-                // Ignore and try next extension
+                // Tiếp tục thử định dạng khác nếu lỗi
             }
         }
-
         return null;
     }
 

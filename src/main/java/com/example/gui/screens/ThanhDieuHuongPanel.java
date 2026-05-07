@@ -72,6 +72,7 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		JScrollPane scrollPane = new JScrollPane(sidebar);
 		scrollPane.setBorder(null);
 		scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 		scrollPane.setPreferredSize(new Dimension(220, getHeight()));
 
 		add(scrollPane, BorderLayout.WEST);
@@ -215,32 +216,57 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		menuLabels.add(label);
 	}
 
-	private void capNhatDuLieuKhiDoiThe() {
-		if (pnlKhachHang != null)
-			pnlKhachHang.taiLaiDanhSach();
-		if (pnlHoaDon != null)
-			pnlHoaDon.taiLaiDanhSach();
-		if (pnlTrangChu != null) {
-			pnlTrangChu.loadThongKeData();
-			pnlTrangChu.layDuLieuChoHoatDongGanDay();
+	private void capNhatDuLieuKhiDoiThe(String tabName) {
+		if (tabName == null)
+			return;
+
+		switch (tabName) {
+			case "Khách Hàng" -> {
+				if (pnlKhachHang != null)
+					pnlKhachHang.taiLaiDanhSach();
+			}
+			case "Quản Lý Hóa Đơn" -> {
+				if (pnlHoaDon != null)
+					pnlHoaDon.taiLaiDanhSach();
+			}
+			case "Màn Hình Chính" -> {
+				if (pnlTrangChu != null) {
+					pnlTrangChu.loadThongKeData();
+					pnlTrangChu.layDuLieuChoHoatDongGanDay();
+				}
+				if (pnlTrangChuNhanVien != null) {
+					pnlTrangChuNhanVien.refreshData();
+				}
+			}
+			case "Mở Ca" -> {
+				if (pnlMoCa != null)
+					pnlMoCa.loadDuLieuCa();
+			}
+			case "Kết Ca" -> {
+				if (pnlDongCa != null)
+					pnlDongCa.loadDuLieuCa();
+			}
+			case "Bán Hàng" -> {
+				if (pnlBanHang != null)
+					pnlBanHang.loadHoaDonChuaThanhToan();
+			}
+			case "Quản Lý Sản Phẩm" -> {
+				if (pnlSanPham != null)
+					pnlSanPham.loadDanhSachSanPham();
+			}
+			case "Quản Lý Nhân Viên" -> {
+				if (isQuanLy && pnlNhanVien != null)
+					pnlNhanVien.taiLaiDanhSach();
+			}
+			case "Quản Lý Tài Khoản" -> {
+				if (isQuanLy && pnlTaiKhoan != null)
+					pnlTaiKhoan.taiLaiDanhSach();
+			}
+			case "Thống Kê" -> {
+				if (pnlThongKe != null)
+					pnlThongKe.capNhatDuLieuThongKe();
+			}
 		}
-		if (pnlTrangChuNhanVien != null) {
-			pnlTrangChuNhanVien.refreshData();
-		}
-		if (pnlMoCa != null)
-			pnlMoCa.loadDuLieuCa();
-		if (pnlDongCa != null)
-			pnlDongCa.loadDuLieuCa();
-		if (pnlBanHang != null)
-			pnlBanHang.loadHoaDonChuaThanhToan();
-		if (pnlSanPham != null)
-			pnlSanPham.loadDanhSachSanPham();
-		if (isQuanLy) {
-			if (pnlNhanVien != null)
-				pnlNhanVien.taiLaiDanhSach();
-		}
-		if (pnlThongKe != null)
-			pnlThongKe.capNhatDuLieuThongKe();
 	}
 
 	@Override
@@ -266,7 +292,7 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		}
 
 		cardLayout.show(contentPanel, item.name);
-		capNhatDuLieuKhiDoiThe();
+		capNhatDuLieuKhiDoiThe(item.name);
 	}
 
 	@Override
@@ -280,20 +306,24 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 			}
 		} else if (o.equals(btnMoCa)) {
 			cardLayout.show(contentPanel, "Mở Ca");
+			capNhatDuLieuKhiDoiThe("Mở Ca");
 		} else if (o.equals(btnKetCa)) {
 			cardLayout.show(contentPanel, "Kết Ca");
+			capNhatDuLieuKhiDoiThe("Kết Ca");
 		}
 	}
 
 	public void switchTo(String action) {
 		CardLayout layout = (CardLayout) contentPanel.getLayout();
-		capNhatDuLieuKhiDoiThe();
-		switch (action) {
-			case "Màn hình chính" -> layout.show(contentPanel, "Màn Hình Chính");
-			case "Quản lý hóa đơn" -> layout.show(contentPanel, "Hóa Đơn");
-			case "Quản lý khách hàng" -> layout.show(contentPanel, "Khách Hàng");
-			case "Xem thống kê" -> layout.show(contentPanel, "Thống Kê");
-		}
+		String tabName = switch (action) {
+			case "Màn hình chính" -> "Màn Hình Chính";
+			case "Quản lý hóa đơn" -> "Quản Lý Hóa Đơn";
+			case "Quản lý khách hàng" -> "Khách Hàng";
+			case "Xem thống kê" -> "Thống Kê";
+			default -> action;
+		};
+		layout.show(contentPanel, tabName);
+		capNhatDuLieuKhiDoiThe(tabName);
 	}
 
 	private void initMenuStructure(TaiKhoan taiKhoan) {
