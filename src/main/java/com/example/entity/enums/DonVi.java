@@ -17,4 +17,13 @@ public enum DonVi {
     public String getMoTa() {
         return moTa;
     }
+
+    public static DonVi tuMoTa(String moTa) {
+        for (DonVi dv : DonVi.values()) {
+            if (dv.moTa.equalsIgnoreCase(moTa)) {
+                return dv;
+            }
+        }
+        return null;
+    }
 }

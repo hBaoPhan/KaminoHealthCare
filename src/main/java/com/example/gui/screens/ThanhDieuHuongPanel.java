@@ -111,7 +111,7 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		// --- PHẦN NỘI DUNG CHÍNH (CARD LAYOUT) ---
 		cardLayout = new CardLayout();
 		contentPanel = new JPanel(cardLayout);
-		
+
 		contentPanel.add(pnlTrangChu = new ManHinhChinhPanel(taiKhoan), "Màn Hình Chính");
 		contentPanel.add(pnlHoaDon = new HoaDonPanel(taiKhoan), "Quản Lý Hóa Đơn");
 		contentPanel.add(pnlBanHang = new BanHangPanel(taiKhoan), "Bán Hàng");
@@ -119,7 +119,7 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		contentPanel.add(pnlTraHang = new TraHangPanel(), "Trả Hàng");
 		contentPanel.add(pnlKhachHang = new KhachHangPanel(), "Khách Hàng");
 		contentPanel.add(pnlSanPham = new SanPhamPanel(), "Quản Lý Sản Phẩm");
-		
+
 		if (isQuanLy) {
 			contentPanel.add(pnlLo = new LoPanel(), "Quản Lý Lô");
 			contentPanel.add(pnlKhuyenMai = new KhuyenMaiPanel(), "Khuyến Mãi");
@@ -211,19 +211,26 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 	}
 
 	private void capNhatDuLieuKhiDoiThe() {
-		if (pnlKhachHang != null) pnlKhachHang.taiLaiDanhSach();
-		if (pnlHoaDon != null) pnlHoaDon.taiLaiDanhSach();
+		if (pnlKhachHang != null)
+			pnlKhachHang.taiLaiDanhSach();
+		if (pnlHoaDon != null)
+			pnlHoaDon.taiLaiDanhSach();
 		if (pnlTrangChu != null) {
 			pnlTrangChu.loadThongKeData();
 			pnlTrangChu.layDuLieuChoHoatDongGanDay();
 		}
-		if (pnlMoCa != null) pnlMoCa.loadDuLieuCa();
-		if (pnlDongCa != null) pnlDongCa.loadDuLieuCa();
-		if (pnlBanHang != null) pnlBanHang.loadHoaDonChuaThanhToan();
-		
+		if (pnlMoCa != null)
+			pnlMoCa.loadDuLieuCa();
+		if (pnlDongCa != null)
+			pnlDongCa.loadDuLieuCa();
+		if (pnlBanHang != null)
+			pnlBanHang.loadHoaDonChuaThanhToan();
+
 		if (isQuanLy) {
-			if (pnlNhanVien != null) pnlNhanVien.taiLaiDanhSach();
-			if (pnlThongKe != null) pnlThongKe.capNhatDuLieuThongKe();
+			if (pnlNhanVien != null)
+				pnlNhanVien.taiLaiDanhSach();
+			if (pnlThongKe != null)
+				pnlThongKe.capNhatDuLieuThongKe();
 		}
 	}
 
@@ -257,7 +264,8 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 	public void actionPerformed(ActionEvent e) {
 		Object o = e.getSource();
 		if (o.equals(btnDangXuat)) {
-			if (JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn đăng xuất?", "Xác nhận", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+			if (JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn đăng xuất?", "Xác nhận",
+					JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
 				new DangNhapPanel().setVisible(true);
 				this.dispose();
 			}
@@ -338,24 +346,41 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		String name, iconPath;
 		boolean isChild, isExpanded = false;
 		List<MenuItem> children = new ArrayList<>();
-		MenuItem(String name, String iconPath) { this(name, iconPath, false); }
+
+		MenuItem(String name, String iconPath) {
+			this(name, iconPath, false);
+		}
+
 		MenuItem(String name, String iconPath, boolean isChild) {
-			this.name = name; this.iconPath = iconPath; this.isChild = isChild;
+			this.name = name;
+			this.iconPath = iconPath;
+			this.isChild = isChild;
 		}
 	}
 
 	private static class MenuLabel extends JLabel {
 		private final MenuItem menuItem;
-		MenuLabel(MenuItem item) { super(item.name); this.menuItem = item; }
-		public MenuItem getMenuItem() { return menuItem; }
+
+		MenuLabel(MenuItem item) {
+			super(item.name);
+			this.menuItem = item;
+		}
+
+		public MenuItem getMenuItem() {
+			return menuItem;
+		}
 	}
 
 	private static class HiDPIIcon implements Icon {
 		private final Image image;
 		private final int width, height;
+
 		public HiDPIIcon(Image image, int width, int height) {
-			this.image = image; this.width = width; this.height = height;
+			this.image = image;
+			this.width = width;
+			this.height = height;
 		}
+
 		@Override
 		public void paintIcon(Component c, Graphics g, int x, int y) {
 			Graphics2D g2 = (Graphics2D) g.create();
@@ -364,12 +389,35 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 			g2.drawImage(image, x, y, width, height, null);
 			g2.dispose();
 		}
-		@Override public int getIconWidth() { return width; }
-		@Override public int getIconHeight() { return height; }
+
+		@Override
+		public int getIconWidth() {
+			return width;
+		}
+
+		@Override
+		public int getIconHeight() {
+			return height;
+		}
 	}
 
-	@Override public void mousePressed(MouseEvent e) {}
-	@Override public void mouseReleased(MouseEvent e) {}
-	@Override public void mouseEntered(MouseEvent e) { if (e.getSource() instanceof JLabel) ((JLabel)e.getSource()).setForeground(textHoverColor); }
-	@Override public void mouseExited(MouseEvent e) { if (e.getSource() instanceof JLabel) ((JLabel)e.getSource()).setForeground(textDefaultColor); }
+	@Override
+	public void mousePressed(MouseEvent e) {
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent e) {
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent e) {
+		if (e.getSource() instanceof JLabel)
+			((JLabel) e.getSource()).setForeground(textHoverColor);
+	}
+
+	@Override
+	public void mouseExited(MouseEvent e) {
+		if (e.getSource() instanceof JLabel)
+			((JLabel) e.getSource()).setForeground(textDefaultColor);
+	}
 }
