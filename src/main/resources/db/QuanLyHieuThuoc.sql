@@ -155,11 +155,11 @@ INSERT INTO NhanVien (maNhanVien, tenNhanVien, cccd, sdt, chucVu, trangThaiHoatD
 ('DS001', N'Phạm Thị Dung', '079200000005', '0901234571', N'DUOC_SI', 0);
 
 INSERT INTO TaiKhoan (tenDangNhap, matKhau, maNhanVien) VALUES
-('baoph', '123456', 'QL001'),
-('taitr', '123456', 'QL002'),
-('truongng', '123456', 'QL003'),
-('nhatng', '123456', 'QL004'),
-('nv', '123456', 'DS001');
+('baoph', '$2a$12$bfiVg8.pufHx/TEcJYISSeteaaAWStGxzGbIzNkwdgY.2HFhp79Ym', 'QL001'),
+('taitr', '$2a$12$bfiVg8.pufHx/TEcJYISSeteaaAWStGxzGbIzNkwdgY.2HFhp79Y', 'QL002'),
+('truongng', '$2a$12$bfiVg8.pufHx/TEcJYISSeteaaAWStGxzGbIzNkwdgY.2HFhp79Y', 'QL003'),
+('nhatng', '$2a$12$bfiVg8.pufHx/TEcJYISSeteaaAWStGxzGbIzNkwdgY.2HFhp79Y', 'QL004'),
+('nv', '$2a$12$bfiVg8.pufHx/TEcJYISSeteaaAWStGxzGbIzNkwdgY.2HFhp79Y', 'DS001');
 
 -- 4.2. KHÁCH HÀNG
 INSERT INTO KhachHang (maKhachHang, tenKhachHang, sdt, trangThaiKhachHang) VALUES
@@ -320,7 +320,6 @@ INSERT INTO Lo (maLo, soLo, ngayHetHan, soLuongSanPham, maSanPham, giaNhap) VALU
 ('LO070526003', 'L008', '2027-05-01', 100, 'OTC-NIZ-004', 100000),
 ('LO070526004', 'L009', '2029-01-01', 500, 'TPCN-BPK-039', 150000),
 ('LO070526005', 'L010', '2028-01-01', 300, 'TPCN-OMG-055', 200000),
--- Lô bổ sung cho các sản phẩm khác
 ('LO070526006', 'LN001', '2028-12-31', 1000, 'OTC-CAL-016', 1000),
 ('LO070526007', 'LN002', '2028-12-31', 1000, 'OTC-COR-017', 120000),
 ('LO070526008', 'LN003', '2028-12-31', 1000, 'OTC-CST-018', 600),
@@ -414,10 +413,9 @@ ON Lo
 AFTER INSERT, UPDATE, DELETE
 AS
 BEGIN
-    -- Ngăn việc trả về số dòng bị ảnh hưởng, giúp tăng hiệu suất
     SET NOCOUNT ON;
 
-    -- BƯỚC 1: Xử lý phần dữ liệu bị mất đi (Dành cho sự kiện DELETE và UPDATE)
+    -- Xử lý phần dữ liệu bị mất đi (Dành cho sự kiện DELETE và UPDATE)
     -- Lấy số lượng cũ từ bảng ảo 'deleted' trừ khỏi kho
     IF EXISTS (SELECT 1 FROM deleted)
     BEGIN
@@ -432,7 +430,7 @@ BEGIN
         ) d ON sp.maSanPham = d.maSanPham;
     END
 
-    -- BƯỚC 2: Xử lý phần dữ liệu mới được thêm (Dành cho sự kiện INSERT và UPDATE)
+    -- Xử lý phần dữ liệu mới được thêm (Dành cho sự kiện INSERT và UPDATE)
     -- Lấy số lượng mới từ bảng ảo 'inserted' cộng vào kho
     IF EXISTS (SELECT 1 FROM inserted)
     BEGIN
