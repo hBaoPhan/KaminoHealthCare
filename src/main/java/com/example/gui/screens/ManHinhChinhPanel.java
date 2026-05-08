@@ -84,7 +84,8 @@ public class ManHinhChinhPanel extends JPanel {
         lblHoaDonHomNay = new JLabel("0");
         lblDoanhThuHomNay = new JLabel("0 VND");
         lblLoiNhuan = new JLabel("0 VND");
-        lblCanhBao = new JLabel("0 lô thuốc gần hết hạn");
+        lblCanhBao = new JLabel("Không có cảnh báo");
+        lblCanhBao.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
         panel.add(createStatCard("Hóa đơn hôm nay", lblHoaDonHomNay));
         panel.add(createStatCard("Doanh thu hôm nay", lblDoanhThuHomNay));
@@ -420,15 +421,30 @@ public class ManHinhChinhPanel extends JPanel {
         lblLoiNhuan.setText(loiNhuan == 0 ? "0 VND" : df.format(loiNhuan));
 
         List<Lo> dsLo = loDAO.layTatCa();
+        int loHetHan = 0;
         int loGanHetHan = 0;
-        LocalDate nextMonth = today.plusMonths(1);
+        LocalDate nextMonth = today.plusDays(37);
         for (Lo lo : dsLo) {
-            if (lo.getNgayHetHan() != null && lo.getNgayHetHan().isBefore(nextMonth)
-                    && lo.getNgayHetHan().isAfter(today)) {
-                loGanHetHan++;
+            if (lo.getNgayHetHan() != null) {
+                if (!lo.getNgayHetHan().isAfter(today)) {
+                    loHetHan++;
+                } else if (lo.getNgayHetHan().isBefore(nextMonth)) {
+                    loGanHetHan++;
+                }
             }
         }
-        lblCanhBao.setText(loGanHetHan + " lô thuốc gần hết hạn");
+        String canhBaoText = "";
+        if (loHetHan > 0) {
+            canhBaoText += loHetHan + " lô đã hết hạn";
+        }
+        if (loGanHetHan > 0) {
+            if (!canhBaoText.isEmpty()) canhBaoText += ", ";
+            canhBaoText += loGanHetHan + " lô sắp hết hạn";
+        }
+        if (canhBaoText.isEmpty()) {
+            canhBaoText = "Không có cảnh báo";
+        }
+        lblCanhBao.setText(canhBaoText);
 
         // Update charts
         if (barDataset != null) {
@@ -474,17 +490,19 @@ public class ManHinhChinhPanel extends JPanel {
             });
         }
 
-        List<Lo> dsLo = loDAO.layTatCa();
+        List<Lo> dsLoTable = loDAO.layTatCa();
         modelLoThuoc.setRowCount(0);
         DateTimeFormatter dtfDate = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        LocalDate nextMonth = today.plusMonths(1).plusDays(7);
+        LocalDate nextMonthTable = today.plusDays(37);
 
-        for (Lo lo : dsLo) {
-            if (lo.getNgayHetHan() != null && lo.getNgayHetHan().isBefore(nextMonth)) {
+        for (Lo lo : dsLoTable) {
+            if (lo.getNgayHetHan() != null
+                    && (!lo.getNgayHetHan().isAfter(today) || lo.getNgayHetHan().isBefore(nextMonthTable))) {
+                String trangThai = !lo.getNgayHetHan().isAfter(today) ? " [HẾT HẠN]" : "";
                 modelLoThuoc.addRow(new Object[] {
                         lo.getSoLo(),
                         lo.getSanPham() != null ? lo.getSanPham().getTenSanPham() : "",
-                        lo.getNgayHetHan().format(dtfDate)
+                        lo.getNgayHetHan().format(dtfDate) + trangThai
                 });
             }
         }
