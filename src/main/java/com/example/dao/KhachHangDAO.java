@@ -13,8 +13,8 @@ public class KhachHangDAO {
     public List<KhachHang> layTatCa() {
         List<KhachHang> danhSach = new ArrayList<>();
         String truyVan = "SELECT * FROM KhachHang";
-        try (Connection ketNoi = ConnectDB.getConnection();
-             Statement lenh = ketNoi.createStatement();
+        Connection ketNoi = ConnectDB.getConnection();
+        try (Statement lenh = ketNoi.createStatement();
              ResultSet ketQua = lenh.executeQuery(truyVan)) {
 
             while (ketQua.next()) {
@@ -34,8 +34,8 @@ public class KhachHangDAO {
     public KhachHang timTheoMa(String maKH) {
         KhachHang kh = null;
         String truyVan = "SELECT * FROM KhachHang WHERE maKhachHang = ?";
-        try (Connection ketNoi = ConnectDB.getConnection();
-             PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
+        Connection ketNoi = ConnectDB.getConnection();
+        try (PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
             lenh.setString(1, maKH);
             try (ResultSet ketQua = lenh.executeQuery()) {
                 if (ketQua.next()) {
@@ -60,8 +60,8 @@ public class KhachHangDAO {
     public KhachHang timTheoSdt(String sdt) {
         KhachHang kh = null;
         String truyVan = "SELECT * FROM KhachHang WHERE sdt = ?";
-        try (Connection ketNoi = ConnectDB.getConnection();
-             PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
+        Connection ketNoi = ConnectDB.getConnection();
+        try (PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
             lenh.setString(1, sdt);
             try (ResultSet ketQua = lenh.executeQuery()) {
                 if (ketQua.next()) {
@@ -81,8 +81,8 @@ public class KhachHangDAO {
     public boolean them(KhachHang kh) {
         int soDongThayDoi = 0;
         String truyVan = "INSERT INTO KhachHang VALUES (?, ?, ?, ?)";
-        try (Connection ketNoi = ConnectDB.getConnection();
-             PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
+        Connection ketNoi = ConnectDB.getConnection();
+        try (PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
             lenh.setString(1, kh.getMaKhachHang());
             lenh.setString(2, kh.getTenKhachHang());
             lenh.setString(3, kh.getSdt());
@@ -97,8 +97,8 @@ public class KhachHangDAO {
     public boolean capNhat(KhachHang kh) {
         int soDongThayDoi = 0;
         String truyVan = "UPDATE KhachHang SET tenKhachHang = ?, sdt = ?, trangThaiKhachHang = ? WHERE maKhachHang = ?";
-        try (Connection ketNoi = ConnectDB.getConnection();
-             PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
+        Connection ketNoi = ConnectDB.getConnection();
+        try (PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
             lenh.setString(1, kh.getTenKhachHang());
             lenh.setString(2, kh.getSdt());
             lenh.setString(3, kh.getTrangThai().name());
@@ -113,8 +113,8 @@ public class KhachHangDAO {
     public boolean xoa(String maKH) {
         int soDongThayDoi = 0;
         String truyVan = "DELETE FROM KhachHang WHERE maKhachHang = ?";
-        try (Connection ketNoi = ConnectDB.getConnection();
-             PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
+        Connection ketNoi = ConnectDB.getConnection();
+        try (PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
             lenh.setString(1, maKH);
             soDongThayDoi = lenh.executeUpdate();
         } catch (SQLException e) {

@@ -291,7 +291,7 @@ public class HoaDonDAO {
 
             con.commit();
             return true;
-        } catch (SQLException e) {
+        } catch (Exception e) {
             if (con != null) {
                 try {
                     con.rollback();
@@ -683,7 +683,7 @@ public class HoaDonDAO {
 
             con.commit(); // Chốt dữ liệu xuống database nếu tất cả các bước thành công
             return true;
-        } catch (SQLException e) {
+        } catch (Exception e) {
             try {
                 if (con != null)
                     con.rollback(); // Hoàn tác nếu có lỗi xảy ra
@@ -900,7 +900,7 @@ public class HoaDonDAO {
 
             con.commit();
             return true;
-        } catch (SQLException e) {
+        } catch (Exception e) {
             if (con != null) {
                 try {
                     con.rollback();
@@ -908,7 +908,10 @@ public class HoaDonDAO {
                     ex.printStackTrace();
                 }
             }
-            throw e;
+            if (e instanceof SQLException) {
+                throw (SQLException) e;
+            }
+            throw new RuntimeException(e);
         } finally {
             if (con != null)
                 try {
