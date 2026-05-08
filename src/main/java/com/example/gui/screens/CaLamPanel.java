@@ -84,9 +84,11 @@ public class CaLamPanel extends JPanel {
         txtSearch = new JTextField(20);
         txtSearch.setPreferredSize(new Dimension(200, 35));
         txtSearch.setToolTipText("Tìm kiếm theo tên nhân viên...");
+        txtSearch.setEnabled(false);
 
         cbFilterTime = new JComboBox<>(new String[]{"Hôm nay", "Ngày mai", "Tuần này", "Tuần sau", "Tùy chọn ngày"});
         cbFilterTime.setPreferredSize(new Dimension(130, 35));
+        cbFilterTime.setEnabled(false);
 
         dateChooserFilter = new JDateChooser();
         dateChooserFilter.setPreferredSize(new Dimension(150, 35));
@@ -133,13 +135,16 @@ public class CaLamPanel extends JPanel {
         inputPanel.add(new JLabel("Mã ca:"));
         inputPanel.add(txtMaCa = new JTextField());
         txtMaCa.setEditable(false); txtMaCa.setBackground(new Color(230,230,230));
+        txtMaCa.setEnabled(false);
 
         inputPanel.add(new JLabel("Mã nhân viên:"));
         inputPanel.add(txtMaNV = new JTextField());
+        txtMaNV.setEnabled(false);
 
         inputPanel.add(new JLabel("Tên nhân viên:"));
         inputPanel.add(txtTenNV = new JTextField());
         txtTenNV.setEditable(false);
+        txtTenNV.setEnabled(false);
 
         inputPanel.add(new JLabel("Ngày làm:"));
         dateNgayLamForm = new com.toedter.calendar.JDateChooser(new java.util.Date());
@@ -158,6 +163,7 @@ public class CaLamPanel extends JPanel {
 
         inputPanel.add(new JLabel("Trạng thái ca:"));
         cbTrangThai = new JComboBox<>(com.example.entity.enums.TrangThaiCaLam.values());
+        cbTrangThai.setEnabled(false);
         inputPanel.add(cbTrangThai);
 
         // Phần 4 nút bấm

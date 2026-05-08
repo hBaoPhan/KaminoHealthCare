@@ -22,7 +22,6 @@ public class KhachHangPanel extends JPanel {
 
     // --- Khai báo các thành phần giao diện ---
     private JTextField txtSearch, txtId, txtTen, txtSdt;
-    private JComboBox<String> cbFilter;
     private JTable table;
     private DefaultTableModel model;
     private JLabel lblTongSo;
@@ -74,15 +73,8 @@ public class KhachHangPanel extends JPanel {
         txtSearch.setPreferredSize(new Dimension(250, 35));
         txtSearch.setToolTipText("Nhập tên hoặc số điện thoại...");
 
-        cbFilter = new JComboBox<>(new String[] { "Tất cả khách hàng", "Khách hàng thành viên", "Khách lẻ" });
-        cbFilter.setPreferredSize(new Dimension(180, 35));
-        cbFilter.setBackground(Color.WHITE);
-
         topBar.add(new JLabel("Tìm kiếm: "));
         topBar.add(txtSearch);
-        topBar.add(Box.createHorizontalStrut(20));
-        topBar.add(new JLabel("Lọc theo: "));
-        topBar.add(cbFilter);
         return topBar;
     }
 
@@ -183,9 +175,6 @@ public class KhachHangPanel extends JPanel {
             }
         });
 
-        // Sự kiện đổi bộ lọc
-        cbFilter.addActionListener(e -> locVaTimKiem());
-
         // Sự kiện gõ phím tìm kiếm (Live Search)
         txtSearch.getDocument().addDocumentListener(new DocumentListener() {
             public void insertUpdate(DocumentEvent e) { locVaTimKiem(); }
@@ -225,7 +214,6 @@ public class KhachHangPanel extends JPanel {
     /** Xử lý logic lọc khách hàng theo chữ tìm kiếm và trạng thái */
     private void locVaTimKiem() {
         String keyword = txtSearch.getText().toLowerCase().trim();
-        String filter = cbFilter.getSelectedItem().toString();
 
         model.setRowCount(0); 
         int count = 0;
@@ -238,9 +226,7 @@ public class KhachHangPanel extends JPanel {
 
             String khtvUI = kh.getTrangThai() == TrangThaiKhachHang.KHACH_HANG_THANH_VIEN ? "Có" : "Không";
             
-            boolean matchRole = filter.equals("Tất cả khách hàng") 
-                             || (filter.equals("Khách hàng thành viên") && khtvUI.equals("Có"))
-                             || (filter.equals("Khách lẻ") && khtvUI.equals("Không"));
+            boolean matchRole = kh.getTrangThai() == TrangThaiKhachHang.KHACH_HANG_THANH_VIEN;
             
             boolean matchKeyword = kh.getTenKhachHang().toLowerCase().contains(keyword) 
                                 || (kh.getSdt() != null && kh.getSdt().contains(keyword));
@@ -260,7 +246,6 @@ public class KhachHangPanel extends JPanel {
         txtSearch.setText("");
         txtTen.setText("");
         txtSdt.setText("");
-        cbFilter.setSelectedIndex(0);
         table.clearSelection();
         phatSinhMaTuDong();
         txtTen.requestFocus();

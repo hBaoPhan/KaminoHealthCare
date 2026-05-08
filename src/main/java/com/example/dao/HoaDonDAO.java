@@ -463,6 +463,13 @@ public class HoaDonDAO {
                     hd.setKhachHang(khDAO.timTheoMa(maKH));
                 }
 
+                // Lấy thông tin Khuyến mãi (để áp dụng chiết khấu phần trăm nếu có)
+                String maKM = rs.getString("maKhuyenMai");
+                if (maKM != null) {
+                    KhuyenMaiDAO kmDAO = new KhuyenMaiDAO();
+                    hd.setKhuyenMai(kmDAO.timTheoMa(maKM));
+                }
+
                 // 3. Load danh sách chi tiết sản phẩm để hiển thị lên bảng "Hàng đã mua"
                 ChiTietHoaDonDAO ctDAO = new ChiTietHoaDonDAO();
                 hd.setDsChiTiet(ctDAO.layTheoMaHoaDon(maHD));
@@ -653,8 +660,6 @@ public class HoaDonDAO {
             }
 
             // 3. Cập nhật lại số lượng vào bảng Lo và lưu thông tin Phân bổ lô
-            // LƯU Ý: Khi bạn cập nhật bảng Lo, Trigger trong SQL sẽ tự động cập nhật bảng
-            // SanPham
             String sqlUpdateLo = "UPDATE Lo SET soLuongSanPham = soLuongSanPham + ? WHERE maLo = ?";
             String sqlSPBL = "INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong) VALUES (?, ?, ?, ?)";
 

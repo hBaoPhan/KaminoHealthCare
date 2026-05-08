@@ -494,7 +494,11 @@ public class HoaDonPanel extends JPanel {
         // Footer Info
         JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         footerPanel.setBackground(Color.WHITE);
-        JLabel lblTong = new JLabel("Tổng tiền: " + nf.format(tongTien));
+        
+        hd.setDsChiTiet(dsChiTiet);
+        double tongTienCuoiCung = hd.tinhTongTienThanhToan();
+        
+        JLabel lblTong = new JLabel("Tổng tiền: " + nf.format(tongTienCuoiCung));
         lblTong.setFont(new Font("Segoe UI", Font.BOLD, 16));
         lblTong.setForeground(new Color(220, 53, 69)); // Red color
         footerPanel.add(lblTong);

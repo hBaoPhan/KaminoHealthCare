@@ -204,8 +204,8 @@ public class TaiKhoanPanel extends JPanel {
             TaiKhoan tk = taiKhoanDAO.timTheoMa(tableTaiKhoan.getValueAt(row, 0).toString());
             txtTenDangNhap.setText(tk.getTenDangNhap());
             txtTenDangNhap.setEnabled(false);
-            txtMatKhau.setText("********");
-            txtMatKhau.setEnabled(false);
+            txtMatKhau.setText("");
+            txtMatKhau.setEnabled(true);
             cboNhanVien.setSelectedItem(tk.getNhanVien().getMaNhanVien() + " - " + tk.getNhanVien().getTenNhanVien());
             cboNhanVien.setEnabled(false);
             cboTrangThai.setSelectedItem(tk.getNhanVien().isTrangThai() ? "Đang hoạt động" : "Bị khóa");
@@ -237,10 +237,19 @@ public class TaiKhoanPanel extends JPanel {
 
     private void suaTaiKhoan() {
         if (tableTaiKhoan.getSelectedRow() < 0) return;
-        if (JOptionPane.showConfirmDialog(this, "Xác nhận sửa trạng thái tài khoản?", "Sửa", 0) == 0) {
+        if (JOptionPane.showConfirmDialog(this, "Xác nhận cập nhật thông tin tài khoản?", "Sửa", 0) == 0) {
             NhanVien nv = nhanVienDAO.timTheoMa(cboNhanVien.getSelectedItem().toString().split(" - ")[0]);
             nv.setTrangThai(cboTrangThai.getSelectedItem().equals("Đang hoạt động"));
             nhanVienDAO.capNhat(nv);
+            
+            String matKhauMoi = txtMatKhau.getText().trim();
+            if (!matKhauMoi.isEmpty()) {
+                TaiKhoan tk = new TaiKhoan(txtTenDangNhap.getText(), matKhauMoi, nv);
+                taiKhoanDAO.capNhat(tk);
+                JOptionPane.showMessageDialog(this, "Đã cập nhật trạng thái và mật khẩu mới!");
+            } else {
+                JOptionPane.showMessageDialog(this, "Đã cập nhật trạng thái tài khoản!");
+            }
             loadDataToTable(); lamMoiForm();
         }
     }
