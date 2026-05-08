@@ -13,11 +13,10 @@ public class QuaTangDAO {
 
     public List<QuaTang> layTatCa() {
         List<QuaTang> danhSach = new ArrayList<>();
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "SELECT * FROM QuaTang";
-            Statement lenh = ketNoi.createStatement();
-            ResultSet ketQua = lenh.executeQuery(truyVan);
+        String truyVan = "SELECT * FROM QuaTang";
+        try (Connection ketNoi = ConnectDB.getConnection();
+             Statement lenh = ketNoi.createStatement();
+             ResultSet ketQua = lenh.executeQuery(truyVan)) {
 
             DonViQuyDoiDAO dvDAO = new DonViQuyDoiDAO();
             while (ketQua.next()) {
@@ -35,20 +34,19 @@ public class QuaTangDAO {
 
     public List<QuaTang> timTheoKhuyenMai(String maKM) {
         List<QuaTang> danhSach = new ArrayList<>();
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "SELECT * FROM QuaTang WHERE maKhuyenMai = ?";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
+        String truyVan = "SELECT * FROM QuaTang WHERE maKhuyenMai = ?";
+        try (Connection ketNoi = ConnectDB.getConnection();
+             PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
             lenh.setString(1, maKM);
-            ResultSet ketQua = lenh.executeQuery();
-
-            DonViQuyDoiDAO dvDAO = new DonViQuyDoiDAO();
-            while (ketQua.next()) {
-                QuaTang qt = new QuaTang();
-                qt.setKhuyenMai(new KhuyenMai(ketQua.getString("maKhuyenMai")));
-                qt.setDonViQuyDoi(dvDAO.timTheoMa(ketQua.getString("maDonVi")));
-                qt.setSoLuongTang(ketQua.getInt("soLuongTang"));
-                danhSach.add(qt);
+            try (ResultSet ketQua = lenh.executeQuery()) {
+                DonViQuyDoiDAO dvDAO = new DonViQuyDoiDAO();
+                while (ketQua.next()) {
+                    QuaTang qt = new QuaTang();
+                    qt.setKhuyenMai(new KhuyenMai(ketQua.getString("maKhuyenMai")));
+                    qt.setDonViQuyDoi(dvDAO.timTheoMa(ketQua.getString("maDonVi")));
+                    qt.setSoLuongTang(ketQua.getInt("soLuongTang"));
+                    danhSach.add(qt);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -58,10 +56,9 @@ public class QuaTangDAO {
 
     public boolean them(QuaTang qt) {
         int soDongThayDoi = 0;
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "INSERT INTO QuaTang VALUES (?, ?, ?)";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
+        String truyVan = "INSERT INTO QuaTang VALUES (?, ?, ?)";
+        try (Connection ketNoi = ConnectDB.getConnection();
+             PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
             lenh.setString(1, qt.getKhuyenMai().getMaKhuyenMai());
             lenh.setString(2, qt.getDonViQuyDoi().getMaDonVi());
             lenh.setInt(3, qt.getSoLuongTang());
@@ -74,10 +71,9 @@ public class QuaTangDAO {
 
     public boolean xoa(String maKM, String maDonVi) {
         int soDongThayDoi = 0;
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "DELETE FROM QuaTang WHERE maKhuyenMai = ? AND maDonVi = ?";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
+        String truyVan = "DELETE FROM QuaTang WHERE maKhuyenMai = ? AND maDonVi = ?";
+        try (Connection ketNoi = ConnectDB.getConnection();
+             PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
             lenh.setString(1, maKM);
             lenh.setString(2, maDonVi);
             soDongThayDoi = lenh.executeUpdate();
@@ -89,10 +85,9 @@ public class QuaTangDAO {
 
     public boolean xoaTheoKhuyenMai(String maKM) {
         int soDongThayDoi = 0;
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "DELETE FROM QuaTang WHERE maKhuyenMai = ?";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
+        String truyVan = "DELETE FROM QuaTang WHERE maKhuyenMai = ?";
+        try (Connection ketNoi = ConnectDB.getConnection();
+             PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
             lenh.setString(1, maKM);
             soDongThayDoi = lenh.executeUpdate();
         } catch (SQLException e) {
