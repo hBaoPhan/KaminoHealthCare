@@ -139,6 +139,15 @@ public class HoaDonService {
         return hoaDonDAO.xoa(maHD);
     }
 
+    /**
+     * Lấy danh sách phân bổ lô tương ứng để hoàn trả kho khi trả hàng.
+     * Di chuyển raw SQL từ TraHangPanel — tầng UI không được viết SQL.
+     */
+    public List<SuPhanBoLo> layDanhSachPhanBoLoCanTra(String maHoaDonGoc,
+                                                       List<ChiTietHoaDon> dsChiTietTra) {
+        return hoaDonDAO.layDanhSachPhanBoLoCanTra(maHoaDonGoc, dsChiTietTra);
+    }
+
     // ==================== THỐNG KÊ ====================
 
     /**

@@ -962,4 +962,53 @@ public class HoaDonDAO {
         }
         return count;
     }
+
+    /**
+     * Lấy danh sách phân bổ lô tương ứng để hoàn trả kho.
+     * <p>
+     * Di chuyển từ TraHangPanel (raw SQL không thuộc tầng UI).
+     * Với mỗi ChiTietHoaDon cần trả, tìm các Lô mà hóa đơn gốc đã xuất
+     * và phân bổ lại đúng số lượng vào từng Lô theo thứ tự.
+     *
+     * @param maHoaDonGoc Mã hóa đơn gốc cần tra cứu phân bổ lô
+     * @param dsChiTietTra Danh sách chi tiết hàng thực tế khách muốn trả
+     * @return Danh sách SuPhanBoLo để hoàn trả kho
+     */
+    public List<SuPhanBoLo> layDanhSachPhanBoLoCanTra(String maHoaDonGoc, List<ChiTietHoaDon> dsChiTietTra) {
+        List<SuPhanBoLo> dsPhanBoTra = new ArrayList<>();
+        String sql = "SELECT maLo, soLuong FROM SuPhanBoLo WHERE maHoaDon = ? AND maDonVi = ?";
+        try {
+            Connection con = ConnectDB.getConnection();
+            try (PreparedStatement ps = con.prepareStatement(sql)) {
+                for (ChiTietHoaDon ctMoi : dsChiTietTra) {
+                    int soLuongCanTra = ctMoi.getSoLuong();
+                    ps.setString(1, maHoaDonGoc);
+                    ps.setString(2, ctMoi.getDonViQuyDoi().getMaDonVi());
+
+                    try (ResultSet rs = ps.executeQuery()) {
+                        // Nếu 1 SP được lấy từ nhiều Lô, chia đúng số lượng trả về từng Lô
+                        while (rs.next() && soLuongCanTra > 0) {
+                            String maLoGoc = rs.getString("maLo");
+                            int slGocTrongLo = rs.getInt("soLuong");
+                            int slTraVaoLo = Math.min(soLuongCanTra, slGocTrongLo);
+
+                            Lo lo = new Lo();
+                            lo.setMaLo(maLoGoc);
+
+                            SuPhanBoLo spb = new SuPhanBoLo();
+                            spb.setLo(lo);
+                            spb.setChiTietHoaDon(ctMoi);
+                            spb.setSoLuong(slTraVaoLo);
+                            dsPhanBoTra.add(spb);
+
+                            soLuongCanTra -= slTraVaoLo;
+                        }
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return dsPhanBoTra;
+    }
 }
