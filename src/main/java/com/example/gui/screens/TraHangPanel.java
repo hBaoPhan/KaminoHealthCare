@@ -292,7 +292,6 @@ public class TraHangPanel extends JPanel {
                     hoaDonTra.setKhachHang(hd.getKhachHang());
                 }
                 
-                // Tạo đối tượng hóa đơn gốc và gán mã HD01 vào
                 HoaDon hdGoc = new HoaDon();
                 hdGoc.setMaHoaDon(txtMaHoaGoc.getText()); 
                 hoaDonTra.setHoaDonDoiTra(hdGoc);
@@ -301,6 +300,15 @@ public class TraHangPanel extends JPanel {
                 com.example.entity.NhanVien nvTemp = new com.example.entity.NhanVien();
                 nvTemp.setMaNhanVien("QL001"); // Tạm thời gán QL001 để test
                 hoaDonTra.setNhanVien(nvTemp);
+
+                hoaDonTra.setLoaiHoaDon(com.example.entity.enums.LoaiHoaDon.TRA_HANG);
+                hoaDonTra.setPhuongThucThanhToan(com.example.entity.enums.PhuongThucThanhToan.TIEN_MAT);
+                com.example.entity.CaLam ca = hoaDonService.layCaHienTai(nvTemp.getMaNhanVien());
+                if (ca == null) {
+                    JOptionPane.showMessageDialog(this, "Chưa mở ca làm việc!");
+                    return;
+                }
+                hoaDonTra.setCa(ca);
                 
                 // 2. Gom danh sách sản phẩm thực tế từ bảng vào hóa đơn
                 List<ChiTietHoaDon> dsTra = new ArrayList<>();
@@ -375,6 +383,12 @@ public class TraHangPanel extends JPanel {
 
 
         dsChiTietGoc = ctHDPDAO.layTheoMaHoaDon(maHD);
+        
+        // --- XỬ LÝ LỖI DUPLICATE ---
+        // Không load các sản phẩm là Quà Tặng (isLaQuaTangKem = true) lên danh sách trả hàng.
+        // Điều này đảm bảo mỗi maDonVi chỉ xuất hiện 1 lần, tránh lỗi Duplicate Primary Key (maHD, maDonVi, laQuaTangKem)
+        dsChiTietGoc.removeIf(ChiTietHoaDon::isLaQuaTangKem);
+
         this.hd.setDsChiTiet(dsChiTietGoc);
 
         // Điền thông tin lên giao diện

@@ -26,6 +26,23 @@ public class SuPhanBoLoDAO {
         return pst.executeUpdate() > 0;
     }
 
+    public boolean themNhieu(List<SuPhanBoLo> ds, String maHoaDon, Connection con) throws SQLException {
+        if (ds == null || ds.isEmpty()) return true;
+        String sql = "INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong, laQuaTangKem) VALUES (?, ?, ?, ?, ?)";
+        try (PreparedStatement pst = con.prepareStatement(sql)) {
+            for (SuPhanBoLo spbl : ds) {
+                pst.setString(1, maHoaDon);
+                pst.setString(2, spbl.getChiTietHoaDon().getDonViQuyDoi().getMaDonVi());
+                pst.setString(3, spbl.getLo().getMaLo());
+                pst.setInt(4, spbl.getSoLuong());
+                pst.setBoolean(5, spbl.getChiTietHoaDon().isLaQuaTangKem());
+                pst.addBatch();
+            }
+            pst.executeBatch();
+            return true;
+        }
+    }
+
     public List<SuPhanBoLo> layPhanBoLoCuaChiTiet(String maHD, String maDV, boolean laQuaTangKem) {
         List<SuPhanBoLo> ds = new ArrayList<>();
         String sql = "SELECT s.* FROM SuPhanBoLo s " +
@@ -57,5 +74,13 @@ public class SuPhanBoLoDAO {
             e.printStackTrace();
         }
         return ds;
+    }
+
+    public boolean xoaToanBoPhanBoLo(String maHD, Connection con) throws SQLException {
+        String truyVan = "DELETE FROM SuPhanBoLo WHERE maHoaDon = ?";
+        try (PreparedStatement lenh = con.prepareStatement(truyVan)) {
+            lenh.setString(1, maHD);
+            return lenh.executeUpdate() >= 0;
+        }
     }
 }

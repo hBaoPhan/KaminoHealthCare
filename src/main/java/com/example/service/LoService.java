@@ -32,9 +32,23 @@ public class LoService {
 
     /**
      * Sinh mã lô tự động — di chuyển từ LoDAO (đây là nghiệp vụ, không phải CRUD).
+     * Định dạng: LO + DD + MM + YY + XXX
+     * Ví dụ: LO060526001
      */
     public String sinhMaLo() {
-        return loDAO.sinhMaLo();
+        LocalDate today = LocalDate.now();
+        String prefix = "LO"
+                + String.format("%02d", today.getDayOfMonth())
+                + String.format("%02d", today.getMonthValue())
+                + String.format("%02d", today.getYear() % 100);
+
+        String lastMaLo = loDAO.layMaLoMoiNhat(prefix);
+        if (lastMaLo != null) {
+            int lastNumber = Integer.parseInt(lastMaLo.substring(lastMaLo.length() - 3));
+            return prefix + String.format("%03d", lastNumber + 1);
+        } else {
+            return prefix + "001";
+        }
     }
 
     /**

@@ -3,6 +3,8 @@ package com.example.dao;
 import com.example.connectDB.ConnectDB;
 import com.example.entity.Lo;
 import com.example.entity.SanPham;
+import com.example.entity.SuPhanBoLo;
+
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -18,7 +20,7 @@ public class LoDAO {
         String sql = "SELECT * FROM Lo ORDER BY ngayHetHan ASC, maLo ASC";
 
         try (Statement lenh = ConnectDB.getConnection().createStatement();
-             ResultSet ketQua = lenh.executeQuery(sql)) {
+                ResultSet ketQua = lenh.executeQuery(sql)) {
 
             while (ketQua.next()) {
                 Lo lo = new Lo();
@@ -37,34 +39,20 @@ public class LoDAO {
     }
 
     /**
-     * Tự động sinh mã lô theo định dạng: LO + DD + MM + YY + XXX
-     * Ví dụ: LO060526001
+     * Lấy mã lô mới nhất theo prefix
      */
-    public String sinhMaLo() {
-        LocalDate today = LocalDate.now();
-        String prefix = "LO" 
-                      + String.format("%02d", today.getDayOfMonth())
-                      + String.format("%02d", today.getMonthValue())
-                      + String.format("%02d", today.getYear() % 100);
-
+    public String layMaLoMoiNhat(String prefix) {
         String sql = "SELECT TOP 1 maLo FROM Lo WHERE maLo LIKE ? ORDER BY maLo DESC";
-
         try (PreparedStatement stmt = ConnectDB.getConnection().prepareStatement(sql)) {
-
             stmt.setString(1, prefix + "%");
             ResultSet rs = stmt.executeQuery();
-
             if (rs.next()) {
-                String lastMaLo = rs.getString("maLo");
-                int lastNumber = Integer.parseInt(lastMaLo.substring(lastMaLo.length() - 3));
-                return prefix + String.format("%03d", lastNumber + 1);
-            } else {
-                return prefix + "001";
+                return rs.getString("maLo");
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            return prefix + "001"; // fallback
         }
+        return null;
     }
 
     /**
@@ -72,7 +60,7 @@ public class LoDAO {
      */
     public boolean themLo(Lo lo) {
         String sql = "INSERT INTO Lo(maLo, soLo, ngayHetHan, soLuongSanPham, maSanPham, giaNhap) " +
-                     "VALUES(?, ?, ?, ?, ?, ?)";
+                "VALUES(?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = ConnectDB.getConnection().prepareStatement(sql)) {
 
             stmt.setString(1, lo.getMaLo());
@@ -89,13 +77,12 @@ public class LoDAO {
         }
     }
 
-
     /**
      * Cập nhật lô
      */
     public boolean capNhatLo(Lo lo) {
         String sql = "UPDATE Lo SET soLo = ?, ngayHetHan = ?, soLuongSanPham = ?, " +
-                     "maSanPham = ?, giaNhap = ? WHERE maLo = ?";
+                "maSanPham = ?, giaNhap = ? WHERE maLo = ?";
         try (PreparedStatement stmt = ConnectDB.getConnection().prepareStatement(sql)) {
 
             stmt.setString(1, lo.getSoLo());
@@ -112,7 +99,6 @@ public class LoDAO {
         }
     }
 
-
     /**
      * Xóa lô
      */
@@ -127,7 +113,6 @@ public class LoDAO {
             return false;
         }
     }
-
 
     /**
      * Tìm theo mã lô
@@ -174,12 +159,28 @@ public class LoDAO {
         }
     }
 
+    public boolean capNhatTonKhoNhieu(List<SuPhanBoLo> ds, boolean isCong, Connection con) throws SQLException {
+        if (ds == null || ds.isEmpty())
+            return true;
+        String operator = isCong ? "+" : "-";
+        String sql = "UPDATE Lo SET soLuongSanPham = soLuongSanPham " + operator + " ? WHERE maLo = ?";
+        try (PreparedStatement pst = con.prepareStatement(sql)) {
+            for (SuPhanBoLo sp : ds) {
+                pst.setInt(1, sp.getSoLuong());
+                pst.setString(2, sp.getLo().getMaLo());
+                pst.addBatch();
+            }
+            pst.executeBatch();
+            return true;
+        }
+    }
+
     public List<Lo> layDanhSachLoKhaDung(String maDonViQuyDoi) {
         List<Lo> danhSach = new ArrayList<>();
         String truyVan = "SELECT l.* FROM Lo l " +
-                         "INNER JOIN DonViQuyDoi dv ON l.maSanPham = dv.maSanPham " +
-                         "WHERE dv.maDonVi = ? AND l.soLuongSanPham > 0 " +
-                         "AND l.ngayHetHan > GETDATE() ORDER BY l.ngayHetHan ASC";
+                "INNER JOIN DonViQuyDoi dv ON l.maSanPham = dv.maSanPham " +
+                "WHERE dv.maDonVi = ? AND l.soLuongSanPham > 0 " +
+                "AND l.ngayHetHan > GETDATE() ORDER BY l.ngayHetHan ASC";
 
         try (PreparedStatement lenh = ConnectDB.getConnection().prepareStatement(truyVan)) {
 

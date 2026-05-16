@@ -8,10 +8,17 @@ import com.example.entity.HoaDon;
 import com.example.entity.SuPhanBoLo;
 import com.example.entity.enums.LoaiHoaDon;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+
+import com.example.connectDB.ConnectDB;
+import com.example.dao.ChiTietHoaDonDAO;
+import com.example.dao.LoDAO;
+import com.example.dao.SuPhanBoLoDAO;
+import com.example.entity.Lo;
 
 /**
  * Service xử lý toàn bộ nghiệp vụ liên quan đến Hóa đơn.
@@ -22,6 +29,9 @@ public class HoaDonService {
 
     private final HoaDonDAO hoaDonDAO = new HoaDonDAO();
     private final CaLamDAO caLamDAO = new CaLamDAO();
+    private final ChiTietHoaDonDAO ctDAO = new ChiTietHoaDonDAO();
+    private final LoDAO loDAO = new LoDAO();
+    private final SuPhanBoLoDAO spbDAO = new SuPhanBoLoDAO();
 
     // ==================== TRUY VẤN ====================
 
@@ -91,7 +101,29 @@ public class HoaDonService {
      * Nếu hóa đơn đã tồn tại, chỉ cập nhật thông tin và chi tiết (idempotent).
      */
     public boolean luuHoaDonBanHang(HoaDon hd, List<ChiTietHoaDon> dsChiTiet) {
-        return hoaDonDAO.luuHoaDonBanHang(hd, dsChiTiet);
+        Connection con = null;
+        try {
+            con = ConnectDB.getConnection();
+            con.setAutoCommit(false);
+
+            HoaDon existing = hoaDonDAO.timTheoMa(hd.getMaHoaDon());
+            if (existing != null) {
+                hoaDonDAO.capNhat(hd, con);
+                ctDAO.xoaToanBoChiTiet(hd.getMaHoaDon(), con);
+            } else {
+                hoaDonDAO.them(hd, con);
+            }
+            ctDAO.themNhieu(dsChiTiet, hd.getMaHoaDon(), con);
+
+            con.commit();
+            return true;
+        } catch (Exception e) {
+            if (con != null) try { con.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (con != null) try { con.setAutoCommit(true); } catch (SQLException ex) { ex.printStackTrace(); }
+        }
     }
 
     /**
@@ -100,7 +132,46 @@ public class HoaDonService {
      * @throws SQLException nếu không đủ tồn kho
      */
     public boolean xacNhanThanhToan(String maHoaDon, List<ChiTietHoaDon> dsChiTiet) throws SQLException {
-        return hoaDonDAO.xacNhanThanhToan(maHoaDon, dsChiTiet);
+        Connection con = null;
+        try {
+            con = ConnectDB.getConnection();
+            con.setAutoCommit(false);
+
+            hoaDonDAO.capNhatTrangThaiThanhToan(maHoaDon, true, con);
+
+            for (ChiTietHoaDon ct : dsChiTiet) {
+                int soLuongCanTru = ct.getSoLuong() * ct.getDonViQuyDoi().getHeSoQuyDoi();
+                List<Lo> dsLo = hoaDonDAO.layDanhSachLoKhaDung(con, ct.getDonViQuyDoi().getMaDonVi());
+
+                for (Lo lo : dsLo) {
+                    if (soLuongCanTru <= 0) break;
+                    int tru = Math.min(soLuongCanTru, lo.getSoLuongSanPham());
+
+                    loDAO.capNhatSoLuongTon(lo.getMaLo(), -tru, con);
+
+                    SuPhanBoLo spb = new SuPhanBoLo();
+                    spb.setChiTietHoaDon(ct);
+                    spb.setLo(lo);
+                    spb.setSoLuong(tru);
+                    spbDAO.themSuPhanBoLo(spb, con);
+
+                    soLuongCanTru -= tru;
+                }
+
+                if (soLuongCanTru > 0) {
+                    throw new SQLException("Không đủ tồn kho cho: " + ct.getDonViQuyDoi().getSanPham().getTenSanPham());
+                }
+            }
+
+            con.commit();
+            return true;
+        } catch (Exception e) {
+            if (con != null) try { con.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            if (e instanceof SQLException) throw (SQLException) e;
+            throw new RuntimeException(e);
+        } finally {
+            if (con != null) try { con.setAutoCommit(true); } catch (SQLException ex) { ex.printStackTrace(); }
+        }
     }
 
     /**
@@ -110,21 +181,87 @@ public class HoaDonService {
                                      List<SuPhanBoLo> dsTraLai,
                                      List<ChiTietHoaDon> dsChiTietMoi,
                                      List<SuPhanBoLo> dsPhanBoMoi) {
-        return hoaDonDAO.luuHoaDonDoiHang(hoaDonMoi, dsTraLai, dsChiTietMoi, dsPhanBoMoi);
+        Connection ketNoi = null;
+        try {
+            ketNoi = ConnectDB.getConnection();
+            ketNoi.setAutoCommit(false);
+
+            loDAO.capNhatTonKhoNhieu(dsTraLai, true, ketNoi);
+            hoaDonDAO.them(hoaDonMoi, ketNoi);
+            ctDAO.themNhieu(dsChiTietMoi, hoaDonMoi.getMaHoaDon(), ketNoi);
+
+            if (dsPhanBoMoi != null && !dsPhanBoMoi.isEmpty()) {
+                for (SuPhanBoLo spMoi : dsPhanBoMoi) {
+                    Lo lo = loDAO.timTheoMa(spMoi.getLo().getMaLo());
+                    if (lo == null) throw new RuntimeException("Không tìm thấy Lô " + spMoi.getLo().getMaLo());
+                    if (lo.getSoLuongSanPham() < spMoi.getSoLuong()) {
+                        throw new RuntimeException("Lô " + spMoi.getLo().getMaLo() + " không đủ số lượng để đổi!");
+                    }
+                }
+                loDAO.capNhatTonKhoNhieu(dsPhanBoMoi, false, ketNoi);
+                spbDAO.themNhieu(dsPhanBoMoi, hoaDonMoi.getMaHoaDon(), ketNoi);
+            }
+
+            ketNoi.commit();
+            return true;
+        } catch (Exception e) {
+            if (ketNoi != null) try { ketNoi.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (ketNoi != null) try { ketNoi.setAutoCommit(true); } catch (SQLException ex) { ex.printStackTrace(); }
+        }
     }
 
     /**
      * Thực thi toàn bộ luồng trả hàng trong 1 transaction duy nhất.
      */
     public boolean luuHoaDonTraHang(HoaDon hoaDonTra, List<SuPhanBoLo> dsPhanBoTra) {
-        return hoaDonDAO.luuHoaDonTraHang(hoaDonTra, dsPhanBoTra);
+        Connection con = null;
+        try {
+            con = ConnectDB.getConnection();
+            con.setAutoCommit(false);
+
+            hoaDonTra.setTrangThaiThanhToan(true);
+            hoaDonDAO.them(hoaDonTra, con);
+            ctDAO.themNhieu(hoaDonTra.getDsChiTiet(), hoaDonTra.getMaHoaDon(), con);
+
+            loDAO.capNhatTonKhoNhieu(dsPhanBoTra, true, con);
+            spbDAO.themNhieu(dsPhanBoTra, hoaDonTra.getMaHoaDon(), con);
+
+            con.commit();
+            return true;
+        } catch (Exception e) {
+            if (con != null) try { con.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (con != null) try { con.setAutoCommit(true); } catch (SQLException ex) { ex.printStackTrace(); }
+        }
     }
 
     /**
      * Hủy hóa đơn (xóa chuỗi SuPhanBoLo → ChiTietHoaDon → HoaDon trong 1 transaction).
      */
     public boolean huyHoaDon(String maHD) {
-        return hoaDonDAO.huyHoaDon(maHD);
+        Connection con = null;
+        try {
+            con = ConnectDB.getConnection();
+            con.setAutoCommit(false);
+
+            spbDAO.xoaToanBoPhanBoLo(maHD, con);
+            ctDAO.xoaToanBoChiTiet(maHD, con);
+            hoaDonDAO.xoa(maHD, con);
+
+            con.commit();
+            return true;
+        } catch (Exception e) {
+            if (con != null) try { con.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (con != null) try { con.setAutoCommit(true); } catch (SQLException ex) { ex.printStackTrace(); }
+        }
     }
 
     public boolean them(HoaDon hd) {

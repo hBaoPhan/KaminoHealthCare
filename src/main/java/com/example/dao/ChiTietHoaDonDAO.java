@@ -54,6 +54,23 @@ public class ChiTietHoaDonDAO {
         return lenh.executeUpdate() > 0;
     }
 
+    public boolean themNhieu(List<ChiTietHoaDon> ds, String maHoaDon, Connection con) throws SQLException {
+        if (ds == null || ds.isEmpty()) return true;
+        String truyVan = "INSERT INTO ChiTietHoaDon (maHoaDon, maDonVi, soLuong, donGia, laQuaTangKem) VALUES (?, ?, ?, ?, ?)";
+        try (PreparedStatement lenh = con.prepareStatement(truyVan)) {
+            for (ChiTietHoaDon ct : ds) {
+                lenh.setString(1, maHoaDon);
+                lenh.setString(2, ct.getDonViQuyDoi().getMaDonVi());
+                lenh.setInt(3, ct.getSoLuong());
+                lenh.setDouble(4, ct.getDonGia());
+                lenh.setBoolean(5, ct.isLaQuaTangKem());
+                lenh.addBatch();
+            }
+            lenh.executeBatch();
+            return true;
+        }
+    }
+
     public boolean capNhat(ChiTietHoaDon ct) {
         int soDongThayDoi = 0;
         String truyVan = "UPDATE ChiTietHoaDon SET soLuong = ?, donGia = ? WHERE maHoaDon = ? AND maDonVi = ? AND laQuaTangKem = ?";
@@ -90,5 +107,13 @@ public class ChiTietHoaDonDAO {
             e.printStackTrace();
         }
         return soDongThayDoi > 0;
+    }
+
+    public boolean xoaToanBoChiTiet(String maHD, Connection con) throws SQLException {
+        String truyVan = "DELETE FROM ChiTietHoaDon WHERE maHoaDon = ?";
+        try (PreparedStatement lenh = con.prepareStatement(truyVan)) {
+            lenh.setString(1, maHD);
+            return lenh.executeUpdate() >= 0;
+        }
     }
 }
