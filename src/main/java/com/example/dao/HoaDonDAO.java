@@ -103,7 +103,6 @@ public class HoaDonDAO {
 
     /**
      * Lấy hóa đơn bán hàng chưa thanh toán mới nhất của nhân viên.
-     * Kèm theo danh sách ChiTietHoaDon đầy đủ (gồm cả DonViQuyDoi với SanPham).
      */
     public HoaDon layHoaDonChuaThanhToan(String maNhanVien) {
         HoaDon hd = null;
@@ -114,7 +113,6 @@ public class HoaDonDAO {
             Connection con = ConnectDB.getConnection();
             KhachHangDAO khDAO = new KhachHangDAO();
             KhuyenMaiDAO kmDAO = new KhuyenMaiDAO();
-            DonViQuyDoiDAO dvDAO = new DonViQuyDoiDAO();
 
             try (PreparedStatement pst = con.prepareStatement(sql)) {
                 pst.setString(1, maNhanVien);
@@ -123,53 +121,6 @@ public class HoaDonDAO {
                         hd = mapHoaDon(rs, new NhanVienDAO(), khDAO, kmDAO);
                     }
                 }
-            }
-
-            // Load ChiTietHoaDon
-            if (hd != null) {
-                List<ChiTietHoaDon> dsChiTiet = new ArrayList<>();
-                String sqlCT = "SELECT ct.*, sp.maSanPham, sp.tenSanPham, sp.donGiaCoBan, sp.thue, " +
-                        "dv.tenDonVi, dv.heSoQuyDoi " +
-                        "FROM ChiTietHoaDon ct " +
-                        "JOIN DonViQuyDoi dv ON ct.maDonVi = dv.maDonVi " +
-                        "JOIN SanPham sp ON dv.maSanPham = sp.maSanPham " +
-                        "WHERE ct.maHoaDon = ?";
-                try (PreparedStatement pstCT = con.prepareStatement(sqlCT)) {
-                    pstCT.setString(1, hd.getMaHoaDon());
-                    try (ResultSet rsCT = pstCT.executeQuery()) {
-                        while (rsCT.next()) {
-                            ChiTietHoaDon ct = new ChiTietHoaDon();
-                            ct.setHoaDon(hd);
-                            ct.setSoLuong(rsCT.getInt("soLuong"));
-                            ct.setDonGia(rsCT.getDouble("donGia"));
-                            ct.setLaQuaTangKem(rsCT.getBoolean("laQuaTangKem"));
-
-                            // Build DonViQuyDoi with SanPham
-                            com.example.entity.SanPham sp = new com.example.entity.SanPham();
-                            sp.setMaSanPham(rsCT.getString("maSanPham"));
-                            sp.setTenSanPham(rsCT.getString("tenSanPham"));
-                            sp.setDonGiaCoBan(rsCT.getDouble("donGiaCoBan"));
-                            sp.setThue(rsCT.getDouble("thue"));
-
-                            com.example.entity.DonViQuyDoi dv = new com.example.entity.DonViQuyDoi();
-                            dv.setMaDonVi(rsCT.getString("maDonVi"));
-                            dv.setHeSoQuyDoi(rsCT.getInt("heSoQuyDoi"));
-                            dv.setSanPham(sp);
-
-                            String tenDonViStr = rsCT.getString("tenDonVi");
-                            if (tenDonViStr != null) {
-                                try {
-                                    dv.setTenDonVi(com.example.entity.enums.DonVi.valueOf(tenDonViStr));
-                                } catch (IllegalArgumentException ignored) {
-                                }
-                            }
-
-                            ct.setDonViQuyDoi(dv);
-                            dsChiTiet.add(ct);
-                        }
-                    }
-                }
-                hd.setDsChiTiet(dsChiTiet);
             }
         } catch (SQLException e) {
             e.printStackTrace();

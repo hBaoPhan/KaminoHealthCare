@@ -44,7 +44,11 @@ public class HoaDonService {
      * Lấy hóa đơn bán hàng chưa thanh toán mới nhất của nhân viên.
      */
     public HoaDon layHoaDonChuaThanhToan(String maNhanVien) {
-        return hoaDonDAO.layHoaDonChuaThanhToan(maNhanVien);
+        HoaDon hd = hoaDonDAO.layHoaDonChuaThanhToan(maNhanVien);
+        if (hd != null) {
+            hd.setDsChiTiet(ctService.layTheoMaHoaDon(hd.getMaHoaDon()));
+        }
+        return hd;
     }
 
     public List<HoaDon> timKiem(String maHD, LocalDate ngayTao) {
