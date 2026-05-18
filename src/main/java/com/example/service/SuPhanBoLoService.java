@@ -2,6 +2,7 @@ package com.example.service;
 
 import com.example.dao.SuPhanBoLoDAO;
 import com.example.entity.SuPhanBoLo;
+import com.example.entity.ChiTietHoaDon;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -31,7 +32,23 @@ public class SuPhanBoLoService {
      * Ghi bản ghi phân bổ lô trong transaction đã cho.
      * Được gọi từ HoaDonService khi thực thi nghiệp vụ bán/đổi/trả hàng.
      */
-    public boolean them(SuPhanBoLo spbl, Connection con) throws SQLException {
-        return suPhanBoLoDAO.themSuPhanBoLo(spbl, con);
+    public boolean them(SuPhanBoLo spbl) throws SQLException {
+        return suPhanBoLoDAO.themSuPhanBoLo(spbl);
+    }
+
+    public boolean themSuPhanBoLo(SuPhanBoLo spb) throws SQLException {
+        return suPhanBoLoDAO.themSuPhanBoLo(spb);
+    }
+
+    public boolean themNhieu(List<SuPhanBoLo> ds, String maHD) throws SQLException {
+        return suPhanBoLoDAO.themNhieu(ds, maHD);
+    }
+
+    public boolean xoaToanBoPhanBoLo(String maHD) throws SQLException {
+        return suPhanBoLoDAO.xoaToanBoPhanBoLo(maHD);
+    }
+
+    public List<SuPhanBoLo> layDanhSachPhanBoLoCanTra(String maHoaDonGoc, List<ChiTietHoaDon> dsChiTietTra) {
+        return suPhanBoLoDAO.layDanhSachPhanBoLoCanTra(maHoaDonGoc, dsChiTietTra);
     }
 }

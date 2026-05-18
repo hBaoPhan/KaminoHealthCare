@@ -1,6 +1,5 @@
 package com.example.service;
 
-import com.example.dao.CaLamDAO;
 import com.example.dao.HoaDonDAO;
 import com.example.entity.CaLam;
 import com.example.entity.ChiTietHoaDon;
@@ -15,9 +14,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import com.example.connectDB.ConnectDB;
-import com.example.dao.ChiTietHoaDonDAO;
-import com.example.dao.LoDAO;
-import com.example.dao.SuPhanBoLoDAO;
+import com.example.entity.Lo;
 import com.example.entity.Lo;
 
 /**
@@ -28,10 +25,10 @@ import com.example.entity.Lo;
 public class HoaDonService {
 
     private final HoaDonDAO hoaDonDAO = new HoaDonDAO();
-    private final CaLamDAO caLamDAO = new CaLamDAO();
-    private final ChiTietHoaDonDAO ctDAO = new ChiTietHoaDonDAO();
-    private final LoDAO loDAO = new LoDAO();
-    private final SuPhanBoLoDAO spbDAO = new SuPhanBoLoDAO();
+    private final CaLamService caLamService = new CaLamService();
+    private final ChiTietHoaDonService ctService = new ChiTietHoaDonService();
+    private final LoService loService = new LoService();
+    private final SuPhanBoLoService spbService = new SuPhanBoLoService();
 
     // ==================== TRUY VẤN ====================
 
@@ -91,7 +88,7 @@ public class HoaDonService {
      * Trả về null nếu nhân viên chưa mở ca.
      */
     public CaLam layCaHienTai(String maNhanVien) {
-        return caLamDAO.layCaHienTai(maNhanVien);
+        return caLamService.layCaHienTai(maNhanVien);
     }
 
     // ==================== LƯU / CẬP NHẬT ====================
@@ -108,12 +105,12 @@ public class HoaDonService {
 
             HoaDon existing = hoaDonDAO.timTheoMa(hd.getMaHoaDon());
             if (existing != null) {
-                hoaDonDAO.capNhat(hd, con);
-                ctDAO.xoaToanBoChiTiet(hd.getMaHoaDon(), con);
+                hoaDonDAO.capNhat(hd);
+                ctService.xoaToanBoChiTiet(hd.getMaHoaDon());
             } else {
-                hoaDonDAO.them(hd, con);
+                hoaDonDAO.them(hd);
             }
-            ctDAO.themNhieu(dsChiTiet, hd.getMaHoaDon(), con);
+            ctService.themNhieu(dsChiTiet, hd.getMaHoaDon());
 
             con.commit();
             return true;
@@ -126,34 +123,29 @@ public class HoaDonService {
         }
     }
 
-    /**
-     * Xác nhận thanh toán: cập nhật trạng thái và trừ kho theo FEFO.
-     *
-     * @throws SQLException nếu không đủ tồn kho
-     */
     public boolean xacNhanThanhToan(String maHoaDon, List<ChiTietHoaDon> dsChiTiet) throws SQLException {
         Connection con = null;
         try {
             con = ConnectDB.getConnection();
             con.setAutoCommit(false);
 
-            hoaDonDAO.capNhatTrangThaiThanhToan(maHoaDon, true, con);
+            hoaDonDAO.capNhatTrangThaiThanhToan(maHoaDon, true);
 
             for (ChiTietHoaDon ct : dsChiTiet) {
                 int soLuongCanTru = ct.getSoLuong() * ct.getDonViQuyDoi().getHeSoQuyDoi();
-                List<Lo> dsLo = hoaDonDAO.layDanhSachLoKhaDung(con, ct.getDonViQuyDoi().getMaDonVi());
+                List<Lo> dsLo = loService.layDanhSachLoKhaDung(ct.getDonViQuyDoi().getMaDonVi());
 
                 for (Lo lo : dsLo) {
                     if (soLuongCanTru <= 0) break;
                     int tru = Math.min(soLuongCanTru, lo.getSoLuongSanPham());
 
-                    loDAO.capNhatSoLuongTon(lo.getMaLo(), -tru, con);
+                    loService.capNhatSoLuongTon(lo.getMaLo(), -tru);
 
                     SuPhanBoLo spb = new SuPhanBoLo();
                     spb.setChiTietHoaDon(ct);
                     spb.setLo(lo);
                     spb.setSoLuong(tru);
-                    spbDAO.themSuPhanBoLo(spb, con);
+                    spbService.themSuPhanBoLo(spb);
 
                     soLuongCanTru -= tru;
                 }
@@ -186,20 +178,20 @@ public class HoaDonService {
             ketNoi = ConnectDB.getConnection();
             ketNoi.setAutoCommit(false);
 
-            loDAO.capNhatTonKhoNhieu(dsTraLai, true, ketNoi);
-            hoaDonDAO.them(hoaDonMoi, ketNoi);
-            ctDAO.themNhieu(dsChiTietMoi, hoaDonMoi.getMaHoaDon(), ketNoi);
+            loService.capNhatTonKhoNhieu(dsTraLai, true);
+            hoaDonDAO.them(hoaDonMoi);
+            ctService.themNhieu(dsChiTietMoi, hoaDonMoi.getMaHoaDon());
 
             if (dsPhanBoMoi != null && !dsPhanBoMoi.isEmpty()) {
                 for (SuPhanBoLo spMoi : dsPhanBoMoi) {
-                    Lo lo = loDAO.timTheoMa(spMoi.getLo().getMaLo());
+                    Lo lo = loService.timTheoMa(spMoi.getLo().getMaLo());
                     if (lo == null) throw new RuntimeException("Không tìm thấy Lô " + spMoi.getLo().getMaLo());
                     if (lo.getSoLuongSanPham() < spMoi.getSoLuong()) {
                         throw new RuntimeException("Lô " + spMoi.getLo().getMaLo() + " không đủ số lượng để đổi!");
                     }
                 }
-                loDAO.capNhatTonKhoNhieu(dsPhanBoMoi, false, ketNoi);
-                spbDAO.themNhieu(dsPhanBoMoi, hoaDonMoi.getMaHoaDon(), ketNoi);
+                loService.capNhatTonKhoNhieu(dsPhanBoMoi, false);
+                spbService.themNhieu(dsPhanBoMoi, hoaDonMoi.getMaHoaDon());
             }
 
             ketNoi.commit();
@@ -223,11 +215,11 @@ public class HoaDonService {
             con.setAutoCommit(false);
 
             hoaDonTra.setTrangThaiThanhToan(true);
-            hoaDonDAO.them(hoaDonTra, con);
-            ctDAO.themNhieu(hoaDonTra.getDsChiTiet(), hoaDonTra.getMaHoaDon(), con);
+            hoaDonDAO.them(hoaDonTra);
+            ctService.themNhieu(hoaDonTra.getDsChiTiet(), hoaDonTra.getMaHoaDon());
 
-            loDAO.capNhatTonKhoNhieu(dsPhanBoTra, true, con);
-            spbDAO.themNhieu(dsPhanBoTra, hoaDonTra.getMaHoaDon(), con);
+            loService.capNhatTonKhoNhieu(dsPhanBoTra, true);
+            spbService.themNhieu(dsPhanBoTra, hoaDonTra.getMaHoaDon());
 
             con.commit();
             return true;
@@ -248,10 +240,9 @@ public class HoaDonService {
         try {
             con = ConnectDB.getConnection();
             con.setAutoCommit(false);
-
-            spbDAO.xoaToanBoPhanBoLo(maHD, con);
-            ctDAO.xoaToanBoChiTiet(maHD, con);
-            hoaDonDAO.xoa(maHD, con);
+            spbService.xoaToanBoPhanBoLo(maHD);
+            ctService.xoaToanBoChiTiet(maHD);
+            hoaDonDAO.xoa(maHD);
 
             con.commit();
             return true;
@@ -265,15 +256,30 @@ public class HoaDonService {
     }
 
     public boolean them(HoaDon hd) {
-        return hoaDonDAO.them(hd);
+        try {
+            return hoaDonDAO.them(hd);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public boolean capNhat(HoaDon hd) {
-        return hoaDonDAO.capNhat(hd);
+        try {
+            return hoaDonDAO.capNhat(hd);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public boolean xoa(String maHD) {
-        return hoaDonDAO.xoa(maHD);
+        try {
+            return hoaDonDAO.xoa(maHD);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     /**
@@ -282,7 +288,7 @@ public class HoaDonService {
      */
     public List<SuPhanBoLo> layDanhSachPhanBoLoCanTra(String maHoaDonGoc,
                                                        List<ChiTietHoaDon> dsChiTietTra) {
-        return hoaDonDAO.layDanhSachPhanBoLoCanTra(maHoaDonGoc, dsChiTietTra);
+        return spbService.layDanhSachPhanBoLoCanTra(maHoaDonGoc, dsChiTietTra);
     }
 
     // ==================== THỐNG KÊ ====================

@@ -41,10 +41,10 @@ public class ChiTietHoaDonDAO {
         return ds;
     }
 
-    public boolean them(ChiTietHoaDon ct, Connection con) throws SQLException {
+    public boolean them(ChiTietHoaDon ct) throws SQLException {
         String truyVan = "INSERT INTO ChiTietHoaDon (maHoaDon, maDonVi, soLuong, donGia, laQuaTangKem) VALUES (?, ?, ?, ?, ?)";
        
-        PreparedStatement lenh = con.prepareStatement(truyVan);
+        PreparedStatement lenh = ConnectDB.getConnection().prepareStatement(truyVan);
         lenh.setString(1, ct.getHoaDon().getMaHoaDon());
         lenh.setString(2, ct.getDonViQuyDoi().getMaDonVi());
         lenh.setInt(3, ct.getSoLuong());
@@ -54,10 +54,10 @@ public class ChiTietHoaDonDAO {
         return lenh.executeUpdate() > 0;
     }
 
-    public boolean themNhieu(List<ChiTietHoaDon> ds, String maHoaDon, Connection con) throws SQLException {
+    public boolean themNhieu(List<ChiTietHoaDon> ds, String maHoaDon) throws SQLException {
         if (ds == null || ds.isEmpty()) return true;
         String truyVan = "INSERT INTO ChiTietHoaDon (maHoaDon, maDonVi, soLuong, donGia, laQuaTangKem) VALUES (?, ?, ?, ?, ?)";
-        try (PreparedStatement lenh = con.prepareStatement(truyVan)) {
+        try (PreparedStatement lenh = ConnectDB.getConnection().prepareStatement(truyVan)) {
             for (ChiTietHoaDon ct : ds) {
                 lenh.setString(1, maHoaDon);
                 lenh.setString(2, ct.getDonViQuyDoi().getMaDonVi());
@@ -109,9 +109,9 @@ public class ChiTietHoaDonDAO {
         return soDongThayDoi > 0;
     }
 
-    public boolean xoaToanBoChiTiet(String maHD, Connection con) throws SQLException {
+    public boolean xoaToanBoChiTiet(String maHD) throws SQLException {
         String truyVan = "DELETE FROM ChiTietHoaDon WHERE maHoaDon = ?";
-        try (PreparedStatement lenh = con.prepareStatement(truyVan)) {
+        try (PreparedStatement lenh = ConnectDB.getConnection().prepareStatement(truyVan)) {
             lenh.setString(1, maHD);
             return lenh.executeUpdate() >= 0;
         }

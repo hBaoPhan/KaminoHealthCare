@@ -31,8 +31,8 @@ public class ChiTietHoaDonService {
      * Thêm chi tiết hóa đơn trong phạm vi transaction đã cho.
      * Được gọi từ HoaDonService khi cần kiểm soát transaction thủ công.
      */
-    public boolean them(ChiTietHoaDon ct, Connection con) throws SQLException {
-        return chiTietHoaDonDAO.them(ct, con);
+    public boolean them(ChiTietHoaDon ct) throws SQLException {
+        return chiTietHoaDonDAO.them(ct);
     }
 
     public boolean capNhat(ChiTietHoaDon ct) {
@@ -41,5 +41,13 @@ public class ChiTietHoaDonService {
 
     public boolean xoa(String maHD, String maDV, boolean laQuaTangKem) {
         return chiTietHoaDonDAO.xoa(maHD, maDV, laQuaTangKem);
+    }
+
+    public boolean themNhieu(List<ChiTietHoaDon> ds, String maHoaDon) throws SQLException {
+        return chiTietHoaDonDAO.themNhieu(ds, maHoaDon);
+    }
+
+    public boolean xoaToanBoChiTiet(String maHD) throws SQLException {
+        return chiTietHoaDonDAO.xoaToanBoChiTiet(maHD);
     }
 }

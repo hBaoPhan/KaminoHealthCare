@@ -211,16 +211,19 @@ public class BanHangPanel extends JPanel {
 
             private void updateSearch() {
                 String text = txtSearch.getText().trim();
-                if (text.isEmpty() || text.equals("Mã/Tên sản phẩm")) {
+                if (text.isEmpty() || text.equals("Tìm Mã/Tên sản phẩm")) {
                     searchPopup.setVisible(false);
                     return;
                 }
 
                 SwingUtilities.invokeLater(() -> {
                     List<SanPham> results = sanPhamService.timTheoMaHoacTen(text);
+                    
+                    // Hide the popup first to reset its peer and avoid duplicate drawing/rendering artifacts
+                    searchPopup.setVisible(false);
                     searchPopup.removeAll();
+                    
                     if (results.isEmpty()) {
-                        searchPopup.setVisible(false);
                         return;
                     }
                     for (SanPham sp : results) {
@@ -251,6 +254,10 @@ public class BanHangPanel extends JPanel {
 
                         searchPopup.add(item);
                     }
+                    
+                    searchPopup.revalidate();
+                    searchPopup.repaint();
+                    
                     if (txtSearch.isShowing()) {
                         searchPopup.show(txtSearch, 0, txtSearch.getHeight());
                         txtSearch.requestFocus();

@@ -24,7 +24,7 @@ public class LoService {
         return loDAO.timTheoMa(maLo);
     }
 
-    public List<Lo> layDanhSachLoKhaDung(String maDonViQuyDoi) {
+    public List<Lo> layDanhSachLoKhaDung(String maDonViQuyDoi) throws java.sql.SQLException {
         return loDAO.layDanhSachLoKhaDung(maDonViQuyDoi);
     }
 
@@ -53,10 +53,6 @@ public class LoService {
 
     /**
      * Lấy danh sách lô sắp hết hạn trong N ngày tới.
-     * Di chuyển từ LoPanel — đây là nghiệp vụ cảnh báo.
-     *
-     * @param soNgay Số ngày cảnh báo trước (ví dụ: 30)
-     * @return Danh sách lô hết hạn trong vòng soNgay ngày
      */
     public List<Lo> layLoSapHetHan(int soNgay) {
         LocalDate ngayGioi = LocalDate.now().plusDays(soNgay);
@@ -90,7 +86,12 @@ public class LoService {
         return loDAO.xoaLo(maLo);
     }
 
-    public boolean capNhatSoLuongTon(String maLo, int soLuongThayDoi) {
+    public boolean capNhatSoLuongTon(String maLo, int soLuongThayDoi) throws java.sql.SQLException {
         return loDAO.capNhatSoLuongTon(maLo, soLuongThayDoi);
+    }
+
+    public boolean capNhatTonKhoNhieu(List<com.example.entity.SuPhanBoLo> danhSachPhanBo, boolean isHoanTra)
+            throws java.sql.SQLException {
+        return loDAO.capNhatTonKhoNhieu(danhSachPhanBo, isHoanTra);
     }
 }

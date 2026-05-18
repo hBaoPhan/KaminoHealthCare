@@ -24,9 +24,9 @@ public class HoaDonDAO {
      * Tránh lặp lại cùng đoạn code trong layTatCa(), timTheoMa(), timKiem().
      */
     private HoaDon mapHoaDon(ResultSet rs,
-                              NhanVienDAO nvDAO,
-                              KhachHangDAO khDAO,
-                              KhuyenMaiDAO kmDAO) throws SQLException {
+            NhanVienDAO nvDAO,
+            KhachHangDAO khDAO,
+            KhuyenMaiDAO kmDAO) throws SQLException {
         HoaDon hd = new HoaDon();
         hd.setMaHoaDon(rs.getString("maHoaDon"));
         hd.setThoiGianTao(rs.getTimestamp("thoiGianTao").toLocalDateTime());
@@ -177,65 +177,9 @@ public class HoaDonDAO {
         return hd;
     }
 
-    public boolean them(HoaDon hd) {
-        int soDongThayDoi = 0;
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "INSERT INTO HoaDon (maHoaDon, thoiGianTao, maNhanVien, trangThaiThanhToan, maKhachHang, maKhuyenMai, loaiHoaDon, maCa, ghiChu, maHoaDonDoiTra, maDonThuoc, phuongThucThanhToan) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
-            lenh.setString(1, hd.getMaHoaDon());
-            lenh.setTimestamp(2, Timestamp.valueOf(hd.getThoiGianTao()));
-            lenh.setString(3, hd.getNhanVien().getMaNhanVien());
-            lenh.setBoolean(4, hd.isTrangThaiThanhToan());
-
-            // Đảm bảo không bị lỗi NullPointer khi getKhachHang() bị null
-            lenh.setString(5, hd.getKhachHang() != null ? hd.getKhachHang().getMaKhachHang() : null);
-
-            lenh.setString(6, hd.getKhuyenMai() != null ? hd.getKhuyenMai().getMaKhuyenMai() : null);
-            lenh.setString(7, hd.getLoaiHoaDon().name());
-            lenh.setString(8, hd.getCa().getMaCa());
-            lenh.setString(9, hd.getGhiChu());
-            lenh.setString(10, hd.getHoaDonDoiTra() != null ? hd.getHoaDonDoiTra().getMaHoaDon() : null);
-            lenh.setString(11, hd.getDonThuoc() != null ? hd.getDonThuoc().getMaDonThuoc() : null);
-            lenh.setString(12, hd.getPhuongThucThanhToan() != null ? hd.getPhuongThucThanhToan().name() : null);
-            soDongThayDoi = lenh.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return soDongThayDoi > 0;
-    }
-
-    public boolean capNhat(HoaDon hd) {
-        int soDongThayDoi = 0;
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "UPDATE HoaDon SET thoiGianTao = ?, maNhanVien = ?, trangThaiThanhToan = ?, maKhachHang = ?, maKhuyenMai = ?, loaiHoaDon = ?, maCa = ?, ghiChu = ?, maHoaDonDoiTra = ?, maDonThuoc = ?, phuongThucThanhToan = ? WHERE maHoaDon = ?";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
-            lenh.setTimestamp(1, Timestamp.valueOf(hd.getThoiGianTao()));
-            lenh.setString(2, hd.getNhanVien().getMaNhanVien());
-            lenh.setBoolean(3, hd.isTrangThaiThanhToan());
-
-            // Đảm bảo không bị lỗi NullPointer khi getKhachHang() bị null
-            lenh.setString(4, hd.getKhachHang() != null ? hd.getKhachHang().getMaKhachHang() : null);
-
-            lenh.setString(5, hd.getKhuyenMai() != null ? hd.getKhuyenMai().getMaKhuyenMai() : null);
-            lenh.setString(6, hd.getLoaiHoaDon().name());
-            lenh.setString(7, hd.getCa().getMaCa());
-            lenh.setString(8, hd.getGhiChu());
-            lenh.setString(9, hd.getHoaDonDoiTra() != null ? hd.getHoaDonDoiTra().getMaHoaDon() : null);
-            lenh.setString(10, hd.getDonThuoc() != null ? hd.getDonThuoc().getMaDonThuoc() : null);
-            lenh.setString(11, hd.getPhuongThucThanhToan() != null ? hd.getPhuongThucThanhToan().name() : null);
-            lenh.setString(12, hd.getMaHoaDon());
-            soDongThayDoi = lenh.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return soDongThayDoi > 0;
-    }
-
-    public boolean them(HoaDon hd, Connection con) throws SQLException {
+    public boolean them(HoaDon hd) throws SQLException {
         String truyVan = "INSERT INTO HoaDon (maHoaDon, thoiGianTao, maNhanVien, trangThaiThanhToan, maKhachHang, maKhuyenMai, loaiHoaDon, maCa, ghiChu, maHoaDonDoiTra, maDonThuoc, phuongThucThanhToan) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement lenh = con.prepareStatement(truyVan)) {
+        try (PreparedStatement lenh = ConnectDB.getConnection().prepareStatement(truyVan)) {
             lenh.setString(1, hd.getMaHoaDon());
             lenh.setTimestamp(2, Timestamp.valueOf(hd.getThoiGianTao()));
             lenh.setString(3, hd.getNhanVien().getMaNhanVien());
@@ -252,9 +196,9 @@ public class HoaDonDAO {
         }
     }
 
-    public boolean capNhat(HoaDon hd, Connection con) throws SQLException {
+    public boolean capNhat(HoaDon hd) throws SQLException {
         String truyVan = "UPDATE HoaDon SET thoiGianTao = ?, maNhanVien = ?, trangThaiThanhToan = ?, maKhachHang = ?, maKhuyenMai = ?, loaiHoaDon = ?, maCa = ?, ghiChu = ?, maHoaDonDoiTra = ?, maDonThuoc = ?, phuongThucThanhToan = ? WHERE maHoaDon = ?";
-        try (PreparedStatement lenh = con.prepareStatement(truyVan)) {
+        try (PreparedStatement lenh = ConnectDB.getConnection().prepareStatement(truyVan)) {
             lenh.setTimestamp(1, Timestamp.valueOf(hd.getThoiGianTao()));
             lenh.setString(2, hd.getNhanVien().getMaNhanVien());
             lenh.setBoolean(3, hd.isTrangThaiThanhToan());
@@ -271,33 +215,21 @@ public class HoaDonDAO {
         }
     }
 
-    public boolean capNhatTrangThaiThanhToan(String maHD, boolean trangThai, Connection con) throws SQLException {
-        try (PreparedStatement pst = con.prepareStatement("UPDATE HoaDon SET trangThaiThanhToan = ? WHERE maHoaDon = ?")) {
+    public boolean capNhatTrangThaiThanhToan(String maHD, boolean trangThai) throws SQLException {
+        try (PreparedStatement pst = ConnectDB.getConnection()
+                .prepareStatement("UPDATE HoaDon SET trangThaiThanhToan = ? WHERE maHoaDon = ?")) {
             pst.setBoolean(1, trangThai);
             pst.setString(2, maHD);
             return pst.executeUpdate() > 0;
         }
     }
 
-    public boolean xoa(String maHD, Connection con) throws SQLException {
-        try (PreparedStatement pst = con.prepareStatement("DELETE FROM HoaDon WHERE maHoaDon = ?")) {
+    public boolean xoa(String maHD) throws SQLException {
+        try (PreparedStatement pst = ConnectDB.getConnection()
+                .prepareStatement("DELETE FROM HoaDon WHERE maHoaDon = ?")) {
             pst.setString(1, maHD);
             return pst.executeUpdate() > 0;
         }
-    }
-
-    public boolean xoa(String maHD) {
-        int soDongThayDoi = 0;
-        try {
-            Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "DELETE FROM HoaDon WHERE maHoaDon = ?";
-            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
-            lenh.setString(1, maHD);
-            soDongThayDoi = lenh.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return soDongThayDoi > 0;
     }
 
     public List<HoaDon> timKiem(String maHD, LocalDate ngayTao) {
@@ -445,12 +377,6 @@ public class HoaDonDAO {
         return count;
     }
 
-
-
-
-
-
-
     public double tinhTongDoanhThuCa(String maCa) {
         double tong = 0;
         String sql = "SELECT SUM(ct.soLuong * ct.donGia * (1 + sp.thue/100)) as tong " +
@@ -476,25 +402,6 @@ public class HoaDonDAO {
 
 
 
-    public List<Lo> layDanhSachLoKhaDung(Connection con, String maDonViQuyDoi) throws SQLException {
-        List<Lo> danhSach = new ArrayList<>();
-        String truyVan = "SELECT l.* FROM Lo l INNER JOIN DonViQuyDoi dv ON l.maSanPham = dv.maSanPham " +
-                "WHERE dv.maDonVi = ? AND l.soLuongSanPham > 0 AND l.ngayHetHan > GETDATE() " +
-                "ORDER BY l.ngayHetHan ASC";
-        try (PreparedStatement lenh = con.prepareStatement(truyVan)) {
-            lenh.setString(1, maDonViQuyDoi);
-            try (ResultSet ketQua = lenh.executeQuery()) {
-                while (ketQua.next()) {
-                    Lo lo = new Lo();
-                    lo.setMaLo(ketQua.getString("maLo"));
-                    lo.setSoLuongSanPham(ketQua.getInt("soLuongSanPham"));
-                    danhSach.add(lo);
-                }
-            }
-        }
-        return danhSach;
-    }
-
     /**
      * Đếm số lượng hóa đơn trong ngày theo loại để sinh mã tuần tự
      */
@@ -517,52 +424,5 @@ public class HoaDonDAO {
         return count;
     }
 
-    /**
-     * Lấy danh sách phân bổ lô tương ứng để hoàn trả kho.
-     * <p>
-     * Di chuyển từ TraHangPanel (raw SQL không thuộc tầng UI).
-     * Với mỗi ChiTietHoaDon cần trả, tìm các Lô mà hóa đơn gốc đã xuất
-     * và phân bổ lại đúng số lượng vào từng Lô theo thứ tự.
-     *
-     * @param maHoaDonGoc Mã hóa đơn gốc cần tra cứu phân bổ lô
-     * @param dsChiTietTra Danh sách chi tiết hàng thực tế khách muốn trả
-     * @return Danh sách SuPhanBoLo để hoàn trả kho
-     */
-    public List<SuPhanBoLo> layDanhSachPhanBoLoCanTra(String maHoaDonGoc, List<ChiTietHoaDon> dsChiTietTra) {
-        List<SuPhanBoLo> dsPhanBoTra = new ArrayList<>();
-        String sql = "SELECT maLo, soLuong FROM SuPhanBoLo WHERE maHoaDon = ? AND maDonVi = ?";
-        try {
-            Connection con = ConnectDB.getConnection();
-            try (PreparedStatement ps = con.prepareStatement(sql)) {
-                for (ChiTietHoaDon ctMoi : dsChiTietTra) {
-                    int soLuongCanTra = ctMoi.getSoLuong();
-                    ps.setString(1, maHoaDonGoc);
-                    ps.setString(2, ctMoi.getDonViQuyDoi().getMaDonVi());
 
-                    try (ResultSet rs = ps.executeQuery()) {
-                        // Nếu 1 SP được lấy từ nhiều Lô, chia đúng số lượng trả về từng Lô
-                        while (rs.next() && soLuongCanTra > 0) {
-                            String maLoGoc = rs.getString("maLo");
-                            int slGocTrongLo = rs.getInt("soLuong");
-                            int slTraVaoLo = Math.min(soLuongCanTra, slGocTrongLo);
-
-                            Lo lo = new Lo();
-                            lo.setMaLo(maLoGoc);
-
-                            SuPhanBoLo spb = new SuPhanBoLo();
-                            spb.setLo(lo);
-                            spb.setChiTietHoaDon(ctMoi);
-                            spb.setSoLuong(slTraVaoLo);
-                            dsPhanBoTra.add(spb);
-
-                            soLuongCanTra -= slTraVaoLo;
-                        }
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return dsPhanBoTra;
-    }
 }

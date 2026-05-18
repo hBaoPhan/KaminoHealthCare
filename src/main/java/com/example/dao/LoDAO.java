@@ -140,31 +140,21 @@ public class LoDAO {
         return null;
     }
 
-    // ====================== CÁC HÀM CŨ (giữ lại) ======================
-    public boolean capNhatSoLuongTon(String maLo, int soLuongThayDoi, Connection con) throws SQLException {
+    public boolean capNhatSoLuongTon(String maLo, int soLuongThayDoi) throws SQLException {
         String sql = "UPDATE Lo SET soLuongSanPham = soLuongSanPham + ? WHERE maLo = ?";
-        PreparedStatement stmt = con.prepareStatement(sql);
-        stmt.setInt(1, soLuongThayDoi);
-        stmt.setString(2, maLo);
-        return stmt.executeUpdate() > 0;
-    }
-
-    public boolean capNhatSoLuongTon(String maLo, int soLuongThayDoi) {
-        try {
-            Connection con = ConnectDB.getConnection();
-            return capNhatSoLuongTon(maLo, soLuongThayDoi, con);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+        try (PreparedStatement stmt = ConnectDB.getConnection().prepareStatement(sql)) {
+            stmt.setInt(1, soLuongThayDoi);
+            stmt.setString(2, maLo);
+            return stmt.executeUpdate() > 0;
         }
     }
 
-    public boolean capNhatTonKhoNhieu(List<SuPhanBoLo> ds, boolean isCong, Connection con) throws SQLException {
+    public boolean capNhatTonKhoNhieu(List<SuPhanBoLo> ds, boolean isCong) throws SQLException {
         if (ds == null || ds.isEmpty())
             return true;
         String operator = isCong ? "+" : "-";
         String sql = "UPDATE Lo SET soLuongSanPham = soLuongSanPham " + operator + " ? WHERE maLo = ?";
-        try (PreparedStatement pst = con.prepareStatement(sql)) {
+        try (PreparedStatement pst = ConnectDB.getConnection().prepareStatement(sql)) {
             for (SuPhanBoLo sp : ds) {
                 pst.setInt(1, sp.getSoLuong());
                 pst.setString(2, sp.getLo().getMaLo());
@@ -175,7 +165,7 @@ public class LoDAO {
         }
     }
 
-    public List<Lo> layDanhSachLoKhaDung(String maDonViQuyDoi) {
+    public List<Lo> layDanhSachLoKhaDung(String maDonViQuyDoi) throws SQLException {
         List<Lo> danhSach = new ArrayList<>();
         String truyVan = "SELECT l.* FROM Lo l " +
                 "INNER JOIN DonViQuyDoi dv ON l.maSanPham = dv.maSanPham " +
@@ -183,22 +173,19 @@ public class LoDAO {
                 "AND l.ngayHetHan > GETDATE() ORDER BY l.ngayHetHan ASC";
 
         try (PreparedStatement lenh = ConnectDB.getConnection().prepareStatement(truyVan)) {
-
             lenh.setString(1, maDonViQuyDoi);
-            ResultSet ketQua = lenh.executeQuery();
-
-            while (ketQua.next()) {
-                Lo lo = new Lo();
-                lo.setMaLo(ketQua.getString("maLo"));
-                lo.setSoLo(ketQua.getString("soLo"));
-                lo.setNgayHetHan(ketQua.getDate("ngayHetHan").toLocalDate());
-                lo.setSoLuongSanPham(ketQua.getInt("soLuongSanPham"));
-                lo.setSanPham(new SanPham(ketQua.getString("maSanPham")));
-                lo.setGiaNhap(ketQua.getDouble("giaNhap"));
-                danhSach.add(lo);
+            try (ResultSet ketQua = lenh.executeQuery()) {
+                while (ketQua.next()) {
+                    Lo lo = new Lo();
+                    lo.setMaLo(ketQua.getString("maLo"));
+                    lo.setSoLo(ketQua.getString("soLo"));
+                    lo.setNgayHetHan(ketQua.getDate("ngayHetHan").toLocalDate());
+                    lo.setSoLuongSanPham(ketQua.getInt("soLuongSanPham"));
+                    lo.setSanPham(new SanPham(ketQua.getString("maSanPham")));
+                    lo.setGiaNhap(ketQua.getDouble("giaNhap"));
+                    danhSach.add(lo);
+                }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return danhSach;
     }
