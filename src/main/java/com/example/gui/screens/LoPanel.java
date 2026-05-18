@@ -23,6 +23,7 @@ import java.util.List;
 public class LoPanel extends JPanel {
 
     private final LoDAO loDAO = new LoDAO();
+    private final com.example.service.LoService loService = new com.example.service.LoService();
     private final com.example.dao.SanPhamDAO sanPhamDAO = new com.example.dao.SanPhamDAO();
     private JTable table;
     private DefaultTableModel model;
@@ -457,7 +458,7 @@ public class LoPanel extends JPanel {
     }
 
     private void loadNewMaLo() {
-        txtMaLo.setText(loDAO.sinhMaLo());
+        txtMaLo.setText(loService.sinhMaLo());
     }
 
     private void lamMoi() {

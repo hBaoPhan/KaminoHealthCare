@@ -5,7 +5,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
 import com.example.dao.ChiTietHoaDonDAO;
-import com.example.dao.HoaDonDAO;
+import com.example.service.HoaDonService;
 
 import java.awt.*;
 import java.text.DecimalFormat;
@@ -38,7 +38,7 @@ public class TraHangPanel extends JPanel {
     private JCheckBox chkTienMat, chkChuyenKhoan;
 
     // --- Biến xử lý dữ liệu và Database ---
-    private HoaDonDAO hoaDonDAO = new HoaDonDAO();
+    private HoaDonService hoaDonService = new HoaDonService();
     private ChiTietHoaDonDAO ctHDPDAO = new ChiTietHoaDonDAO();
     private DefaultTableModel model; // Để đổ dữ liệu vào bảng
     private List<ChiTietHoaDon> dsChiTietGoc = new ArrayList<>();
@@ -292,7 +292,6 @@ public class TraHangPanel extends JPanel {
                     hoaDonTra.setKhachHang(hd.getKhachHang());
                 }
                 
-                // Tạo đối tượng hóa đơn gốc và gán mã HD01 vào
                 HoaDon hdGoc = new HoaDon();
                 hdGoc.setMaHoaDon(txtMaHoaGoc.getText()); 
                 hoaDonTra.setHoaDonDoiTra(hdGoc);
@@ -301,6 +300,15 @@ public class TraHangPanel extends JPanel {
                 com.example.entity.NhanVien nvTemp = new com.example.entity.NhanVien();
                 nvTemp.setMaNhanVien("QL001"); // Tạm thời gán QL001 để test
                 hoaDonTra.setNhanVien(nvTemp);
+
+                hoaDonTra.setLoaiHoaDon(com.example.entity.enums.LoaiHoaDon.TRA_HANG);
+                hoaDonTra.setPhuongThucThanhToan(com.example.entity.enums.PhuongThucThanhToan.TIEN_MAT);
+                com.example.entity.CaLam ca = hoaDonService.layCaHienTai(nvTemp.getMaNhanVien());
+                if (ca == null) {
+                    JOptionPane.showMessageDialog(this, "Chưa mở ca làm việc!");
+                    return;
+                }
+                hoaDonTra.setCa(ca);
                 
                 // 2. Gom danh sách sản phẩm thực tế từ bảng vào hóa đơn
                 List<ChiTietHoaDon> dsTra = new ArrayList<>();
@@ -322,53 +330,12 @@ public class TraHangPanel extends JPanel {
                 }
                 hoaDonTra.setDsChiTiet(dsTra);
 
-                // =========================================================================
-                // BƯỚC BỔ SUNG: Truy vấn CSDL lấy danh sách các Lô đã bán của Hóa đơn gốc
-                // để hoàn trả số lượng đúng vào Lô đó.
-                // =========================================================================
-                List<com.example.entity.SuPhanBoLo> dsPhanBoTra = new ArrayList<>();
-                try {
-                    java.sql.Connection con = com.example.connectDB.ConnectDB.getConnection();
-                    // Lấy các lô mà hóa đơn gốc đã xuất cho một đơn vị sản phẩm cụ thể
-                    String sql = "SELECT maLo, soLuong FROM SuPhanBoLo WHERE maHoaDon = ? AND maDonVi = ?";
-                    java.sql.PreparedStatement ps = con.prepareStatement(sql);
-                    
-                    for (ChiTietHoaDon ctMoi : dsTra) {
-                        int soLuongCanTra = ctMoi.getSoLuong();
-                        
-                        ps.setString(1, txtMaHoaGoc.getText().trim()); // Lấy mã hóa đơn gốc
-                        ps.setString(2, ctMoi.getDonViQuyDoi().getMaDonVi());
-                        
-                        java.sql.ResultSet rs = ps.executeQuery();
-                        
-                        // Nếu 1 sản phẩm bị lấy từ 2 Lô khác nhau, vòng lặp này sẽ chia đúng số lượng trả về từng Lô
-                        while (rs.next() && soLuongCanTra > 0) {
-                            String maLoGoc = rs.getString("maLo");
-                            int slGocTrongLo = rs.getInt("soLuong");
-                            
-                            // Tính toán số lượng trả vào lô này (không được vượt quá số lượng đã lấy từ lô)
-                            int slTraVaoLo = Math.min(soLuongCanTra, slGocTrongLo);
-                            
-                            com.example.entity.SuPhanBoLo sp = new com.example.entity.SuPhanBoLo();
-                            com.example.entity.Lo lo = new com.example.entity.Lo();
-                            lo.setMaLo(maLoGoc);
-                            sp.setLo(lo);
-                            sp.setChiTietHoaDon(ctMoi);
-                            sp.setSoLuong(slTraVaoLo); // Số lượng hoàn trả
-                            
-                            dsPhanBoTra.add(sp);
-                            
-                            soLuongCanTra -= slTraVaoLo; // Trừ đi phần đã trả vào lô này
-                        }
-                        rs.close();
-                    }
-                    ps.close();
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
+                // BƯỚC BỔ SUNG: Lấy danh sách Lô đã bán từ hóa đơn gốc để hoàn trả đúng lô.
+                // Ủy quyền cho HoaDonService — không viết SQL trực tiếp trong tầng UI.
+                List<com.example.entity.SuPhanBoLo> dsPhanBoTra = hoaDonService.layDanhSachPhanBoLoCanTra(
+                        txtMaHoaGoc.getText().trim(), dsTra);
 
-                // 3. Gọi DAO để lưu xuống SQL Server
-                if (hoaDonDAO.luuHoaDonTraHang(hoaDonTra, dsPhanBoTra)) {
+                if (hoaDonService.luuHoaDonTraHang(hoaDonTra, dsPhanBoTra)) {
                     JOptionPane.showMessageDialog(TraHangPanel.this, "Thanh toán và hoàn kho thành công!");
                     // Xóa sạch dữ liệu trên giao diện để làm hóa đơn mới
                     lamMoiGiaoDien(); 
@@ -397,33 +364,31 @@ public class TraHangPanel extends JPanel {
 
     /** Hiển thị sản phẩm của hóa đơn gốc lên bảng dựa vào mã nhập */
     private void hienThiSanPhamHoaDon(String maHD) {
-        // 1. Kiểm tra xem hóa đơn này đã từng đổi trả lần nào chưa
-        if (hoaDonDAO.daTungDoiTra(maHD)) {
-            JOptionPane.showMessageDialog(this, 
-                "Hóa đơn này đã thực hiện đổi/trả trước đó. Mỗi hóa đơn chỉ được đổi trả 01 lần duy nhất!", 
-                "Thông báo", JOptionPane.WARNING_MESSAGE);
-            lamMoiGiaoDien();
-            return;
-        }
-
-        // 2. Lấy hóa đơn kèm kiểm tra điều kiện (Thanh toán = 1 và Hạn = 7 ngày)
-        this.hd = hoaDonDAO.layHoaDonDeDoi(maHD);
+        // Lấy hóa đơn — layHoaDonDeDoi() đã kiểm tra: đã TT, còn hạn 7 ngày, chưa đổi trả
+        this.hd = hoaDonService.layHoaDonDeDoi(maHD);
 
         if (this.hd == null) {
-            // Kiểm tra xem thực sự là không có mã này hay là do vi phạm điều kiện 7 ngày
-            HoaDon hdCheck = hoaDonDAO.timTheoMa(maHD);
+            // Phân biệt: HD không tồn tại vs HD không đủ điều kiện
+            HoaDon hdCheck = hoaDonService.timTheoMa(maHD);
             if (hdCheck == null) {
                 JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn có mã: " + maHD, "Lỗi", JOptionPane.ERROR_MESSAGE);
             } else {
-                JOptionPane.showMessageDialog(this, 
-                    "Hóa đơn này không đủ điều kiện đổi trả!\n(Lý do: Có thể đã quá hạn 7 ngày hoặc chưa được thanh toán)", 
+                JOptionPane.showMessageDialog(this,
+                    "Hóa đơn này không đủ điều kiện đổi trả!\n(Lý do: Có thể đã quá hạn 7 ngày, chưa thanh toán, hoặc đã được đổi/trả trước đó)",
                     "Từ chối", JOptionPane.WARNING_MESSAGE);
             }
             lamMoiGiaoDien();
             return;
         }
 
+
         dsChiTietGoc = ctHDPDAO.layTheoMaHoaDon(maHD);
+        
+        // --- XỬ LÝ LỖI DUPLICATE ---
+        // Không load các sản phẩm là Quà Tặng (isLaQuaTangKem = true) lên danh sách trả hàng.
+        // Điều này đảm bảo mỗi maDonVi chỉ xuất hiện 1 lần, tránh lỗi Duplicate Primary Key (maHD, maDonVi, laQuaTangKem)
+        dsChiTietGoc.removeIf(ChiTietHoaDon::isLaQuaTangKem);
+
         this.hd.setDsChiTiet(dsChiTietGoc);
 
         // Điền thông tin lên giao diện
@@ -548,11 +513,9 @@ public class TraHangPanel extends JPanel {
         }
     }
 
-    /** Hàm tự sinh mã hóa đơn trả định dạng HDTddMMyyXXX */
+    /** Hàm tự sinh mã hóa đơn trả — ủy quyền cho HoaDonService */
     private String tuSinhMaHoaDonTra() {
-        String ngayThangNam = new java.text.SimpleDateFormat("ddMMyy").format(new java.util.Date());
-        int soThuTuMoi = hoaDonDAO.laySoLuongHoaDonTrongNgay() + 1;
-        return "HDT" + ngayThangNam + String.format("%03d", soThuTuMoi);
+        return hoaDonService.sinhMaHoaDon(com.example.entity.enums.LoaiHoaDon.TRA_HANG);
     }
 
     // ====================================================================

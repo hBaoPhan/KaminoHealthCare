@@ -8,7 +8,13 @@ import javax.swing.table.*;
 import java.awt.*;
 import com.github.lgooddatepicker.components.DatePicker;
 import com.github.lgooddatepicker.components.DatePickerSettings;
-import com.example.dao.*;
+import com.example.dao.ChiTietHoaDonDAO;
+import com.example.dao.DonThuocDAO;
+import com.example.dao.DonViQuyDoiDAO;
+import com.example.service.HoaDonService;
+import com.example.service.KhachHangService;
+import com.example.service.KhuyenMaiService;
+import com.example.service.SanPhamService;
 import com.example.entity.*;
 import com.example.entity.enums.*;
 import javax.swing.event.DocumentEvent;
@@ -34,12 +40,12 @@ public class BanHangPanel extends JPanel {
     private final Font FONT_LABEL = new Font("Segoe UI", Font.BOLD, 14);
     private final Font FONT_TEXT = new Font("Segoe UI", Font.PLAIN, 14);
 
-    private SanPhamDAO sanPhamDAO = new SanPhamDAO();
+    private SanPhamService sanPhamService = new SanPhamService();
     private DonViQuyDoiDAO donViQuyDoiDAO = new DonViQuyDoiDAO();
-    private KhachHangDAO khachHangDAO = new KhachHangDAO();
-    private KhuyenMaiDAO khuyenMaiDAO = new KhuyenMaiDAO();
+    private KhachHangService khachHangService = new KhachHangService();
+    private KhuyenMaiService khuyenMaiService = new KhuyenMaiService();
     private DonThuocDAO donThuocDAO = new DonThuocDAO();
-    private HoaDonDAO hoaDonDAO = new HoaDonDAO();
+    private HoaDonService hoaDonService = new HoaDonService();
     private ChiTietHoaDonDAO chiTietDAO = new ChiTietHoaDonDAO();
     private DefaultTableModel model;
     private JTable table;
@@ -82,7 +88,7 @@ public class BanHangPanel extends JPanel {
     }
 
     public void loadHoaDonChuaThanhToan() {
-        HoaDon hd = hoaDonDAO.layHoaDonChuaThanhToan(nhanVienHienTai.getMaNhanVien());
+        HoaDon hd = hoaDonService.layHoaDonChuaThanhToan(nhanVienHienTai.getMaNhanVien());
         if (hd == null) {
             maHoaDonHienTai = sinhMaHoaDon();
             if (lblMaHoaDon != null)
@@ -205,16 +211,19 @@ public class BanHangPanel extends JPanel {
 
             private void updateSearch() {
                 String text = txtSearch.getText().trim();
-                if (text.isEmpty() || text.equals("Mã/Tên sản phẩm")) {
+                if (text.isEmpty() || text.equals("Tìm Mã/Tên sản phẩm")) {
                     searchPopup.setVisible(false);
                     return;
                 }
 
                 SwingUtilities.invokeLater(() -> {
-                    List<SanPham> results = sanPhamDAO.timTheoMaHoacTen(text);
+                    List<SanPham> results = sanPhamService.timTheoMaHoacTen(text);
+                    
+                    // Hide the popup first to reset its peer and avoid duplicate drawing/rendering artifacts
+                    searchPopup.setVisible(false);
                     searchPopup.removeAll();
+                    
                     if (results.isEmpty()) {
-                        searchPopup.setVisible(false);
                         return;
                     }
                     for (SanPham sp : results) {
@@ -245,6 +254,10 @@ public class BanHangPanel extends JPanel {
 
                         searchPopup.add(item);
                     }
+                    
+                    searchPopup.revalidate();
+                    searchPopup.repaint();
+                    
                     if (txtSearch.isShowing()) {
                         searchPopup.show(txtSearch, 0, txtSearch.getHeight());
                         txtSearch.requestFocus();
@@ -741,12 +754,7 @@ public class BanHangPanel extends JPanel {
         cboKhuyenMai = new JComboBox<>();
         // cboKhuyenMai.setEnabled(false); // Cho phép xổ ra để xem
         cboKhuyenMai.addItem("-- Không áp dụng --");
-        dsKhuyenMai = khuyenMaiDAO.layTatCa();
-        
-        // Chỉ lấy các khuyến mãi còn hạn
-        LocalDateTime now = LocalDateTime.now();
-        dsKhuyenMai.removeIf(km -> (km.getThoiGianBatDau() != null && km.getThoiGianBatDau().isAfter(now)) || 
-                                   (km.getThoiGianKetThuc() != null && km.getThoiGianKetThuc().isBefore(now)));
+        dsKhuyenMai = khuyenMaiService.layKhuyenMaiConHan();
                                    
         for (KhuyenMai km : dsKhuyenMai) {
             cboKhuyenMai.addItem(km.getTenKhuyenMai());
@@ -944,7 +952,7 @@ public class BanHangPanel extends JPanel {
     private void timKhachHang() {
         String sdt = txtSoDienThoai.getText().trim();
         if (sdt.length() >= 10) {
-            KhachHang kh = khachHangDAO.timTheoSdt(sdt);
+            KhachHang kh = khachHangService.timTheoSdt(sdt);
             if (kh != null) {
                 khachHangHienTai = kh;
                 txtTenKhachHang.setText(kh.getTenKhachHang());
@@ -975,9 +983,7 @@ public class BanHangPanel extends JPanel {
     }
 
     private String sinhMaHoaDon() {
-        int stt = hoaDonDAO.demHoaDonTrongNgay(LoaiHoaDon.BAN_HANG) + 1;
-        String date = LocalDate.now().format(DateTimeFormatter.ofPattern("ddMMyy"));
-        return String.format("HDB%s%03d", date, stt);
+        return hoaDonService.sinhMaHoaDon(LoaiHoaDon.BAN_HANG);
     }
 
     /** Thu thập chi tiết hóa đơn từ bảng */
@@ -1011,35 +1017,17 @@ public class BanHangPanel extends JPanel {
             }
         }
 
-        int bestIndex = 0;
-        double maxGiam = -1;
+        // Ủy quyền logic chọn KM tốt nhất cho Service
+        int bestIndex = khuyenMaiService.chonKhuyenMaiTotNhat(dsKhuyenMai, tongTienHang);
+        int cboIndex = bestIndex + 1; // +1 vì index 0 là "-- Không áp dụng --"
 
-        for (int i = 0; i < dsKhuyenMai.size(); i++) {
-            KhuyenMai km = dsKhuyenMai.get(i);
-            if (tongTienHang >= km.getGiaTriDonHangToiThieu()) {
-                if (km.getLoaiKhuyenMai() == LoaiKhuyenMai.PHAN_TRAM) {
-                    double giam = tongTienHang * km.getKhuyenMaiPhanTram() / 100.0;
-                    if (giam > maxGiam) {
-                        maxGiam = giam;
-                        bestIndex = i + 1;
-                    }
-                } else if (km.getLoaiKhuyenMai() == LoaiKhuyenMai.TANG_KEM) {
-                    if (maxGiam <= 0) {
-                        maxGiam = 0;
-                        bestIndex = i + 1;
-                    }
-                }
-            }
-        }
-
-        if (cboKhuyenMai.getSelectedIndex() != bestIndex) {
+        if (cboKhuyenMai.getSelectedIndex() != cboIndex) {
             isAutoSelectingPromotion = true;
             try {
-                cboKhuyenMai.setSelectedIndex(bestIndex);
+                cboKhuyenMai.setSelectedIndex(cboIndex);
             } finally {
                 isAutoSelectingPromotion = false;
             }
-            // Gọi tường minh sau khi flag đã reset để xóa quà cũ và thêm quà mới đúng
             capNhatQuaTang();
         }
     }
@@ -1143,8 +1131,7 @@ public class BanHangPanel extends JPanel {
             return null;
         }
 
-        CaLamDAO caLamDAO = new CaLamDAO();
-        CaLam caHienTai = caLamDAO.layCaHienTai(nhanVienHienTai.getMaNhanVien());
+        CaLam caHienTai = hoaDonService.layCaHienTai(nhanVienHienTai.getMaNhanVien());
         if (caHienTai == null) {
             JOptionPane.showMessageDialog(this, "Bạn chưa mở ca làm việc!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             return null;
@@ -1193,7 +1180,7 @@ public class BanHangPanel extends JPanel {
             return false;
         List<ChiTietHoaDon> dsChiTiet = thuThapChiTiet(hd);
 
-        boolean success = hoaDonDAO.luuHoaDonBanHang(hd, dsChiTiet);
+        boolean success = hoaDonService.luuHoaDonBanHang(hd, dsChiTiet);
         if (success) {
             if (hienThongBao) {
                 JOptionPane.showMessageDialog(this, "Lưu hóa đơn thành công!", "Thành công",
@@ -1239,7 +1226,7 @@ public class BanHangPanel extends JPanel {
         java.util.List<ChiTietHoaDon> dsChiTiet = thuThapChiTiet(hd);
 
         try {
-            if (hoaDonDAO.xacNhanThanhToan(maHoaDonHienTai, dsChiTiet)) {
+            if (hoaDonService.xacNhanThanhToan(maHoaDonHienTai, dsChiTiet)) {
                 JOptionPane.showMessageDialog(this, "Thanh toán thành công!", "Thành công",
                         JOptionPane.INFORMATION_MESSAGE);
                 // Reset form

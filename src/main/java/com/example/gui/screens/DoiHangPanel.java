@@ -1,6 +1,10 @@
 package com.example.gui.screens;
 
-import com.example.dao.*;
+import com.example.dao.ChiTietHoaDonDAO;
+import com.example.dao.DonViQuyDoiDAO;
+import com.example.dao.LoDAO;
+import com.example.service.HoaDonService;
+import com.example.service.SanPhamService;
 import com.example.entity.*;
 import com.example.entity.enums.*;
 
@@ -39,9 +43,9 @@ public class DoiHangPanel extends JPanel {
     private JList<SanPham> listGoiY;
     private DefaultListModel<SanPham> modelGoiY;
 
-    private HoaDonDAO hoaDonDAO = new HoaDonDAO();
+    private HoaDonService hoaDonService = new HoaDonService();
     private ChiTietHoaDonDAO chiTietHoaDonDAO = new ChiTietHoaDonDAO();
-    private SanPhamDAO sanPhamDAO = new SanPhamDAO();
+    private SanPhamService sanPhamService = new SanPhamService();
     private DonViQuyDoiDAO donViQuyDoiDAO = new DonViQuyDoiDAO();
 
     private HoaDon hoaDonGocHienTai = null;
@@ -193,7 +197,7 @@ public class DoiHangPanel extends JPanel {
                     popupGoiY.setVisible(false);
                     return;
                 }
-                List<SanPham> ds = sanPhamDAO.timTheoMaHoacTen(text);
+                List<SanPham> ds = sanPhamService.timTheoMaHoacTen(text);
                 if (!ds.isEmpty()) {
                     modelGoiY.clear();
                     for (SanPham sp : ds)
@@ -292,7 +296,7 @@ public class DoiHangPanel extends JPanel {
     }
 
     private void timKiemHoaDonGoc(String maHoaDon) {
-        hoaDonGocHienTai = hoaDonDAO.layHoaDonDeDoi(maHoaDon);
+        hoaDonGocHienTai = hoaDonService.layHoaDonDeDoi(maHoaDon);
         if (hoaDonGocHienTai == null) {
             JOptionPane.showMessageDialog(this, "Hóa đơn không hợp lệ hoặc quá hạn!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             resetForm();
@@ -349,7 +353,7 @@ public class DoiHangPanel extends JPanel {
         }
 
         // Kiểm tra tồn kho thực tế
-        SanPham spDB = sanPhamDAO.timTheoMa(sp.getMaSanPham());
+        SanPham spDB = sanPhamService.timTheoMa(sp.getMaSanPham());
         if (spDB == null || spDB.getSoLuongTon() <= 0) {
             JOptionPane.showMessageDialog(this, "Sản phẩm này hiện đã hết hàng trong kho!", "Hết hàng",
                     JOptionPane.WARNING_MESSAGE);
@@ -517,11 +521,9 @@ public class DoiHangPanel extends JPanel {
                 }
             }
 
-            // 3. KHỞI TẠO THÔNG TIN HÓA ĐƠN MỚI
+            // 3. KHỞI TẠO THÔNG TIN HÓA ĐƠN MỚI — Ủy quyền sinh mã cho HoaDonService
             LocalDateTime now = LocalDateTime.now();
-            String ngayThangNam = now.format(DateTimeFormatter.ofPattern("ddMMyy"));
-            int stt = hoaDonDAO.laySoLuongHoaDonTrongNgay("HDD", ngayThangNam) + 1;
-            String maHoaDonMoi = String.format("HDD%s%03d", ngayThangNam, stt);
+            String maHoaDonMoi = hoaDonService.sinhMaHoaDon(LoaiHoaDon.DOI_HANG);
 
             HoaDon hdMoi = new HoaDon();
             hdMoi.setMaHoaDon(maHoaDonMoi);
@@ -535,7 +537,7 @@ public class DoiHangPanel extends JPanel {
                     radTienMat.isSelected() ? PhuongThucThanhToan.TIEN_MAT : PhuongThucThanhToan.CHUYEN_KHOAN);
             hdMoi.setGhiChu(txtGhiChu.getText());
 
-            CaLam ca = new CaLamDAO().layCaHienTai(taiKhoanDangNhap.getNhanVien().getMaNhanVien());
+            CaLam ca = hoaDonService.layCaHienTai(taiKhoanDangNhap.getNhanVien().getMaNhanVien());
             if (ca == null) {
                 JOptionPane.showMessageDialog(this, "Chưa mở ca làm việc!");
                 return;
@@ -634,8 +636,8 @@ public class DoiHangPanel extends JPanel {
                 }
             }
 
-            // 5. THỰC THI GIAO DỊCH QUA DAO
-            if (hoaDonDAO.luuHoaDonDoiHang(hdMoi, dsTraLai, dsChiTietMoi, dsPhanBoMoi)) {
+            // 5. THỰC THI GIAO DỊCH QUA SERVICE
+            if (hoaDonService.luuHoaDonDoiHang(hdMoi, dsTraLai, dsChiTietMoi, dsPhanBoMoi)) {
                 JOptionPane.showMessageDialog(this, "Thanh toán thành công hóa đơn đổi: " + maHoaDonMoi);
                 resetForm();
             } else {

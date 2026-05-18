@@ -3,7 +3,7 @@ package com.example.gui.screens;
 import com.example.entity.TaiKhoan;
 import com.example.entity.enums.ChucVu;
 import com.example.dao.ChiTietHoaDonDAO;
-import com.example.dao.HoaDonDAO;
+import com.example.service.HoaDonService;
 import com.example.entity.ChiTietHoaDon;
 import com.example.entity.HoaDon;
 import com.example.entity.enums.LoaiHoaDon;
@@ -32,7 +32,7 @@ public class HoaDonPanel extends JPanel {
     private final Font FONT_STATS = new Font("Segoe UI", Font.BOLD, 22);
     private final Font FONT_LABEL = new Font("Segoe UI", Font.BOLD, 14);
     private final Font FONT_TEXT = new Font("Segoe UI", Font.PLAIN, 14);
-    private final HoaDonDAO hoaDonDAO;
+    private final HoaDonService hoaDonService;
     private DefaultTableModel model;
 
     private JLabel lblHoaDonHomNay;
@@ -71,7 +71,7 @@ public class HoaDonPanel extends JPanel {
         add(centerPanel, BorderLayout.CENTER);
         add(createDetailPanel(), BorderLayout.SOUTH);
 
-        hoaDonDAO = new HoaDonDAO();
+        hoaDonService = new HoaDonService();
         taiLaiDanhSach();
     }
 
@@ -291,7 +291,7 @@ public class HoaDonPanel extends JPanel {
         // Lấy loại hóa đơn được chọn từ combobox
         String loaiChon = cboLoaiHoaDon != null ? (String) cboLoaiHoaDon.getSelectedItem() : "Tất cả";
 
-        List<HoaDon> ds = hoaDonDAO.timKiem(keyword, date);
+        List<HoaDon> ds = hoaDonService.timKiem(keyword, date);
 
         int homNay = 0, banHang = 0, doiHang = 0, traHang = 0;
         java.time.LocalDate today = java.time.LocalDate.now();
@@ -358,7 +358,7 @@ public class HoaDonPanel extends JPanel {
                 "Xác nhận hủy", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 
         if (confirm == JOptionPane.YES_OPTION) {
-            if (hoaDonDAO.huyHoaDon(maHD)) {
+            if (hoaDonService.huyHoaDon(maHD)) {
                 JOptionPane.showMessageDialog(this, "Đã hủy hóa đơn thành công.");
                 taiLaiDanhSach();
             } else {
@@ -389,7 +389,7 @@ public class HoaDonPanel extends JPanel {
         }
         String maHD = model.getValueAt(row, 0).toString();
 
-        HoaDon hd = hoaDonDAO.timTheoMa(maHD);
+        HoaDon hd = hoaDonService.timTheoMa(maHD);
         if (hd == null)
             return;
 
@@ -424,7 +424,7 @@ public class HoaDonPanel extends JPanel {
     }
 
     private JPanel createInvoiceDetailPanel(String maHD, String title) {
-        HoaDon hd = hoaDonDAO.timTheoMa(maHD);
+        HoaDon hd = hoaDonService.timTheoMa(maHD);
         if (hd == null)
             return new JPanel();
 
@@ -592,17 +592,17 @@ public class HoaDonPanel extends JPanel {
         btnXacNhan.setFont(FONT_LABEL);
 
         btnXacNhan.addActionListener(e -> {
-            HoaDon hd = hoaDonDAO.timTheoMa(maHD);
-            if (hd != null) {
-                hd.setTrangThaiThanhToan(true);
-                if (hoaDonDAO.capNhat(hd)) {
+            try {
+                if (hoaDonService.xacNhanThanhToan(maHD, dsChiTiet)) {
                     JOptionPane.showMessageDialog(dialog, "Thanh toán thành công!");
                     dialog.dispose();
                     taiLaiDanhSach();
                 } else {
-                    JOptionPane.showMessageDialog(dialog,
-                            "Lỗi: Không thể cập nhật trạng thái hóa đơn trên cơ sở dữ liệu.");
+                    JOptionPane.showMessageDialog(dialog, "Lỗi: Không thể cập nhật trạng thái hóa đơn trên cơ sở dữ liệu.");
                 }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(dialog, "Lỗi khi thanh toán: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
         });
 

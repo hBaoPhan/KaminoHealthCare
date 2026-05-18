@@ -1,7 +1,7 @@
 package com.example.gui.screens;
 
 import com.example.dao.NhanVienDAO;
-import com.example.dao.TaiKhoanDAO;
+import com.example.service.TaiKhoanService;
 import com.example.entity.NhanVien;
 import com.example.entity.TaiKhoan;
 import com.example.entity.enums.ChucVu;
@@ -29,7 +29,7 @@ public class TaiKhoanPanel extends JPanel {
     private JLabel lblTongSoTaiKhoan;
 
     private NhanVienDAO nhanVienDAO = new NhanVienDAO();
-    private TaiKhoanDAO taiKhoanDAO = new TaiKhoanDAO();
+    private TaiKhoanService taiKhoanService = new TaiKhoanService();
     private List<TaiKhoan> danhSachTaiKhoanFull = new ArrayList<>();
 
     public TaiKhoanPanel() {
@@ -139,7 +139,7 @@ public class TaiKhoanPanel extends JPanel {
     }
 
     private void loadDataToTable() {
-        danhSachTaiKhoanFull = taiKhoanDAO.layTatCa();
+        danhSachTaiKhoanFull = taiKhoanService.layTatCa();
         locDuLieu();
     }
 
@@ -201,7 +201,7 @@ public class TaiKhoanPanel extends JPanel {
     private void fillDataToForm() {
         int row = tableTaiKhoan.getSelectedRow();
         if (row >= 0) {
-            TaiKhoan tk = taiKhoanDAO.timTheoMa(tableTaiKhoan.getValueAt(row, 0).toString());
+            TaiKhoan tk = taiKhoanService.timTheoMa(tableTaiKhoan.getValueAt(row, 0).toString());
             txtTenDangNhap.setText(tk.getTenDangNhap());
             txtTenDangNhap.setEnabled(false);
             txtMatKhau.setText("");
@@ -221,44 +221,45 @@ public class TaiKhoanPanel extends JPanel {
 
     private void themTaiKhoan() {
         String dn = txtTenDangNhap.getText().trim();
-        if (dn.isEmpty() || taiKhoanDAO.timTheoMa(dn) != null) {
-            JOptionPane.showMessageDialog(this, "Tên đăng nhập không hợp lệ hoặc đã tồn tại!"); return;
-        }
         String maNV = cboNhanVien.getSelectedItem().toString().split(" - ")[0];
-        for (TaiKhoan tk : danhSachTaiKhoanFull) {
-            if (tk.getNhanVien().getMaNhanVien().equals(maNV)) {
-                JOptionPane.showMessageDialog(this, "Nhân viên này đã có tài khoản!"); return;
-            }
+        TaiKhoan tkMoi = new TaiKhoan(dn, txtMatKhau.getText(), new NhanVien(maNV));
+
+        // Ủy quyền validate (tên ĐN đã tồn tại + NV đã có TK) cho Service
+        boolean success = taiKhoanService.them(tkMoi, danhSachTaiKhoanFull);
+        if (!success) {
+            JOptionPane.showMessageDialog(this,
+                    "Tên đăng nhập đã tồn tại hoặc nhân viên này đã có tài khoản!");
+            return;
         }
-        if (taiKhoanDAO.them(new TaiKhoan(dn, txtMatKhau.getText(), new NhanVien(maNV)))) {
-            loadDataToTable(); lamMoiForm();
-        }
+        loadDataToTable();
+        lamMoiForm();
     }
 
     private void suaTaiKhoan() {
         if (tableTaiKhoan.getSelectedRow() < 0) return;
         if (JOptionPane.showConfirmDialog(this, "Xác nhận cập nhật thông tin tài khoản?", "Sửa", 0) == 0) {
-            NhanVien nv = nhanVienDAO.timTheoMa(cboNhanVien.getSelectedItem().toString().split(" - ")[0]);
-            nv.setTrangThai(cboTrangThai.getSelectedItem().equals("Đang hoạt động"));
-            nhanVienDAO.capNhat(nv);
-            
+            TaiKhoan tkHienTai = taiKhoanService.timTheoMa(txtTenDangNhap.getText());
+            boolean trangThaiMoi = cboTrangThai.getSelectedItem().equals("Đang hoạt động");
             String matKhauMoi = txtMatKhau.getText().trim();
-            if (!matKhauMoi.isEmpty()) {
-                TaiKhoan tk = new TaiKhoan(txtTenDangNhap.getText(), matKhauMoi, nv);
-                taiKhoanDAO.capNhat(tk);
-                JOptionPane.showMessageDialog(this, "Đã cập nhật trạng thái và mật khẩu mới!");
-            } else {
-                JOptionPane.showMessageDialog(this, "Đã cập nhật trạng thái tài khoản!");
+
+            // Ủy quyền logic cập nhật mật khẩu + trạng thái NV cho Service
+            boolean success = taiKhoanService.capNhatTaiKhoan(tkHienTai, trangThaiMoi, matKhauMoi);
+            if (success) {
+                String msg = matKhauMoi.isEmpty() ? "Đã cập nhật trạng thái tài khoản!"
+                        : "Đã cập nhật trạng thái và mật khẩu mới!";
+                JOptionPane.showMessageDialog(this, msg);
             }
-            loadDataToTable(); lamMoiForm();
+            loadDataToTable();
+            lamMoiForm();
         }
     }
 
     private void xoaTaiKhoan() {
         if (tableTaiKhoan.getSelectedRow() < 0) return;
         if (JOptionPane.showConfirmDialog(this, "Xóa tài khoản này?", "Xóa", 0) == 0) {
-            taiKhoanDAO.xoa(tableTaiKhoan.getValueAt(tableTaiKhoan.getSelectedRow(), 0).toString());
-            loadDataToTable(); lamMoiForm();
+            taiKhoanService.xoa(tableTaiKhoan.getValueAt(tableTaiKhoan.getSelectedRow(), 0).toString());
+            loadDataToTable();
+            lamMoiForm();
         }
     }
 }
