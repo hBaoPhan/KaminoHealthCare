@@ -72,6 +72,7 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		JScrollPane scrollPane = new JScrollPane(sidebar);
 		scrollPane.setBorder(null);
 		scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
 		scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 		scrollPane.setPreferredSize(new Dimension(220, getHeight()));
 
@@ -197,13 +198,13 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 			label.setIcon(getIconForTab(item.name));
 		}
 		label.setIconTextGap(15);
-		int leftPad = item.isChild ? 50 : 25;
+		int leftPad = item.isChild ? 60 : 25;
 		label.setBorder(BorderFactory.createEmptyBorder(10, leftPad, 10, 25));
 		label.addMouseListener(this);
 		label.setCursor(new Cursor(Cursor.HAND_CURSOR));
 		label.setAlignmentX(Component.CENTER_ALIGNMENT);
 		label.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
-		label.setOpaque(true);
+		label.setOpaque(false);
 		label.setBackground(sidebarColor);
 
 		if (!item.children.isEmpty()) {
@@ -285,14 +286,9 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		}
 
 		for (MenuLabel ml : menuLabels) {
-			if (ml == clickedLabel) {
-				ml.setBorder(selectedBorder);
-				ml.setBackground(selectedBg);
-			} else {
-				int pad = ml.getMenuItem().isChild ? 50 : 25;
-				ml.setBorder(BorderFactory.createEmptyBorder(10, pad, 10, 25));
-				ml.setBackground(sidebarColor);
-			}
+			boolean selected = (ml == clickedLabel);
+			ml.setSelected(selected);
+			ml.setForeground(selected ? textHoverColor : textDefaultColor);
 		}
 
 		cardLayout.show(contentPanel, item.name);
@@ -405,14 +401,76 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 
 	private static class MenuLabel extends JLabel {
 		private final MenuItem menuItem;
+		private boolean isHovered = false;
+		private boolean isSelected = false;
 
 		MenuLabel(MenuItem item) {
 			super(item.name);
 			this.menuItem = item;
+			setOpaque(false);
 		}
 
 		public MenuItem getMenuItem() {
 			return menuItem;
+		}
+
+		public boolean isSelected() {
+			return isSelected;
+		}
+
+		public void setSelected(boolean selected) {
+			this.isSelected = selected;
+			repaint();
+		}
+
+		public void setHovered(boolean hovered) {
+			this.isHovered = hovered;
+			repaint();
+		}
+
+		@Override
+		protected void paintComponent(Graphics g) {
+			Graphics2D g2 = (Graphics2D) g.create();
+			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+			int width = getWidth();
+			int height = getHeight();
+
+			// 1. Draw rounded background highlight (Pill design)
+			if (isSelected) {
+				g2.setColor(Color.decode("#E8F0FE")); // Google Material light blue highlight
+				g2.fillRoundRect(8, 2, width - 16, height - 4, 10, 10);
+			} else if (isHovered) {
+				g2.setColor(Color.decode("#F1F3F4")); // Modern light grey hover background
+				g2.fillRoundRect(8, 2, width - 16, height - 4, 10, 10);
+			}
+
+			// 2. Draw modern blue vertical strip for selected parent menu
+			if (isSelected && !menuItem.isChild) {
+				g2.setColor(Color.decode("#1A73E8"));
+				g2.fillRoundRect(8, 8, 4, height - 16, 2, 2);
+			}
+
+			// 3. Draw branch lines for submenus (visual tree structure)
+			if (menuItem.isChild) {
+				g2.setColor(Color.decode("#DADCE0")); // Subtle grey for visual connection
+				g2.setStroke(new BasicStroke(1.5f));
+				// Vertical connection line
+				g2.drawLine(30, 0, 30, height / 2);
+				// Horizontal branch line
+				g2.drawLine(30, height / 2, 42, height / 2);
+
+				// 4. Draw modern micro bullet dot
+				g2.setColor(isSelected ? Color.decode("#1A73E8") : Color.decode("#5F6368"));
+				if (isSelected) {
+					g2.fillOval(45, height / 2 - 3, 6, 6);
+				} else {
+					g2.drawOval(45, height / 2 - 3, 5, 5);
+				}
+			}
+
+			g2.dispose();
+			super.paintComponent(g);
 		}
 	}
 
@@ -456,13 +514,17 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 
 	@Override
 	public void mouseEntered(MouseEvent e) {
-		if (e.getSource() instanceof JLabel)
-			((JLabel) e.getSource()).setForeground(textHoverColor);
+		if (e.getSource() instanceof MenuLabel label) {
+			label.setHovered(true);
+			label.setForeground(textHoverColor);
+		}
 	}
 
 	@Override
 	public void mouseExited(MouseEvent e) {
-		if (e.getSource() instanceof JLabel)
-			((JLabel) e.getSource()).setForeground(textDefaultColor);
+		if (e.getSource() instanceof MenuLabel label) {
+			label.setHovered(false);
+			label.setForeground(label.isSelected() ? textHoverColor : textDefaultColor);
+		}
 	}
 }
