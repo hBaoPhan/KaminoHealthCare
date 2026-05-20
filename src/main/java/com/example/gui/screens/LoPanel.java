@@ -27,6 +27,8 @@ public class LoPanel extends JPanel {
     private final com.example.dao.SanPhamDAO sanPhamDAO = new com.example.dao.SanPhamDAO();
     private JTable table;
     private DefaultTableModel model;
+    private JComboBox<String> cboFilterTrangThai;
+    private JTextField txtSearch;
 
     private JTextField txtMaLo, txtSoLo, txtMaSanPham, txtSoLuong, txtGiaNhap;
     private JDateChooser dateChooserNgayHetHan; // ← Thay thế cho JTextField ngày
@@ -68,7 +70,7 @@ public class LoPanel extends JPanel {
         lblDanhSachLo.setFont(new Font("Segoe UI", Font.BOLD, 20));
         lblDanhSachLo.setForeground(new Color(50, 50, 50));
 
-        JTextField txtSearch = new JTextField("Tìm kiếm theo mã lô hoặc mã SP...");
+        txtSearch = new JTextField("Tìm kiếm theo mã lô hoặc mã SP...");
         txtSearch.setForeground(Color.GRAY);
         txtSearch.setPreferredSize(new Dimension(280, 35));
 
@@ -127,9 +129,18 @@ public class LoPanel extends JPanel {
             locVaHienThiLo(txtSearch.getText().trim());
         });
 
+        String[] trangThaiValues = {"Tất cả", "Sắp hết hạn", "Còn hạn lâu", "Đã hết hạn"};
+        cboFilterTrangThai = new JComboBox<>(trangThaiValues);
+        cboFilterTrangThai.setPreferredSize(new Dimension(130, 35));
+        cboFilterTrangThai.addActionListener(e -> {
+            searchPopup.setVisible(false);
+            locVaHienThiLo(txtSearch.getText().trim());
+        });
+
         JPanel searchWrapper = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
         searchWrapper.setBackground(new Color(245, 245, 245));
         searchWrapper.add(txtSearch);
+        searchWrapper.add(cboFilterTrangThai);
         searchWrapper.add(btnSearch);
 
         topBar.add(lblDanhSachLo, BorderLayout.WEST);
@@ -357,7 +368,7 @@ public class LoPanel extends JPanel {
             danhSachLo = loDAO.layTatCa();
         }
 
-        hienThiLoLenBang(danhSachLo);
+        locVaHienThiLo(txtSearch != null ? txtSearch.getText().trim() : "");
     }
 
     private void hienThiLoLenBang(List<Lo> list) {
@@ -439,21 +450,57 @@ public class LoPanel extends JPanel {
     }
 
     private void locVaHienThiLo(String text) {
-        if (text.isEmpty() || text.equals("Tìm kiếm theo mã lô hoặc mã SP...")) {
-            hienThiLoLenBang(danhSachLo);
-            return;
+        String keyword = (text == null || text.isEmpty() || text.equals("Tìm kiếm theo mã lô hoặc mã SP...")) ? "" : text.trim().toLowerCase();
+        String trangThaiFilter = cboFilterTrangThai != null ? (String) cboFilterTrangThai.getSelectedItem() : "Tất cả";
+
+        java.time.LocalDate now = java.time.LocalDate.now();
+        List<Lo> locKetQua = new java.util.ArrayList<>();
+
+        if (danhSachLo == null) {
+            danhSachLo = loDAO.layTatCa();
         }
 
-        List<Lo> locKetQua = new java.util.ArrayList<>();
-        if (danhSachLo != null) {
-            for (Lo lo : danhSachLo) {
+        for (Lo lo : danhSachLo) {
+            // 1. Lọc theo từ khóa tìm kiếm
+            if (!keyword.isEmpty()) {
                 String maSP = lo.getSanPham().getMaSanPham().toLowerCase();
                 String maLo = lo.getMaLo().toLowerCase();
-                if (maSP.contains(text.toLowerCase()) || maLo.contains(text.toLowerCase())) {
-                    locKetQua.add(lo);
+                if (!maSP.contains(keyword) && !maLo.contains(keyword)) {
+                    continue;
                 }
             }
+
+            // 2. Lọc theo trạng thái
+            if (!"Tất cả".equals(trangThaiFilter)) {
+                java.time.LocalDate ngayHetHan = lo.getNgayHetHan();
+                if ("Sắp hết hạn".equals(trangThaiFilter) || "Còn hạn lâu".equals(trangThaiFilter)) {
+                    // Còn hạn: ngayHetHan >= now
+                    if (ngayHetHan.isBefore(now)) {
+                        continue;
+                    }
+                } else if ("Đã hết hạn".equals(trangThaiFilter)) {
+                    // Đã hết hạn: ngayHetHan < now
+                    if (!ngayHetHan.isBefore(now)) {
+                        continue;
+                    }
+                }
+            }
+
+            locKetQua.add(lo);
         }
+
+        // 3. Sắp xếp danh sách dựa trên lựa chọn trạng thái
+        if ("Sắp hết hạn".equals(trangThaiFilter)) {
+            // Ngày hết hạn tăng dần (gần hết hạn lên trên)
+            locKetQua.sort((l1, l2) -> l1.getNgayHetHan().compareTo(l2.getNgayHetHan()));
+        } else if ("Còn hạn lâu".equals(trangThaiFilter)) {
+            // Ngày hết hạn giảm dần (còn hạn lâu lên trên)
+            locKetQua.sort((l1, l2) -> l2.getNgayHetHan().compareTo(l1.getNgayHetHan()));
+        } else if ("Đã hết hạn".equals(trangThaiFilter)) {
+            // Ngày hết hạn giảm dần (vừa hết hạn nhất lên trên)
+            locKetQua.sort((l1, l2) -> l2.getNgayHetHan().compareTo(l1.getNgayHetHan()));
+        }
+
         hienThiLoLenBang(locKetQua);
     }
 
