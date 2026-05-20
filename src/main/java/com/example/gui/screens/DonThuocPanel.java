@@ -1,6 +1,6 @@
 package com.example.gui.screens;
 
-import com.example.dao.DonThuocDAO;
+import com.example.service.DonThuocService;
 import com.example.entity.DonThuoc;
 import com.example.gui.components.RoundedButton;
 import com.example.gui.components.RoundedPanel;
@@ -30,7 +30,7 @@ public class DonThuocPanel extends JPanel {
     private final Font FONT_LABEL = new Font("Segoe UI", Font.BOLD, 14);
     private final Font FONT_TEXT = new Font("Segoe UI", Font.PLAIN, 14);
 
-    private final DonThuocDAO donThuocDAO;
+    private final DonThuocService donThuocService;
     private DefaultTableModel model;
     private JTable table;
 
@@ -45,7 +45,7 @@ public class DonThuocPanel extends JPanel {
         setBackground(COLOR_BG);
         setBorder(new EmptyBorder(25, 25, 25, 25));
 
-        donThuocDAO = new DonThuocDAO();
+        donThuocService = new DonThuocService();
 
         JPanel centerPanel = new JPanel(new BorderLayout(0, 25));
         centerPanel.setOpaque(false);
@@ -215,7 +215,7 @@ public class DonThuocPanel extends JPanel {
     private void taiLaiDanhSach() {
         model.setRowCount(0);
         java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        List<DonThuoc> ds = donThuocDAO.layTatCa();
+        List<DonThuoc> ds = donThuocService.layTatCa();
         for (DonThuoc dt : ds) {
             String ngayKe = dt.getNgayKeDon() != null ? dt.getNgayKeDon().format(dtf) : "";
             model.addRow(new Object[]{
@@ -246,7 +246,7 @@ public class DonThuocPanel extends JPanel {
         int row = table.getSelectedRow();
         if (row >= 0) {
             String ma = (String) model.getValueAt(row, 0);
-            DonThuoc dt = donThuocDAO.timTheoMa(ma);
+            DonThuoc dt = donThuocService.timTheoMa(ma);
             if (dt != null) {
                 txtMaDonThuoc.setText(dt.getMaDonThuoc());
                 txtTenBacSi.setText(dt.getTenBacSi());
@@ -267,13 +267,13 @@ public class DonThuocPanel extends JPanel {
             return;
         }
 
-        if (donThuocDAO.timTheoMa(ma) != null) {
+        if (donThuocService.timTheoMa(ma) != null) {
             JOptionPane.showMessageDialog(this, "Mã đơn thuốc đã tồn tại!");
             return;
         }
 
         DonThuoc dt = new DonThuoc(ma, ten, coSo, ngay);
-        if (donThuocDAO.them(dt)) {
+        if (donThuocService.them(dt)) {
             JOptionPane.showMessageDialog(this, "Thêm đơn thuốc thành công!");
             taiLaiDanhSach();
             lamMoiForm();
@@ -300,7 +300,7 @@ public class DonThuocPanel extends JPanel {
         }
 
         DonThuoc dt = new DonThuoc(ma, ten, coSo, ngay);
-        if (donThuocDAO.capNhat(dt)) {
+        if (donThuocService.capNhat(dt)) {
             JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
             taiLaiDanhSach();
             lamMoiForm();
@@ -319,7 +319,7 @@ public class DonThuocPanel extends JPanel {
         String ma = (String) model.getValueAt(row, 0);
         int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc chắn muốn xóa đơn thuốc " + ma + "?", "Xác nhận", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
-            if (donThuocDAO.xoa(ma)) {
+            if (donThuocService.xoa(ma)) {
                 JOptionPane.showMessageDialog(this, "Xóa thành công!");
                 taiLaiDanhSach();
                 lamMoiForm();
@@ -336,7 +336,7 @@ public class DonThuocPanel extends JPanel {
         
         model.setRowCount(0);
         java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        List<DonThuoc> ds = donThuocDAO.layTatCa();
+        List<DonThuoc> ds = donThuocService.layTatCa();
         
         for (DonThuoc dt : ds) {
             boolean matchKeyword = keyword.isEmpty() || 

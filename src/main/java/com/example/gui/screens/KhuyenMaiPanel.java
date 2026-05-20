@@ -1,8 +1,8 @@
 package com.example.gui.screens;
 
-import com.example.dao.DonViQuyDoiDAO;
-import com.example.dao.KhuyenMaiDAO;
-import com.example.dao.SanPhamDAO;
+import com.example.service.DonViQuyDoiService;
+import com.example.service.KhuyenMaiService;
+import com.example.service.SanPhamService;
 import com.example.entity.KhuyenMai;
 import com.example.entity.QuaTang;
 import com.example.entity.SanPham;
@@ -28,8 +28,8 @@ import java.util.List;
 
 public class KhuyenMaiPanel extends JPanel {
 
-    private final KhuyenMaiDAO khuyenMaiDAO = new KhuyenMaiDAO();
-    private final SanPhamDAO sanPhamDAO = new SanPhamDAO();
+    private final KhuyenMaiService khuyenMaiService = new KhuyenMaiService();
+    private final SanPhamService sanPhamService = new SanPhamService();
 
     private DefaultTableModel tableModel;
     private JTable table;
@@ -78,7 +78,7 @@ public class KhuyenMaiPanel extends JPanel {
     }
 
     private void loadDataFromDatabase() {
-        danhSachKhuyenMai = khuyenMaiDAO.layTatCa();
+        danhSachKhuyenMai = khuyenMaiService.layTatCa();
     }
 
     // ===================== LEFT PANEL - DANH SÁCH =====================
@@ -493,7 +493,7 @@ public class KhuyenMaiPanel extends JPanel {
         }
         
         SwingUtilities.invokeLater(() -> {
-            List<SanPham> suggestions = sanPhamDAO.timKiemGoiY(keyword);
+            List<SanPham> suggestions = sanPhamService.timKiemGoiY(keyword);
             listModelSuggestions.clear();
             if (!suggestions.isEmpty()) {
                 for (SanPham sp : suggestions) {
@@ -527,8 +527,8 @@ public class KhuyenMaiPanel extends JPanel {
         cboDonViQuaTang.removeAllItems();
         SanPham sp = findSanPhamByName(tenSP);
         if (sp != null) {
-            DonViQuyDoiDAO dvqdDAO = new DonViQuyDoiDAO();
-            List<DonViQuyDoi> listDV = dvqdDAO.timTheoMaSanPham(sp.getMaSanPham());
+            DonViQuyDoiService dvqdService = new DonViQuyDoiService();
+            List<DonViQuyDoi> listDV = dvqdService.timTheoMaSanPham(sp.getMaSanPham());
             for (DonViQuyDoi dv : listDV) {
                 if (dv.getTenDonVi() != null) {
                     cboDonViQuaTang.addItem(dv.getTenDonVi());
@@ -546,7 +546,7 @@ public class KhuyenMaiPanel extends JPanel {
     // ===================== HELPER METHODS =====================
     private SanPham findSanPhamByName(String tenSanPham) {
         try {
-            List<SanPham> danhSach = sanPhamDAO.layTatCa();
+            List<SanPham> danhSach = sanPhamService.layTatCa();
             for (SanPham sp : danhSach) {
                 if (sp.getTenSanPham().equalsIgnoreCase(tenSanPham)) {
                     return sp;
@@ -564,7 +564,7 @@ public class KhuyenMaiPanel extends JPanel {
         KhuyenMai km = buildKhuyenMaiFromForm();
         if (km == null) return;
 
-        if (khuyenMaiDAO.them(km)) {
+        if (khuyenMaiService.them(km)) {
             JOptionPane.showMessageDialog(this, "Thêm khuyến mãi thành công!\nMã: " + km.getMaKhuyenMai(),
                     "Thành công", JOptionPane.INFORMATION_MESSAGE);
             loadDataFromDatabase();
@@ -587,7 +587,7 @@ public class KhuyenMaiPanel extends JPanel {
 
         km.setMaKhuyenMai(txtMaKhuyenMai.getText().trim());
 
-        if (khuyenMaiDAO.capNhat(km)) {
+        if (khuyenMaiService.capNhat(km)) {
             JOptionPane.showMessageDialog(this, "Cập nhật thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
             loadDataFromDatabase();
             refreshTableData();
@@ -607,7 +607,7 @@ public class KhuyenMaiPanel extends JPanel {
         int confirm = JOptionPane.showConfirmDialog(this, "Xóa khuyến mãi " + ma + "?",
                 "Xác nhận", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
-            if (khuyenMaiDAO.xoa(ma)) {
+            if (khuyenMaiService.xoa(ma)) {
                 JOptionPane.showMessageDialog(this, "Xóa thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
                 loadDataFromDatabase();
                 refreshTableData();
@@ -712,8 +712,8 @@ public class KhuyenMaiPanel extends JPanel {
                     return null;
                 }
 
-                DonViQuyDoiDAO dvqdDAO = new DonViQuyDoiDAO();
-                DonViQuyDoi dvqd = dvqdDAO.timTheoTenVaMaSP(donVi.name(), sp.getMaSanPham());
+                DonViQuyDoiService dvqdService = new DonViQuyDoiService();
+                DonViQuyDoi dvqd = dvqdService.timTheoTenVaMaSP(donVi.name(), sp.getMaSanPham());
 
                 if (dvqd == null) {
                     JOptionPane.showMessageDialog(this,
@@ -824,7 +824,7 @@ public class KhuyenMaiPanel extends JPanel {
     }
 
     private void clearForm() {
-        txtMaKhuyenMai.setText(khuyenMaiDAO.generateNextMaKhuyenMai());
+        txtMaKhuyenMai.setText(khuyenMaiService.generateNextMaKhuyenMai());
         txtTenKhuyenMai.setText("");
         datePickerBatDau.clear();
         datePickerKetThuc.clear();

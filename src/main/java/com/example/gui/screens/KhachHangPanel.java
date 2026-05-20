@@ -1,6 +1,6 @@
 package com.example.gui.screens;
 
-import com.example.dao.KhachHangDAO;
+import com.example.service.KhachHangService;
 import com.example.entity.KhachHang;
 import com.example.entity.enums.TrangThaiKhachHang;
 
@@ -28,7 +28,7 @@ public class KhachHangPanel extends JPanel {
     private JButton btnThem, btnSua, btnXoa, btnLamMoi;
 
     // --- Khai báo biến xử lý Database và Dữ liệu ---
-    private KhachHangDAO khDAO = new KhachHangDAO();
+    private KhachHangService khService = new KhachHangService();
     private List<KhachHang> dsKhachHang = new ArrayList<>();
 
 
@@ -206,7 +206,7 @@ public class KhachHangPanel extends JPanel {
 
     /** Lấy dữ liệu mới nhất từ CSDL và hiển thị lại lên bảng */
     public void taiLaiDanhSach() {
-        dsKhachHang = khDAO.layTatCa();
+        dsKhachHang = khService.layTatCa();
         locVaTimKiem();
         lamMoiForm();
     }
@@ -261,7 +261,7 @@ public class KhachHangPanel extends JPanel {
         if (!validateData()) return;
         
         String sdt = txtSdt.getText().trim();
-        KhachHang khCheck = khDAO.timTheoSdt(sdt);
+        KhachHang khCheck = khService.timTheoSdt(sdt);
         if (khCheck != null) {
             JOptionPane.showMessageDialog(this, "Số điện thoại này đã tồn tại trong hệ thống (Thuộc về: " + khCheck.getTenKhachHang() + ")!");
             return;
@@ -275,7 +275,7 @@ public class KhachHangPanel extends JPanel {
         // Mặc định luôn là khách hàng thành viên khi thêm mới
         kh.setTrangThai(TrangThaiKhachHang.KHACH_HANG_THANH_VIEN); 
 
-        if (khDAO.them(kh)) {
+        if (khService.them(kh)) {
             JOptionPane.showMessageDialog(this, "Thêm khách hàng thành viên thành công!");
             taiLaiDanhSach();
         }
@@ -297,7 +297,7 @@ public class KhachHangPanel extends JPanel {
         if (!validateData()) return;
 
         String sdtMoi = txtSdt.getText().trim();
-        KhachHang khCheck = khDAO.timTheoSdt(sdtMoi);
+        KhachHang khCheck = khService.timTheoSdt(sdtMoi);
         if (khCheck != null && !khCheck.getMaKhachHang().equals(txtId.getText())) {
              JOptionPane.showMessageDialog(this, "Số điện thoại này đang được sử dụng bởi khách hàng khác!");
              return;
@@ -311,10 +311,10 @@ public class KhachHangPanel extends JPanel {
             kh.setSdt(sdtMoi);
             
             // Giữ nguyên trạng thái (Thành viên / Khách lẻ) cũ từ CSDL
-            KhachHang khCu = khDAO.timTheoMa(txtId.getText());
+            KhachHang khCu = khService.timTheoMa(txtId.getText());
             kh.setTrangThai(khCu.getTrangThai());
 
-            if (khDAO.capNhat(kh)) {
+            if (khService.capNhat(kh)) {
                 JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
                 taiLaiDanhSach();
             } else {
@@ -344,7 +344,7 @@ public class KhachHangPanel extends JPanel {
         
         if (confirm == JOptionPane.YES_OPTION) {
             // Lấy đối tượng khách hàng từ database để cập nhật
-            KhachHang kh = khDAO.timTheoMa(maKH);
+            KhachHang kh = khService.timTheoMa(maKH);
             if (kh != null) {
                 // 1. Đánh dấu tên để hàm lọc locVaTimKiem() tự động ẩn khỏi bảng
                 kh.setTenKhachHang("[ĐÃ XÓA] " + kh.getTenKhachHang()); 
@@ -353,7 +353,7 @@ public class KhachHangPanel extends JPanel {
                 kh.setTrangThai(TrangThaiKhachHang.KHACH_LE); 
                 
                 // 3. Gọi hàm cập nhật để lưu thay đổi vào SQL
-                if (khDAO.capNhat(kh)) {
+                if (khService.capNhat(kh)) {
                     JOptionPane.showMessageDialog(this, "Đã ẩn và chuyển trạng thái khách hàng thành công!");
                     taiLaiDanhSach(); // Load lại danh sách để cập nhật giao diện
                 } else {

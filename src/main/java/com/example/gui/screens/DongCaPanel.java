@@ -4,8 +4,8 @@ import com.example.entity.CaLam;
 import com.example.entity.NhanVien;
 import com.example.entity.TaiKhoan;
 import com.example.entity.enums.TrangThaiCaLam;
-import com.example.dao.CaLamDAO;
-import com.example.dao.HoaDonDAO;
+import com.example.service.CaLamService;
+import com.example.service.HoaDonService;
 import com.example.gui.components.RoundedButton;
 
 import javax.swing.*;
@@ -25,8 +25,8 @@ public class DongCaPanel extends JPanel implements ActionListener {
 
     private final TaiKhoan taiKhoan;
     private final NhanVien nhanVien;
-    private final CaLamDAO caLamDAO = new CaLamDAO();
-    private final HoaDonDAO hoaDonDAO = new HoaDonDAO();
+    private final CaLamService caLamService = new CaLamService();
+    private final HoaDonService hoaDonService = new HoaDonService();
     private CaLam caHienTai;
 
     // Components
@@ -243,18 +243,18 @@ public class DongCaPanel extends JPanel implements ActionListener {
     }
 
     public void loadDuLieuCa() {
-        caHienTai = caLamDAO.layCaHienTai(nhanVien.getMaNhanVien());
+        caHienTai = caLamService.layCaHienTai(nhanVien.getMaNhanVien());
         if (caHienTai != null) {
             java.time.LocalDate ngayCa = caHienTai.getGioBatDau() != null ? caHienTai.getGioBatDau().toLocalDate() : java.time.LocalDate.now();
-            java.util.List<com.example.entity.HoaDon> dsHoaDon = hoaDonDAO.timKiem(null, ngayCa);
+            java.util.List<com.example.entity.HoaDon> dsHoaDon = hoaDonService.timKiem(null, ngayCa);
             
             // Nếu ca làm việc vắt qua ngày mới
             if (!ngayCa.isEqual(java.time.LocalDate.now())) {
-                dsHoaDon.addAll(hoaDonDAO.timKiem(null, java.time.LocalDate.now()));
+                dsHoaDon.addAll(hoaDonService.timKiem(null, java.time.LocalDate.now()));
             }
 
             double doanhThu = 0;
-            com.example.dao.ChiTietHoaDonDAO chiTietHoaDonDAO = new com.example.dao.ChiTietHoaDonDAO();
+            com.example.service.ChiTietHoaDonService chiTietHoaDonService = new com.example.service.ChiTietHoaDonService();
             
             for (com.example.entity.HoaDon hd : dsHoaDon) {
                 if (hd.getCa() == null || !caHienTai.getMaCa().equals(hd.getCa().getMaCa())) {
@@ -274,9 +274,9 @@ public class DongCaPanel extends JPanel implements ActionListener {
                     double tongGoc = 0;
                     if (hd.getHoaDonDoiTra() != null) {
                         String maGoc = hd.getHoaDonDoiTra().getMaHoaDon();
-                        com.example.entity.HoaDon hdGoc = hoaDonDAO.timTheoMa(maGoc);
+                        com.example.entity.HoaDon hdGoc = hoaDonService.timTheoMa(maGoc);
                         if (hdGoc != null) {
-                            hdGoc.setDsChiTiet(chiTietHoaDonDAO.layTheoMaHoaDon(maGoc));
+                            hdGoc.setDsChiTiet(chiTietHoaDonService.layTheoMaHoaDon(maGoc));
                             tongGoc = hdGoc.tinhTongTienThanhToan();
                         }
                     }
@@ -368,7 +368,7 @@ public class DongCaPanel extends JPanel implements ActionListener {
         caHienTai.setTienHeThong(tienHeThong);
         caHienTai.setGhiChu(txtGhiChu.getText().trim());
 
-        if (caLamDAO.capNhat(caHienTai)) {
+        if (caLamService.capNhat(caHienTai)) {
             JOptionPane.showMessageDialog(this, "Đóng ca thành công!");
             // Switch back to home
             Container parent = getParent();

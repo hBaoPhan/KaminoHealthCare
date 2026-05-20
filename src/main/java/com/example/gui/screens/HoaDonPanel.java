@@ -2,7 +2,7 @@ package com.example.gui.screens;
 
 import com.example.entity.TaiKhoan;
 import com.example.entity.enums.ChucVu;
-import com.example.dao.ChiTietHoaDonDAO;
+import com.example.service.ChiTietHoaDonService;
 import com.example.service.HoaDonService;
 import com.example.entity.ChiTietHoaDon;
 import com.example.entity.HoaDon;
@@ -456,8 +456,8 @@ public class HoaDonPanel extends JPanel {
         panel.add(headerPanel, BorderLayout.NORTH);
 
         // Table
-        ChiTietHoaDonDAO ctDAO = new ChiTietHoaDonDAO();
-        List<ChiTietHoaDon> dsChiTiet = ctDAO.layTheoMaHoaDon(maHD);
+        ChiTietHoaDonService ctService = new ChiTietHoaDonService();
+        List<ChiTietHoaDon> dsChiTiet = ctService.layTheoMaHoaDon(maHD);
 
         String[] cols = { "Tên SP", "ĐVT", "SL", "Đơn giá", "Thành tiền", "Quà tặng" };
         DefaultTableModel ctModel = new DefaultTableModel(cols, 0);
@@ -522,8 +522,8 @@ public class HoaDonPanel extends JPanel {
         }
 
         String maHD = model.getValueAt(row, 0).toString();
-        ChiTietHoaDonDAO ctDAO = new ChiTietHoaDonDAO();
-        List<ChiTietHoaDon> dsChiTiet = ctDAO.layTheoMaHoaDon(maHD);
+        ChiTietHoaDonService ctService = new ChiTietHoaDonService();
+        List<ChiTietHoaDon> dsChiTiet = ctService.layTheoMaHoaDon(maHD);
 
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Xác nhận thanh toán: " + maHD,
                 true);

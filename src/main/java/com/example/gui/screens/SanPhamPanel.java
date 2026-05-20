@@ -1,7 +1,7 @@
 package com.example.gui.screens;
 
-import com.example.dao.DonViQuyDoiDAO;
-import com.example.dao.SanPhamDAO;
+import com.example.service.DonViQuyDoiService;
+import com.example.service.SanPhamService;
 import com.example.entity.DonViQuyDoi;
 import com.example.entity.SanPham;
 import com.example.entity.enums.DonVi;
@@ -25,8 +25,8 @@ import java.io.InputStream;
 
 public class SanPhamPanel extends JPanel {
 
-    private SanPhamDAO sanPhamDAO = new SanPhamDAO();
-    private DonViQuyDoiDAO donViQuyDoiDAO = new DonViQuyDoiDAO();
+    private SanPhamService sanPhamService = new SanPhamService();
+    private DonViQuyDoiService donViQuyDoiService = new DonViQuyDoiService();
     private List<SanPham> danhSachSanPham = new ArrayList<>();
 
     // Components
@@ -407,7 +407,7 @@ public class SanPhamPanel extends JPanel {
     // ====================== LOGIC ======================
 
     public void loadDanhSachSanPham() {
-        danhSachSanPham = sanPhamDAO.laySanPhamDangKinhDoanh();
+        danhSachSanPham = sanPhamService.laySanPhamDangKinhDoanh();
         hienThiSanPhamLenGrid(danhSachSanPham);
     }
 
@@ -629,7 +629,7 @@ public class SanPhamPanel extends JPanel {
             return;
         }
 
-        List<DonViQuyDoi> ds = donViQuyDoiDAO.timTheoMaSanPham(sp.getMaSanPham());
+        List<DonViQuyDoi> ds = donViQuyDoiService.timTheoMaSanPham(sp.getMaSanPham());
         if (ds == null || ds.isEmpty()) {
             return;
         }
@@ -682,8 +682,8 @@ public class SanPhamPanel extends JPanel {
             }
 
             LoaiSanPham phanLoai = LoaiSanPham.valueOf((String) cbLoaiSP.getSelectedItem());
-            String maMoi = sanPhamDAO.taoMaSanPhamTuDong(phanLoai, ten);
-            if (sanPhamDAO.tonTaiMaSanPham(maMoi)) {
+            String maMoi = sanPhamService.taoMaSanPhamTuDong(phanLoai, ten);
+            if (sanPhamService.tonTaiMaSanPham(maMoi)) {
                 JOptionPane.showMessageDialog(this, "Mã sản phẩm bị trùng: " + maMoi, "Lỗi",
                         JOptionPane.ERROR_MESSAGE);
                 return;
@@ -705,7 +705,7 @@ public class SanPhamPanel extends JPanel {
             sp.setTrangThaiKinhDoanh(true);
             sp.setThue(0.10);
 
-            boolean success = sanPhamDAO.them(sp);
+            boolean success = sanPhamService.them(sp);
             if (success) {
                 luuDonViQuyDoi(maMoi);
                 luuAnhSanPham(maMoi);
@@ -714,7 +714,7 @@ public class SanPhamPanel extends JPanel {
                 loadDanhSachSanPham();
 
                 // chọn lại item vừa thêm (nếu có)
-                SanPham spMoi = sanPhamDAO.timTheoMa(maMoi);
+                SanPham spMoi = sanPhamService.timTheoMa(maMoi);
                 if (spMoi != null) {
                     hienThiChiTietSanPham(spMoi);
                 } else {
@@ -824,7 +824,7 @@ public class SanPhamPanel extends JPanel {
             sanPhamDangChon.setMoTa(txtMoTa.getText().trim());
             sanPhamDangChon.setLoaiSanPham(LoaiSanPham.valueOf((String) cbLoaiSP.getSelectedItem()));
 
-            boolean success = sanPhamDAO.capNhat(sanPhamDangChon);
+            boolean success = sanPhamService.capNhat(sanPhamDangChon);
             if (success) {
                 luuDonViQuyDoi(sanPhamDangChon.getMaSanPham());
                 luuAnhSanPham(sanPhamDangChon.getMaSanPham());
@@ -853,7 +853,7 @@ public class SanPhamPanel extends JPanel {
 
         if (confirm == JOptionPane.YES_OPTION) {
             sanPhamDangChon.setTrangThaiKinhDoanh(false);
-            boolean success = sanPhamDAO.capNhat(sanPhamDangChon);
+            boolean success = sanPhamService.capNhat(sanPhamDangChon);
             if (success) {
                 JOptionPane.showMessageDialog(this, "Xóa sản phẩm thành công!", "Thành công",
                         JOptionPane.INFORMATION_MESSAGE);
@@ -884,11 +884,11 @@ public class SanPhamPanel extends JPanel {
     }
 
     private void luuDonViQuyDoi(String maSP) {
-        SanPham sp = sanPhamDAO.timTheoMa(maSP);
+        SanPham sp = sanPhamService.timTheoMa(maSP);
         if (sp == null)
             return;
-
-        List<DonViQuyDoi> dsHienCo = donViQuyDoiDAO.timTheoMaSanPham(maSP);
+ 
+        List<DonViQuyDoi> dsHienCo = donViQuyDoiService.timTheoMaSanPham(maSP);
         List<String> dsTenDonViTrenBang = new ArrayList<>();
 
         for (int i = 0; i < donViQuyDoiModel.getRowCount(); i++) {
@@ -906,20 +906,20 @@ public class SanPhamPanel extends JPanel {
 
             if (dvCu != null) {
                 dvCu.setHeSoQuyDoi(heSo);
-                donViQuyDoiDAO.capNhat(dvCu);
+                donViQuyDoiService.capNhat(dvCu);
             } else {
                 DonViQuyDoi dvMoi = new DonViQuyDoi();
-                dvMoi.setMaDonVi(donViQuyDoiDAO.taoMaDonViTuDong());
+                dvMoi.setMaDonVi(donViQuyDoiService.taoMaDonViTuDong());
                 dvMoi.setTenDonVi(donViEnum);
                 dvMoi.setHeSoQuyDoi(heSo);
                 dvMoi.setSanPham(sp);
-                donViQuyDoiDAO.them(dvMoi);
+                donViQuyDoiService.them(dvMoi);
             }
         }
 
         for (DonViQuyDoi dv : dsHienCo) {
             if (!dsTenDonViTrenBang.contains(dv.getTenDonVi().name())) {
-                donViQuyDoiDAO.xoa(dv.getMaDonVi());
+                donViQuyDoiService.xoa(dv.getMaDonVi());
             }
         }
     }

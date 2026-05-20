@@ -10,13 +10,13 @@ import com.example.entity.CaLam;
 import com.example.entity.ChiTietHoaDon;
 import com.example.entity.enums.LoaiHoaDon;
 import com.example.entity.enums.LoaiSanPham;
-import com.example.dao.HoaDonDAO;
-import com.example.dao.LoDAO;
-import com.example.dao.KhuyenMaiDAO;
-import com.example.dao.SanPhamDAO;
-import com.example.dao.CaLamDAO;
-import com.example.dao.ChiTietHoaDonDAO;
-import com.example.dao.KhachHangDAO;
+import com.example.service.HoaDonService;
+import com.example.service.LoService;
+import com.example.service.KhuyenMaiService;
+import com.example.service.SanPhamService;
+import com.example.service.CaLamService;
+import com.example.service.ChiTietHoaDonService;
+import com.example.service.KhachHangService;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -47,13 +47,13 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
 
     private RoundedButton btnBanHang, btnTimThuoc, btnTimKhachHang, btnThanhToan;
     
-    private HoaDonDAO hoaDonDAO = new HoaDonDAO();
-    private LoDAO loDAO = new LoDAO();
-    private KhuyenMaiDAO khuyenMaiDAO = new KhuyenMaiDAO();
-    private SanPhamDAO sanPhamDAO = new SanPhamDAO();
-    private CaLamDAO caLamDAO = new CaLamDAO();
-    private ChiTietHoaDonDAO chiTietHoaDonDAO = new ChiTietHoaDonDAO();
-    private KhachHangDAO khachHangDAO = new KhachHangDAO();
+    private HoaDonService hoaDonService = new HoaDonService();
+    private LoService loService = new LoService();
+    private KhuyenMaiService khuyenMaiService = new KhuyenMaiService();
+    private SanPhamService sanPhamService = new SanPhamService();
+    private CaLamService caLamService = new CaLamService();
+    private ChiTietHoaDonService chiTietHoaDonService = new ChiTietHoaDonService();
+    private KhachHangService khachHangService = new KhachHangService();
 
     private TaiKhoan taiKhoan;
 
@@ -291,13 +291,13 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
         DateTimeFormatter dfDate = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
         // 1. Stats and Hoa Don Hom Nay
-        List<HoaDon> dsHoaDon = hoaDonDAO.timKiem(null, today);
+        List<HoaDon> dsHoaDon = hoaDonService.timKiem(null, today);
         modelHoaDon.setRowCount(0);
         int soHoaDon = 0;
         double doanhThuCa = 0;
 
         // Find current shift to calculate "Doanh thu của ca"
-        CaLam caHienTai = caLamDAO.layCaHienTai(taiKhoan.getNhanVien().getMaNhanVien());
+        CaLam caHienTai = caLamService.layCaHienTai(taiKhoan.getNhanVien().getMaNhanVien());
         LocalDateTime shiftStart = (caHienTai != null) ? caHienTai.getGioBatDau() : today.atStartOfDay();
 
         for (HoaDon hd : dsHoaDon) {
@@ -324,15 +324,15 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
 
         lblHoaDonDaLap.setText(String.valueOf(soHoaDon));
         lblDoanhThuCa.setText(df.format(doanhThuCa));
-        lblKhachHang.setText(String.valueOf(khachHangDAO.layTatCa().size()));
+        lblKhachHang.setText(String.valueOf(khachHangService.layTatCa().size()));
 
         // 2. Lô thuốc hết hạn hôm nay & Cảnh báo
-        List<Lo> dsLo = loDAO.layTatCa();
+        List<Lo> dsLo = loService.layTatCa();
         modelLoHetHan.setRowCount(0);
         int loGanHetHan = 0;
         for (Lo lo : dsLo) {
             if (lo.getNgayHetHan().isEqual(today)) {
-                modelLoHetHan.addRow(new Object[]{lo.getSoLo(), lo.getSanPham().getTenSanPham(), lo.getNgayHetHan().format(dfDate)});
+                modelLoHetHan.addRow(new Object[]{lo.getMaLo(), lo.getSanPham().getTenSanPham(), lo.getNgayHetHan().format(dfDate)});
             }
             if (lo.getNgayHetHan().isBefore(today.plusMonths(1)) && lo.getNgayHetHan().isAfter(today)) {
                 loGanHetHan++;
@@ -341,7 +341,7 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
         lblCanhBao.setText(loGanHetHan + " lô thuốc gần hết hạn");
 
         // 3. Khuyến mãi hiện hành
-        List<KhuyenMai> dsKM = khuyenMaiDAO.layTatCa();
+        List<KhuyenMai> dsKM = khuyenMaiService.layTatCa();
         modelKhuyenMai.setRowCount(0);
         for (KhuyenMai km : dsKM) {
             if (km.getThoiGianBatDau().toLocalDate().isBefore(today.plusDays(1)) && km.getThoiGianKetThuc().toLocalDate().isAfter(today.minusDays(1))) {
@@ -350,7 +350,7 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
         }
 
         // 4. Sản phẩm mới
-        List<SanPham> dsSP = sanPhamDAO.layTatCa();
+        List<SanPham> dsSP = sanPhamService.layTatCa();
         modelSanPhamMoi.setRowCount(0);
         dsSP.stream().sorted((s1, s2) -> s2.getMaSanPham().compareTo(s1.getMaSanPham())).limit(10).forEach(sp -> {
             modelSanPhamMoi.addRow(new Object[]{sp.getMaSanPham(), sp.getTenSanPham(), sp.getLoaiSanPham().name(), df.format(sp.getDonGiaCoBan())});
@@ -366,7 +366,7 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
 
         for (HoaDon hd : dsHoaDon) {
             if (!hd.isTrangThaiThanhToan()) continue;
-            hd.setDsChiTiet(chiTietHoaDonDAO.layTheoMaHoaDon(hd.getMaHoaDon()));
+            hd.setDsChiTiet(chiTietHoaDonService.layTheoMaHoaDon(hd.getMaHoaDon()));
             for (ChiTietHoaDon ct : hd.getDsChiTiet()) {
                 if (ct.getDonViQuyDoi() == null || ct.getDonViQuyDoi().getSanPham() == null) continue;
                 LoaiSanPham loai = ct.getDonViQuyDoi().getSanPham().getLoaiSanPham();

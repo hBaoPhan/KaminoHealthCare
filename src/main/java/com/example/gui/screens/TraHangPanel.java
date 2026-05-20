@@ -4,7 +4,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
-import com.example.dao.ChiTietHoaDonDAO;
+import com.example.service.ChiTietHoaDonService;
 import com.example.service.HoaDonService;
 
 import java.awt.*;
@@ -39,7 +39,7 @@ public class TraHangPanel extends JPanel {
 
     // --- Biến xử lý dữ liệu và Database ---
     private HoaDonService hoaDonService = new HoaDonService();
-    private ChiTietHoaDonDAO ctHDPDAO = new ChiTietHoaDonDAO();
+    private ChiTietHoaDonService chiTietHoaDonService = new ChiTietHoaDonService();
     private DefaultTableModel model; // Để đổ dữ liệu vào bảng
     private List<ChiTietHoaDon> dsChiTietGoc = new ArrayList<>();
     private DecimalFormat df = new DecimalFormat("###,###,### VND");
@@ -382,7 +382,7 @@ public class TraHangPanel extends JPanel {
         }
 
 
-        dsChiTietGoc = ctHDPDAO.layTheoMaHoaDon(maHD);
+        dsChiTietGoc = chiTietHoaDonService.layTheoMaHoaDon(maHD);
         
         // --- XỬ LÝ LỖI DUPLICATE ---
         // Không load các sản phẩm là Quà Tặng (isLaQuaTangKem = true) lên danh sách trả hàng.
