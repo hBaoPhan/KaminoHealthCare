@@ -187,7 +187,7 @@ public class LoDAO {
         String truyVan = "SELECT l.* FROM Lo l " +
                 "INNER JOIN DonViQuyDoi dv ON l.maSanPham = dv.maSanPham " +
                 "WHERE dv.maDonVi = ? AND l.soLuongSanPham > 0 " +
-                "AND l.ngayHetHan > GETDATE() ORDER BY l.ngayHetHan ASC";
+                "AND l.ngayHetHan > DATEADD(day, 30, GETDATE()) ORDER BY l.ngayHetHan ASC";
 
         try (PreparedStatement lenh = ConnectDB.getConnection().prepareStatement(truyVan)) {
             lenh.setString(1, maDonViQuyDoi);

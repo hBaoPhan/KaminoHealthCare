@@ -15,7 +15,6 @@ import java.util.List;
 
 import com.example.connectDB.ConnectDB;
 import com.example.entity.Lo;
-import com.example.entity.Lo;
 
 /**
  * Service xử lý toàn bộ nghiệp vụ liên quan đến Hóa đơn.
@@ -188,9 +187,9 @@ public class HoaDonService {
      * Thực thi toàn bộ luồng đổi hàng trong 1 transaction duy nhất.
      */
     public boolean luuHoaDonDoiHang(HoaDon hoaDonMoi,
-                                    List<SuPhanBoLo> dsTraLai,
-                                    List<ChiTietHoaDon> dsChiTietMoi,
-                                    List<SuPhanBoLo> dsPhanBoMoi) {
+            List<SuPhanBoLo> dsTraLai,
+            List<ChiTietHoaDon> dsChiTietMoi,
+            List<SuPhanBoLo> dsPhanBoMoi) {
         Connection ketNoi = null;
         try {
             ketNoi = ConnectDB.getConnection();
@@ -337,7 +336,7 @@ public class HoaDonService {
      * Di chuyển raw SQL từ TraHangPanel — tầng UI không được viết SQL.
      */
     public List<SuPhanBoLo> layDanhSachPhanBoLoCanTra(String maHoaDonGoc,
-                                                      List<ChiTietHoaDon> dsChiTietTra) {
+            List<ChiTietHoaDon> dsChiTietTra) {
         return spbService.layDanhSachPhanBoLoCanTra(maHoaDonGoc, dsChiTietTra);
     }
 
