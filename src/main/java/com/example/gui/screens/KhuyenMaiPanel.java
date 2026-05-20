@@ -22,6 +22,7 @@ import javax.swing.table.TableCellRenderer;
 import java.awt.event.MouseEvent;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.RoundRectangle2D;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -42,6 +43,7 @@ public class KhuyenMaiPanel extends JPanel {
     private JButton btnThem, btnXoa, btnSua, btnLamMoi;
     private JTextField txtSearch;
     private JComboBox<String> cboFilterLoai;
+    private JComboBox<String> cboFilterTrangThai;
 
     private JTextField txtMaKhuyenMai;
     private JTextField txtTenKhuyenMai;
@@ -123,10 +125,16 @@ public class KhuyenMaiPanel extends JPanel {
         cboFilterLoai.setPreferredSize(new Dimension(130, 35));
         cboFilterLoai.addActionListener(e -> refreshTableData());
 
+        String[] trangThaiValues = {"Tất cả", "Sắp hết hạn", "Sắp hoạt động"};
+        cboFilterTrangThai = new JComboBox<>(trangThaiValues);
+        cboFilterTrangThai.setPreferredSize(new Dimension(130, 35));
+        cboFilterTrangThai.addActionListener(e -> refreshTableData());
+
         JPanel searchWrapper = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         searchWrapper.setBackground(new Color(241, 246, 255));
         searchWrapper.add(txtSearch);
         searchWrapper.add(cboFilterLoai);
+        searchWrapper.add(cboFilterTrangThai);
         searchWrapper.add(btnSearch);
 
         topBar.add(lblDanhSach, BorderLayout.WEST);
@@ -330,13 +338,19 @@ public class KhuyenMaiPanel extends JPanel {
 
         rightPanel.add(formPanel, BorderLayout.CENTER);
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 10));
         buttonPanel.setBackground(Color.WHITE);
 
         btnThem   = createStyledButton("Thêm",    new Color(40, 167, 69),  Color.WHITE);
         btnSua    = createStyledButton("Sửa",     new Color(255, 193, 7),  Color.BLACK);
         btnXoa    = createStyledButton("Xóa",     new Color(220, 53, 69),  Color.WHITE);
         btnLamMoi = createStyledButton("Làm mới", new Color(108, 117, 125), Color.WHITE);
+
+        Dimension btnSize = new Dimension(85, 36);
+        btnThem.setPreferredSize(btnSize);
+        btnSua.setPreferredSize(btnSize);
+        btnXoa.setPreferredSize(btnSize);
+        btnLamMoi.setPreferredSize(btnSize);
 
         btnThem.addActionListener(e -> themKhuyenMai());
         btnSua.addActionListener(e -> suaKhuyenMai());
@@ -369,27 +383,100 @@ public class KhuyenMaiPanel extends JPanel {
     }
 
     private JButton createStyledButton(String text, Color bgColor, Color fgColor) {
-        JButton btn = new JButton(text);
-        btn.setOpaque(true);
-        btn.setBackground(bgColor);
-        btn.setForeground(fgColor);
-        btn.setFocusPainted(false);
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        btn.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        return new RoundedButton(text, bgColor, fgColor);
+    }
 
-        Color hoverColor = bgColor.darker();
-        btn.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                if (btn.isEnabled()) btn.setBackground(hoverColor);
+    private static class RoundedButton extends JButton {
+        private final Color baseBgColor;
+        private final Color hoverBgColor;
+        private final Color disabledBgColor = new Color(224, 224, 224);
+        private final Color disabledFgColor = new Color(160, 160, 160);
+        private final Color baseFgColor;
+
+        public RoundedButton(String text, Color bgColor, Color fgColor) {
+            super(text);
+            this.baseBgColor = bgColor;
+            this.baseFgColor = fgColor;
+            this.hoverBgColor = getHoverColor(bgColor);
+
+            setContentAreaFilled(false);
+            setFocusPainted(false);
+            setBorderPainted(false);
+            setOpaque(false);
+            setForeground(fgColor);
+            setFont(new Font("Segoe UI", Font.BOLD, 12));
+            setCursor(new Cursor(Cursor.HAND_CURSOR));
+            
+            setPreferredSize(new Dimension(85, 36));
+
+            addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    if (isEnabled()) {
+                        repaint();
+                    }
+                }
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    if (isEnabled()) {
+                        repaint();
+                    }
+                }
+            });
+        }
+
+        private Color getHoverColor(Color color) {
+            double luminance = (0.299 * color.getRed() + 0.587 * color.getGreen() + 0.114 * color.getBlue()) / 255;
+            if (luminance > 0.5) {
+                return new Color(
+                    Math.max(0, color.getRed() - 30),
+                    Math.max(0, color.getGreen() - 30),
+                    Math.max(0, color.getBlue() - 30)
+                );
+            } else {
+                return new Color(
+                    Math.min(255, color.getRed() + 30),
+                    Math.min(255, color.getGreen() + 30),
+                    Math.min(255, color.getBlue() + 30)
+                );
             }
-            @Override
-            public void mouseExited(MouseEvent e) {
-                if (btn.isEnabled()) btn.setBackground(bgColor);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            if (!isEnabled()) {
+                g2.setColor(disabledBgColor);
+                setForeground(disabledFgColor);
+            } else {
+                setForeground(baseFgColor);
+                if (getModel().isPressed()) {
+                    g2.setColor(hoverBgColor.darker());
+                } else if (getModel().isRollover()) {
+                    g2.setColor(hoverBgColor);
+                } else {
+                    g2.setColor(baseBgColor);
+                }
             }
-        });
-        return btn;
+
+            g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 12, 12));
+            
+            // Subtle border
+            if (isEnabled()) {
+                g2.setColor(baseBgColor.darker());
+                g2.setStroke(new BasicStroke(1f));
+                g2.draw(new RoundRectangle2D.Float(0.5f, 0.5f, getWidth() - 1f, getHeight() - 1f, 12, 12));
+            } else {
+                g2.setColor(new Color(200, 200, 200));
+                g2.setStroke(new BasicStroke(1f));
+                g2.draw(new RoundRectangle2D.Float(0.5f, 0.5f, getWidth() - 1f, getHeight() - 1f, 12, 12));
+            }
+
+            g2.dispose();
+            super.paintComponent(g);
+        }
     }
 
     private void updateFormFieldsByLoai() {
@@ -741,8 +828,11 @@ public class KhuyenMaiPanel extends JPanel {
         tableModel.setRowCount(0);
         String keyword = txtSearch.getText().trim().toLowerCase();
         String filter  = (String) cboFilterLoai.getSelectedItem();
+        String trangThaiFilter = cboFilterTrangThai != null ? (String) cboFilterTrangThai.getSelectedItem() : "Tất cả";
 
-        int stt = 1;
+        java.time.LocalDate now = java.time.LocalDate.now();
+        java.util.List<KhuyenMai> filteredList = new java.util.ArrayList<>();
+
         for (KhuyenMai km : danhSachKhuyenMai) {
             if (!keyword.isEmpty() && !keyword.startsWith("tìm kiếm")
                     && !km.getMaKhuyenMai().toLowerCase().contains(keyword)
@@ -755,6 +845,37 @@ public class KhuyenMaiPanel extends JPanel {
                 if ("Tặng kèm".equals(filter)  && km.getLoaiKhuyenMai() != LoaiKhuyenMai.TANG_KEM)  continue;
             }
 
+            if (!"Tất cả".equals(trangThaiFilter)) {
+                java.time.LocalDate batDau = km.getThoiGianBatDau().toLocalDate();
+                java.time.LocalDate ketThuc = km.getThoiGianKetThuc().toLocalDate();
+
+                if ("Sắp hết hạn".equals(trangThaiFilter)) {
+                    // Sắp hết hạn: Chưa hết hạn (ketThuc >= now)
+                    if (ketThuc.isBefore(now)) {
+                        continue;
+                    }
+                } else if ("Sắp hoạt động".equals(trangThaiFilter)) {
+                    // Sắp hoạt động: Chưa bắt đầu (batDau > now)
+                    if (!batDau.isAfter(now)) {
+                        continue;
+                    }
+                }
+            }
+
+            filteredList.add(km);
+        }
+
+        // Sắp xếp danh sách
+        if ("Sắp hết hạn".equals(trangThaiFilter)) {
+            // Sắp xếp theo thoiGianKetThuc tăng dần (gần hết hạn nhất lên trên)
+            filteredList.sort((km1, km2) -> km1.getThoiGianKetThuc().compareTo(km2.getThoiGianKetThuc()));
+        } else if ("Sắp hoạt động".equals(trangThaiFilter)) {
+            // Sắp xếp theo thoiGianBatDau tăng dần (sắp bắt đầu nhất lên trên)
+            filteredList.sort((km1, km2) -> km1.getThoiGianBatDau().compareTo(km2.getThoiGianBatDau()));
+        }
+
+        int stt = 1;
+        for (KhuyenMai km : filteredList) {
             String quaTangText = "";
             if (km.getLoaiKhuyenMai() == LoaiKhuyenMai.TANG_KEM && km.getQuaTangKem() != null) {
                 QuaTang qt = km.getQuaTangKem();

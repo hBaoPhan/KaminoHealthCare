@@ -506,55 +506,180 @@ public class SanPhamPanel extends JPanel {
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
         card.setBackground(Color.WHITE);
         card.setBorder(BorderFactory.createCompoundBorder(
-                new LineBorder(new Color(200, 200, 200), 1, true),
-                new EmptyBorder(10, 10, 10, 10)));
-        card.setPreferredSize(new Dimension(180, 220));
-        card.setMaximumSize(new Dimension(180, 220));
-        card.setMinimumSize(new Dimension(180, 220));
+                new LineBorder(new Color(225, 225, 225), 1, true),
+                new EmptyBorder(12, 10, 12, 10)));
+        card.setPreferredSize(new Dimension(180, 270));
+        card.setMaximumSize(new Dimension(180, 270));
+        card.setMinimumSize(new Dimension(180, 270));
 
-        // Ảnh
+        // 1. Ảnh sản phẩm đặt trong khung bo góc màu trắng, viền xám nhạt
+        RoundedPanel imgContainer = new RoundedPanel(10, false);
+        imgContainer.setLayout(new BorderLayout());
+        imgContainer.setBackground(Color.WHITE);
+        imgContainer.setBorder(BorderFactory.createLineBorder(new Color(225, 225, 225), 1));
+        imgContainer.setPreferredSize(new Dimension(160, 90));
+        imgContainer.setMaximumSize(new Dimension(160, 90));
+        imgContainer.setMinimumSize(new Dimension(160, 90));
+        imgContainer.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         JLabel lblImage = new JLabel("", SwingConstants.CENTER);
-        lblImage.setOpaque(true);
-        lblImage.setBackground(new Color(230, 230, 230));
-        lblImage.setPreferredSize(new Dimension(160, 80));
-        lblImage.setMaximumSize(new Dimension(160, 80));
-        lblImage.setMinimumSize(new Dimension(160, 80));
-        lblImage.setAlignmentX(Component.CENTER_ALIGNMENT);
-        ImageIcon icon = loadProductImageIcon(sp.getMaSanPham(), 160, 80);
+        ImageIcon icon = loadProductImageIcon(sp.getMaSanPham(), 160, 90);
         if (icon != null) {
             lblImage.setIcon(icon);
-            lblImage.setText("");
         } else {
             lblImage.setIcon(null);
             lblImage.setText("Ảnh SP");
+            lblImage.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            lblImage.setForeground(Color.GRAY);
         }
+        imgContainer.add(lblImage, BorderLayout.CENTER);
 
-        // Tên
-        JLabel lblName = new JLabel("<html><div style='text-align: center;'>" + sp.getTenSanPham() + "</div></html>");
-        lblName.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        // 2. Tên sản phẩm
+        JLabel lblName = new JLabel("<html><div style='text-align: center; width: 140px; font-family: Segoe UI;'>" + sp.getTenSanPham() + "</div></html>", SwingConstants.CENTER);
+        lblName.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblName.setForeground(new Color(33, 37, 41));
         lblName.setAlignmentX(Component.CENTER_ALIGNMENT);
-        lblName.setPreferredSize(new Dimension(160, 35));
+        lblName.setPreferredSize(new Dimension(160, 36));
+        lblName.setMaximumSize(new Dimension(160, 36));
 
-        // Giá
-        JLabel lblPrice = new JLabel(String.format("Giá: %,dđ", (long) sp.getDonGiaCoBan()));
-        lblPrice.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        // 3. Badges hiển thị đơn vị quy đổi
+        JPanel badgePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
+        badgePanel.setBackground(Color.WHITE);
+        badgePanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        badgePanel.setPreferredSize(new Dimension(160, 26));
+        badgePanel.setMaximumSize(new Dimension(160, 26));
 
-        JLabel lblStatus = new JLabel("Tồn: " + sp.getSoLuongTon());
-        lblStatus.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        lblStatus.setForeground(sp.getSoLuongTon() > 0 ? new Color(0, 153, 0) : Color.RED);
-
-        JPanel infoPanel = new JPanel(new GridLayout(2, 1));
+        // 4. Panel chứa thông tin (Giá, Tình trạng, Số lượng tồn)
+        JPanel infoPanel = new JPanel();
+        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
         infoPanel.setBackground(Color.WHITE);
-        infoPanel.add(lblPrice);
-        infoPanel.add(lblStatus);
+        infoPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        infoPanel.setPreferredSize(new Dimension(160, 60));
+        infoPanel.setMaximumSize(new Dimension(160, 60));
 
-        card.add(lblImage);
-        card.add(Box.createRigidArea(new Dimension(0, 10)));
+        JLabel lblPrice = new JLabel("", SwingConstants.LEFT);
+        lblPrice.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblPrice.setForeground(new Color(33, 37, 41));
+        lblPrice.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel lblStatus = new JLabel("", SwingConstants.LEFT);
+        lblStatus.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblStatus.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel lblStock = new JLabel("", SwingConstants.LEFT);
+        lblStock.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblStock.setForeground(new Color(100, 100, 100));
+        lblStock.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        infoPanel.add(lblPrice);
+        infoPanel.add(Box.createRigidArea(new Dimension(0, 3)));
+        infoPanel.add(lblStatus);
+        infoPanel.add(Box.createRigidArea(new Dimension(0, 3)));
+        infoPanel.add(lblStock);
+
+        // Lấy danh sách các đơn vị quy đổi
+        List<DonViQuyDoi> tempDV = donViQuyDoiDAO.timTheoMaSanPham(sp.getMaSanPham());
+        final List<DonViQuyDoi> dsDV = (tempDV != null) ? tempDV : new java.util.ArrayList<>();
+        // Sắp xếp đơn vị từ lớn đến nhỏ (Hộp -> Vỉ -> Viên)
+        dsDV.sort((d1, d2) -> Integer.compare(d2.getHeSoQuyDoi(), d1.getHeSoQuyDoi()));
+
+        final DonViQuyDoi[] activeDV = { dsDV.isEmpty() ? null : dsDV.get(0) };
+
+        // Hàm cập nhật trạng thái UI động của Card khi chọn đơn vị quy đổi khác nhau
+        Runnable updateCardUI = new Runnable() {
+            @Override
+            public void run() {
+                badgePanel.removeAll();
+                
+                if (activeDV[0] != null) {
+                    double priceVal = sp.getDonGiaCoBan() * activeDV[0].getHeSoQuyDoi();
+                    lblPrice.setText(String.format("Giá: %,.0fđ / %s", priceVal, activeDV[0].getTenDonVi().getMoTa()));
+                } else {
+                    lblPrice.setText(String.format("Giá: %,.0fđ", sp.getDonGiaCoBan()));
+                }
+
+                if (sp.getSoLuongTon() > 0) {
+                    lblStatus.setText("<html>Tình trạng: <font color='#28a745'><b>Còn hàng</b></font></html>");
+                } else {
+                    lblStatus.setText("<html>Tình trạng: <font color='#dc3545'><b>Hết hàng</b></font></html>");
+                }
+
+                // Tìm đơn vị bé nhất (hệ số quy đổi = 1) để hiển thị số lượng tồn chính xác nhất
+                DonViQuyDoi smallestUnit = null;
+                for (DonViQuyDoi dv : dsDV) {
+                    if (dv.getHeSoQuyDoi() == 1) {
+                        smallestUnit = dv;
+                        break;
+                    }
+                }
+                String smallestUnitName = (smallestUnit != null) ? smallestUnit.getTenDonVi().getMoTa() : "Đơn vị";
+                lblStock.setText("Số lượng tồn: " + sp.getSoLuongTon() + " " + smallestUnitName);
+
+                for (final DonViQuyDoi dv : dsDV) {
+                    final boolean isActive = dv.equals(activeDV[0]);
+                    RoundedPanel badge = new RoundedPanel(8, false) {
+                        @Override
+                        protected void paintComponent(Graphics g) {
+                            Graphics2D g2 = (Graphics2D) g.create();
+                            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                            g2.setColor(getBackground());
+                            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
+                            if (isActive) {
+                                g2.setColor(new Color(0, 123, 255));
+                                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
+                            }
+                            g2.dispose();
+                        }
+                    };
+                    badge.setLayout(new FlowLayout(FlowLayout.CENTER, 6, 2));
+                    badge.setOpaque(false);
+                    badge.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+                    JLabel badgeLabel = new JLabel(dv.getTenDonVi().getMoTa());
+                    badgeLabel.setFont(new Font("Segoe UI", isActive ? Font.BOLD : Font.PLAIN, 11));
+                    if (isActive) {
+                        badge.setBackground(Color.WHITE);
+                        badgeLabel.setForeground(new Color(0, 123, 255));
+                    } else {
+                        badge.setBackground(new Color(245, 245, 245));
+                        badgeLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+                        badgeLabel.setForeground(new Color(120, 120, 120));
+                    }
+                    badge.add(badgeLabel);
+
+                    badge.addMouseListener(new MouseAdapter() {
+                        @Override
+                        public void mouseClicked(MouseEvent e) {
+                            e.consume();
+                            activeDV[0] = dv;
+                            // Cập nhật giao diện card
+                            Runnable updateUI = (Runnable) card.getClientProperty("updateUI");
+                            if (updateUI != null) updateUI.run();
+                            hienThiChiTietSanPham(sp);
+                        }
+                    });
+
+                    badgePanel.add(badge);
+                }
+
+                badgePanel.revalidate();
+                badgePanel.repaint();
+            }
+        };
+
+        // Gắn updateCardUI làm property để có thể gọi lại từ bên trong listener
+        card.putClientProperty("updateUI", updateCardUI);
+        updateCardUI.run();
+
+        card.add(imgContainer);
+        card.add(Box.createRigidArea(new Dimension(0, 8)));
         card.add(lblName);
+        card.add(Box.createRigidArea(new Dimension(0, 6)));
+        card.add(badgePanel);
         card.add(Box.createRigidArea(new Dimension(0, 10)));
         card.add(infoPanel);
 
-        // Click event
+        // Click event cho toàn bộ card
         card.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
