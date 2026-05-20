@@ -129,7 +129,7 @@ public class LoPanel extends JPanel {
             locVaHienThiLo(txtSearch.getText().trim());
         });
 
-        String[] trangThaiValues = {"Tất cả", "Sắp hết hạn", "Còn hạn lâu", "Đã hết hạn"};
+        String[] trangThaiValues = { "Tất cả", "Sắp hết hạn", "Còn hạn lâu", "Đã hết hạn" };
         cboFilterTrangThai = new JComboBox<>(trangThaiValues);
         cboFilterTrangThai.setPreferredSize(new Dimension(130, 35));
         cboFilterTrangThai.addActionListener(e -> {
@@ -408,10 +408,10 @@ public class LoPanel extends JPanel {
             List<Lo> results = new java.util.ArrayList<>();
             if (danhSachLo == null)
                 danhSachLo = loService.layTatCa();
-            
+
             for (Lo lo : danhSachLo) {
-                if (lo.getMaLo().toLowerCase().contains(text.toLowerCase()) || 
-                    lo.getSanPham().getMaSanPham().toLowerCase().contains(text.toLowerCase())) {
+                if (lo.getMaLo().toLowerCase().contains(text.toLowerCase()) ||
+                        lo.getSanPham().getMaSanPham().toLowerCase().contains(text.toLowerCase())) {
                     results.add(lo);
                 }
             }
@@ -450,14 +450,15 @@ public class LoPanel extends JPanel {
     }
 
     private void locVaHienThiLo(String text) {
-        String keyword = (text == null || text.isEmpty() || text.equals("Tìm kiếm theo mã lô hoặc mã SP...")) ? "" : text.trim().toLowerCase();
+        String keyword = (text == null || text.isEmpty() || text.equals("Tìm kiếm theo mã lô hoặc mã SP...")) ? ""
+                : text.trim().toLowerCase();
         String trangThaiFilter = cboFilterTrangThai != null ? (String) cboFilterTrangThai.getSelectedItem() : "Tất cả";
 
         java.time.LocalDate now = java.time.LocalDate.now();
         List<Lo> locKetQua = new java.util.ArrayList<>();
 
         if (danhSachLo == null) {
-            danhSachLo = loDAO.layTatCa();
+            danhSachLo = loService.layTatCa();
         }
 
         for (Lo lo : danhSachLo) {

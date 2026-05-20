@@ -98,10 +98,10 @@ public class SanPhamPanel extends JPanel {
         txtSearch = new JTextField("Tìm kiếm theo mã hoặc tên...");
         txtSearch.setForeground(Color.GRAY);
         txtSearch.setPreferredSize(new Dimension(220, 35));
-        
+
         searchPopup = new JPopupMenu();
         searchPopup.setFocusable(false);
-        
+
         txtSearch.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
@@ -129,11 +129,19 @@ public class SanPhamPanel extends JPanel {
         });
         txtSearch.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
             @Override
-            public void insertUpdate(javax.swing.event.DocumentEvent e) { updateSearch(); }
+            public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                updateSearch();
+            }
+
             @Override
-            public void removeUpdate(javax.swing.event.DocumentEvent e) { updateSearch(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                updateSearch();
+            }
+
             @Override
-            public void changedUpdate(javax.swing.event.DocumentEvent e) { updateSearch(); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                updateSearch();
+            }
         });
 
         JButton btnSearch = new RoundedButton("Tìm");
@@ -218,7 +226,8 @@ public class SanPhamPanel extends JPanel {
         btnSelectImage.setBackground(new Color(153, 225, 255));
         btnSelectImage.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Images", "jpg", "png", "jpeg"));
+            fileChooser
+                    .setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Images", "jpg", "png", "jpeg"));
             if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
                 selectedImageFile = fileChooser.getSelectedFile();
                 try {
@@ -412,7 +421,8 @@ public class SanPhamPanel extends JPanel {
     }
 
     private void updateSearch() {
-        if (isUpdatingSearch) return;
+        if (isUpdatingSearch)
+            return;
 
         String text = txtSearch.getText().trim();
         if (text.isEmpty() || text.equals("Tìm kiếm theo mã hoặc tên...")) {
@@ -427,7 +437,7 @@ public class SanPhamPanel extends JPanel {
             List<SanPham> results = new ArrayList<>();
             for (SanPham sp : danhSachSanPham) {
                 if (sp.getMaSanPham().toLowerCase().contains(text.toLowerCase()) ||
-                    sp.getTenSanPham().toLowerCase().contains(text.toLowerCase())) {
+                        sp.getTenSanPham().toLowerCase().contains(text.toLowerCase())) {
                     results.add(sp);
                 }
             }
@@ -440,7 +450,8 @@ public class SanPhamPanel extends JPanel {
 
             int count = 0;
             for (SanPham sp : results) {
-                if (count >= 10) break;
+                if (count >= 10)
+                    break;
                 JMenuItem item = new JMenuItem(sp.getMaSanPham() + " - " + sp.getTenSanPham());
                 item.setFont(new Font("Segoe UI", Font.PLAIN, 14));
                 item.addActionListener(e -> {
@@ -535,7 +546,8 @@ public class SanPhamPanel extends JPanel {
         imgContainer.add(lblImage, BorderLayout.CENTER);
 
         // 2. Tên sản phẩm
-        JLabel lblName = new JLabel("<html><div style='text-align: center; width: 140px; font-family: Segoe UI;'>" + sp.getTenSanPham() + "</div></html>", SwingConstants.CENTER);
+        JLabel lblName = new JLabel("<html><div style='text-align: center; width: 140px; font-family: Segoe UI;'>"
+                + sp.getTenSanPham() + "</div></html>", SwingConstants.CENTER);
         lblName.setFont(new Font("Segoe UI", Font.BOLD, 13));
         lblName.setForeground(new Color(33, 37, 41));
         lblName.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -578,7 +590,7 @@ public class SanPhamPanel extends JPanel {
         infoPanel.add(lblStock);
 
         // Lấy danh sách các đơn vị quy đổi
-        List<DonViQuyDoi> tempDV = donViQuyDoiDAO.timTheoMaSanPham(sp.getMaSanPham());
+        List<DonViQuyDoi> tempDV = donViQuyDoiService.timTheoMaSanPham(sp.getMaSanPham());
         final List<DonViQuyDoi> dsDV = (tempDV != null) ? tempDV : new java.util.ArrayList<>();
         // Sắp xếp đơn vị từ lớn đến nhỏ (Hộp -> Vỉ -> Viên)
         dsDV.sort((d1, d2) -> Integer.compare(d2.getHeSoQuyDoi(), d1.getHeSoQuyDoi()));
@@ -590,7 +602,7 @@ public class SanPhamPanel extends JPanel {
             @Override
             public void run() {
                 badgePanel.removeAll();
-                
+
                 if (activeDV[0] != null) {
                     double priceVal = sp.getDonGiaCoBan() * activeDV[0].getHeSoQuyDoi();
                     lblPrice.setText(String.format("Giá: %,.0fđ / %s", priceVal, activeDV[0].getTenDonVi().getMoTa()));
@@ -604,7 +616,8 @@ public class SanPhamPanel extends JPanel {
                     lblStatus.setText("<html>Tình trạng: <font color='#dc3545'><b>Hết hàng</b></font></html>");
                 }
 
-                // Tìm đơn vị bé nhất (hệ số quy đổi = 1) để hiển thị số lượng tồn chính xác nhất
+                // Tìm đơn vị bé nhất (hệ số quy đổi = 1) để hiển thị số lượng tồn chính xác
+                // nhất
                 DonViQuyDoi smallestUnit = null;
                 for (DonViQuyDoi dv : dsDV) {
                     if (dv.getHeSoQuyDoi() == 1) {
@@ -654,7 +667,8 @@ public class SanPhamPanel extends JPanel {
                             activeDV[0] = dv;
                             // Cập nhật giao diện card
                             Runnable updateUI = (Runnable) card.getClientProperty("updateUI");
-                            if (updateUI != null) updateUI.run();
+                            if (updateUI != null)
+                                updateUI.run();
                             hienThiChiTietSanPham(sp);
                         }
                     });
@@ -867,7 +881,7 @@ public class SanPhamPanel extends JPanel {
 
         for (String ext : exts) {
             String fileName = base + "." + ext;
-            
+
             // 1) Thử load từ Classpath (Jar/Target)
             // Lưu ý: ClassLoader.getResource không bắt đầu bằng /
             String resourcePath = "images/anhSanPham/" + fileName;
@@ -885,9 +899,10 @@ public class SanPhamPanel extends JPanel {
                     // 2) Fallback: Load trực tiếp từ Filesystem (Dùng cho môi trường dev)
                     // Sử dụng Paths.get để tự động xử lý dấu gạch chéo hệ điều hành
                     java.nio.file.Path[] paths = {
-                        java.nio.file.Paths.get("src", "main", "resources", "images", "anhSanPham", fileName),
-                        java.nio.file.Paths.get(System.getProperty("user.dir", ""), "src", "main", "resources", "images", "anhSanPham", fileName),
-                        java.nio.file.Paths.get("target", "classes", "images", "anhSanPham", fileName)
+                            java.nio.file.Paths.get("src", "main", "resources", "images", "anhSanPham", fileName),
+                            java.nio.file.Paths.get(System.getProperty("user.dir", ""), "src", "main", "resources",
+                                    "images", "anhSanPham", fileName),
+                            java.nio.file.Paths.get("target", "classes", "images", "anhSanPham", fileName)
                     };
 
                     for (java.nio.file.Path p : paths) {
@@ -1012,7 +1027,7 @@ public class SanPhamPanel extends JPanel {
         SanPham sp = sanPhamService.timTheoMa(maSP);
         if (sp == null)
             return;
- 
+
         List<DonViQuyDoi> dsHienCo = donViQuyDoiService.timTheoMaSanPham(maSP);
         List<String> dsTenDonViTrenBang = new ArrayList<>();
 
@@ -1025,7 +1040,8 @@ public class SanPhamPanel extends JPanel {
             DonViQuyDoi dvCu = null;
             for (DonViQuyDoi dv : dsHienCo) {
                 if (dv.getTenDonVi() == donViEnum) {
-                    dvCu = dv; break;
+                    dvCu = dv;
+                    break;
                 }
             }
 
@@ -1050,10 +1066,12 @@ public class SanPhamPanel extends JPanel {
     }
 
     private void luuAnhSanPham(String maSanPham) {
-        if (selectedImageFile == null) return;
+        if (selectedImageFile == null)
+            return;
         try {
             File dir1 = new File("src/main/resources/images/anhSanPham");
-            if (!dir1.exists()) dir1.mkdirs();
+            if (!dir1.exists())
+                dir1.mkdirs();
             File dest1 = new File(dir1, maSanPham + ".png");
             BufferedImage bImage = ImageIO.read(selectedImageFile);
             ImageIO.write(bImage, "png", dest1);
