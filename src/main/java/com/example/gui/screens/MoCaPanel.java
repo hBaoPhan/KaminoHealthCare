@@ -4,7 +4,7 @@ import com.example.entity.CaLam;
 import com.example.entity.NhanVien;
 import com.example.entity.TaiKhoan;
 import com.example.entity.enums.TrangThaiCaLam;
-import com.example.dao.CaLamDAO;
+import com.example.service.CaLamService;
 import com.example.gui.components.RoundedButton;
 import com.example.gui.components.RoundedPanel;
 
@@ -25,7 +25,7 @@ public class MoCaPanel extends JPanel implements ActionListener {
 
     private final TaiKhoan taiKhoan;
     private final NhanVien nhanVien;
-    private final CaLamDAO caLamDAO = new CaLamDAO();
+    private final CaLamService caLamService = new CaLamService();
 
     // Components
     private JLabel lblNhanVien, lblMaNhanVien, lblThoiGian;
@@ -55,7 +55,7 @@ public class MoCaPanel extends JPanel implements ActionListener {
     }
 
     public void loadDuLieuCa() {
-        CaLam cl = caLamDAO.layCaHienTai(nhanVien.getMaNhanVien());
+        CaLam cl = caLamService.layCaHienTai(nhanVien.getMaNhanVien());
         if (cl != null) {
             txtTienMatDauCa.setText(df.format(cl.getTienMoCa()));
             btnMoCa.setEnabled(false);
@@ -276,7 +276,7 @@ public class MoCaPanel extends JPanel implements ActionListener {
     }
 
     private void handleMoCa() {
-        if (caLamDAO.layCaHienTai(nhanVien.getMaNhanVien()) != null) {
+        if (caLamService.layCaHienTai(nhanVien.getMaNhanVien()) != null) {
             JOptionPane.showMessageDialog(this,
                     "Bạn đang có một ca làm việc chưa đóng. Vui lòng kết ca trước khi mở ca mới!",
                     "Cảnh báo", JOptionPane.WARNING_MESSAGE);
@@ -297,7 +297,7 @@ public class MoCaPanel extends JPanel implements ActionListener {
         CaLam caLam = new CaLam();
         // Tự động sinh mã ca: CA + Ngày (2 số) + Tháng (2 số) + Năm (2 số cuối) + Số thứ tự (2 chữ số)
         String prefix = "CA" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("ddMMyy"));
-        int stt = caLamDAO.laySoLuongCaTrongNgay(prefix) + 1;
+        int stt = caLamService.laySoLuongCaTrongNgay(prefix) + 1;
         String maCa = String.format("%s%02d", prefix, stt);
         caLam.setMaCa(maCa);
         caLam.setNhanVien(nhanVien);
@@ -308,7 +308,7 @@ public class MoCaPanel extends JPanel implements ActionListener {
         caLam.setTienKetCa(0);
         caLam.setGhiChu("");
 
-        if (caLamDAO.them(caLam)) {
+        if (caLamService.them(caLam)) {
             JOptionPane.showMessageDialog(this, "Mở ca thành công!");
             // Switch back to home screen or dashboard
             Container parent = getParent();

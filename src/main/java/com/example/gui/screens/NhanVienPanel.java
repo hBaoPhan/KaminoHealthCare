@@ -41,7 +41,7 @@ public class NhanVienPanel extends JPanel {
     private JButton btnThem, btnSua, btnXoa, btnLamMoi;
 
     // --- Biến kết nối Database và lưu trữ dữ liệu ---
-    private com.example.dao.NhanVienDAO nvDAO = new com.example.dao.NhanVienDAO();
+    private com.example.service.NhanVienService nvService = new com.example.service.NhanVienService();
     private java.util.List<com.example.entity.NhanVien> dsNhanVien = new java.util.ArrayList<>();
 
 
@@ -240,7 +240,7 @@ public class NhanVienPanel extends JPanel {
 
     /** Lấy toàn bộ nhân viên từ CSDL và vẽ lên giao diện */
     public void taiLaiDanhSach() {
-        dsNhanVien = nvDAO.layTatCa();
+        dsNhanVien = nvService.layTatCa();
         locVaTimKiem();
         lamMoiForm();
     }
@@ -287,7 +287,7 @@ public class NhanVienPanel extends JPanel {
         nv.setChucVu(cbChucVu.getSelectedIndex() == 0 ? com.example.entity.enums.ChucVu.DUOC_SI : com.example.entity.enums.ChucVu.NHAN_VIEN_QUAN_LY);
         nv.setTrangThai(cbTrangThai.getSelectedIndex() == 0);
 
-        if (nvDAO.them(nv)) {
+        if (nvService.them(nv)) {
             // Đã xóa phần tự động tạo tài khoản ở đây
             JOptionPane.showMessageDialog(this, "Thêm nhân viên thành công!");
             taiLaiDanhSach();
@@ -308,7 +308,7 @@ public class NhanVienPanel extends JPanel {
             nv.setChucVu(cbChucVu.getSelectedIndex() == 0 ? com.example.entity.enums.ChucVu.DUOC_SI : com.example.entity.enums.ChucVu.NHAN_VIEN_QUAN_LY);
             nv.setTrangThai(cbTrangThai.getSelectedIndex() == 0);
 
-            if (nvDAO.capNhat(nv)) {
+            if (nvService.capNhat(nv)) {
                 JOptionPane.showMessageDialog(this, "Cập nhật thành công!"); taiLaiDanhSach();
             } else { JOptionPane.showMessageDialog(this, "Cập nhật thất bại!"); }
         }
@@ -320,9 +320,9 @@ public class NhanVienPanel extends JPanel {
         if (txtId.getText().equals("QL001")) { JOptionPane.showMessageDialog(this, "Cảnh báo: Không thể khóa tài khoản Quản lý gốc!"); return; }
         
         if (JOptionPane.showConfirmDialog(this, "Bạn muốn khóa (xóa) nhân viên này?", "Xác nhận", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
-            com.example.entity.NhanVien nv = nvDAO.timTheoMa(txtId.getText());
+            com.example.entity.NhanVien nv = nvService.timTheoMa(txtId.getText());
             nv.setTrangThai(false);
-            if (nvDAO.capNhat(nv)) {
+            if (nvService.capNhat(nv)) {
                 JOptionPane.showMessageDialog(this, "Đã khóa thành công!"); taiLaiDanhSach();
             }
         }

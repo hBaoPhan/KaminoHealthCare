@@ -4,6 +4,7 @@ import com.example.connectDB.ConnectDB;
 import com.example.entity.Lo;
 import com.example.entity.SanPham;
 import com.example.entity.SuPhanBoLo;
+import com.example.entity.enums.LoaiSanPham;
 
 import java.sql.*;
 import java.time.LocalDate;
@@ -17,7 +18,11 @@ public class LoDAO {
      */
     public List<Lo> layTatCa() {
         List<Lo> danhSach = new ArrayList<>();
-        String sql = "SELECT * FROM Lo ORDER BY ngayHetHan ASC, maLo ASC";
+        String sql = "SELECT l.maLo, l.soLo, l.ngayHetHan, l.soLuongSanPham, l.giaNhap, " +
+                     "s.maSanPham, s.tenSanPham, s.loaiSanPham, s.soLuongTon, s.moTa, s.hoatChat, s.donGiaCoBan, s.trangThaiKinhDoanh, s.thue " +
+                     "FROM Lo l " +
+                     "INNER JOIN SanPham s ON l.maSanPham = s.maSanPham " +
+                     "ORDER BY l.ngayHetHan ASC, l.maLo ASC";
 
         try (Statement lenh = ConnectDB.getConnection().createStatement();
                 ResultSet ketQua = lenh.executeQuery(sql)) {
@@ -28,7 +33,19 @@ public class LoDAO {
                 lo.setSoLo(ketQua.getString("soLo"));
                 lo.setNgayHetHan(ketQua.getDate("ngayHetHan").toLocalDate());
                 lo.setSoLuongSanPham(ketQua.getInt("soLuongSanPham"));
-                lo.setSanPham(new SanPham(ketQua.getString("maSanPham")));
+                
+                SanPham sp = new SanPham();
+                sp.setMaSanPham(ketQua.getString("maSanPham"));
+                sp.setTenSanPham(ketQua.getString("tenSanPham"));
+                sp.setLoaiSanPham(LoaiSanPham.valueOf(ketQua.getString("loaiSanPham")));
+                sp.setSoLuongTon(ketQua.getInt("soLuongTon"));
+                sp.setMoTa(ketQua.getString("moTa"));
+                sp.setHoatChat(ketQua.getString("hoatChat"));
+                sp.setDonGiaCoBan(ketQua.getDouble("donGiaCoBan"));
+                sp.setTrangThaiKinhDoanh(ketQua.getBoolean("trangThaiKinhDoanh"));
+                sp.setThue(ketQua.getDouble("thue"));
+                
+                lo.setSanPham(sp);
                 lo.setGiaNhap(ketQua.getDouble("giaNhap"));
                 danhSach.add(lo);
             }
@@ -170,7 +187,7 @@ public class LoDAO {
         String truyVan = "SELECT l.* FROM Lo l " +
                 "INNER JOIN DonViQuyDoi dv ON l.maSanPham = dv.maSanPham " +
                 "WHERE dv.maDonVi = ? AND l.soLuongSanPham > 0 " +
-                "AND l.ngayHetHan > GETDATE() ORDER BY l.ngayHetHan ASC";
+                "AND l.ngayHetHan > DATEADD(day, 30, GETDATE()) ORDER BY l.ngayHetHan ASC";
 
         try (PreparedStatement lenh = ConnectDB.getConnection().prepareStatement(truyVan)) {
             lenh.setString(1, maDonViQuyDoi);

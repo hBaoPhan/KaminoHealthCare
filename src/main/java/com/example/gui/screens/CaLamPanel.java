@@ -1,6 +1,6 @@
 package com.example.gui.screens;
 
-import com.example.dao.CaLamDAO;
+import com.example.service.CaLamService;
 import com.example.entity.CaLam;
 import com.example.entity.NhanVien;
 import com.example.entity.enums.TrangThaiCaLam;
@@ -38,7 +38,7 @@ public class CaLamPanel extends JPanel {
     private DefaultTableModel modelDanhSach, modelLichTuan;
 
     // --- Data Logic ---
-    private CaLamDAO caLamDAO = new CaLamDAO();
+    private CaLamService caLamService = new CaLamService();
     private DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
     private LocalDate selectedDate = LocalDate.now();
     private List<CaLam> listCaTuan = new ArrayList<>();
@@ -358,7 +358,7 @@ public class CaLamPanel extends JPanel {
         String timKiem = txtSearch.getText().trim();
 
         // 1. Load bảng Danh sách (Theo ngày chọn)
-        List<CaLam> dsNgay = caLamDAO.layCaTheoNgayVaTen(selectedDate, timKiem);
+        List<CaLam> dsNgay = caLamService.layCaTheoNgayVaTen(selectedDate, timKiem);
         modelDanhSach.setRowCount(0);
         for (CaLam cl : dsNgay) {
             String tenNV = cl.getNhanVien() != null ? cl.getNhanVien().getTenNhanVien() : "";
@@ -375,7 +375,7 @@ public class CaLamPanel extends JPanel {
         LocalDate thu2 = selectedDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         LocalDate chuNhat = selectedDate.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
         
-        listCaTuan = caLamDAO.layCaTrongTuan(thu2, chuNhat);
+        listCaTuan = caLamService.layCaTrongTuan(thu2, chuNhat);
         
         // Sửa Header lịch tuần (Kèm ngày/tháng)
         for (int i = 0; i < 7; i++) {
@@ -438,7 +438,7 @@ public class CaLamPanel extends JPanel {
         cl.setTrangThai(TrangThaiCaLam.CHUA_MO); // Ca mới tương lai mặc định là CHUA_MO
         cl.setTienMoCa(0); cl.setTienKetCa(0); cl.setTienHeThong(0); cl.setGhiChu("");
 
-        if (caLamDAO.them(cl)) {
+        if (caLamService.them(cl)) {
             JOptionPane.showMessageDialog(this, "Thêm ca làm thành công!");
             loadDuLieu(); lamMoiForm();
         } else {
@@ -459,7 +459,7 @@ public class CaLamPanel extends JPanel {
         if (!validateDuLieu(true)) return; 
 
         LocalDate date = dateNgayLamForm.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-        CaLam cl = caLamDAO.timTheoMa(txtMaCa.getText());
+        CaLam cl = caLamService.timTheoMa(txtMaCa.getText());
         cl.setNhanVien(new NhanVien(txtMaNV.getText().trim()));
         
         LocalTime start = LocalTime.parse(new java.text.SimpleDateFormat("HH:mm").format(spinGioBatDau.getValue()));
@@ -469,7 +469,7 @@ public class CaLamPanel extends JPanel {
         cl.setGioKetThuc(LocalDateTime.of(date, end));
         cl.setTrangThai((TrangThaiCaLam) cbTrangThai.getSelectedItem());
 
-        if (caLamDAO.capNhat(cl)) {
+        if (caLamService.capNhat(cl)) {
             JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
             loadDuLieu();
         }
@@ -485,7 +485,7 @@ public class CaLamPanel extends JPanel {
         }
         
         if (JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn xóa ca làm này?", "Xác nhận", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
-            if (caLamDAO.xoa(txtMaCa.getText())) {
+            if (caLamService.xoa(txtMaCa.getText())) {
                 JOptionPane.showMessageDialog(this, "Xóa thành công!");
                 lamMoiForm(); loadDuLieu();
             }
@@ -500,7 +500,7 @@ public class CaLamPanel extends JPanel {
     /** Sinh mã ca tự động */
     public String taoMaCa(LocalDate ngayLam) {
         String prefix = "CA" + ngayLam.format(DateTimeFormatter.ofPattern("ddMMyy"));
-        int stt = caLamDAO.laySoLuongCaTrongNgay(prefix) + 1;
+        int stt = caLamService.laySoLuongCaTrongNgay(prefix) + 1;
         return prefix + String.format("%02d", stt);
     }
 
@@ -527,7 +527,7 @@ public class CaLamPanel extends JPanel {
         // Nếu là SỬA (isCapNhat = true), mới cho phép lấy mã ca hiện tại để loại trừ.
         String maCaCheck = isCapNhat ? txtMaCa.getText() : "";
 
-        if (caLamDAO.kiemTraTrungCa(txtMaNV.getText().trim(), dtStart, dtEnd, maCaCheck)) {
+        if (caLamService.kiemTraTrungCa(txtMaNV.getText().trim(), dtStart, dtEnd, maCaCheck)) {
             JOptionPane.showMessageDialog(this, "Lỗi: Nhân viên này đã có ca làm việc khác trùng với khung giờ này!"); 
             return false;
         }

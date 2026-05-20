@@ -1,6 +1,7 @@
 package com.example.gui.screens;
 
-import com.example.dao.LoDAO;
+import com.example.service.LoService;
+import com.example.service.SanPhamService;
 import com.example.entity.Lo;
 import com.example.entity.SanPham;
 import com.toedter.calendar.JDateChooser; // ← Cần import này
@@ -22,9 +23,8 @@ import java.util.List;
 
 public class LoPanel extends JPanel {
 
-    private final LoDAO loDAO = new LoDAO();
-    private final com.example.service.LoService loService = new com.example.service.LoService();
-    private final com.example.dao.SanPhamDAO sanPhamDAO = new com.example.dao.SanPhamDAO();
+    private final LoService loService = new LoService();
+    private final SanPhamService sanPhamService = new SanPhamService();
     private JTable table;
     private DefaultTableModel model;
     private JComboBox<String> cboFilterTrangThai;
@@ -351,21 +351,21 @@ public class LoPanel extends JPanel {
 
     private void loadDataToTable() {
         if (danhSachSanPham == null)
-            danhSachSanPham = sanPhamDAO.layTatCa();
-        danhSachLo = loDAO.layTatCa();
+            danhSachSanPham = sanPhamService.layTatCa();
+        danhSachLo = loService.layTatCa();
 
         boolean hasChanged = false;
         java.time.LocalDate now = java.time.LocalDate.now();
         for (Lo lo : danhSachLo) {
             if (lo.getSoLuongSanPham() > 0 && !lo.getNgayHetHan().isAfter(now.plusDays(30))) {
                 lo.setSoLuongSanPham(0);
-                loDAO.capNhatLo(lo);
+                loService.capNhat(lo);
                 hasChanged = true;
             }
         }
 
         if (hasChanged) {
-            danhSachLo = loDAO.layTatCa();
+            danhSachLo = loService.layTatCa();
         }
 
         locVaHienThiLo(txtSearch != null ? txtSearch.getText().trim() : "");
@@ -407,7 +407,7 @@ public class LoPanel extends JPanel {
         SwingUtilities.invokeLater(() -> {
             List<Lo> results = new java.util.ArrayList<>();
             if (danhSachLo == null)
-                danhSachLo = loDAO.layTatCa();
+                danhSachLo = loService.layTatCa();
             
             for (Lo lo : danhSachLo) {
                 if (lo.getMaLo().toLowerCase().contains(text.toLowerCase()) || 
@@ -559,7 +559,7 @@ public class LoPanel extends JPanel {
             lo.setSanPham(new SanPham(txtMaSanPham.getText().trim()));
             lo.setGiaNhap(Double.parseDouble(txtGiaNhap.getText().trim().replace(",", "")));
 
-            if (loDAO.themLo(lo)) {
+            if (loService.them(lo)) {
                 JOptionPane.showMessageDialog(this, "Thêm thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
                 loadDataToTable();
                 lamMoi();
@@ -586,7 +586,7 @@ public class LoPanel extends JPanel {
             lo.setSanPham(new SanPham(txtMaSanPham.getText().trim()));
             lo.setGiaNhap(Double.parseDouble(txtGiaNhap.getText().trim().replace(",", "")));
 
-            if (loDAO.capNhatLo(lo)) {
+            if (loService.capNhat(lo)) {
                 JOptionPane.showMessageDialog(this, "Cập nhật lô hàng thành công!", "Thành công",
                         JOptionPane.INFORMATION_MESSAGE);
                 loadDataToTable();
@@ -604,7 +604,7 @@ public class LoPanel extends JPanel {
         String maLo = (String) model.getValueAt(row, 1);
         int confirm = JOptionPane.showConfirmDialog(this, "Xóa lô " + maLo + "?", "Xác nhận",
                 JOptionPane.YES_NO_OPTION);
-        if (confirm == JOptionPane.YES_OPTION && loDAO.xoaLo(maLo)) {
+        if (confirm == JOptionPane.YES_OPTION && loService.xoa(maLo)) {
             loadDataToTable();
             lamMoi();
         }

@@ -1,6 +1,6 @@
 package com.example.gui.screens;
 
-import com.example.dao.NhanVienDAO;
+import com.example.service.NhanVienService;
 import com.example.service.TaiKhoanService;
 import com.example.entity.NhanVien;
 import com.example.entity.TaiKhoan;
@@ -28,7 +28,7 @@ public class TaiKhoanPanel extends JPanel {
     private DefaultTableModel tableModel;
     private JLabel lblTongSoTaiKhoan;
 
-    private NhanVienDAO nhanVienDAO = new NhanVienDAO();
+    private NhanVienService nhanVienService = new NhanVienService();
     private TaiKhoanService taiKhoanService = new TaiKhoanService();
     private List<TaiKhoan> danhSachTaiKhoanFull = new ArrayList<>();
 
@@ -131,7 +131,7 @@ public class TaiKhoanPanel extends JPanel {
 
     private void initData() {
         cboNhanVien.removeAllItems();
-        List<NhanVien> dsNV = nhanVienDAO.layTatCa();
+        List<NhanVien> dsNV = nhanVienService.layTatCa();
         for (NhanVien nv : dsNV) {
             cboNhanVien.addItem(nv.getMaNhanVien() + " - " + nv.getTenNhanVien());
         }
@@ -145,7 +145,7 @@ public class TaiKhoanPanel extends JPanel {
 
     public void taiLaiDanhSach() {
         cboNhanVien.removeAllItems();
-        List<NhanVien> dsNV = nhanVienDAO.layTatCa();
+        List<NhanVien> dsNV = nhanVienService.layTatCa();
         for (NhanVien nv : dsNV) {
             cboNhanVien.addItem(nv.getMaNhanVien() + " - " + nv.getTenNhanVien());
         }

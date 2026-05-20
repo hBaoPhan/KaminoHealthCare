@@ -1,8 +1,8 @@
 package com.example.gui.screens;
 
-import com.example.dao.ChiTietHoaDonDAO;
-import com.example.dao.DonViQuyDoiDAO;
-import com.example.dao.LoDAO;
+import com.example.service.ChiTietHoaDonService;
+import com.example.service.DonViQuyDoiService;
+import com.example.service.LoService;
 import com.example.service.HoaDonService;
 import com.example.service.SanPhamService;
 import com.example.entity.*;
@@ -44,9 +44,9 @@ public class DoiHangPanel extends JPanel {
     private DefaultListModel<SanPham> modelGoiY;
 
     private HoaDonService hoaDonService = new HoaDonService();
-    private ChiTietHoaDonDAO chiTietHoaDonDAO = new ChiTietHoaDonDAO();
+    private ChiTietHoaDonService chiTietHoaDonService = new ChiTietHoaDonService();
     private SanPhamService sanPhamService = new SanPhamService();
-    private DonViQuyDoiDAO donViQuyDoiDAO = new DonViQuyDoiDAO();
+    private DonViQuyDoiService donViQuyDoiService = new DonViQuyDoiService();
 
     private HoaDon hoaDonGocHienTai = null;
     private List<ChiTietHoaDon> chiTietHoaDonGocList = new ArrayList<>();
@@ -257,7 +257,7 @@ public class DoiHangPanel extends JPanel {
 
             // Lấy hệ số quy đổi của đơn vị đang được chọn để GIỮ LẠI
             String moTaDonViGiuLai = model.getValueAt(row, 2).toString();
-            DonViQuyDoi dvGiuLai = donViQuyDoiDAO.timTheoTenVaMaSP(DonVi.tuMoTa(moTaDonViGiuLai).name(), maSP);
+            DonViQuyDoi dvGiuLai = donViQuyDoiService.timTheoTenVaMaSP(DonVi.tuMoTa(moTaDonViGiuLai).name(), maSP);
 
             if (dvGiuLai != null) {
                 int tongDonViNhoNhatGiuLai = slGiuLaiNhap * dvGiuLai.getHeSoQuyDoi();
@@ -278,7 +278,7 @@ public class DoiHangPanel extends JPanel {
         // LOGIC CẬP NHẬT GIÁ THEO ĐƠN VỊ VÀ TÍNH TIỀN
         String moTaDonVi = model.getValueAt(row, 2).toString();
         DonVi dvEnum = DonVi.tuMoTa(moTaDonVi);
-        DonViQuyDoi dv = donViQuyDoiDAO.timTheoTenVaMaSP(dvEnum.name(), maSP);
+        DonViQuyDoi dv = donViQuyDoiService.timTheoTenVaMaSP(dvEnum.name(), maSP);
 
         if (dv != null) {
             double giaMoi = dv.getSanPham().getDonGiaCoBan() * dv.getHeSoQuyDoi();
@@ -311,7 +311,7 @@ public class DoiHangPanel extends JPanel {
         txtNguoiTao.setText(
                 hoaDonGocHienTai.getNhanVien() != null ? hoaDonGocHienTai.getNhanVien().getTenNhanVien() : "N/A");
 
-        List<ChiTietHoaDon> temp = chiTietHoaDonDAO.layTheoMaHoaDon(maHoaDon);
+        List<ChiTietHoaDon> temp = chiTietHoaDonService.layTheoMaHoaDon(maHoaDon);
         chiTietHoaDonGocList = new ArrayList<>();
         for (ChiTietHoaDon ct : temp) {
             if (!ct.isLaQuaTangKem()) {
@@ -361,7 +361,7 @@ public class DoiHangPanel extends JPanel {
         }
 
         // KIỂM TRA ĐƠN VỊ QUY ĐỔI TRƯỚC KHI THÊM
-        List<DonViQuyDoi> dsDV = donViQuyDoiDAO.timTheoMaSanPham(sp.getMaSanPham());
+        List<DonViQuyDoi> dsDV = donViQuyDoiService.timTheoMaSanPham(sp.getMaSanPham());
         if (dsDV == null || dsDV.isEmpty()) {
             JOptionPane.showMessageDialog(this,
                     "Sản phẩm này chưa được thiết lập Đơn vị quy đổi trong hệ thống! Không thể bán.", "Lỗi dữ liệu",
@@ -478,7 +478,7 @@ public class DoiHangPanel extends JPanel {
         String tenDV = String.valueOf(model.getValueAt(row, 2));
         int sl = Integer.parseInt(String.valueOf(model.getValueAt(row, 3)));
 
-        DonViQuyDoi dv = donViQuyDoiDAO.timTheoTenVaMaSP(DonVi.tuMoTa(tenDV).name(), maSP);
+        DonViQuyDoi dv = donViQuyDoiService.timTheoTenVaMaSP(DonVi.tuMoTa(tenDV).name(), maSP);
         if (dv == null)
             throw new Exception("Đơn vị '" + tenDV + "' không hợp lệ!");
 
@@ -591,7 +591,7 @@ public class DoiHangPanel extends JPanel {
             }
 
             // BƯỚC B: XỬ LÝ HÀNG MUA MỚI (Trừ kho đúng số mua thêm)
-            LoDAO loDAO = new LoDAO();
+            LoService loService = new LoService();
             for (int i = 0; i < modelDoi.getRowCount(); i++) {
                 ChiTietHoaDon ctMoi = taoChiTietTuDong(modelDoi, i, hdMoi);
                 ChiTietHoaDon targetCt = ctMoi;
@@ -613,7 +613,7 @@ public class DoiHangPanel extends JPanel {
 
                 // Chạy FEFO lấy Lô ĐÚNG bằng số lượng mới mua thêm
                 int soLuongCanTru = ctMoi.getSoLuong() * ctMoi.getDonViQuyDoi().getHeSoQuyDoi();
-                List<Lo> dsLo = loDAO.layDanhSachLoKhaDung(ctMoi.getDonViQuyDoi().getMaDonVi());
+                List<Lo> dsLo = loService.layDanhSachLoKhaDung(ctMoi.getDonViQuyDoi().getMaDonVi());
 
                 if (dsLo == null || dsLo.isEmpty()) {
                     JOptionPane.showMessageDialog(this, "Sản phẩm '"
@@ -906,7 +906,7 @@ public class DoiHangPanel extends JPanel {
         @Override
         public Component getTableCellEditorComponent(JTable t, Object v, boolean s, int r, int c) {
             cb.removeAllItems();
-            List<DonViQuyDoi> ds = donViQuyDoiDAO.timTheoMaSanPham(t.getValueAt(r, 0).toString());
+            List<DonViQuyDoi> ds = donViQuyDoiService.timTheoMaSanPham(t.getValueAt(r, 0).toString());
             for (DonViQuyDoi dv : ds)
                 cb.addItem(dv.getTenDonVi());
             for (int i = 0; i < cb.getItemCount(); i++)

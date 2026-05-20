@@ -104,10 +104,10 @@ public class HoaDonDAO {
     /**
      * Lấy hóa đơn bán hàng chưa thanh toán mới nhất của nhân viên.
      */
-    public HoaDon layHoaDonChuaThanhToan(String maNhanVien) {
+    public HoaDon layHoaDonChuaThanhToan() {
         HoaDon hd = null;
         String sql = "SELECT TOP 1 * FROM HoaDon " +
-                "WHERE maNhanVien = ? AND loaiHoaDon = 'BAN_HANG' AND trangThaiThanhToan = 0 " +
+                "WHERE loaiHoaDon = 'BAN_HANG' AND trangThaiThanhToan = 0 " +
                 "ORDER BY thoiGianTao DESC";
         try {
             Connection con = ConnectDB.getConnection();
@@ -115,7 +115,6 @@ public class HoaDonDAO {
             KhuyenMaiDAO kmDAO = new KhuyenMaiDAO();
 
             try (PreparedStatement pst = con.prepareStatement(sql)) {
-                pst.setString(1, maNhanVien);
                 try (ResultSet rs = pst.executeQuery()) {
                     if (rs.next()) {
                         hd = mapHoaDon(rs, new NhanVienDAO(), khDAO, kmDAO);
@@ -351,8 +350,6 @@ public class HoaDonDAO {
         return tong;
     }
 
-
-
     /**
      * Đếm số lượng hóa đơn trong ngày theo loại để sinh mã tuần tự
      */
@@ -374,6 +371,5 @@ public class HoaDonDAO {
         }
         return count;
     }
-
 
 }

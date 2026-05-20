@@ -45,6 +45,10 @@ public class CaLamService {
         return caLamDAO.kiemTraTrungCa(maNV, start, end, maCaHienTai);
     }
 
+    public int laySoLuongCaTrongNgay(String prefix) {
+        return caLamDAO.laySoLuongCaTrongNgay(prefix);
+    }
+
     // ==================== NGHIỆP VỤ ====================
 
     /**

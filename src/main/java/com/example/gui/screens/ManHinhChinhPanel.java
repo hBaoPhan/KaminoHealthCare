@@ -8,9 +8,9 @@ import com.example.entity.HoaDon;
 import com.example.entity.Lo;
 import com.example.entity.enums.LoaiHoaDon;
 import com.example.entity.enums.LoaiSanPham;
-import com.example.dao.HoaDonDAO;
-import com.example.dao.LoDAO;
-import com.example.dao.ChiTietHoaDonDAO;
+import com.example.service.HoaDonService;
+import com.example.service.LoService;
+import com.example.service.ChiTietHoaDonService;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -51,14 +51,14 @@ public class ManHinhChinhPanel extends JPanel {
     private RoundedButton btnTimKhachHang;
     private RoundedButton btnThanhToan;
 
-    private HoaDonDAO hoaDonDAO;
-    private LoDAO loDAO;
-    private ChiTietHoaDonDAO chiTietHoaDonDAO;
+    private HoaDonService hoaDonService;
+    private LoService loService;
+    private ChiTietHoaDonService chiTietHoaDonService;
 
     public ManHinhChinhPanel(TaiKhoan taiKhoan) {
-        hoaDonDAO = new HoaDonDAO();
-        loDAO = new LoDAO();
-        chiTietHoaDonDAO = new ChiTietHoaDonDAO();
+        hoaDonService = new HoaDonService();
+        loService = new LoService();
+        chiTietHoaDonService = new ChiTietHoaDonService();
 
         setLayout(new BorderLayout(20, 20));
         setBackground(COLOR_BG);
@@ -338,7 +338,7 @@ public class ManHinhChinhPanel extends JPanel {
 
     public void loadThongKeData() {
         LocalDate today = LocalDate.now();
-        List<HoaDon> dsHoaDon = hoaDonDAO.timKiem(null, today);
+        List<HoaDon> dsHoaDon = hoaDonService.timKiem(null, today);
 
         int soHoaDon = dsHoaDon.size();
         double doanhThu = 0;
@@ -363,9 +363,9 @@ public class ManHinhChinhPanel extends JPanel {
                 double tongGoc = 0;
                 if (hd.getHoaDonDoiTra() != null) {
                     String maGoc = hd.getHoaDonDoiTra().getMaHoaDon();
-                    HoaDon hdGoc = hoaDonDAO.timTheoMa(maGoc);
+                    HoaDon hdGoc = hoaDonService.timTheoMa(maGoc);
                     if (hdGoc != null) {
-                        hdGoc.setDsChiTiet(chiTietHoaDonDAO.layTheoMaHoaDon(maGoc));
+                        hdGoc.setDsChiTiet(chiTietHoaDonService.layTheoMaHoaDon(maGoc));
                         tongGoc = hdGoc.tinhTongTienThanhToan();
                     }
                 }
@@ -420,7 +420,7 @@ public class ManHinhChinhPanel extends JPanel {
         lblDoanhThuHomNay.setText(doanhThu == 0 ? "0 VND" : df.format(doanhThu));
         lblLoiNhuan.setText(loiNhuan == 0 ? "0 VND" : df.format(loiNhuan));
 
-        List<Lo> dsLo = loDAO.layTatCa();
+        List<Lo> dsLo = loService.layTatCa();
         int loHetHan = 0;
         int loGanHetHan = 0;
         LocalDate nextMonth = today.plusDays(37);
@@ -471,7 +471,7 @@ public class ManHinhChinhPanel extends JPanel {
 
     public void layDuLieuChoHoatDongGanDay() {
         LocalDate today = LocalDate.now();
-        List<HoaDon> dsHoaDon = hoaDonDAO.timKiem(null, today);
+        List<HoaDon> dsHoaDon = hoaDonService.timKiem(null, today);
 
         modelHoaDon.setRowCount(0);
         DecimalFormat df = new DecimalFormat("###,###,### VND");
@@ -490,7 +490,7 @@ public class ManHinhChinhPanel extends JPanel {
             });
         }
 
-        List<Lo> dsLoTable = loDAO.layTatCa();
+        List<Lo> dsLoTable = loService.layTatCa();
         modelLoThuoc.setRowCount(0);
         DateTimeFormatter dtfDate = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         LocalDate nextMonthTable = today.plusDays(37);
@@ -500,7 +500,7 @@ public class ManHinhChinhPanel extends JPanel {
                     && (!lo.getNgayHetHan().isAfter(today) || lo.getNgayHetHan().isBefore(nextMonthTable))) {
                 String trangThai = !lo.getNgayHetHan().isAfter(today) ? " [HẾT HẠN]" : "";
                 modelLoThuoc.addRow(new Object[] {
-                        lo.getSoLo(),
+                        lo.getMaLo(),
                         lo.getSanPham() != null ? lo.getSanPham().getTenSanPham() : "",
                         lo.getNgayHetHan().format(dtfDate) + trangThai
                 });
@@ -521,9 +521,9 @@ public class ManHinhChinhPanel extends JPanel {
         double tongGoc = 0;
         if (hd.getHoaDonDoiTra() != null) {
             String maGoc = hd.getHoaDonDoiTra().getMaHoaDon();
-            HoaDon hdGoc = hoaDonDAO.timTheoMa(maGoc);
+            HoaDon hdGoc = hoaDonService.timTheoMa(maGoc);
             if (hdGoc != null) {
-                hdGoc.setDsChiTiet(chiTietHoaDonDAO.layTheoMaHoaDon(maGoc));
+                hdGoc.setDsChiTiet(chiTietHoaDonService.layTheoMaHoaDon(maGoc));
                 tongGoc = hdGoc.tinhTongTienThanhToan();
             }
         }

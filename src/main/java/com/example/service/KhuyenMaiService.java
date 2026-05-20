@@ -102,4 +102,8 @@ public class KhuyenMaiService {
     public boolean xoa(String maKM) {
         return khuyenMaiDAO.xoa(maKM);
     }
+
+    public String generateNextMaKhuyenMai() {
+        return khuyenMaiDAO.generateNextMaKhuyenMai();
+    }
 }
