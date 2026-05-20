@@ -60,10 +60,20 @@ public class MoCaPanel extends JPanel implements ActionListener {
             txtTienMatDauCa.setText(df.format(cl.getTienMoCa()));
             btnMoCa.setEnabled(false);
             btnMoCa.setToolTipText("Bạn đang có ca làm việc chưa đóng");
+            
+            btnNhap.setEnabled(false);
+            txtSoLuong.setEditable(false);
+            cbMenhGia.setEnabled(false);
+            mapSoLuong.clear();
+            updateTable();
         } else {
             txtTienMatDauCa.setText("");
             btnMoCa.setEnabled(true);
             btnMoCa.setToolTipText(null);
+            
+            btnNhap.setEnabled(true);
+            txtSoLuong.setEditable(true);
+            cbMenhGia.setEnabled(true);
         }
     }
 
@@ -236,6 +246,11 @@ public class MoCaPanel extends JPanel implements ActionListener {
     }
 
     private void handleNhap() {
+        if (caLamService.layCaHienTai(nhanVien.getMaNhanVien()) != null) {
+            JOptionPane.showMessageDialog(this, "Không thể nhập tiền khi đang trong ca làm việc!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
         String menhGiaStr = (String) cbMenhGia.getSelectedItem();
         String soLuongStr = txtSoLuong.getText().trim();
 
