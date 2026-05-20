@@ -11,6 +11,7 @@ import com.example.entity.enums.LoaiSanPham;
 import com.example.service.HoaDonService;
 import com.example.service.LoService;
 import com.example.service.ChiTietHoaDonService;
+import com.example.entity.SuPhanBoLo;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -46,6 +47,7 @@ public class ManHinhChinhPanel extends JPanel {
     private DefaultCategoryDataset barDataset;
     private DefaultPieDataset<String> donutDataset;
 
+    private RoundedButton btnTroGiup;
     private RoundedButton btnBanHang;
     private RoundedButton btnTimThuoc;
     private RoundedButton btnTimKhachHang;
@@ -136,8 +138,8 @@ public class ManHinhChinhPanel extends JPanel {
         tgbc.insets = new Insets(0, 0, 0, 10);
         tablePanel.add(leftTablePanel, tgbc);
 
-        modelLoThuoc = new DefaultTableModel(new String[] { "Mã Lô", "Tên thuốc", "HSD" }, 0);
-        JPanel rightTablePanel = createTableContainer("Cảnh báo lô thuốc gần hết hạn", modelLoThuoc);
+        modelLoThuoc = new DefaultTableModel(new String[] { "Mã Lô", "Tên thuốc", "HSD", "Trạng thái" }, 0);
+        JPanel rightTablePanel = createTableContainer("Cảnh báo lô thuốc sắp hết hạn", modelLoThuoc);
         tgbc.weightx = 0.3;
         tgbc.gridx = 1;
         tgbc.insets = new Insets(0, 10, 0, 0);
@@ -241,20 +243,23 @@ public class ManHinhChinhPanel extends JPanel {
     }
 
     private JPanel createBottomPanel() {
-        JPanel panel = new JPanel(new GridLayout(1, 4, 15, 0));
+        JPanel panel = new JPanel(new GridLayout(1, 5, 15, 0));
         panel.setOpaque(false);
         panel.setPreferredSize(new Dimension(panel.getPreferredSize().width, 80));
 
-        btnBanHang = createActionButton("Thêm hóa đơn mới", "F1", new Color(0x20C997));
+        btnTroGiup = createActionButton("Trợ giúp", "F1", new Color(0x6C757D));
+        btnBanHang = createActionButton("Bán hàng", "F2", new Color(0x20C997));
         btnTimThuoc = createActionButton("Tìm kiếm thuốc", "F3", new Color(0x38D9A9));
         btnTimKhachHang = createActionButton("Tìm kiếm khách hàng", "F4", new Color(0x3DB5E0));
         btnThanhToan = createActionButton("Thanh toán", "F9", new Color(0x00C4EC));
 
+        btnTroGiup.addActionListener(e -> navigateTo("Trợ Giúp"));
         btnBanHang.addActionListener(e -> navigateTo("Bán Hàng"));
         btnTimThuoc.addActionListener(e -> navigateTo("Quản Lý Sản Phẩm"));
         btnTimKhachHang.addActionListener(e -> navigateTo("Khách Hàng"));
         btnThanhToan.addActionListener(e -> navigateTo("Quản Lý Hóa Đơn"));
 
+        panel.add(btnTroGiup);
         panel.add(btnBanHang);
         panel.add(btnTimThuoc);
         panel.add(btnTimKhachHang);
@@ -292,6 +297,14 @@ public class ManHinhChinhPanel extends JPanel {
 
         inputMap.put(KeyStroke.getKeyStroke("F1"), "F1_Action");
         actionMap.put("F1_Action", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                btnTroGiup.doClick();
+            }
+        });
+
+        inputMap.put(KeyStroke.getKeyStroke("F2"), "F2_Action");
+        actionMap.put("F2_Action", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 btnBanHang.doClick();
@@ -411,8 +424,42 @@ public class ManHinhChinhPanel extends JPanel {
             }
         }
 
-        // Tạm tính lợi nhuận bằng 20% doanh thu
-        double loiNhuan = doanhThu * 0.2;
+        // Tính lợi nhuận thực: Doanh thu (Bán/Đổi) - Tiền trả hàng (Trả) - Giá vốn (∑
+        // soLuong × giaNhap)
+        double tongGiaVon = 0;
+        double tongTienTra = 0;
+        double tongDoanhThuBanDoi = 0;
+
+        for (HoaDon hd : dsHoaDon) {
+            if (!hd.isTrangThaiThanhToan())
+                continue;
+
+            double finalTotal = hd.tinhTongTienThanhToan();
+            double giaVonHD = 0;
+
+            if (hd.getDsChiTiet() != null) {
+                for (ChiTietHoaDon ct : hd.getDsChiTiet()) {
+                    if (ct.getDsPhanBoLo() != null) {
+                        for (SuPhanBoLo spbl : ct.getDsPhanBoLo()) {
+                            if (spbl.getLo() != null) {
+                                giaVonHD += spbl.getSoLuong() * spbl.getLo().getGiaNhap();
+                            }
+                        }
+                    }
+                }
+            }
+
+            LoaiHoaDon loai = hd.getLoaiHoaDon();
+            if (loai == LoaiHoaDon.BAN_HANG || loai == LoaiHoaDon.DOI_HANG || loai == null) {
+                tongDoanhThuBanDoi += finalTotal;
+                tongGiaVon += giaVonHD;
+            } else if (loai == LoaiHoaDon.TRA_HANG) {
+                tongTienTra += finalTotal;
+                tongGiaVon -= giaVonHD;
+            }
+        }
+
+        double loiNhuan = tongDoanhThuBanDoi - tongTienTra - tongGiaVon;
 
         lblHoaDonHomNay.setText(String.valueOf(soHoaDon));
 
@@ -438,7 +485,8 @@ public class ManHinhChinhPanel extends JPanel {
             canhBaoText += loHetHan + " lô đã hết hạn";
         }
         if (loGanHetHan > 0) {
-            if (!canhBaoText.isEmpty()) canhBaoText += ", ";
+            if (!canhBaoText.isEmpty())
+                canhBaoText += ", ";
             canhBaoText += loGanHetHan + " lô sắp hết hạn";
         }
         if (canhBaoText.isEmpty()) {
@@ -493,16 +541,29 @@ public class ManHinhChinhPanel extends JPanel {
         List<Lo> dsLoTable = loService.layTatCa();
         modelLoThuoc.setRowCount(0);
         DateTimeFormatter dtfDate = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        LocalDate nextMonthTable = today.plusDays(37);
 
         for (Lo lo : dsLoTable) {
-            if (lo.getNgayHetHan() != null
-                    && (!lo.getNgayHetHan().isAfter(today) || lo.getNgayHetHan().isBefore(nextMonthTable))) {
-                String trangThai = !lo.getNgayHetHan().isAfter(today) ? " [HẾT HẠN]" : "";
+            if (lo.getNgayHetHan() == null || lo.getSanPham() == null)
+                continue;
+
+            LocalDate ngayHetHan = lo.getNgayHetHan();
+            String tenThuoc = lo.getSanPham().getTenSanPham();
+            String ngayFormatted = ngayHetHan.format(dtfDate);
+
+            // Quá hạn
+            if (!ngayHetHan.isAfter(today)) {
                 modelLoThuoc.addRow(new Object[] {
-                        lo.getMaLo(),
-                        lo.getSanPham() != null ? lo.getSanPham().getTenSanPham() : "",
-                        lo.getNgayHetHan().format(dtfDate) + trangThai
+                        lo.getMaLo(), tenThuoc, ngayFormatted, "HẾT HẠN"
+                });
+            // Sắp hết hạn: từ 7 ngày tới 1 tháng (bao gồm cả < 7 ngày vì cực kỳ khẩn)
+            } else if (!ngayHetHan.isAfter(today.plusDays(30))) {
+                modelLoThuoc.addRow(new Object[] {
+                        lo.getMaLo(), tenThuoc, ngayFormatted, "SẮP HẾT"
+                });
+            // Ngưng bán: từ 1 tháng tới 3 tháng trước ngày hết hạn
+            } else if (ngayHetHan.isBefore(today.plusDays(90))) {
+                modelLoThuoc.addRow(new Object[] {
+                        lo.getMaLo(), tenThuoc, ngayFormatted, "NGỪNG BÁN"
                 });
             }
         }

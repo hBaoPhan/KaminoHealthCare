@@ -17,6 +17,7 @@ import com.example.service.SanPhamService;
 import com.example.service.CaLamService;
 import com.example.service.ChiTietHoaDonService;
 import com.example.service.KhachHangService;
+import com.example.entity.SuPhanBoLo;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -45,8 +46,8 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
     private DefaultTableModel modelHoaDon, modelKhuyenMai, modelSanPhamMoi, modelLoHetHan;
     private DefaultPieDataset<String> donutDataset;
 
-    private RoundedButton btnBanHang, btnTimThuoc, btnTimKhachHang, btnThanhToan;
-    
+    private RoundedButton btnTroGiup, btnBanHang, btnTimThuoc, btnTimKhachHang, btnThanhToan;
+
     private HoaDonService hoaDonService = new HoaDonService();
     private LoService loService = new LoService();
     private KhuyenMaiService khuyenMaiService = new KhuyenMaiService();
@@ -120,24 +121,31 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
         gbc.insets = new Insets(5, 5, 5, 5);
 
         // Row 1: Left (Hóa đơn hôm nay) - Right (Lô thuốc hết hạn hôm nay)
-        modelHoaDon = new DefaultTableModel(new String[]{"Mã Hóa đơn", "Tên KH", "Ngày tạo", "Khuyến mãi", "Người tạo", "Loại hóa đơn", "Tổng tiền", "Trạng thái thanh toán"}, 0);
+        modelHoaDon = new DefaultTableModel(new String[] { "Mã Hóa đơn", "Tên KH", "Ngày tạo", "Khuyến mãi",
+                "Người tạo", "Loại hóa đơn", "Tổng tiền", "Trạng thái thanh toán" }, 0);
         JPanel pnlHoaDon = createTableContainer("Hóa đơn hôm nay", modelHoaDon);
-        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0.7; gbc.weighty = 0.6;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 0.7;
+        gbc.weighty = 0.6;
         main.add(pnlHoaDon, gbc);
 
-        modelLoHetHan = new DefaultTableModel(new String[]{"Mã Lô", "Tên thuốc", "HSD"}, 0);
-        JPanel pnlLoHetHan = createTableContainer("Lô thuốc hết hạn hôm nay", modelLoHetHan);
-        gbc.gridx = 1; gbc.gridy = 0; gbc.weightx = 0.3; gbc.weighty = 0.6;
+        modelLoHetHan = new DefaultTableModel(new String[] { "Mã Lô", "Tên thuốc", "HSD", "Trạng thái" }, 0);
+        JPanel pnlLoHetHan = createTableContainer("Cảnh báo lô thuốc sắp hết hạn", modelLoHetHan);
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.weightx = 0.3;
+        gbc.weighty = 0.6;
         main.add(pnlLoHetHan, gbc);
 
         // Row 2: Bottom 3 sections
         JPanel bottomRow = new JPanel(new GridLayout(1, 3, 10, 0));
         bottomRow.setOpaque(false);
 
-        modelKhuyenMai = new DefaultTableModel(new String[]{"Tên chương trình", "Chiết khấu", "Ngày kết thúc"}, 0);
+        modelKhuyenMai = new DefaultTableModel(new String[] { "Tên chương trình", "Chiết khấu", "Ngày kết thúc" }, 0);
         bottomRow.add(createTableContainer("Chương trình khuyến mãi hiện hành", modelKhuyenMai));
 
-        modelSanPhamMoi = new DefaultTableModel(new String[]{"Mã SP", "Tên sản phẩm", "Phân loại", "Giá"}, 0);
+        modelSanPhamMoi = new DefaultTableModel(new String[] { "Mã SP", "Tên sản phẩm", "Phân loại", "Giá" }, 0);
         bottomRow.add(createTableContainer("Sản phẩm mới", modelSanPhamMoi));
 
         // Donut Chart Container
@@ -145,15 +153,19 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
         chartWrapper.setLayout(new BorderLayout());
         chartWrapper.setBackground(Color.WHITE);
         chartWrapper.setBorder(new EmptyBorder(10, 10, 10, 10));
-        
+
         JLabel lblChartTitle = new JLabel("Cơ cấu doanh thu theo Nhóm hàng");
         lblChartTitle.setFont(FONT_TITLE);
         chartWrapper.add(lblChartTitle, BorderLayout.NORTH);
         chartWrapper.add(createDonutChartPanel(), BorderLayout.CENTER);
-        
+
         bottomRow.add(chartWrapper);
 
-        gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 2; gbc.weightx = 1.0; gbc.weighty = 0.4;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 2;
+        gbc.weightx = 1.0;
+        gbc.weighty = 0.4;
         main.add(bottomRow, gbc);
 
         return main;
@@ -184,13 +196,13 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
         donutDataset = new DefaultPieDataset<>();
         JFreeChart chart = ChartFactory.createRingChart(null, donutDataset, false, true, false);
         chart.setBackgroundPaint(Color.WHITE);
-        
+
         org.jfree.chart.plot.RingPlot plot = (org.jfree.chart.plot.RingPlot) chart.getPlot();
         plot.setBackgroundPaint(Color.WHITE);
         plot.setOutlineVisible(false);
         plot.setSectionDepth(0.35);
         plot.setLabelGenerator(null); // Hide labels for clean look
-        
+
         // Colors from image: Blue, Purple, Salmon, Cyan, Orange
         plot.setSectionPaint("Thuốc kê đơn", new Color(108, 117, 255));
         plot.setSectionPaint("Thuốc không kê đơn", new Color(147, 108, 255));
@@ -202,20 +214,23 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
     }
 
     private JPanel createBottomPanel() {
-        JPanel panel = new JPanel(new GridLayout(1, 4, 20, 0));
+        JPanel panel = new JPanel(new GridLayout(1, 5, 20, 0));
         panel.setOpaque(false);
         panel.setPreferredSize(new Dimension(panel.getPreferredSize().width, 70));
 
-        btnBanHang = createActionButton("Thêm hóa đơn mới", "F1", new Color(0x20C997));
+        btnTroGiup = createActionButton("Trợ giúp", "F1", new Color(0x6C757D));
+        btnBanHang = createActionButton("Bán hàng", "F2", new Color(0x20C997));
         btnTimThuoc = createActionButton("Tìm kiếm thuốc", "F3", new Color(0x38D9A9));
         btnTimKhachHang = createActionButton("Tìm kiếm khách hàng", "F4", new Color(0x3DB5E0));
         btnThanhToan = createActionButton("Thanh toán", "F9", new Color(0x00C4EC));
 
+        btnTroGiup.addActionListener(e -> navigateTo("Trợ Giúp"));
         btnBanHang.addActionListener(e -> navigateTo("Bán Hàng"));
         btnTimThuoc.addActionListener(e -> navigateTo("Quản Lý Sản Phẩm"));
         btnTimKhachHang.addActionListener(e -> navigateTo("Khách Hàng"));
         btnThanhToan.addActionListener(e -> navigateTo("Quản Lý Hóa Đơn"));
 
+        panel.add(btnTroGiup);
         panel.add(btnBanHang);
         panel.add(btnTimThuoc);
         panel.add(btnTimKhachHang);
@@ -252,22 +267,37 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
 
         inputMap.put(KeyStroke.getKeyStroke("F1"), "F1_Action");
         actionMap.put("F1_Action", new AbstractAction() {
-            public void actionPerformed(ActionEvent e) { btnBanHang.doClick(); }
+            public void actionPerformed(ActionEvent e) {
+                btnTroGiup.doClick();
+            }
+        });
+
+        inputMap.put(KeyStroke.getKeyStroke("F2"), "F2_Action");
+        actionMap.put("F2_Action", new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                btnBanHang.doClick();
+            }
         });
 
         inputMap.put(KeyStroke.getKeyStroke("F3"), "F3_Action");
         actionMap.put("F3_Action", new AbstractAction() {
-            public void actionPerformed(ActionEvent e) { btnTimThuoc.doClick(); }
+            public void actionPerformed(ActionEvent e) {
+                btnTimThuoc.doClick();
+            }
         });
 
         inputMap.put(KeyStroke.getKeyStroke("F4"), "F4_Action");
         actionMap.put("F4_Action", new AbstractAction() {
-            public void actionPerformed(ActionEvent e) { btnTimKhachHang.doClick(); }
+            public void actionPerformed(ActionEvent e) {
+                btnTimKhachHang.doClick();
+            }
         });
 
         inputMap.put(KeyStroke.getKeyStroke("F9"), "F9_Action");
         actionMap.put("F9_Action", new AbstractAction() {
-            public void actionPerformed(ActionEvent e) { btnThanhToan.doClick(); }
+            public void actionPerformed(ActionEvent e) {
+                btnThanhToan.doClick();
+            }
         });
     }
 
@@ -294,58 +324,128 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
         List<HoaDon> dsHoaDon = hoaDonService.timKiem(null, today);
         modelHoaDon.setRowCount(0);
         int soHoaDon = 0;
-        double doanhThuCa = 0;
 
-        // Find current shift to calculate "Doanh thu của ca"
+        // Xác định ca hiện tại để lọc doanh thu trong ca
         CaLam caHienTai = caLamService.layCaHienTai(taiKhoan.getNhanVien().getMaNhanVien());
         LocalDateTime shiftStart = (caHienTai != null) ? caHienTai.getGioBatDau() : today.atStartOfDay();
 
-        for (HoaDon hd : dsHoaDon) {
-            boolean isMyHD = hd.getNhanVien() != null && hd.getNhanVien().getMaNhanVien().equals(taiKhoan.getNhanVien().getMaNhanVien());
-            if (isMyHD) soHoaDon++;
+        // Tính doanh thu ca theo công thức đúng: DT(Bán/Đổi) - Tiền trả(Trả) - Giá vốn
+        double tongBanDoiCa = 0;
+        double tongTraHangCa = 0;
+        double tongGiaVonCa = 0;
 
-            if (hd.isTrangThaiThanhToan()) {
-                if (hd.getThoiGianTao().isAfter(shiftStart)) {
-                    doanhThuCa += hd.tinhTongTienThanhToan();
+        for (HoaDon hd : dsHoaDon) {
+            // Đếm số hóa đơn của nhân viên hiện tại
+            boolean isMyHD = hd.getNhanVien() != null
+                    && hd.getNhanVien().getMaNhanVien().equals(taiKhoan.getNhanVien().getMaNhanVien());
+            if (isMyHD)
+                soHoaDon++;
+
+            // Populate bảng hóa đơn hôm nay
+            modelHoaDon.addRow(new Object[] {
+                    hd.getMaHoaDon(),
+                    hd.getKhachHang() != null ? hd.getKhachHang().getTenKhachHang() : "Khách lẻ",
+                    hd.getThoiGianTao().format(dtf),
+                    hd.getKhuyenMai() != null ? hd.getKhuyenMai().getTenKhuyenMai() : "Không",
+                    hd.getNhanVien() != null ? hd.getNhanVien().getTenNhanVien() : "",
+                    hd.getLoaiHoaDon().getMoTa(),
+                    df.format(hd.tinhTongTienThanhToan()),
+                    hd.isTrangThaiThanhToan() ? "Đã thanh toán" : "Chưa thanh toán"
+            });
+
+            // Chỉ tính doanh thu ca cho hóa đơn ĐÃ THANH TOÁN và TRONG CA HIỆN TẠI
+            if (!hd.isTrangThaiThanhToan())
+                continue;
+            if (hd.getThoiGianTao() == null || !hd.getThoiGianTao().isAfter(shiftStart))
+                continue;
+
+            double finalTotal = hd.tinhTongTienThanhToan();
+            double giaVonHD = 0;
+
+            // Tải chi tiết nếu chưa có để tính giá vốn
+            if (hd.getDsChiTiet() == null) {
+                hd.setDsChiTiet(chiTietHoaDonService.layTheoMaHoaDon(hd.getMaHoaDon()));
+            }
+            if (hd.getDsChiTiet() != null) {
+                for (ChiTietHoaDon ct : hd.getDsChiTiet()) {
+                    if (ct.getDsPhanBoLo() != null) {
+                        for (SuPhanBoLo spbl : ct.getDsPhanBoLo()) {
+                            if (spbl.getLo() != null) {
+                                giaVonHD += spbl.getSoLuong() * spbl.getLo().getGiaNhap();
+                            }
+                        }
+                    }
                 }
             }
 
-            modelHoaDon.addRow(new Object[]{
-                hd.getMaHoaDon(),
-                hd.getKhachHang() != null ? hd.getKhachHang().getTenKhachHang() : "Khách lẻ",
-                hd.getThoiGianTao().format(dtf),
-                hd.getKhuyenMai() != null ? hd.getKhuyenMai().getTenKhuyenMai() : "Không",
-                hd.getNhanVien() != null ? hd.getNhanVien().getTenNhanVien() : "",
-                hd.getLoaiHoaDon().getMoTa(),
-                df.format(hd.tinhTongTienThanhToan()),
-                hd.isTrangThaiThanhToan() ? "Đã thanh toán" : "Chưa thanh toán"
-            });
+            LoaiHoaDon loai = hd.getLoaiHoaDon();
+            if (loai == LoaiHoaDon.BAN_HANG || loai == LoaiHoaDon.DOI_HANG) {
+                tongBanDoiCa += finalTotal;
+                tongGiaVonCa += giaVonHD;
+            } else if (loai == LoaiHoaDon.TRA_HANG) {
+                tongTraHangCa += finalTotal;
+                tongGiaVonCa -= giaVonHD;
+            }
         }
 
+        // Lợi nhuận của ca = Doanh thu bán/đổi - Tiền trả hàng - Giá vốn
+        double loiNhuanCa = tongBanDoiCa - tongTraHangCa - tongGiaVonCa;
+
         lblHoaDonDaLap.setText(String.valueOf(soHoaDon));
-        lblDoanhThuCa.setText(df.format(doanhThuCa));
+        lblDoanhThuCa.setText(df.format(loiNhuanCa));
         lblKhachHang.setText(String.valueOf(khachHangService.layTatCa().size()));
 
         // 2. Lô thuốc hết hạn hôm nay & Cảnh báo
         List<Lo> dsLo = loService.layTatCa();
         modelLoHetHan.setRowCount(0);
         int loGanHetHan = 0;
+        int loNgungBan = 0;
         for (Lo lo : dsLo) {
-            if (lo.getNgayHetHan().isEqual(today)) {
-                modelLoHetHan.addRow(new Object[]{lo.getMaLo(), lo.getSanPham().getTenSanPham(), lo.getNgayHetHan().format(dfDate)});
-            }
-            if (lo.getNgayHetHan().isBefore(today.plusMonths(1)) && lo.getNgayHetHan().isAfter(today)) {
+            if (lo.getNgayHetHan() == null || lo.getSanPham() == null)
+                continue;
+
+            LocalDate ngayHetHan = lo.getNgayHetHan();
+            String tenThuoc = lo.getSanPham().getTenSanPham();
+            String ngayFormatted = ngayHetHan.format(dfDate);
+
+            // Quá hạn
+            if (!ngayHetHan.isAfter(today)) {
+                modelLoHetHan.addRow(new Object[] {
+                        lo.getMaLo(), tenThuoc, ngayFormatted, "HẾT HẠN"
+                });
+            // Sắp hết hạn: từ 7 ngày tới 1 tháng (bao gồm cả < 7 ngày vì cực kỳ khẩn)
+            } else if (!ngayHetHan.isAfter(today.plusDays(30))) {
                 loGanHetHan++;
+                modelLoHetHan.addRow(new Object[] {
+                        lo.getMaLo(), tenThuoc, ngayFormatted, "SẮP HẾT"
+                });
+            // Ngưng bán: từ 1 tháng tới 3 tháng trước ngày hết hạn
+            } else if (ngayHetHan.isBefore(today.plusDays(90))) {
+                loNgungBan++;
+                modelLoHetHan.addRow(new Object[] {
+                        lo.getMaLo(), tenThuoc, ngayFormatted, "NGỪNG BÁN"
+                });
             }
         }
-        lblCanhBao.setText(loGanHetHan + " lô thuốc gần hết hạn");
+
+        // Cập nhật nhãn cảnh báo
+        StringBuilder canhBao = new StringBuilder();
+        if (loGanHetHan > 0)
+            canhBao.append(loGanHetHan).append(" lô sắp hết");
+        if (loNgungBan > 0) {
+            if (canhBao.length() > 0) canhBao.append(", ");
+            canhBao.append(loNgungBan).append(" lô ngưng bán");
+        }
+        lblCanhBao.setText(canhBao.length() > 0 ? canhBao.toString() : "Không có cảnh báo");
 
         // 3. Khuyến mãi hiện hành
         List<KhuyenMai> dsKM = khuyenMaiService.layTatCa();
         modelKhuyenMai.setRowCount(0);
         for (KhuyenMai km : dsKM) {
-            if (km.getThoiGianBatDau().toLocalDate().isBefore(today.plusDays(1)) && km.getThoiGianKetThuc().toLocalDate().isAfter(today.minusDays(1))) {
-                modelKhuyenMai.addRow(new Object[]{km.getTenKhuyenMai(), km.getKhuyenMaiPhanTram() + "%", km.getThoiGianKetThuc().format(dtf)});
+            if (km.getThoiGianBatDau().toLocalDate().isBefore(today.plusDays(1))
+                    && km.getThoiGianKetThuc().toLocalDate().isAfter(today.minusDays(1))) {
+                modelKhuyenMai.addRow(new Object[] { km.getTenKhuyenMai(), km.getKhuyenMaiPhanTram() + "%",
+                        km.getThoiGianKetThuc().format(dtf) });
             }
         }
 
@@ -353,7 +453,8 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
         List<SanPham> dsSP = sanPhamService.layTatCa();
         modelSanPhamMoi.setRowCount(0);
         dsSP.stream().sorted((s1, s2) -> s2.getMaSanPham().compareTo(s1.getMaSanPham())).limit(10).forEach(sp -> {
-            modelSanPhamMoi.addRow(new Object[]{sp.getMaSanPham(), sp.getTenSanPham(), sp.getLoaiSanPham().name(), df.format(sp.getDonGiaCoBan())});
+            modelSanPhamMoi.addRow(new Object[] { sp.getMaSanPham(), sp.getTenSanPham(), sp.getLoaiSanPham().name(),
+                    df.format(sp.getDonGiaCoBan()) });
         });
 
         // 5. Donut Chart
@@ -365,24 +466,35 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
         double etc = 0, otc = 0, tpcn = 0, dcyt = 0, khac = 0;
 
         for (HoaDon hd : dsHoaDon) {
-            if (!hd.isTrangThaiThanhToan()) continue;
+            if (!hd.isTrangThaiThanhToan())
+                continue;
             hd.setDsChiTiet(chiTietHoaDonService.layTheoMaHoaDon(hd.getMaHoaDon()));
             for (ChiTietHoaDon ct : hd.getDsChiTiet()) {
-                if (ct.getDonViQuyDoi() == null || ct.getDonViQuyDoi().getSanPham() == null) continue;
+                if (ct.getDonViQuyDoi() == null || ct.getDonViQuyDoi().getSanPham() == null)
+                    continue;
                 LoaiSanPham loai = ct.getDonViQuyDoi().getSanPham().getLoaiSanPham();
                 double thanhTien = ct.tinhThanhTien();
-                if (loai == LoaiSanPham.ETC) etc += thanhTien;
-                else if (loai == LoaiSanPham.OTC) otc += thanhTien;
-                else if (loai == LoaiSanPham.TPCN) tpcn += thanhTien;
-                else khac += thanhTien;
+                if (loai == LoaiSanPham.ETC)
+                    etc += thanhTien;
+                else if (loai == LoaiSanPham.OTC)
+                    otc += thanhTien;
+                else if (loai == LoaiSanPham.TPCN)
+                    tpcn += thanhTien;
+                else
+                    khac += thanhTien;
             }
         }
 
-        if (etc > 0) donutDataset.setValue("Thuốc kê đơn", etc);
-        if (otc > 0) donutDataset.setValue("Thuốc không kê đơn", otc);
-        if (tpcn > 0) donutDataset.setValue("Thực phẩm chức năng", tpcn);
-        if (khac > 0) donutDataset.setValue("Khác", khac);
+        if (etc > 0)
+            donutDataset.setValue("Thuốc kê đơn", etc);
+        if (otc > 0)
+            donutDataset.setValue("Thuốc không kê đơn", otc);
+        if (tpcn > 0)
+            donutDataset.setValue("Thực phẩm chức năng", tpcn);
+        if (khac > 0)
+            donutDataset.setValue("Khác", khac);
 
-        if (donutDataset.getItemCount() == 0) donutDataset.setValue("Chưa có dữ liệu", 1);
+        if (donutDataset.getItemCount() == 0)
+            donutDataset.setValue("Chưa có dữ liệu", 1);
     }
 }
