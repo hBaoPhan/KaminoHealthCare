@@ -9,6 +9,7 @@ public class CustomBarChart extends JComponent {
 
     private List<String> labels = new ArrayList<>();
     private List<Integer> values = new ArrayList<>();
+    private String yUnit = "";
     private final Color BAR_COLOR = new Color(0, 150, 214); // Cyan Blue
     private final Color GRID_COLOR = new Color(240, 240, 240);
     private final Font LABEL_FONT = new Font("Segoe UI", Font.PLAIN, 10);
@@ -17,6 +18,11 @@ public class CustomBarChart extends JComponent {
     public CustomBarChart() {
         setBackground(Color.WHITE);
         setOpaque(true);
+    }
+
+    public void setyUnit(String yUnit) {
+        this.yUnit = yUnit;
+        repaint();
     }
 
     public void setValues(List<String> labels, List<Integer> values) {
@@ -39,7 +45,7 @@ public class CustomBarChart extends JComponent {
         g2.setColor(getBackground());
         g2.fillRect(0, 0, width, height);
 
-        int leftMargin = 35;
+        int leftMargin = 45;
         int rightMargin = 20;
         int topMargin = 25;
         int bottomMargin = 40;
@@ -66,11 +72,32 @@ public class CustomBarChart extends JComponent {
             if (v > maxVal) maxVal = v;
         }
 
-        // Round maxVal to a clean number
-        maxVal = (int) (Math.ceil((double) maxVal / 10) * 10);
+        // Round maxVal to a clean number based on yUnit
+        if ("viên".equals(yUnit)) {
+            if (maxVal < 5000) {
+                maxVal = 5000;
+            } else {
+                maxVal = (int) (Math.ceil((double) maxVal / 5000) * 5000);
+            }
+        } else if ("khách hàng".equals(yUnit)) {
+            if (maxVal < 50) {
+                maxVal = 50;
+            } else {
+                maxVal = (int) (Math.ceil((double) maxVal / 50) * 50);
+            }
+        } else {
+            maxVal = (int) (Math.ceil((double) maxVal / 10) * 10);
+        }
+
+        // Draw yUnit label at the top left of Y-axis
+        if (yUnit != null && !yUnit.isEmpty()) {
+            g2.setColor(new Color(100, 110, 120));
+            g2.setFont(LABEL_FONT);
+            g2.drawString("(" + yUnit + ")", 5, topMargin - 10);
+        }
 
         // Draw horizontal grid lines and Y axis
-        int numLines = 4;
+        int numLines = 5;
         g2.setFont(LABEL_FONT);
         for (int i = 0; i <= numLines; i++) {
             double ratio = (double) i / numLines;
@@ -81,7 +108,10 @@ public class CustomBarChart extends JComponent {
             g2.drawLine(leftMargin, y, width - rightMargin, y);
 
             g2.setColor(new Color(120, 130, 140));
-            g2.drawString(String.valueOf(val), 5, y + 4);
+            // Right align Y-axis labels slightly
+            String valStr = String.valueOf(val);
+            FontMetrics fm = g2.getFontMetrics();
+            g2.drawString(valStr, leftMargin - fm.stringWidth(valStr) - 6, y + 4);
         }
 
         // Draw Bars

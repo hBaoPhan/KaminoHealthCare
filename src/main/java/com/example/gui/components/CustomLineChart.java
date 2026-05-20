@@ -15,6 +15,7 @@ public class CustomLineChart extends JComponent {
     private List<String> xLabels = new ArrayList<>();
     private List<Double> revenueData = new ArrayList<>();
     private List<Double> profitData = new ArrayList<>();
+    private String yUnit = "";
 
     private int hoveredIndex = -1;
     private final DecimalFormat df = new DecimalFormat("#,###");
@@ -49,6 +50,11 @@ public class CustomLineChart extends JComponent {
                 repaint();
             }
         });
+    }
+
+    public void setyUnit(String yUnit) {
+        this.yUnit = yUnit;
+        repaint();
     }
 
     public void setValues(List<String> labels, List<Double> revenues, List<Double> profits) {
@@ -130,14 +136,44 @@ public class CustomLineChart extends JComponent {
             if (v > maxVal) maxVal = v;
         }
 
-        // Round maxVal to a nice clean number (e.g. multiples of 1M, 5M, 10M, etc.)
-        double basePower = Math.pow(10, Math.floor(Math.log10(maxVal)));
-        if (basePower < 1) basePower = 1;
-        double factor = Math.ceil(maxVal / basePower);
-        maxVal = factor * basePower;
+        // Round maxVal and set numGridLines based on yUnit
+        int numGridLines = 5;
+        if ("VNĐ".equals(yUnit)) {
+            numGridLines = 4;
+            if (maxVal < 10000000) {
+                maxVal = 10000000;
+            } else {
+                maxVal = Math.ceil(maxVal / 10000000.0) * 10000000.0;
+            }
+        } else if ("viên".equals(yUnit)) {
+            numGridLines = 5;
+            if (maxVal < 5000) {
+                maxVal = 5000;
+            } else {
+                maxVal = Math.ceil(maxVal / 5000) * 5000;
+            }
+        } else if ("khách hàng".equals(yUnit)) {
+            numGridLines = 5;
+            if (maxVal < 50) {
+                maxVal = 50;
+            } else {
+                maxVal = Math.ceil(maxVal / 50) * 50;
+            }
+        } else {
+            double basePower = Math.pow(10, Math.floor(Math.log10(maxVal)));
+            if (basePower < 1) basePower = 1;
+            double factor = Math.ceil(maxVal / basePower);
+            maxVal = factor * basePower;
+        }
+
+        // Draw yUnit label at the top left of Y-axis
+        if (yUnit != null && !yUnit.isEmpty()) {
+            g2.setColor(new Color(100, 110, 120));
+            g2.setFont(FONT_AXIS);
+            g2.drawString("(" + yUnit + ")", 15, topMargin - 10);
+        }
 
         // Draw horizontal grid lines and Y-axis labels
-        int numGridLines = 4;
         g2.setFont(FONT_AXIS);
         for (int i = 0; i <= numGridLines; i++) {
             double ratio = (double) i / numGridLines;
@@ -201,6 +237,18 @@ public class CustomLineChart extends JComponent {
             g2.setColor(new Color(120, 130, 140));
             g2.drawString(xLabel, x, height - bottomMargin + 18);
         }
+
+        // Draw xUnit label at the bottom right of X-axis
+        String xUnit = "ngày";
+        for (String lbl : xLabels) {
+            if (lbl.contains(":")) {
+                xUnit = "giờ";
+                break;
+            }
+        }
+        g2.setColor(new Color(100, 110, 120));
+        g2.setFont(FONT_AXIS);
+        g2.drawString("(" + xUnit + ")", width - rightMargin + 5, height - bottomMargin + 18);
 
         int bottomY = height - bottomMargin;
 

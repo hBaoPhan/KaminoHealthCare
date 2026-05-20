@@ -128,10 +128,10 @@ public class ThongKePanel extends JPanel {
         dtGbc.gridx = 0;
         dtGbc.gridy = 0;
         dtGbc.weightx = 1.0;
-        dtGbc.weighty = 0.55;
+        dtGbc.weighty = 0.5;
         panelDoanhThu.add(createChartCard(), dtGbc);
         dtGbc.gridy = 1;
-        dtGbc.weighty = 0.45;
+        dtGbc.weighty = 0.5;
         dtGbc.insets = new Insets(0, 0, 0, 0);
         panelDoanhThu.add(createTableCard(), dtGbc);
 
@@ -158,6 +158,7 @@ public class ThongKePanel extends JPanel {
 
         // Initial Data Fetch
         updatePeriodSelection();
+        updateTabStyles();
         switchThongKeView();
     }
 
@@ -287,6 +288,7 @@ public class ThongKePanel extends JPanel {
         centerWrapper.setOpaque(false);
 
         chart = new CustomLineChart();
+        chart.setyUnit("VNĐ");
         centerWrapper.add(chart, BorderLayout.CENTER);
 
         // Legend box on the right
@@ -502,7 +504,7 @@ public class ThongKePanel extends JPanel {
         bcGbc.gridx = 0;
         bcGbc.gridy = 0;
         bcGbc.weightx = 1.0;
-        bcGbc.weighty = 0.55;
+        bcGbc.weighty = 0.5;
         bcGbc.insets = new Insets(0, 0, 10, 0);
         tabBanChayPanel.add(tableCard, bcGbc);
 
@@ -519,6 +521,7 @@ public class ThongKePanel extends JPanel {
         lblBarTitle.setForeground(new Color(40, 50, 60));
         chartLeft.add(lblBarTitle, BorderLayout.NORTH);
         barChartBestSellers = new CustomBarChart();
+        barChartBestSellers.setyUnit("viên");
         chartLeft.add(barChartBestSellers, BorderLayout.CENTER);
 
         // Chart Right: Pie Chart
@@ -536,7 +539,7 @@ public class ThongKePanel extends JPanel {
         chartsPanel.add(chartRight);
 
         bcGbc.gridy = 1;
-        bcGbc.weighty = 0.45;
+        bcGbc.weighty = 0.5;
         bcGbc.insets = new Insets(0, 0, 0, 0);
         tabBanChayPanel.add(chartsPanel, bcGbc);
 
@@ -658,7 +661,7 @@ public class ThongKePanel extends JPanel {
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.weightx = 1.0;
-        gbc.weighty = 0.55;
+        gbc.weighty = 0.5;
         gbc.insets = new Insets(0, 0, 10, 0);
         panelKhachHang.add(tableCard, gbc);
 
@@ -686,13 +689,14 @@ public class ThongKePanel extends JPanel {
         lblRightTitle.setForeground(new Color(40, 50, 60));
         chartRight.add(lblRightTitle, BorderLayout.NORTH);
         chartNewCustRegistrations = new CustomLineChart();
+        chartNewCustRegistrations.setyUnit("khách hàng");
         chartRight.add(chartNewCustRegistrations, BorderLayout.CENTER);
 
         chartsPanel.add(chartLeft);
         chartsPanel.add(chartRight);
 
         gbc.gridy = 1;
-        gbc.weighty = 0.45;
+        gbc.weighty = 0.5;
         gbc.insets = new Insets(0, 0, 0, 0);
         panelKhachHang.add(chartsPanel, gbc);
 

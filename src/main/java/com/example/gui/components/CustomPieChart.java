@@ -71,9 +71,17 @@ public class CustomPieChart extends JComponent {
         }
 
         // Calculate dimensions
-        int size = Math.min(width, height) - 70;
-        int x = (width - size) / 2;
-        int y = (height - size) / 2;
+        boolean hasSpaceForLegend = width > 280;
+        int legendWidth = hasSpaceForLegend ? 180 : 0;
+
+        int size = Math.min(width - legendWidth - 30, height - 30);
+        if (size < 50) size = 50;
+
+        int cx = hasSpaceForLegend ? (width - legendWidth) / 2 : width / 2;
+        int cy = height / 2;
+
+        int x = cx - size / 2;
+        int y = cy - size / 2;
 
         int startAngle = 90; // Start at top
 
@@ -85,49 +93,69 @@ public class CustomPieChart extends JComponent {
             g2.setColor(COLORS[i % COLORS.length]);
             g2.fillArc(x, y, size, size, startAngle, arcAngle);
 
-            // Draw label pointing lines
-            double alpha = Math.toRadians(startAngle + arcAngle / 2.0);
-            double cos = Math.cos(alpha);
-            double sin = Math.sin(alpha);
-
-            // Points
-            int cx = width / 2;
-            int cy = height / 2;
-            int r = size / 2;
-
-            int px = (int) (cx + cos * (r * 0.85));
-            int py = (int) (cy - sin * (r * 0.85));
-
-            int ex = (int) (cx + cos * (r + 15));
-            int ey = (int) (cy - sin * (r + 15));
-
-            // Draw indicator line
-            g2.setColor(new Color(180, 190, 205));
-            g2.setStroke(new BasicStroke(1.2f));
-            g2.drawLine(px, py, ex, ey);
-
-            int textLineX = ex + (cos >= 0 ? 10 : -10);
-            g2.drawLine(ex, ey, textLineX, ey);
-
-            // Text Label
-            g2.setFont(LABEL_FONT);
-            g2.setColor(new Color(40, 50, 60));
-            double percentage = (val / total) * 100.0;
-            String text = labels.get(i) + " (" + pctDf.format(percentage) + "%)";
-            FontMetrics fm = g2.getFontMetrics();
-
-            int tx = textLineX + (cos >= 0 ? 5 : -fm.stringWidth(text) - 5);
-            g2.drawString(text, tx, ey + 4);
-
             startAngle += arcAngle;
         }
 
         // Draw inner white circle for donut effect
         int innerSize = (int) (size * 0.55);
-        int ix = (width - innerSize) / 2;
-        int iy = (height - innerSize) / 2;
+        int ix = cx - innerSize / 2;
+        int iy = cy - innerSize / 2;
         g2.setColor(Color.WHITE);
         g2.fillOval(ix, iy, innerSize, innerSize);
+
+        // Draw total in the middle
+        g2.setFont(new Font("Segoe UI", Font.BOLD, 10));
+        g2.setColor(new Color(120, 130, 140));
+        String totalText = "TỔNG";
+        FontMetrics fm = g2.getFontMetrics();
+        g2.drawString(totalText, cx - fm.stringWidth(totalText) / 2, cy - 3);
+
+        g2.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        g2.setColor(new Color(50, 60, 70));
+        String totalValText = pctDf.format(total);
+        if (total > 1000) {
+            DecimalFormat df = new DecimalFormat("#,###");
+            totalValText = df.format(total);
+        }
+        fm = g2.getFontMetrics();
+        g2.drawString(totalValText, cx - fm.stringWidth(totalValText) / 2, cy + 11);
+
+        // Draw Legend
+        if (hasSpaceForLegend) {
+            int legendX = width - legendWidth + 10;
+            int itemHeight = 22;
+            int legendHeight = values.size() * itemHeight;
+            int legendY = Math.max(15, (height - legendHeight) / 2);
+
+            for (int i = 0; i < values.size(); i++) {
+                double val = values.get(i);
+                double percentage = (val / total) * 100.0;
+                String text = labels.get(i) + " (" + pctDf.format(percentage) + "%)";
+
+                int itemY = legendY + i * itemHeight;
+
+                // Draw color box
+                g2.setColor(COLORS[i % COLORS.length]);
+                g2.fillRoundRect(legendX, itemY + 4, 12, 12, 3, 3);
+
+                // Draw text
+                g2.setColor(new Color(70, 80, 90));
+                g2.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+
+                // Truncate text if it's too long for the legend space
+                String displayText = text;
+                FontMetrics fmLegend = g2.getFontMetrics();
+                int maxTextWidth = width - legendX - 25;
+                if (fmLegend.stringWidth(displayText) > maxTextWidth) {
+                    while (displayText.length() > 5 && fmLegend.stringWidth(displayText + "...") > maxTextWidth) {
+                        displayText = displayText.substring(0, displayText.length() - 1);
+                    }
+                    displayText = displayText + "...";
+                }
+
+                g2.drawString(displayText, legendX + 20, itemY + 14);
+            }
+        }
 
         g2.dispose();
     }
