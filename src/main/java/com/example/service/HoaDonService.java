@@ -41,10 +41,10 @@ public class HoaDonService {
     }
 
     /**
-     * Lấy hóa đơn bán hàng chưa thanh toán mới nhất của nhân viên.
+     * Lấy hóa đơn bán hàng chưa thanh toán mới nhất.
      */
     public HoaDon layHoaDonChuaThanhToan(String maNhanVien) {
-        HoaDon hd = hoaDonDAO.layHoaDonChuaThanhToan(maNhanVien);
+        HoaDon hd = hoaDonDAO.layHoaDonChuaThanhToan();
         if (hd != null) {
             hd.setDsChiTiet(ctService.layTheoMaHoaDon(hd.getMaHoaDon()));
         }
@@ -52,6 +52,7 @@ public class HoaDonService {
     }
 
     public List<HoaDon> timKiem(String maHD, LocalDate ngayTao) {
+
         return hoaDonDAO.timKiem(maHD, ngayTao);
     }
 
@@ -59,10 +60,6 @@ public class HoaDonService {
 
     /**
      * Sinh mã hóa đơn theo định dạng: [PREFIX][ddMMyy][STT 3 chữ số].
-     * <p>
-     * Ví dụ: BAN_HANG -> "HDB160526001"
-     * <p>
-     * Di chuyển từ BanHangPanel.sinhMaHoaDon() và DoiHangPanel.
      */
     public String sinhMaHoaDon(LoaiHoaDon loaiHoaDon) {
         String prefix = switch (loaiHoaDon) {
@@ -77,11 +74,6 @@ public class HoaDonService {
 
     /**
      * Kiểm tra và lấy hóa đơn gốc phục vụ nghiệp vụ đổi hàng.
-     * <p>
-     * Nghiệp vụ được giữ nguyên từ HoaDonDAO:
-     * - Chỉ lấy hóa đơn đã thanh toán thành công
-     * - Hóa đơn phải còn trong hạn 7 ngày
-     * - Hóa đơn chỉ được đổi 1 lần duy nhất
      */
     public HoaDon layHoaDonDeDoi(String maHD) {
         return hoaDonDAO.layHoaDonDeDoi(maHD);
@@ -119,11 +111,21 @@ public class HoaDonService {
             con.commit();
             return true;
         } catch (Exception e) {
-            if (con != null) try { con.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            if (con != null)
+                try {
+                    con.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
             e.printStackTrace();
             return false;
         } finally {
-            if (con != null) try { con.setAutoCommit(true); } catch (SQLException ex) { ex.printStackTrace(); }
+            if (con != null)
+                try {
+                    con.setAutoCommit(true);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
         }
     }
 
@@ -140,7 +142,8 @@ public class HoaDonService {
                 List<Lo> dsLo = loService.layDanhSachLoKhaDung(ct.getDonViQuyDoi().getMaDonVi());
 
                 for (Lo lo : dsLo) {
-                    if (soLuongCanTru <= 0) break;
+                    if (soLuongCanTru <= 0)
+                        break;
                     int tru = Math.min(soLuongCanTru, lo.getSoLuongSanPham());
 
                     loService.capNhatSoLuongTon(lo.getMaLo(), -tru);
@@ -162,11 +165,22 @@ public class HoaDonService {
             con.commit();
             return true;
         } catch (Exception e) {
-            if (con != null) try { con.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
-            if (e instanceof SQLException) throw (SQLException) e;
+            if (con != null)
+                try {
+                    con.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            if (e instanceof SQLException)
+                throw (SQLException) e;
             throw new RuntimeException(e);
         } finally {
-            if (con != null) try { con.setAutoCommit(true); } catch (SQLException ex) { ex.printStackTrace(); }
+            if (con != null)
+                try {
+                    con.setAutoCommit(true);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
         }
     }
 
@@ -174,9 +188,9 @@ public class HoaDonService {
      * Thực thi toàn bộ luồng đổi hàng trong 1 transaction duy nhất.
      */
     public boolean luuHoaDonDoiHang(HoaDon hoaDonMoi,
-                                     List<SuPhanBoLo> dsTraLai,
-                                     List<ChiTietHoaDon> dsChiTietMoi,
-                                     List<SuPhanBoLo> dsPhanBoMoi) {
+                                    List<SuPhanBoLo> dsTraLai,
+                                    List<ChiTietHoaDon> dsChiTietMoi,
+                                    List<SuPhanBoLo> dsPhanBoMoi) {
         Connection ketNoi = null;
         try {
             ketNoi = ConnectDB.getConnection();
@@ -189,7 +203,8 @@ public class HoaDonService {
             if (dsPhanBoMoi != null && !dsPhanBoMoi.isEmpty()) {
                 for (SuPhanBoLo spMoi : dsPhanBoMoi) {
                     Lo lo = loService.timTheoMa(spMoi.getLo().getMaLo());
-                    if (lo == null) throw new RuntimeException("Không tìm thấy Lô " + spMoi.getLo().getMaLo());
+                    if (lo == null)
+                        throw new RuntimeException("Không tìm thấy Lô " + spMoi.getLo().getMaLo());
                     if (lo.getSoLuongSanPham() < spMoi.getSoLuong()) {
                         throw new RuntimeException("Lô " + spMoi.getLo().getMaLo() + " không đủ số lượng để đổi!");
                     }
@@ -201,11 +216,21 @@ public class HoaDonService {
             ketNoi.commit();
             return true;
         } catch (Exception e) {
-            if (ketNoi != null) try { ketNoi.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            if (ketNoi != null)
+                try {
+                    ketNoi.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
             e.printStackTrace();
             return false;
         } finally {
-            if (ketNoi != null) try { ketNoi.setAutoCommit(true); } catch (SQLException ex) { ex.printStackTrace(); }
+            if (ketNoi != null)
+                try {
+                    ketNoi.setAutoCommit(true);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
         }
     }
 
@@ -228,16 +253,27 @@ public class HoaDonService {
             con.commit();
             return true;
         } catch (Exception e) {
-            if (con != null) try { con.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            if (con != null)
+                try {
+                    con.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
             e.printStackTrace();
             return false;
         } finally {
-            if (con != null) try { con.setAutoCommit(true); } catch (SQLException ex) { ex.printStackTrace(); }
+            if (con != null)
+                try {
+                    con.setAutoCommit(true);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
         }
     }
 
     /**
-     * Hủy hóa đơn (xóa chuỗi SuPhanBoLo → ChiTietHoaDon → HoaDon trong 1 transaction).
+     * Hủy hóa đơn (xóa chuỗi SuPhanBoLo → ChiTietHoaDon → HoaDon trong 1
+     * transaction).
      */
     public boolean huyHoaDon(String maHD) {
         Connection con = null;
@@ -251,11 +287,21 @@ public class HoaDonService {
             con.commit();
             return true;
         } catch (Exception e) {
-            if (con != null) try { con.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            if (con != null)
+                try {
+                    con.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
             e.printStackTrace();
             return false;
         } finally {
-            if (con != null) try { con.setAutoCommit(true); } catch (SQLException ex) { ex.printStackTrace(); }
+            if (con != null)
+                try {
+                    con.setAutoCommit(true);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
         }
     }
 
@@ -291,7 +337,7 @@ public class HoaDonService {
      * Di chuyển raw SQL từ TraHangPanel — tầng UI không được viết SQL.
      */
     public List<SuPhanBoLo> layDanhSachPhanBoLoCanTra(String maHoaDonGoc,
-                                                       List<ChiTietHoaDon> dsChiTietTra) {
+                                                      List<ChiTietHoaDon> dsChiTietTra) {
         return spbService.layDanhSachPhanBoLoCanTra(maHoaDonGoc, dsChiTietTra);
     }
 
