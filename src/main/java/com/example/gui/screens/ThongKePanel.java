@@ -128,10 +128,10 @@ public class ThongKePanel extends JPanel {
         dtGbc.gridx = 0;
         dtGbc.gridy = 0;
         dtGbc.weightx = 1.0;
-        dtGbc.weighty = 0.5;
+        dtGbc.weighty = 0.65;
         panelDoanhThu.add(createChartCard(), dtGbc);
         dtGbc.gridy = 1;
-        dtGbc.weighty = 0.5;
+        dtGbc.weighty = 0.35;
         dtGbc.insets = new Insets(0, 0, 0, 0);
         panelDoanhThu.add(createTableCard(), dtGbc);
 
@@ -398,6 +398,7 @@ public class ThongKePanel extends JPanel {
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.getViewport().setBackground(Color.WHITE);
         scrollPane.setBorder(BorderFactory.createLineBorder(new Color(230, 235, 240)));
+        scrollPane.setPreferredSize(new Dimension(400, 160));
         card.add(scrollPane, BorderLayout.CENTER);
 
         return card;
@@ -499,12 +500,13 @@ public class ThongKePanel extends JPanel {
         JScrollPane scrollBC = new JScrollPane(tableBanChay);
         scrollBC.getViewport().setBackground(Color.WHITE);
         scrollBC.setBorder(BorderFactory.createLineBorder(new Color(230, 235, 240)));
+        scrollBC.setPreferredSize(new Dimension(400, 160));
         tableCard.add(scrollBC, BorderLayout.CENTER);
 
         bcGbc.gridx = 0;
         bcGbc.gridy = 0;
         bcGbc.weightx = 1.0;
-        bcGbc.weighty = 0.5;
+        bcGbc.weighty = 0.35;
         bcGbc.insets = new Insets(0, 0, 10, 0);
         tabBanChayPanel.add(tableCard, bcGbc);
 
@@ -539,7 +541,7 @@ public class ThongKePanel extends JPanel {
         chartsPanel.add(chartRight);
 
         bcGbc.gridy = 1;
-        bcGbc.weighty = 0.5;
+        bcGbc.weighty = 0.65;
         bcGbc.insets = new Insets(0, 0, 0, 0);
         tabBanChayPanel.add(chartsPanel, bcGbc);
 
@@ -656,12 +658,13 @@ public class ThongKePanel extends JPanel {
         JScrollPane scrollKH = new JScrollPane(tableKhachHang);
         scrollKH.getViewport().setBackground(Color.WHITE);
         scrollKH.setBorder(BorderFactory.createLineBorder(new Color(230, 235, 240)));
+        scrollKH.setPreferredSize(new Dimension(400, 160));
         tableCard.add(scrollKH, BorderLayout.CENTER);
 
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.weightx = 1.0;
-        gbc.weighty = 0.5;
+        gbc.weighty = 0.35;
         gbc.insets = new Insets(0, 0, 10, 0);
         panelKhachHang.add(tableCard, gbc);
 
@@ -696,7 +699,7 @@ public class ThongKePanel extends JPanel {
         chartsPanel.add(chartRight);
 
         gbc.gridy = 1;
-        gbc.weighty = 0.5;
+        gbc.weighty = 0.65;
         gbc.insets = new Insets(0, 0, 0, 0);
         panelKhachHang.add(chartsPanel, gbc);
 
@@ -1129,13 +1132,20 @@ public class ThongKePanel extends JPanel {
         List<HoaDon> dsHoaDon = thongKeService.layHoaDonTheoKhoangNgay(tuNgay, denNgay);
         Map<String, CustomerStatItem> stats = new HashMap<>();
         double retailSpending = 0.0;
+        int retailInvoicesCount = 0;
 
         for (HoaDon hd : dsHoaDon) {
             double finalTotal = hd.tinhTongTienThanhToan();
             com.example.entity.KhachHang kh = hd.getKhachHang();
 
             if (kh == null || kh.getMaKhachHang() == null || kh.getMaKhachHang().trim().isEmpty()) {
-                retailSpending += finalTotal;
+                if (hd.getLoaiHoaDon() == LoaiHoaDon.BAN_HANG || hd.getLoaiHoaDon() == LoaiHoaDon.DOI_HANG
+                        || hd.getLoaiHoaDon() == null) {
+                    retailSpending += finalTotal;
+                    retailInvoicesCount++;
+                } else if (hd.getLoaiHoaDon() == LoaiHoaDon.TRA_HANG) {
+                    retailSpending -= finalTotal;
+                }
                 continue;
             }
 
@@ -1184,17 +1194,18 @@ public class ThongKePanel extends JPanel {
             totalMemberSpending += Math.max(0, item.tongChiTieu);
         }
 
-        lblTotalKhachHang.setText("Tổng số khách hàng: " + stats.size());
+        lblTotalKhachHang.setText("Tổng số khách hàng: " + (stats.size() + retailInvoicesCount));
 
         List<String> pieLabels = new ArrayList<>();
         List<Double> pieValues = new ArrayList<>();
-        if (totalMemberSpending > 0) {
+        double memberCount = stats.size();
+        if (memberCount > 0) {
             pieLabels.add("Khách hàng thành viên");
-            pieValues.add(totalMemberSpending);
+            pieValues.add(memberCount);
         }
-        if (retailSpending > 0) {
+        if (retailInvoicesCount > 0) {
             pieLabels.add("Khách lẻ");
-            pieValues.add(retailSpending);
+            pieValues.add((double) retailInvoicesCount);
         }
         pieChartCustTypes.setValues(pieLabels, pieValues);
 
@@ -1262,17 +1273,19 @@ public class ThongKePanel extends JPanel {
         if (type == null)
             return;
 
-        boolean needsDate = "Thống kê doanh thu".equals(type) 
+        boolean needsDate = "Thống kê doanh thu".equals(type)
                 || ("Thống kê sản phẩm".equals(type) && "Bán chạy".equals(activeTabSp))
                 || "Thống kê khách hàng".equals(type);
 
         if (needsDate) {
             if (datePickerTu.getDate() == null || datePickerDen.getDate() == null) {
-                JOptionPane.showMessageDialog(this, "Vui lòng chọn đầy đủ thời gian Từ và Đến trước khi xuất PDF!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn đầy đủ thời gian Từ và Đến trước khi xuất PDF!",
+                        "Thông báo", JOptionPane.WARNING_MESSAGE);
                 return;
             }
             if (datePickerTu.getDate().isAfter(datePickerDen.getDate())) {
-                JOptionPane.showMessageDialog(this, "Thời gian 'Từ' phải trước hoặc bằng 'Đến'!", "Lỗi thời gian", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Thời gian 'Từ' phải trước hoặc bằng 'Đến'!", "Lỗi thời gian",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
         }

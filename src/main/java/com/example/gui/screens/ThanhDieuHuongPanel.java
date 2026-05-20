@@ -60,6 +60,7 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		}
 
 		setTitle("Kamino Healthcare - Hệ Thống Quản Lý Nhà Thuốc");
+		setSize(1400, 850);
 		setExtendedState(JFrame.MAXIMIZED_BOTH);
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
