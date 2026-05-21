@@ -11,6 +11,7 @@ public class ChiTietHoaDon {
     private double donGia;
     private boolean laQuaTangKem;
     private List<SuPhanBoLo> dsPhanBoLo;
+    private int soLuongLoi; // transient field for UI
 
     public ChiTietHoaDon() {
     }
@@ -24,7 +25,16 @@ public class ChiTietHoaDon {
 		this.donGia = donGia;
 		this.laQuaTangKem = laQuaTangKem;
 		this.dsPhanBoLo = dsPhanBoLo;
+        this.soLuongLoi = 0;
 	}
+
+    public int getSoLuongLoi() {
+        return soLuongLoi;
+    }
+
+    public void setSoLuongLoi(int soLuongLoi) {
+        this.soLuongLoi = soLuongLoi;
+    }
 
 	public HoaDon getHoaDon() {
         return hoaDon;

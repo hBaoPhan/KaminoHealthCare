@@ -408,22 +408,23 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
             String tenThuoc = lo.getSanPham().getTenSanPham();
             String ngayFormatted = ngayHetHan.format(dfDate);
 
+            long soNgay = java.time.Duration.between(today.atStartOfDay(), ngayHetHan.atStartOfDay()).toDays();
+
             // Quá hạn
-            if (!ngayHetHan.isAfter(today)) {
+            if (soNgay <= 0) {
                 modelLoHetHan.addRow(new Object[] {
                         lo.getMaLo(), tenThuoc, ngayFormatted, "HẾT HẠN"
                 });
-            // Sắp hết hạn: từ 7 ngày tới 1 tháng (bao gồm cả < 7 ngày vì cực kỳ khẩn)
-            } else if (!ngayHetHan.isAfter(today.plusDays(30))) {
-                loGanHetHan++;
-                modelLoHetHan.addRow(new Object[] {
-                        lo.getMaLo(), tenThuoc, ngayFormatted, "SẮP HẾT"
-                });
-            // Ngưng bán: từ 1 tháng tới 3 tháng trước ngày hết hạn
-            } else if (ngayHetHan.isBefore(today.plusDays(90))) {
+                // Sắp hết hạn: từ 1 ngày tới 1 tháng (<= 30 ngày)
+            } else if (soNgay <= 30) {
                 loNgungBan++;
                 modelLoHetHan.addRow(new Object[] {
                         lo.getMaLo(), tenThuoc, ngayFormatted, "NGỪNG BÁN"
+                });
+            } else if (soNgay <= 37) {
+                loGanHetHan++;
+                modelLoHetHan.addRow(new Object[] {
+                        lo.getMaLo(), tenThuoc, ngayFormatted, "SẮP HẾT"
                 });
             }
         }
@@ -433,7 +434,8 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
         if (loGanHetHan > 0)
             canhBao.append(loGanHetHan).append(" lô sắp hết");
         if (loNgungBan > 0) {
-            if (canhBao.length() > 0) canhBao.append(", ");
+            if (canhBao.length() > 0)
+                canhBao.append(", ");
             canhBao.append(loNgungBan).append(" lô ngưng bán");
         }
         lblCanhBao.setText(canhBao.length() > 0 ? canhBao.toString() : "Không có cảnh báo");

@@ -470,12 +470,12 @@ public class ManHinhChinhPanel extends JPanel {
         List<Lo> dsLo = loService.layTatCa();
         int loHetHan = 0;
         int loGanHetHan = 0;
-        LocalDate nextMonth = today.plusDays(37);
         for (Lo lo : dsLo) {
             if (lo.getNgayHetHan() != null) {
-                if (!lo.getNgayHetHan().isAfter(today)) {
+                long soNgay = java.time.Duration.between(today.atStartOfDay(), lo.getNgayHetHan().atStartOfDay()).toDays();
+                if (soNgay <= 0) {
                     loHetHan++;
-                } else if (lo.getNgayHetHan().isBefore(nextMonth)) {
+                } else if (soNgay <= 30) {
                     loGanHetHan++;
                 }
             }
@@ -550,18 +550,20 @@ public class ManHinhChinhPanel extends JPanel {
             String tenThuoc = lo.getSanPham().getTenSanPham();
             String ngayFormatted = ngayHetHan.format(dtfDate);
 
+            long soNgay = java.time.Duration.between(today.atStartOfDay(), ngayHetHan.atStartOfDay()).toDays();
+
             // Quá hạn
-            if (!ngayHetHan.isAfter(today)) {
+            if (soNgay <= 0) {
                 modelLoThuoc.addRow(new Object[] {
                         lo.getMaLo(), tenThuoc, ngayFormatted, "HẾT HẠN"
                 });
-            // Sắp hết hạn: từ 7 ngày tới 1 tháng (bao gồm cả < 7 ngày vì cực kỳ khẩn)
-            } else if (!ngayHetHan.isAfter(today.plusDays(30))) {
+            // Sắp hết hạn: từ 1 ngày tới 1 tháng (<= 30 ngày)
+            } else if (soNgay <= 30) {
                 modelLoThuoc.addRow(new Object[] {
                         lo.getMaLo(), tenThuoc, ngayFormatted, "SẮP HẾT"
                 });
-            // Ngưng bán: từ 1 tháng tới 3 tháng trước ngày hết hạn
-            } else if (ngayHetHan.isBefore(today.plusDays(90))) {
+            // Ngưng bán: từ 1 tháng tới 3 tháng trước ngày hết hạn (31 đến 90 ngày)
+            } else if (soNgay <= 90) {
                 modelLoThuoc.addRow(new Object[] {
                         lo.getMaLo(), tenThuoc, ngayFormatted, "NGỪNG BÁN"
                 });

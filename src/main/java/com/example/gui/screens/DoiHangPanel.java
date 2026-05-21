@@ -82,8 +82,8 @@ public class DoiHangPanel extends JPanel {
             }
         });
 
-        tblHoaDonGoc = createTable();
-        tblSanPham = createTable();
+        tblHoaDonGoc = createTable(true);
+        tblSanPham = createTable(false);
 
         tblHoaDonGoc.addMouseListener(new MouseAdapter() {
             @Override
@@ -211,7 +211,7 @@ public class DoiHangPanel extends JPanel {
         });
 
         tblHoaDonGoc.getModel().addTableModelListener(e -> {
-            if (e.getType() == TableModelEvent.UPDATE && (e.getColumn() == 3 || e.getColumn() == 2)) {
+            if (e.getType() == TableModelEvent.UPDATE && (e.getColumn() == 3 || e.getColumn() == 2 || e.getColumn() == 7)) {
                 xuLyKhiThayDoiDonVi(tblHoaDonGoc, e.getFirstRow(), e.getColumn());
             }
         });
@@ -246,32 +246,28 @@ public class DoiHangPanel extends JPanel {
         DefaultTableModel model = (DefaultTableModel) table.getModel();
         String maSP = model.getValueAt(row, 0).toString();
 
-        // LOGIC CHẶN SỐ LƯỢNG GIỮ LẠI (Bảng hóa đơn gốc)
-        if (table == tblHoaDonGoc && col == 3) {
-            int slGiuLaiNhap = Integer.parseInt(model.getValueAt(row, 3).toString());
+        // LOGIC CHẶN SỐ LƯỢNG ĐỔI VÀ SỐ LƯỢNG LỖI (Bảng hóa đơn gốc)
+        if (table == tblHoaDonGoc && (col == 3 || col == 7)) {
+            int slTraNhap = Integer.parseInt(model.getValueAt(row, 3).toString());
+            int slLoiNhap = Integer.parseInt(model.getValueAt(row, 7).toString());
 
-            // Lấy chi tiết gốc và hệ số quy đổi lúc mua
             ChiTietHoaDon ctGoc = chiTietHoaDonGocList.get(row);
-            int heSoGoc = ctGoc.getDonViQuyDoi().getHeSoQuyDoi();
-            int tongDonViNhoNhatDaMua = ctGoc.getSoLuong() * heSoGoc;
+            int slDaMua = ctGoc.getSoLuong();
 
-            // Lấy hệ số quy đổi của đơn vị đang được chọn để GIỮ LẠI
-            String moTaDonViGiuLai = model.getValueAt(row, 2).toString();
-            DonViQuyDoi dvGiuLai = donViQuyDoiService.timTheoTenVaMaSP(DonVi.tuMoTa(moTaDonViGiuLai).name(), maSP);
+            if (slTraNhap < 0 || slTraNhap > slDaMua) {
+                JOptionPane.showMessageDialog(this,
+                        "Số lượng đổi phải từ 0 đến " + slDaMua + " (số lượng đã mua)!",
+                        "Cảnh báo dữ liệu", JOptionPane.ERROR_MESSAGE);
+                SwingUtilities.invokeLater(() -> model.setValueAt(0, row, 3));
+                return;
+            }
 
-            if (dvGiuLai != null) {
-                int tongDonViNhoNhatGiuLai = slGiuLaiNhap * dvGiuLai.getHeSoQuyDoi();
-
-                if (tongDonViNhoNhatGiuLai > tongDonViNhoNhatDaMua) {
-                    JOptionPane.showMessageDialog(this,
-                            "Số lượng giữ lại vượt quá số lượng đã mua ban đầu!",
-                            "Cảnh báo gian lận", JOptionPane.ERROR_MESSAGE);
-
-                    // Trả về số lượng tối đa được phép giữ lại theo đơn vị hiện tại
-                    int slToiDaHopLe = tongDonViNhoNhatDaMua / dvGiuLai.getHeSoQuyDoi();
-                    model.setValueAt(slToiDaHopLe, row, 3);
-                    return;
-                }
+            if (slLoiNhap < 0 || slLoiNhap > slTraNhap) {
+                JOptionPane.showMessageDialog(this,
+                        "Số lượng lỗi phải từ 0 đến " + slTraNhap + " (số lượng đổi)!",
+                        "Cảnh báo dữ liệu", JOptionPane.ERROR_MESSAGE);
+                SwingUtilities.invokeLater(() -> model.setValueAt(0, row, 7));
+                return;
             }
         }
 
@@ -289,7 +285,15 @@ public class DoiHangPanel extends JPanel {
                         ? Integer.parseInt(slValue.toString())
                         : 0;
                 double thueTiLe = Double.parseDouble(model.getValueAt(row, 5).toString());
-                model.setValueAt(sl * giaMoi * (1 + thueTiLe / 100.0), row, 6);
+                
+                if (table == tblHoaDonGoc) {
+                    ChiTietHoaDon ctGoc = chiTietHoaDonGocList.get(row);
+                    int slDaMua = ctGoc.getSoLuong();
+                    int slGiuLai = slDaMua - sl;
+                    model.setValueAt(slGiuLai * giaMoi * (1 + thueTiLe / 100.0), row, 6);
+                } else {
+                    model.setValueAt(sl * giaMoi * (1 + thueTiLe / 100.0), row, 6);
+                }
                 tinhToanToanBoTien();
             });
         }
@@ -332,7 +336,8 @@ public class DoiHangPanel extends JPanel {
                     ct.getSoLuong(),
                     ct.getDonGia(),
                     thueTiLe,
-                    tt
+                    0.0,
+                    0
             });
             tongTienHoaDonGocBanDau += tt;
         }
@@ -391,7 +396,7 @@ public class DoiHangPanel extends JPanel {
         // Lấy mô tả của đơn vị đầu tiên trong danh sách để hiển thị mặc định
         String dv = dsDV.get(0).getTenDonVi().getMoTa();
         model.addRow(
-                new Object[] { sp.getMaSanPham(), sp.getTenSanPham(), dv, 1, sp.getDonGiaCoBan(), sp.getThue(), 0.0 });
+                new Object[] { sp.getMaSanPham(), sp.getTenSanPham(), dv, 1, sp.getDonGiaCoBan(), sp.getThue(), 0.0, 0 });
     }
 
     private void tinhToanToanBoTien() {
@@ -441,13 +446,22 @@ public class DoiHangPanel extends JPanel {
     private double tinhTienChoBang(JTable table) {
         double total = 0;
         DefaultTableModel model = (DefaultTableModel) table.getModel();
+        boolean isGoc = (table == tblHoaDonGoc);
         for (int i = 0; i < model.getRowCount(); i++) {
             try {
                 int sl = Integer.parseInt(String.valueOf(model.getValueAt(i, 3)));
                 double gia = Double.parseDouble(String.valueOf(model.getValueAt(i, 4)));
                 double thueTiLe = Double.parseDouble(String.valueOf(model.getValueAt(i, 5)));
 
-                double tt = sl * gia * (1 + thueTiLe / 100.0);
+                double tt;
+                if (isGoc) {
+                    ChiTietHoaDon ctGoc = chiTietHoaDonGocList.get(i);
+                    int slDaMua = ctGoc.getSoLuong();
+                    int slGiuLai = slDaMua - sl;
+                    tt = slGiuLai * gia * (1 + thueTiLe / 100.0);
+                } else {
+                    tt = sl * gia * (1 + thueTiLe / 100.0);
+                }
                 model.setValueAt(tt, i, 6);
                 total += tt;
             } catch (Exception ignored) {
@@ -472,11 +486,10 @@ public class DoiHangPanel extends JPanel {
         }
     }
 
-    private ChiTietHoaDon taoChiTietTuDong(DefaultTableModel model, int row, HoaDon hd) throws Exception {
+    private ChiTietHoaDon taoChiTietTuDong(DefaultTableModel model, int row, HoaDon hd, int sl) throws Exception {
 
         String maSP = String.valueOf(model.getValueAt(row, 0));
         String tenDV = String.valueOf(model.getValueAt(row, 2));
-        int sl = Integer.parseInt(String.valueOf(model.getValueAt(row, 3)));
 
         DonViQuyDoi dv = donViQuyDoiService.timTheoTenVaMaSP(DonVi.tuMoTa(tenDV).name(), maSP);
         if (dv == null)
@@ -551,39 +564,70 @@ public class DoiHangPanel extends JPanel {
 
             // BƯỚC A: XỬ LÝ HÀNG BẢNG GỐC (Hoàn đúng số lượng trả)
             for (int i = 0; i < modelGoc.getRowCount(); i++) {
-                int slGiuLai = Integer.parseInt(modelGoc.getValueAt(i, 3).toString());
+                int slTra = Integer.parseInt(modelGoc.getValueAt(i, 3).toString());
                 ChiTietHoaDon ctGoc = chiTietHoaDonGocList.get(i);
                 int slDaMua = ctGoc.getSoLuong();
-                int slTra = slDaMua - slGiuLai;
-
-                // 1. Ghi nhận hàng giữ lại vào Hóa đơn mới (không đụng đến Lô)
-                if (slGiuLai > 0) {
-                    dsChiTietMoi.add(taoChiTietTuDong(modelGoc, i, hdMoi));
+                int slGiuLai = slDaMua - slTra;
+                
+                Object loiVal = modelGoc.getValueAt(i, 7);
+                int slLoi = (loiVal != null && !loiVal.toString().trim().isEmpty()) 
+                        ? Integer.parseInt(loiVal.toString()) : 0;
+ 
+                if (slLoi > slTra) {
+                    JOptionPane.showMessageDialog(this, "Số lượng lỗi không được vượt quá số lượng trả lại!");
+                    return;
                 }
-
-                // 2. Trả lại kho CHÍNH XÁC số lượng khách không lấy
-                if (slTra > 0) {
+ 
+                // 1. Ghi nhận hàng giữ lại vào Hóa đơn mới (không đụng đến Lô).
+                // Nếu slGiuLai = 0 nhưng slTra > 0, ta vẫn thêm ChiTietHoaDon với soLuong = 0 để làm mốc lưu SuPhanBoLo cho hàng trả.
+                ChiTietHoaDon ctMoi = null;
+                if (slGiuLai > 0) {
+                    ctMoi = taoChiTietTuDong(modelGoc, i, hdMoi, slGiuLai);
+                    dsChiTietMoi.add(ctMoi);
+                } else if (slTra > 0) {
+                    ctMoi = taoChiTietTuDong(modelGoc, i, hdMoi, 0);
+                    dsChiTietMoi.add(ctMoi);
+                }
+ 
+                // 2. Trả lại kho CHÍNH XÁC số lượng khách trả
+                if (slTra > 0 && ctMoi != null) {
                     int heSoQuyDoi = ctGoc.getDonViQuyDoi().getHeSoQuyDoi();
-                    int slCanHoanNhoNhat = slTra * heSoQuyDoi; // Quy đổi số lượng trả ra Viên/Vỉ
-
+                    int slCanHoanNhoNhat = slTra * heSoQuyDoi; 
+                    int slLoiNhoNhat = slLoi * heSoQuyDoi; 
+ 
                     List<SuPhanBoLo> dsPhanBoBanDau = ctGoc.getDsPhanBoLo();
-
+ 
                     if (dsPhanBoBanDau != null) {
                         for (SuPhanBoLo pbGoc : dsPhanBoBanDau) {
                             if (slCanHoanNhoNhat <= 0)
                                 break;
-
-                            // ĐÃ FIX: Nhân số lượng lưu trong SuPhanBoLo (đơn vị bán) với hệ số quy đổi
-                            // Để biết chính xác Lô này ngày xưa đã xuất đi bao nhiêu Viên/Vỉ
-                            int luongGocTrongDBDaQuyDoi = pbGoc.getSoLuong() * heSoQuyDoi;
-
+ 
+                            int luongGocTrongDBDaQuyDoi = pbGoc.getSoLuong(); // Đã sửa bug nhân hệ số quy đổi ở đây
                             int hoanThucTe = Math.min(slCanHoanNhoNhat, luongGocTrongDBDaQuyDoi);
-
-                            SuPhanBoLo traLai = new SuPhanBoLo();
-                            traLai.setLo(pbGoc.getLo());
-                            traLai.setSoLuong(hoanThucTe); // Gửi xuống DAO số lượng theo Đơn vị nhỏ nhất để cộng kho
-                            dsTraLai.add(traLai);
-
+ 
+                            // Phân bổ phần lỗi
+                            int hoanLoi = Math.min(slLoiNhoNhat, hoanThucTe);
+                            if (hoanLoi > 0) {
+                                SuPhanBoLo traLaiLoi = new SuPhanBoLo();
+                                traLaiLoi.setLo(pbGoc.getLo());
+                                traLaiLoi.setSoLuong(hoanLoi);
+                                traLaiLoi.setLoi(true);
+                                traLaiLoi.setChiTietHoaDon(ctMoi); // Liên kết với ctMoi của hóa đơn mới
+                                dsTraLai.add(traLaiLoi);
+                                slLoiNhoNhat -= hoanLoi;
+                            }
+ 
+                            // Phân bổ phần bình thường
+                            int hoanNormal = hoanThucTe - hoanLoi;
+                            if (hoanNormal > 0) {
+                                SuPhanBoLo traLaiNormal = new SuPhanBoLo();
+                                traLaiNormal.setLo(pbGoc.getLo());
+                                traLaiNormal.setSoLuong(hoanNormal);
+                                traLaiNormal.setLoi(false);
+                                traLaiNormal.setChiTietHoaDon(ctMoi); // Liên kết với ctMoi của hóa đơn mới
+                                dsTraLai.add(traLaiNormal);
+                            }
+ 
                             slCanHoanNhoNhat -= hoanThucTe;
                         }
                     }
@@ -593,7 +637,8 @@ public class DoiHangPanel extends JPanel {
             // BƯỚC B: XỬ LÝ HÀNG MUA MỚI (Trừ kho đúng số mua thêm)
             LoService loService = new LoService();
             for (int i = 0; i < modelDoi.getRowCount(); i++) {
-                ChiTietHoaDon ctMoi = taoChiTietTuDong(modelDoi, i, hdMoi);
+                int slMoi = Integer.parseInt(modelDoi.getValueAt(i, 3).toString());
+                ChiTietHoaDon ctMoi = taoChiTietTuDong(modelDoi, i, hdMoi, slMoi);
                 ChiTietHoaDon targetCt = ctMoi;
 
                 // Kiểm tra gộp dòng (Nếu mua thêm sản phẩm trùng với SP giữ lại)
@@ -671,8 +716,10 @@ public class DoiHangPanel extends JPanel {
         ((DefaultTableModel) tblSanPham.getModel()).setRowCount(0);
     }
 
-    private JTable createTable() {
-        String[] cols = { "Mã SP", "Tên sản phẩm", "Đơn vị", "Số lượng", "Đơn giá", "Thuế", "Thành tiền" };
+    private JTable createTable(boolean isGoc) {
+        String[] cols = isGoc 
+                ? new String[] { "Mã SP", "Tên sản phẩm", "Đơn vị", "Số lượng Đổi", "Đơn giá", "Thuế", "Thành tiền", "Số lượng lỗi" }
+                : new String[] { "Mã SP", "Tên sản phẩm", "Đơn vị", "Số lượng", "Đơn giá", "Thuế", "Thành tiền", "Số lượng lỗi" };
         DefaultTableModel model = new DefaultTableModel(cols, 0) {
             @Override
             public boolean isCellEditable(int row, int col) {
@@ -684,10 +731,10 @@ public class DoiHangPanel extends JPanel {
                     if (chiTietHoaDonGocList.get(row).getDonViQuyDoi().getSanPham().getLoaiSanPham().name()
                             .equals("ETC"))
                         return false;
-                    // Vấn đề 3: Bảng gốc chỉ được sửa số lượng (cột 3), khóa đơn vị (cột 2)
-                    return col == 3;
+                    // Vấn đề 3: Bảng gốc chỉ được sửa số lượng đổi (cột 3) và số lượng lỗi (cột 7)
+                    return col == 3 || col == 7;
                 }
-                // Bảng sản phẩm mới thì được sửa đơn vị và số lượng
+                // Bảng sản phẩm mới thì được sửa đơn vị (col 2) và số lượng (col 3)
                 return col == 2 || col == 3;
             }
         };
@@ -716,6 +763,7 @@ public class DoiHangPanel extends JPanel {
         table.getColumnModel().getColumn(6).setCellRenderer(rightRenderer);
         table.getColumnModel().getColumn(2).setCellEditor(new DynamicUnitCellEditor());
         table.getColumnModel().getColumn(3).setCellEditor(new QuantitySpinnerEditor());
+        table.getColumnModel().getColumn(7).setCellEditor(new QuantitySpinnerEditor());
         return table;
     }
 
@@ -917,23 +965,45 @@ public class DoiHangPanel extends JPanel {
             return cb;
         }
 
-        // ĐÃ SỬA LỖI NULL POINTER EXCEPTION TẠI ĐÂY
         @Override
         public Object getCellEditorValue() {
             Object selected = cb.getSelectedItem();
             if (selected != null && selected instanceof DonVi) {
                 return ((DonVi) selected).getMoTa();
             }
-            return ""; // Trả về chuỗi rỗng thay vì ném exception
+            return ""; 
         }
     }
 
     private class QuantitySpinnerEditor extends AbstractCellEditor implements TableCellEditor {
-        private JSpinner s = new JSpinner(new SpinnerNumberModel(1, 0, 9999, 1));
+        private JSpinner s = new JSpinner();
 
         @Override
         public Component getTableCellEditorComponent(JTable t, Object v, boolean sl, int r, int c) {
-            s.setValue(v);
+            int currentVal = 0;
+            try {
+                currentVal = Integer.parseInt(v.toString());
+            } catch (Exception ex) {}
+
+            int max = 9999;
+            int min = 0;
+            
+            if (t == tblHoaDonGoc) {
+                String maSP = t.getValueAt(r, 0).toString();
+                // Tìm số lượng gốc đã mua
+                for (ChiTietHoaDon ct : chiTietHoaDonGocList) {
+                    if (ct.getDonViQuyDoi().getSanPham().getMaSanPham().equals(maSP)) {
+                        max = ct.getSoLuong();
+                        break;
+                    }
+                }
+                min = 0;
+            } else {
+                // tblSanPham (mua mới) thì min = 1
+                min = 1;
+            }
+
+            s.setModel(new SpinnerNumberModel(currentVal, min, max, 1));
             return s;
         }
 

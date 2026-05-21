@@ -196,8 +196,13 @@ public class HoaDonService {
             ketNoi.setAutoCommit(false);
 
             loService.capNhatTonKhoNhieu(dsTraLai, true);
+
             hoaDonDAO.them(hoaDonMoi);
             ctService.themNhieu(dsChiTietMoi, hoaDonMoi.getMaHoaDon());
+
+            if (dsTraLai != null && !dsTraLai.isEmpty()) {
+                spbService.themNhieu(dsTraLai, hoaDonMoi.getMaHoaDon());
+            }
 
             if (dsPhanBoMoi != null && !dsPhanBoMoi.isEmpty()) {
                 for (SuPhanBoLo spMoi : dsPhanBoMoi) {

@@ -1338,7 +1338,7 @@ public class ThongKePanel extends JPanel {
                         activeModel = modelBanChay;
                     } else if ("Sắp hết hạn".equals(activeTabSp)) {
                         periodStr = "Thời điểm kiểm tra: " + java.time.LocalDate.now().format(dateFormatter)
-                                + " (Thời hạn < 30 ngày)";
+                                + " (Thời hạn từ 7 ngày đến 1 tháng)";
                         headers = new String[] { "Mã lô", "Số lô", "Mã SP", "Tên sản phẩm", "Số lượng", "Hạn dùng" };
                         colWidths = new int[] { 80, 80, 80, 160, 60, 80 };
                         activeModel = modelSapHetHan;

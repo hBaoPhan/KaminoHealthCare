@@ -172,12 +172,19 @@ public class LoDAO {
         String operator = isCong ? "+" : "-";
         String sql = "UPDATE Lo SET soLuongSanPham = soLuongSanPham " + operator + " ? WHERE maLo = ?";
         try (PreparedStatement pst = ConnectDB.getConnection().prepareStatement(sql)) {
+            boolean hasBatch = false;
             for (SuPhanBoLo sp : ds) {
+                if (isCong && sp.isLoi()) {
+                    continue; // Skip defective items when returning/adding to stock
+                }
                 pst.setInt(1, sp.getSoLuong());
                 pst.setString(2, sp.getLo().getMaLo());
                 pst.addBatch();
+                hasBatch = true;
             }
-            pst.executeBatch();
+            if (hasBatch) {
+                pst.executeBatch();
+            }
             return true;
         }
     }

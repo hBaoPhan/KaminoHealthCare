@@ -139,27 +139,29 @@ public class TraHangPanel extends JPanel {
         pnlHeader.add(pnlSearchAction, BorderLayout.EAST);
 
         // Bảng dữ liệu
-        String[] columns = { "Mã sản phẩm", "Tên sản phẩm", "Đơn vị", "Số lượng", "Đơn giá", "Thuế", "Thành tiền" };
+        String[] columns = { "Mã sản phẩm", "Tên sản phẩm", "Đơn vị", "Số lượng", "Đơn giá", "Thuế", "Thành tiền", "Số lượng lỗi" };
         Object[][] data = {};
         model = new DefaultTableModel(data, columns){
             @Override
             public boolean isCellEditable(int row, int column) {
-                return column == 3; // Chỉ cho phép sửa cột số lượng
+                return column == 3 || column == 7; // Chỉ cho phép sửa cột số lượng (col 3) và số lượng lỗi (col 7)
             }
         };
         JTable table = new JTable(model);
         table.setRowHeight(30);
         table.getColumnModel().getColumn(3).setCellEditor(new QuantitySpinnerEditor());
+        table.getColumnModel().getColumn(7).setCellEditor(new QuantitySpinnerEditor());
         
         // Lắng nghe sự kiện người dùng gõ sửa số lượng
         model.addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
-                // Chỉ xử lý khi cột số 3 (Số lượng) bị thay đổi
-                if (e.getType() == TableModelEvent.UPDATE && e.getColumn() == 3) {
+                // Chỉ xử lý khi cột số 3 (Số lượng) hoặc cột số 7 (Số lượng lỗi) bị thay đổi
+                if (e.getType() == TableModelEvent.UPDATE && (e.getColumn() == 3 || e.getColumn() == 7)) {
                     int row = e.getFirstRow();
                     try {
                         int soLuongMoi = Integer.parseInt(model.getValueAt(row, 3).toString());
+                        int soLuongLoiMoi = Integer.parseInt(model.getValueAt(row, 7).toString());
                         String maSP = model.getValueAt(row, 0).toString();
                         
                         // Lấy số lượng mua gốc
@@ -175,6 +177,12 @@ public class TraHangPanel extends JPanel {
                         if (soLuongMoi <= 0 || soLuongMoi > soLuongGoc) {
                             JOptionPane.showMessageDialog(null, "Số lượng trả phải lớn hơn 0 và tối đa là " + soLuongGoc);
                             model.setValueAt(soLuongGoc, row, 3); // Hoàn nguyên số cũ
+                            return;
+                        }
+                        
+                        if (soLuongLoiMoi < 0 || soLuongLoiMoi > soLuongMoi) {
+                            JOptionPane.showMessageDialog(null, "Số lượng lỗi phải từ 0 đến " + soLuongMoi);
+                            model.setValueAt(0, row, 7); // Hoàn nguyên về 0
                             return;
                         }
                         
@@ -315,6 +323,12 @@ public class TraHangPanel extends JPanel {
                 for (int i = 0; i < model.getRowCount(); i++) {
                     String maSP = model.getValueAt(i, 0).toString();
                     int slTra = Integer.parseInt(model.getValueAt(i, 3).toString());
+                    int slLoi = Integer.parseInt(model.getValueAt(i, 7).toString());
+                    
+                    if (slLoi > slTra) {
+                        JOptionPane.showMessageDialog(this, "Số lượng lỗi không được vượt quá số lượng trả!");
+                        return;
+                    }
                     
                     // Tìm lại thông tin gốc để lấy Đơn vị quy đổi và Đơn giá
                     for (ChiTietHoaDon ctGoc : dsChiTietGoc) {
@@ -322,6 +336,7 @@ public class TraHangPanel extends JPanel {
                             ChiTietHoaDon ctMoi = new ChiTietHoaDon();
                             ctMoi.setDonViQuyDoi(ctGoc.getDonViQuyDoi());
                             ctMoi.setSoLuong(slTra);
+                            ctMoi.setSoLuongLoi(slLoi);
                             ctMoi.setDonGia(ctGoc.getDonGia());
                             dsTra.add(ctMoi);
                             break;
@@ -410,7 +425,8 @@ public class TraHangPanel extends JPanel {
                 ct.getSoLuong(),
                 df.format(ct.getDonGia()),
                 df.format(ct.tinhTienThue()),
-                df.format(ct.tinhThanhTien())
+                df.format(ct.tinhThanhTien()),
+                0
             });
         }
         tinhToanTienHoanTra();
@@ -537,13 +553,13 @@ public class TraHangPanel extends JPanel {
                 }
             }
             
-            int currentVal = 1;
+            int currentVal = 0;
             try {
                 currentVal = Integer.parseInt(value.toString());
             } catch (Exception ex) {}
 
-            // Cấu hình Spinner: (Giá trị hiện tại, Min = 1, Max = soLuongGoc, Bước nhảy = 1)
-            spinner.setModel(new SpinnerNumberModel(currentVal, 1, soLuongGoc, 1));
+            int min = (column == 3) ? 1 : 0;
+            spinner.setModel(new SpinnerNumberModel(currentVal, min, soLuongGoc, 1));
             return spinner;
         }
 

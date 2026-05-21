@@ -10,7 +10,8 @@ import java.util.List;
 
 public class ThongKeDAO {
 
-    private HoaDon mapHoaDon(ResultSet rs, NhanVienDAO nvDAO, KhachHangDAO khDAO, KhuyenMaiDAO kmDAO) throws SQLException {
+    private HoaDon mapHoaDon(ResultSet rs, NhanVienDAO nvDAO, KhachHangDAO khDAO, KhuyenMaiDAO kmDAO)
+            throws SQLException {
         HoaDon hd = new HoaDon();
         hd.setMaHoaDon(rs.getString("maHoaDon"));
         hd.setThoiGianTao(rs.getTimestamp("thoiGianTao").toLocalDateTime());
@@ -50,16 +51,16 @@ public class ThongKeDAO {
             Connection ketNoi = ConnectDB.getConnection();
             String sql = "SELECT * FROM HoaDon WHERE thoiGianTao >= ? AND thoiGianTao < ? AND trangThaiThanhToan = 1 ORDER BY thoiGianTao ASC";
             PreparedStatement lenh = ketNoi.prepareStatement(sql);
-            
+
             lenh.setTimestamp(1, Timestamp.valueOf(tuNgay.atStartOfDay()));
             lenh.setTimestamp(2, Timestamp.valueOf(denNgay.plusDays(1).atStartOfDay()));
-            
+
             ResultSet ketQua = lenh.executeQuery();
             NhanVienDAO nvDAO = new NhanVienDAO();
             KhachHangDAO khDAO = new KhachHangDAO();
             KhuyenMaiDAO kmDAO = new KhuyenMaiDAO();
             ChiTietHoaDonDAO ctDAO = new ChiTietHoaDonDAO();
-            
+
             while (ketQua.next()) {
                 HoaDon hd = mapHoaDon(ketQua, nvDAO, khDAO, kmDAO);
                 hd.setDsChiTiet(ctDAO.layTheoMaHoaDon(hd.getMaHoaDon()));
@@ -75,21 +76,23 @@ public class ThongKeDAO {
         List<Object[]> ds = new ArrayList<>();
         try {
             Connection con = ConnectDB.getConnection();
-            String sql = "SELECT l.maLo, l.soLo, sp.maSanPham, sp.tenSanPham, l.soLuongTon, l.ngayHetHan " +
-                         "FROM Lo l " +
-                         "JOIN SanPham sp ON l.maSanPham = sp.maSanPham " +
-                         "WHERE l.soLuongTon > 0 AND l.ngayHetHan <= DATEADD(day, 30, GETDATE()) " +
-                         "ORDER BY l.ngayHetHan ASC";
+            String sql = "SELECT l.maLo, l.soLo, sp.maSanPham, sp.tenSanPham, l.soLuongSanPham, l.ngayHetHan " +
+                    "FROM Lo l " +
+                    "JOIN SanPham sp ON l.maSanPham = sp.maSanPham " +
+                    "WHERE l.soLuongSanPham > 0 " +
+                    "AND l.ngayHetHan >= DATEADD(day, 7, CAST(GETDATE() AS DATE)) " +
+                    "AND l.ngayHetHan <= DATEADD(month, 1, CAST(GETDATE() AS DATE)) " +
+                    "ORDER BY l.ngayHetHan ASC";
             PreparedStatement stmt = con.prepareStatement(sql);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                ds.add(new Object[]{
-                    rs.getString("maLo"),
-                    rs.getString("soLo"),
-                    rs.getString("maSanPham"),
-                    rs.getString("tenSanPham"),
-                    rs.getInt("soLuongTon"),
-                    rs.getDate("ngayHetHan").toLocalDate()
+                ds.add(new Object[] {
+                        rs.getString("maLo"),
+                        rs.getString("soLo"),
+                        rs.getString("maSanPham"),
+                        rs.getString("tenSanPham"),
+                        rs.getInt("soLuongSanPham"),
+                        rs.getDate("ngayHetHan").toLocalDate()
                 });
             }
         } catch (SQLException e) {
@@ -103,15 +106,16 @@ public class ThongKeDAO {
         try {
             Connection con = ConnectDB.getConnection();
             String sql = "SELECT sp.maSanPham, sp.tenSanPham, sp.loaiSanPham, sp.soLuongTon, " +
-                         "       MAX(hd.thoiGianTao) as lanBanCuoi, " +
-                         "       DATEDIFF(day, COALESCE(MAX(hd.thoiGianTao), '2000-01-01'), GETDATE()) as soNgay " +
-                         "FROM SanPham sp " +
-                         "LEFT JOIN DonViQuyDoi dv ON sp.maSanPham = dv.maSanPham " +
-                         "LEFT JOIN ChiTietHoaDon ct ON dv.maDonVi = ct.maDonVi " +
-                         "LEFT JOIN HoaDon hd ON ct.maHoaDon = hd.maHoaDon AND hd.trangThaiThanhToan = 1 AND hd.loaiHoaDon IN ('BAN_HANG', 'DOI_HANG') " +
-                         "WHERE sp.soLuongTon > 0 AND sp.trangThaiKinhDoanh = 1 " +
-                         "GROUP BY sp.maSanPham, sp.tenSanPham, sp.loaiSanPham, sp.soLuongTon " +
-                         "ORDER BY soNgay DESC, sp.soLuongTon DESC";
+                    "       MAX(hd.thoiGianTao) as lanBanCuoi, " +
+                    "       DATEDIFF(day, COALESCE(MAX(hd.thoiGianTao), '2000-01-01'), GETDATE()) as soNgay " +
+                    "FROM SanPham sp " +
+                    "LEFT JOIN DonViQuyDoi dv ON sp.maSanPham = dv.maSanPham " +
+                    "LEFT JOIN ChiTietHoaDon ct ON dv.maDonVi = ct.maDonVi " +
+                    "LEFT JOIN HoaDon hd ON ct.maHoaDon = hd.maHoaDon AND hd.trangThaiThanhToan = 1 AND hd.loaiHoaDon IN ('BAN_HANG', 'DOI_HANG') "
+                    +
+                    "WHERE sp.soLuongTon > 0 AND sp.trangThaiKinhDoanh = 1 " +
+                    "GROUP BY sp.maSanPham, sp.tenSanPham, sp.loaiSanPham, sp.soLuongTon " +
+                    "ORDER BY soNgay DESC, sp.soLuongTon DESC";
             PreparedStatement stmt = con.prepareStatement(sql);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
@@ -120,13 +124,13 @@ public class ThongKeDAO {
                 if (ts != null) {
                     lbc = ts.toLocalDateTime().toLocalDate();
                 }
-                ds.add(new Object[]{
-                    rs.getString("maSanPham"),
-                    rs.getString("tenSanPham"),
-                    rs.getString("loaiSanPham"),
-                    rs.getInt("soLuongTon"),
-                    lbc,
-                    rs.getObject("lanBanCuoi") != null ? rs.getInt("soNgay") : -1
+                ds.add(new Object[] {
+                        rs.getString("maSanPham"),
+                        rs.getString("tenSanPham"),
+                        rs.getString("loaiSanPham"),
+                        rs.getInt("soLuongTon"),
+                        lbc,
+                        rs.getObject("lanBanCuoi") != null ? rs.getInt("soNgay") : -1
                 });
             }
         } catch (SQLException e) {
@@ -140,15 +144,15 @@ public class ThongKeDAO {
         try {
             Connection con = ConnectDB.getConnection();
             String sql = "SELECT maKhachHang, MIN(thoiGianTao) as ngayDk " +
-                         "FROM HoaDon " +
-                         "WHERE maKhachHang IS NOT NULL AND maKhachHang != '' AND trangThaiThanhToan = 1 " +
-                         "GROUP BY maKhachHang";
+                    "FROM HoaDon " +
+                    "WHERE maKhachHang IS NOT NULL AND maKhachHang != '' AND trangThaiThanhToan = 1 " +
+                    "GROUP BY maKhachHang";
             PreparedStatement stmt = con.prepareStatement(sql);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                ds.add(new Object[]{
-                    rs.getString("maKhachHang"),
-                    rs.getTimestamp("ngayDk").toLocalDateTime()
+                ds.add(new Object[] {
+                        rs.getString("maKhachHang"),
+                        rs.getTimestamp("ngayDk").toLocalDateTime()
                 });
             }
         } catch (SQLException e) {

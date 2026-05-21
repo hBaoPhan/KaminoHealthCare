@@ -51,4 +51,5 @@ public class SuPhanBoLoService {
     public List<SuPhanBoLo> layDanhSachPhanBoLoCanTra(String maHoaDonGoc, List<ChiTietHoaDon> dsChiTietTra) {
         return suPhanBoLoDAO.layDanhSachPhanBoLoCanTra(maHoaDonGoc, dsChiTietTra);
     }
+
 }
