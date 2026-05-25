@@ -8,6 +8,7 @@ import com.example.entity.SuPhanBoLo;
 import com.example.entity.enums.LoaiHoaDon;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -185,25 +186,56 @@ public class HoaDonService {
 
     /**
      * Thực thi toàn bộ luồng đổi hàng trong 1 transaction duy nhất.
+     * Đã sửa lỗi Foreign Key Constraint: Đảm bảo thứ tự Parent (ChiTietHoaDon) -> Child (SuPhanBoLo)
      */
     public boolean luuHoaDonDoiHang(HoaDon hoaDonMoi,
             List<SuPhanBoLo> dsTraLai,
             List<ChiTietHoaDon> dsChiTietMoi,
-            List<SuPhanBoLo> dsPhanBoMoi) {
+            List<SuPhanBoLo> dsPhanBoMoi,
+            double soTienChenhLech) {
         Connection ketNoi = null;
         try {
             ketNoi = ConnectDB.getConnection();
-            ketNoi.setAutoCommit(false);
+            ketNoi.setAutoCommit(false); // Bắt đầu Transaction
 
+            // -----------------------------------------------------------------
+            // BƯỚC 1: XỬ LÝ KHO HÀNG TRẢ LẠI (Chỉ tính toán và cập nhật kho)
+            // -----------------------------------------------------------------
             loService.capNhatTonKhoNhieu(dsTraLai, true);
 
+            if (dsTraLai != null && !dsTraLai.isEmpty()) {
+                String sqlUpdateTonTongTra = "UPDATE SanPham SET soLuongTon = soLuongTon + ? WHERE maSanPham = ?";
+                try (PreparedStatement pstSP = ketNoi.prepareStatement(sqlUpdateTonTongTra)) {
+                    for (SuPhanBoLo spb : dsTraLai) {
+                        if (spb.isLoi()) {
+                            continue; // Bỏ qua cộng kho bán đối với hàng lỗi
+                        }
+                        pstSP.setInt(1, spb.getSoLuong());
+                        pstSP.setString(2, spb.getChiTietHoaDon().getDonViQuyDoi().getSanPham().getMaSanPham());
+                        pstSP.addBatch();
+                    }
+                    pstSP.executeBatch();
+                }
+            }
+
+            // -----------------------------------------------------------------
+            // BƯỚC 2: TẠO CHỨNG TỪ (BẢNG CHA & BẢNG TRUNG GIAN)
+            // -----------------------------------------------------------------
+            // BẮT BUỘC: Phải lưu HoaDon và ChiTietHoaDon trước để tạo khóa chính (Primary Key)
             hoaDonDAO.them(hoaDonMoi);
             ctService.themNhieu(dsChiTietMoi, hoaDonMoi.getMaHoaDon());
 
+            // -----------------------------------------------------------------
+            // BƯỚC 3: LƯU VẾT PHÂN BỔ LÔ HÀNG TRẢ (BẢNG CON)
+            // -----------------------------------------------------------------
             if (dsTraLai != null && !dsTraLai.isEmpty()) {
+                // Giờ ChiTietHoaDon đã tồn tại, lưu SuPhanBoLo sẽ không bị lỗi Khóa Ngoại
                 spbService.themNhieu(dsTraLai, hoaDonMoi.getMaHoaDon());
             }
 
+            // -----------------------------------------------------------------
+            // BƯỚC 4: XỬ LÝ HÀNG MUA MỚI (XUẤT KHO & LƯU VẾT)
+            // -----------------------------------------------------------------
             if (dsPhanBoMoi != null && !dsPhanBoMoi.isEmpty()) {
                 for (SuPhanBoLo spMoi : dsPhanBoMoi) {
                     Lo lo = loService.timTheoMa(spMoi.getLo().getMaLo());
@@ -213,28 +245,57 @@ public class HoaDonService {
                         throw new RuntimeException("Lô " + spMoi.getLo().getMaLo() + " không đủ số lượng để đổi!");
                     }
                 }
+                
+                // Trừ tồn kho theo Lô
                 loService.capNhatTonKhoNhieu(dsPhanBoMoi, false);
+                
+                // Lưu vết phân bổ Lô xuất mới (Sau khi bảng cha ChiTietHoaDon đã có)
                 spbService.themNhieu(dsPhanBoMoi, hoaDonMoi.getMaHoaDon());
+
+                // Trừ tồn kho tổng SanPham
+                String sqlUpdateTonTongXuat = "UPDATE SanPham SET soLuongTon = soLuongTon - ? WHERE maSanPham = ?";
+                try (PreparedStatement pstSP = ketNoi.prepareStatement(sqlUpdateTonTongXuat)) {
+                    for (SuPhanBoLo spb : dsPhanBoMoi) {
+                        pstSP.setInt(1, spb.getSoLuong());
+                        pstSP.setString(2, spb.getChiTietHoaDon().getDonViQuyDoi().getSanPham().getMaSanPham());
+                        pstSP.addBatch();
+                    }
+                    pstSP.executeBatch();
+                }
             }
 
-            ketNoi.commit();
+            // -----------------------------------------------------------------
+            // BƯỚC 5: CẬP NHẬT DÒNG TIỀN CA LÀM VIỆC (CaLam)
+            // -----------------------------------------------------------------
+            if (hoaDonMoi.getPhuongThucThanhToan() == com.example.entity.enums.PhuongThucThanhToan.TIEN_MAT) {
+                String sqlUpdateTienCa = "UPDATE CaLam SET tienKetCa = tienKetCa + ? WHERE maCa = ?";
+                try (PreparedStatement pstCa = ketNoi.prepareStatement(sqlUpdateTienCa)) {
+                    pstCa.setDouble(1, soTienChenhLech); 
+                    pstCa.setString(2, hoaDonMoi.getCa().getMaCa());
+                    pstCa.executeUpdate();
+                }
+            }
+
+            ketNoi.commit(); 
             return true;
         } catch (Exception e) {
-            if (ketNoi != null)
+            if (ketNoi != null) {
                 try {
-                    ketNoi.rollback();
+                    ketNoi.rollback(); 
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
+            }
             e.printStackTrace();
             return false;
         } finally {
-            if (ketNoi != null)
+            if (ketNoi != null) {
                 try {
                     ketNoi.setAutoCommit(true);
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
+            }
         }
     }
 
