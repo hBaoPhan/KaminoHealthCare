@@ -54,6 +54,8 @@ public class DoiHangPanel extends JPanel {
     private List<ChiTietHoaDon> chiTietHoaDonGocList = new ArrayList<>();
     private double tongTienHoaDonGocBanDau = 0;
     private TaiKhoan taiKhoanDangNhap;
+    private final StringBuilder barcodeBuffer = new StringBuilder();
+    private long lastKeyTime = 0;
 
     public DoiHangPanel(TaiKhoan tk) {
         this.taiKhoanDangNhap = tk;
@@ -149,6 +151,53 @@ public class DoiHangPanel extends JPanel {
                 }
             }
         });
+
+        // Thiết lập bộ đón bắt phím toàn cục (KeyEventDispatcher) cho máy quét barcode
+        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(e -> {
+            if (!isShowing()) {
+                return false;
+            }
+
+            // Ngăn ngừa lỗi đúp sự kiện khi người dùng đang active focus trong các ô nhập văn bản (txtSearchSanPham, txtSearchHoaDon, v.v.)
+            Component focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+            boolean isEditableFocused = (focusOwner instanceof javax.swing.text.JTextComponent) 
+                                        && ((javax.swing.text.JTextComponent) focusOwner).isEditable();
+            if (isEditableFocused) {
+                return false;
+            }
+
+            if (e.getID() == KeyEvent.KEY_TYPED) {
+                long now = System.currentTimeMillis();
+                char c = e.getKeyChar();
+
+                // Nếu khoảng cách giữa 2 ký tự lớn hơn 50ms, coi như nhập liệu thủ công bằng bàn phím
+                if (now - lastKeyTime > 50) {
+                    barcodeBuffer.setLength(0);
+                }
+                lastKeyTime = now;
+
+                if (c == '\n') {
+                    String barcode = barcodeBuffer.toString().trim();
+                    if (!barcode.isEmpty() && barcode.length() >= 5) {
+                        DonViQuyDoi dv = donViQuyDoiService.timTheoBarcode(barcode);
+                        if (dv != null) {
+                            SwingUtilities.invokeLater(() -> {
+                                xuLyQuetBarcode(dv);
+                                if (txtSearchSanPham != null) {
+                                    txtSearchSanPham.setText("");
+                                }
+                            });
+                            barcodeBuffer.setLength(0);
+                            return true; // Tiêu hủy sự kiện phím Enter
+                        }
+                    }
+                    barcodeBuffer.setLength(0);
+                } else if (Character.isLetterOrDigit(c)) {
+                    barcodeBuffer.append(c);
+                }
+            }
+            return false;
+        });
     }
 
     private void setupPlaceholder(JTextField textField, String placeholder) {
@@ -222,31 +271,8 @@ public class DoiHangPanel extends JPanel {
             if (!text.isEmpty() && !text.equals("Nhập mã/tên sản phẩm...")) {
                 DonViQuyDoi dv = donViQuyDoiService.timTheoBarcode(text);
                 if (dv != null) {
-                    // Check if this product is in the original invoice tblHoaDonGoc
-                    DefaultTableModel modelGoc = (DefaultTableModel) tblHoaDonGoc.getModel();
-                    boolean foundInGoc = false;
-                    for (int i = 0; i < modelGoc.getRowCount(); i++) {
-                        if (modelGoc.getValueAt(i, 0).equals(dv.getSanPham().getMaSanPham())
-                                && modelGoc.getValueAt(i, 2).equals(dv.getTenDonVi().getMoTa())) {
-                            int slGoc = chiTietHoaDonGocList.get(i).getSoLuong();
-                            int slTraHienTai = Integer.parseInt(modelGoc.getValueAt(i, 3).toString());
-                            if (slTraHienTai < slGoc) {
-                                modelGoc.setValueAt(slTraHienTai + 1, i, 3);
-                                xuLyKhiThayDoiDonVi(tblHoaDonGoc, i, 3);
-                            } else {
-                                JOptionPane.showMessageDialog(this,
-                                        "Đã đạt số lượng tối đa có thể đổi cho sản phẩm này trong hóa đơn gốc!",
-                                        "Cảnh báo", JOptionPane.WARNING_MESSAGE);
-                            }
-                            foundInGoc = true;
-                            break;
-                        }
-                    }
-                    if (!foundInGoc) {
-                        themSanPhamVaoBang(dv.getSanPham(), dv);
-                    }
+                    xuLyQuetBarcode(dv);
                     txtSearchSanPham.setText("");
-                    popupGoiY.setVisible(false);
                 } else {
                     SanPham sp = sanPhamService.timTheoMa(text);
                     if (sp != null) {
@@ -431,6 +457,36 @@ public class DoiHangPanel extends JPanel {
         }
         txtTienGoc.setText(formatVND(tongTienHoaDonGocBanDau));
         tinhToanToanBoTien();
+    }
+
+    private void xuLyQuetBarcode(DonViQuyDoi dv) {
+        if (dv == null) {
+            return;
+        }
+        // Check if this product is in the original invoice tblHoaDonGoc
+        DefaultTableModel modelGoc = (DefaultTableModel) tblHoaDonGoc.getModel();
+        boolean foundInGoc = false;
+        for (int i = 0; i < modelGoc.getRowCount(); i++) {
+            if (modelGoc.getValueAt(i, 0).equals(dv.getSanPham().getMaSanPham())
+                    && modelGoc.getValueAt(i, 2).equals(dv.getTenDonVi().getMoTa())) {
+                int slGoc = chiTietHoaDonGocList.get(i).getSoLuong();
+                int slTraHienTai = Integer.parseInt(modelGoc.getValueAt(i, 3).toString());
+                if (slTraHienTai < slGoc) {
+                    modelGoc.setValueAt(slTraHienTai + 1, i, 3);
+                    xuLyKhiThayDoiDonVi(tblHoaDonGoc, i, 3);
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                            "Đã đạt số lượng tối đa có thể đổi cho sản phẩm này trong hóa đơn gốc!",
+                            "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+                }
+                foundInGoc = true;
+                break;
+            }
+        }
+        if (!foundInGoc) {
+            themSanPhamVaoBang(dv.getSanPham(), dv);
+        }
+        popupGoiY.setVisible(false);
     }
 
     private void themSanPhamVaoBang(SanPham sp) {

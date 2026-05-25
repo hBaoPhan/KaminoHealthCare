@@ -79,6 +79,8 @@ public class BanHangPanel extends JPanel {
     private List<DonThuoc> dsDonThuoc = new java.util.ArrayList<>();
     private String maHoaDonHienTai = "";
     private NhanVien nhanVienHienTai;
+    private final StringBuilder barcodeBuffer = new StringBuilder();
+    private long lastKeyTime = 0;
 
 
 
@@ -128,6 +130,53 @@ public class BanHangPanel extends JPanel {
                     });
                 }
             }
+        });
+
+        // Thiết lập bộ đón bắt phím toàn cục (KeyEventDispatcher) cho máy quét barcode
+        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(e -> {
+            if (!isShowing()) {
+                return false;
+            }
+
+            // Ngăn ngừa lỗi đúp sự kiện khi người dùng đang active focus trong các ô nhập văn bản (txtSearch, txtSoDienThoai, areaNotes)
+            Component focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+            boolean isEditableFocused = (focusOwner instanceof javax.swing.text.JTextComponent) 
+                                        && ((javax.swing.text.JTextComponent) focusOwner).isEditable();
+            if (isEditableFocused) {
+                return false;
+            }
+
+            if (e.getID() == KeyEvent.KEY_TYPED) {
+                long now = System.currentTimeMillis();
+                char c = e.getKeyChar();
+
+                // Nếu khoảng cách giữa 2 ký tự lớn hơn 50ms, coi như nhập liệu thủ công bằng bàn phím
+                if (now - lastKeyTime > 50) {
+                    barcodeBuffer.setLength(0);
+                }
+                lastKeyTime = now;
+
+                if (c == '\n') {
+                    String barcode = barcodeBuffer.toString().trim();
+                    if (!barcode.isEmpty() && barcode.length() >= 5) {
+                        DonViQuyDoi dv = donViQuyDoiService.timTheoBarcode(barcode);
+                        if (dv != null) {
+                            SwingUtilities.invokeLater(() -> {
+                                addProductToTable(dv.getSanPham(), dv);
+                                if (txtSearch != null) {
+                                    txtSearch.setText("");
+                                }
+                            });
+                            barcodeBuffer.setLength(0);
+                            return true; // Tiêu hủy sự kiện phím Enter
+                        }
+                    }
+                    barcodeBuffer.setLength(0);
+                } else if (Character.isLetterOrDigit(c)) {
+                    barcodeBuffer.append(c);
+                }
+            }
+            return false;
         });
     }
 
