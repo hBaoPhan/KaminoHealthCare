@@ -255,6 +255,7 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 			case "Bán Hàng" -> {
 				if (pnlBanHang != null)
 					pnlBanHang.loadHoaDonChuaThanhToan();
+
 			}
 			case "Quản Lý Sản Phẩm" -> {
 				if (pnlSanPham != null)

@@ -180,7 +180,28 @@ public class BanHangPanel extends JPanel {
         });
     }
 
+    public void loadKhuyenMai() {
+        if (cboKhuyenMai == null) {
+            return;
+        }
+        boolean oldAuto = isAutoSelectingPromotion;
+        isAutoSelectingPromotion = true;
+        try {
+            cboKhuyenMai.removeAllItems();
+            cboKhuyenMai.addItem("-- Không áp dụng --");
+            dsKhuyenMai = khuyenMaiService.layKhuyenMaiConHan();
+            if (dsKhuyenMai != null) {
+                for (KhuyenMai km : dsKhuyenMai) {
+                    cboKhuyenMai.addItem(km.getTenKhuyenMai());
+                }
+            }
+        } finally {
+            isAutoSelectingPromotion = oldAuto;
+        }
+    }
+
     public void loadHoaDonChuaThanhToan() {
+        loadKhuyenMai();
         HoaDon hd = hoaDonService.layHoaDonChuaThanhToan(nhanVienHienTai.getMaNhanVien());
         if (hd == null) {
             maHoaDonHienTai = sinhMaHoaDon();
@@ -816,12 +837,7 @@ public class BanHangPanel extends JPanel {
         // Khuyến mãi
         cboKhuyenMai = new JComboBox<>();
         // cboKhuyenMai.setEnabled(false); // Cho phép xổ ra để xem
-        cboKhuyenMai.addItem("-- Không áp dụng --");
-        dsKhuyenMai = khuyenMaiService.layKhuyenMaiConHan();
-
-        for (KhuyenMai km : dsKhuyenMai) {
-            cboKhuyenMai.addItem(km.getTenKhuyenMai());
-        }
+        loadKhuyenMai();
 
         cboKhuyenMai.setRenderer(new DefaultListCellRenderer() {
             @Override

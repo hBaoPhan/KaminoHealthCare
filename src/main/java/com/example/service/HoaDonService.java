@@ -151,7 +151,7 @@ public class HoaDonService {
                     spb.setChiTietHoaDon(ct);
                     spb.setLo(lo);
                     spb.setSoLuong(tru);
-                    spbService.themSuPhanBoLo(spb);
+                    spbService.themSuPhanBoLo(spb, maHoaDon);
 
                     soLuongCanTru -= tru;
                 }

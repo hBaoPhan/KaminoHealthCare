@@ -40,6 +40,13 @@ public class SuPhanBoLoService {
         return suPhanBoLoDAO.themSuPhanBoLo(spb);
     }
 
+    /**
+     * Overload an toàn: nhận maHoaDon trực tiếp, tránh NPE khi ChiTietHoaDon.getHoaDon() == null.
+     */
+    public boolean themSuPhanBoLo(SuPhanBoLo spb, String maHoaDon) throws SQLException {
+        return suPhanBoLoDAO.themSuPhanBoLo(spb, maHoaDon);
+    }
+
     public boolean themNhieu(List<SuPhanBoLo> ds, String maHD) throws SQLException {
         return suPhanBoLoDAO.themNhieu(ds, maHD);
     }

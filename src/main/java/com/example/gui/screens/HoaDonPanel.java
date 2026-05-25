@@ -160,7 +160,7 @@ public class HoaDonPanel extends JPanel {
 
         btnHuy = new RoundedButton("Hủy hóa đơn");
         btnHuy.setFont(FONT_TEXT);
-        btnHuy.setForeground(Color.WHITE);
+        btnHuy.setForeground(Color.BLACK);
         btnHuy.setBackground(new Color(220, 53, 69)); // Red color
         btnHuy.setPreferredSize(new Dimension(140, 35));
         // Chỉ hiển thị nút hủy nếu là Quản lý
@@ -388,11 +388,13 @@ public class HoaDonPanel extends JPanel {
             return;
         }
 
-        // Tải chi tiết sản phẩm của hóa đơn cụ thể (nếu là hóa đơn đổi trả, chỉ in các sản phẩm đổi trả, không in hóa đơn gốc)
+        // Tải chi tiết sản phẩm của hóa đơn cụ thể (nếu là hóa đơn đổi trả, chỉ in các
+        // sản phẩm đổi trả, không in hóa đơn gốc)
         ChiTietHoaDonService ctService = new ChiTietHoaDonService();
         List<ChiTietHoaDon> dsChiTiet = ctService.layTheoMaHoaDon(maHD);
-        
-        // Mặc định đối với in lại hóa đơn lịch sử, tiền khách đưa là tổng tiền cần thanh toán, tiền thừa là 0
+
+        // Mặc định đối với in lại hóa đơn lịch sử, tiền khách đưa là tổng tiền cần
+        // thanh toán, tiền thừa là 0
         double tongThanhToan = hd.tinhTongTienThanhToan();
         com.example.utils.InHoaDonPOS.inHoaDon(hd, dsChiTiet, tongThanhToan, 0);
     }
@@ -524,10 +526,10 @@ public class HoaDonPanel extends JPanel {
         // Footer Info
         JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         footerPanel.setBackground(Color.WHITE);
-        
+
         hd.setDsChiTiet(dsChiTiet);
         double tongTienCuoiCung = hd.tinhTongTienThanhToan();
-        
+
         JLabel lblTong = new JLabel("Tổng tiền: " + nf.format(tongTienCuoiCung));
         lblTong.setFont(new Font("Segoe UI", Font.BOLD, 16));
         lblTong.setForeground(new Color(220, 53, 69)); // Red color
@@ -628,11 +630,13 @@ public class HoaDonPanel extends JPanel {
                     dialog.dispose();
                     taiLaiDanhSach();
                 } else {
-                    JOptionPane.showMessageDialog(dialog, "Lỗi: Không thể cập nhật trạng thái hóa đơn trên cơ sở dữ liệu.");
+                    JOptionPane.showMessageDialog(dialog,
+                            "Lỗi: Không thể cập nhật trạng thái hóa đơn trên cơ sở dữ liệu.");
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
-                JOptionPane.showMessageDialog(dialog, "Lỗi khi thanh toán: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(dialog, "Lỗi khi thanh toán: " + ex.getMessage(), "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
             }
         });
 
