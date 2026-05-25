@@ -152,6 +152,12 @@ public class HoaDonPanel extends JPanel {
         btnView.setBackground(Color.WHITE);
         btnView.setPreferredSize(new Dimension(80, 35));
 
+        RoundedButton btnIn = new RoundedButton("In hóa đơn");
+        btnIn.setFont(FONT_TEXT);
+        btnIn.setForeground(Color.DARK_GRAY);
+        btnIn.setBackground(Color.WHITE);
+        btnIn.setPreferredSize(new Dimension(110, 35));
+
         btnHuy = new RoundedButton("Hủy hóa đơn");
         btnHuy.setFont(FONT_TEXT);
         btnHuy.setForeground(Color.WHITE);
@@ -165,6 +171,7 @@ public class HoaDonPanel extends JPanel {
         leftPanel.add(new JLabel("Loại:"));
         leftPanel.add(cboLoaiHoaDon);
         leftPanel.add(btnView);
+        leftPanel.add(btnIn);
         leftPanel.add(btnHuy);
 
         RoundedButton btnPayment = new RoundedButton("Thanh toán");
@@ -193,6 +200,7 @@ public class HoaDonPanel extends JPanel {
         datePicker.addDateChangeListener(event -> taiLaiDanhSach());
         cboLoaiHoaDon.addActionListener(e -> taiLaiDanhSach());
         btnView.addActionListener(e -> xemChiTietHoaDon());
+        btnIn.addActionListener(e -> inHoaDonDuocChon());
         btnHuy.addActionListener(e -> huyHoaDon());
         btnPayment.addActionListener(e -> thanhToanHoaDon());
 
@@ -365,6 +373,28 @@ public class HoaDonPanel extends JPanel {
                 JOptionPane.showMessageDialog(this, "Lỗi: Không thể hủy hóa đơn này.");
             }
         }
+    }
+
+    private void inHoaDonDuocChon() {
+        int row = table.getSelectedRow();
+        if (row < 0) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn một hóa đơn để in.");
+            return;
+        }
+        String maHD = model.getValueAt(row, 0).toString();
+        HoaDon hd = hoaDonService.timTheoMa(maHD);
+        if (hd == null) {
+            JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn này.");
+            return;
+        }
+
+        // Tải chi tiết sản phẩm của hóa đơn cụ thể (nếu là hóa đơn đổi trả, chỉ in các sản phẩm đổi trả, không in hóa đơn gốc)
+        ChiTietHoaDonService ctService = new ChiTietHoaDonService();
+        List<ChiTietHoaDon> dsChiTiet = ctService.layTheoMaHoaDon(maHD);
+        
+        // Mặc định đối với in lại hóa đơn lịch sử, tiền khách đưa là tổng tiền cần thanh toán, tiền thừa là 0
+        double tongThanhToan = hd.tinhTongTienThanhToan();
+        com.example.utils.InHoaDonPOS.inHoaDon(hd, dsChiTiet, tongThanhToan, 0);
     }
 
     private void hienThiChiTiet() {

@@ -1441,9 +1441,23 @@ public class BanHangPanel extends JPanel {
 
         try {
             if (hoaDonService.xacNhanThanhToan(maHoaDonHienTai, dsChiTiet)) {
-                JOptionPane.showMessageDialog(this, "Thanh toán thành công!", "Thành công",
-                        JOptionPane.INFORMATION_MESSAGE);
-                // Reset form
+                // Phân tích số tiền khách đưa và tiền thối
+                double tienKhachDua = 0;
+                double tienThoi = 0;
+                try {
+                    String kd = txtTienKhachDua.getText().replaceAll("[^\\d]", "");
+                    tienKhachDua = kd.isEmpty() ? 0 : Double.parseDouble(kd);
+                    
+                    String tl = txtTienThoiLai.getText().replaceAll("[^\\d]", "");
+                    tienThoi = tl.isEmpty() ? 0 : Double.parseDouble(tl);
+                } catch (Exception ex) {
+                    // Bỏ qua lỗi parse
+                }
+                
+                // Hiển thị trực quan hóa đơn xem trước và hỏi in ấn (Chỉ một bước duy nhất cực kỳ tiện lợi)
+                com.example.utils.InHoaDonPOS.inHoaDon(hd, dsChiTiet, tienKhachDua, tienThoi);
+
+                // Tiến hành reset giao diện phục vụ giao dịch tiếp theo
                 model.setRowCount(0);
                 maHoaDonHienTai = sinhMaHoaDon();
                 lblMaHoaDon.setText(maHoaDonHienTai);

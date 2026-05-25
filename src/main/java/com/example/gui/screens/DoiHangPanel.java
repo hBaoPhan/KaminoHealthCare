@@ -828,7 +828,21 @@ public class DoiHangPanel extends JPanel {
 
             // 5. THỰC THI GIAO DỊCH QUA SERVICE
             if (hoaDonService.luuHoaDonDoiHang(hdMoi, dsTraLai, dsChiTietMoi, dsPhanBoMoi)) {
-                JOptionPane.showMessageDialog(this, "Thanh toán thành công hóa đơn đổi: " + maHoaDonMoi);
+                double tienKhachDua = 0;
+                double tienThoi = 0;
+                try {
+                    String kd = txtKhachDua.getText().replaceAll("[^\\d]", "");
+                    tienKhachDua = kd.isEmpty() ? 0 : Double.parseDouble(kd);
+                    
+                    String tl = txtTienThoi.getText().replaceAll("[^\\d]", "");
+                    tienThoi = tl.isEmpty() ? 0 : Double.parseDouble(tl);
+                } catch (Exception ex) {
+                    // Bỏ qua lỗi parse
+                }
+                
+                // Hiển thị trực quan hóa đơn đổi hàng xem trước và hỏi in ấn
+                com.example.utils.InHoaDonPOS.inHoaDon(hdMoi, dsChiTietMoi, tienKhachDua, tienThoi);
+                
                 resetForm();
             } else {
                 JOptionPane.showMessageDialog(this, "Lỗi hệ thống: Giao dịch không thể hoàn tất!", "Lỗi SQL",
