@@ -6,6 +6,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import com.github.lgooddatepicker.components.DatePicker;
 import com.github.lgooddatepicker.components.DatePickerSettings;
 import com.example.service.ChiTietHoaDonService;
@@ -58,6 +59,7 @@ public class BanHangPanel extends JPanel {
     private JLabel lblThanhTien;
 
     private RoundedTextField txtSoDienThoai;
+    private RoundedTextField txtSearch;
     private JCheckBox chkKhachLe;
     private RoundedTextField txtTenKhachHang;
     private JLabel lblMaHoaDon;
@@ -76,6 +78,9 @@ public class BanHangPanel extends JPanel {
     private String maHoaDonHienTai = "";
     private NhanVien nhanVienHienTai;
 
+    private final StringBuilder barcodeBuffer = new StringBuilder();
+    private long lastKeyTime = 0;
+
     public BanHangPanel(TaiKhoan taiKhoan) {
         this.nhanVienHienTai = taiKhoan.getNhanVien();
         setLayout(new BorderLayout(20, 0));
@@ -84,6 +89,43 @@ public class BanHangPanel extends JPanel {
 
         add(createLeftPanel(), BorderLayout.CENTER);
         add(createRightSidebar(), BorderLayout.EAST);
+
+        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(e -> {
+            if (!isShowing()) {
+                return false;
+            }
+
+            if (e.getID() == KeyEvent.KEY_TYPED) {
+                long now = System.currentTimeMillis();
+                char c = e.getKeyChar();
+
+                if (now - lastKeyTime > 50) {
+                    barcodeBuffer.setLength(0);
+                }
+                lastKeyTime = now;
+
+                if (c == '\n') {
+                    String barcode = barcodeBuffer.toString().trim();
+                    if (!barcode.isEmpty() && barcode.length() >= 5) {
+                        DonViQuyDoi dv = donViQuyDoiService.timTheoBarcode(barcode);
+                        if (dv != null) {
+                            SwingUtilities.invokeLater(() -> {
+                                addProductToTable(dv.getSanPham(), dv);
+                                if (txtSearch != null) {
+                                    txtSearch.setText("");
+                                }
+                            });
+                            barcodeBuffer.setLength(0);
+                            return true; // Tiêu hủy sự kiện Enter
+                        }
+                    }
+                    barcodeBuffer.setLength(0);
+                } else if (Character.isLetterOrDigit(c)) {
+                    barcodeBuffer.append(c);
+                }
+            }
+            return false;
+        });
 
         SwingUtilities.invokeLater(this::loadHoaDonChuaThanhToan);
     }
@@ -113,6 +155,9 @@ public class BanHangPanel extends JPanel {
 
             khachHangHienTai = null;
             updateSummary();
+            if (txtSearch != null) {
+                txtSearch.requestFocusInWindow();
+            }
             return;
         }
 
@@ -175,6 +220,9 @@ public class BanHangPanel extends JPanel {
                 }
             }
         }
+        if (txtSearch != null) {
+            txtSearch.requestFocusInWindow();
+        }
     }
 
     private JPanel createLeftPanel() {
@@ -187,7 +235,7 @@ public class BanHangPanel extends JPanel {
         JLabel lblTitle = new JLabel("Danh sách sản phẩm");
         lblTitle.setFont(FONT_TITLE);
 
-        RoundedTextField txtSearch = new RoundedTextField("Tìm Mã/Tên sản phẩm", 15);
+        txtSearch = new RoundedTextField("Tìm Mã/Tên sản phẩm", 15);
         txtSearch.setPreferredSize(new Dimension(250, 35));
         txtSearch.setFont(FONT_TEXT);
 
@@ -266,6 +314,28 @@ public class BanHangPanel extends JPanel {
                         txtSearch.requestFocus();
                     }
                 });
+            }
+        });
+
+        txtSearch.addActionListener(e -> {
+            String text = txtSearch.getText().trim();
+            if (!text.isEmpty() && !text.equals("Tìm Mã/Tên sản phẩm")) {
+                DonViQuyDoi dv = donViQuyDoiService.timTheoBarcode(text);
+                if (dv != null) {
+                    addProductToTable(dv.getSanPham(), dv);
+                    txtSearch.setText("");
+                    searchPopup.setVisible(false);
+                } else {
+                    SanPham sp = sanPhamService.timTheoMa(text);
+                    if (sp != null) {
+                        List<DonViQuyDoi> donVis = donViQuyDoiService.timTheoMaSanPham(sp.getMaSanPham());
+                        if (!donVis.isEmpty()) {
+                            addProductToTable(sp, donVis.get(0));
+                            txtSearch.setText("");
+                            searchPopup.setVisible(false);
+                        }
+                    }
+                }
             }
         });
 

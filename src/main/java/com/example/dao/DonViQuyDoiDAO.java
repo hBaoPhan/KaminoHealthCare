@@ -26,6 +26,7 @@ public class DonViQuyDoiDAO {
                 dv.setTenDonVi(DonVi.valueOf(ketQua.getString("tenDonVi")));
                 dv.setHeSoQuyDoi(ketQua.getInt("heSoQuyDoi"));
                 dv.setSanPham(spDAO.timTheoMa(ketQua.getString("maSanPham")));
+                dv.setBarcode(ketQua.getString("barcode"));
                 danhSach.add(dv);
             }
         } catch (SQLException e) {
@@ -50,6 +51,7 @@ public class DonViQuyDoiDAO {
                 dv.setTenDonVi(DonVi.valueOf(ketQua.getString("tenDonVi")));
                 dv.setHeSoQuyDoi(ketQua.getInt("heSoQuyDoi"));
                 dv.setSanPham(spDAO.timTheoMa(ketQua.getString("maSanPham")));
+                dv.setBarcode(ketQua.getString("barcode"));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -61,12 +63,13 @@ public class DonViQuyDoiDAO {
         int soDongThayDoi = 0;
         try {
             Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "INSERT INTO DonViQuyDoi VALUES (?, ?, ?, ?)";
+            String truyVan = "INSERT INTO DonViQuyDoi (maDonVi, tenDonVi, heSoQuyDoi, maSanPham, barcode) VALUES (?, ?, ?, ?, ?)";
             PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
             lenh.setString(1, dv.getMaDonVi());
             lenh.setString(2, dv.getTenDonVi().name());
             lenh.setInt(3, dv.getHeSoQuyDoi());
             lenh.setString(4, dv.getSanPham().getMaSanPham());
+            lenh.setString(5, dv.getBarcode());
             soDongThayDoi = lenh.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -78,12 +81,13 @@ public class DonViQuyDoiDAO {
         int soDongThayDoi = 0;
         try {
             Connection ketNoi = ConnectDB.getConnection();
-            String truyVan = "UPDATE DonViQuyDoi SET tenDonVi = ?, heSoQuyDoi = ?, maSanPham = ? WHERE maDonVi = ?";
+            String truyVan = "UPDATE DonViQuyDoi SET tenDonVi = ?, heSoQuyDoi = ?, maSanPham = ?, barcode = ? WHERE maDonVi = ?";
             PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
             lenh.setString(1, dv.getTenDonVi().name());
             lenh.setInt(2, dv.getHeSoQuyDoi());
             lenh.setString(3, dv.getSanPham().getMaSanPham());
-            lenh.setString(4, dv.getMaDonVi());
+            lenh.setString(4, dv.getBarcode());
+            lenh.setString(5, dv.getMaDonVi());
             soDongThayDoi = lenh.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -121,6 +125,7 @@ public class DonViQuyDoiDAO {
                 dv.setTenDonVi(DonVi.valueOf(ketQua.getString("tenDonVi")));
                 dv.setHeSoQuyDoi(ketQua.getInt("heSoQuyDoi"));
                 dv.setSanPham(spDAO.timTheoMa(ketQua.getString("maSanPham")));
+                dv.setBarcode(ketQua.getString("barcode"));
                 danhSach.add(dv);
             }
         } catch (SQLException e) {
@@ -142,6 +147,7 @@ public class DonViQuyDoiDAO {
                 dv.setMaDonVi(rs.getString("maDonVi"));
                 dv.setTenDonVi(DonVi.valueOf(rs.getString("tenDonVi")));
                 dv.setHeSoQuyDoi(rs.getInt("heSoQuyDoi")); // Dùng để tính giá 
+                dv.setBarcode(rs.getString("barcode"));
                 
                 // Lấy thông tin sản phẩm để có giá bán cơ bản (giá 1 viên/chai/tuýp)
                 SanPhamDAO spDAO = new SanPhamDAO();
@@ -182,5 +188,29 @@ public class DonViQuyDoiDAO {
             e.printStackTrace();
         }
         return soDongThayDoi > 0;
+    }
+
+    public DonViQuyDoi timTheoBarcode(String barcode) {
+        DonViQuyDoi dv = null;
+        try {
+            Connection ketNoi = ConnectDB.getConnection();
+            String truyVan = "SELECT * FROM DonViQuyDoi WHERE barcode = ?";
+            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
+            lenh.setString(1, barcode);
+            ResultSet ketQua = lenh.executeQuery();
+
+            SanPhamDAO spDAO = new SanPhamDAO();
+            if (ketQua.next()) {
+                dv = new DonViQuyDoi();
+                dv.setMaDonVi(ketQua.getString("maDonVi"));
+                dv.setTenDonVi(DonVi.valueOf(ketQua.getString("tenDonVi")));
+                dv.setHeSoQuyDoi(ketQua.getInt("heSoQuyDoi"));
+                dv.setSanPham(spDAO.timTheoMa(ketQua.getString("maSanPham")));
+                dv.setBarcode(ketQua.getString("barcode"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return dv;
     }
 }

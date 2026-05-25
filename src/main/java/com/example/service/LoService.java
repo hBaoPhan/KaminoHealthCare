@@ -94,4 +94,8 @@ public class LoService {
             throws java.sql.SQLException {
         return loDAO.capNhatTonKhoNhieu(danhSachPhanBo, isHoanTra);
     }
+
+    public int tinhTongTonKhoSanPham(String maSanPham) {
+        return loDAO.tinhTongTonKhoSanPham(maSanPham);
+    }
 }

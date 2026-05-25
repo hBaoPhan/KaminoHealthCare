@@ -8,6 +8,7 @@ public class DonViQuyDoi {
     private DonVi tenDonVi;
     private int heSoQuyDoi;
     private SanPham sanPham;
+    private String barcode;
 
     public DonViQuyDoi() {
     }
@@ -21,6 +22,14 @@ public class DonViQuyDoi {
         this.tenDonVi = tenDonVi;
         this.heSoQuyDoi = heSoQuyDoi;
         this.sanPham = sanPham;
+    }
+
+    public DonViQuyDoi(String maDonVi, DonVi tenDonVi, int heSoQuyDoi, SanPham sanPham, String barcode) {
+        this.maDonVi = maDonVi;
+        this.tenDonVi = tenDonVi;
+        this.heSoQuyDoi = heSoQuyDoi;
+        this.sanPham = sanPham;
+        this.barcode = barcode;
     }
 
     public String getMaDonVi() {
@@ -55,6 +64,14 @@ public class DonViQuyDoi {
         this.sanPham = sanPham;
     }
 
+    public String getBarcode() {
+        return barcode;
+    }
+
+    public void setBarcode(String barcode) {
+        this.barcode = barcode;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -75,6 +92,7 @@ public class DonViQuyDoi {
                 ", tenDonVi=" + tenDonVi +
                 ", heSoQuyDoi=" + heSoQuyDoi +
                 ", sanPham=" + sanPham +
+                ", barcode='" + barcode + '\'' +
                 '}';
     }
 }
