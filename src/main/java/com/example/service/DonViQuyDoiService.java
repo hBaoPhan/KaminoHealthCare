@@ -30,6 +30,10 @@ public class DonViQuyDoiService {
         return donViQuyDoiDAO.timTheoTenVaMaSP(tenDonViStr, maSanPham);
     }
 
+    public DonViQuyDoi timTheoBarcode(String barcode) {
+        return donViQuyDoiDAO.timTheoBarcode(barcode);
+    }
+
     // ==================== NGHIỆP VỤ ====================
 
     /**

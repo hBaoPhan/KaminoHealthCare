@@ -1,25 +1,25 @@
 USE master;
-GO -- 1. XÓA DATABASE CŨ (NẾU ĐANG TỒN TẠI)
+GO
     IF EXISTS (
         SELECT name
         FROM sys.databases
-        WHERE name = N 'QUANLYKAMINOHEALTHCARE'
+        WHERE name = N'QUANLYKAMINOHEALTHCARE'
     ) BEGIN ALTER DATABASE [QUANLYKAMINOHEALTHCARE]
 SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
 DROP DATABASE [QUANLYKAMINOHEALTHCARE];
 END
-GO -- 2. TẠO MỚI DATABASE
+GO
     CREATE DATABASE [QUANLYKAMINOHEALTHCARE];
-GO USE [QUANLYKAMINOHEALTHCARE];
-GO --- =================================================== ---
-    --- 3. KHỞI TẠO CÁC BẢNG THỰC THỂ (DDL)
-    --- =================================================== ---
+GO
+USE [QUANLYKAMINOHEALTHCARE];
+GO
+
     CREATE TABLE NhanVien (
         maNhanVien VARCHAR(10) PRIMARY KEY,
         tenNhanVien NVARCHAR(100) NOT NULL,
         cccd VARCHAR(12) UNIQUE,
         sdt VARCHAR(10),
-        chucVu NVARCHAR(50) NOT NULL CHECK (chucVu IN (N'DUOC_SI', N 'NHAN_VIEN_QUAN_LY')),
+        chucVu NVARCHAR(50) NOT NULL CHECK (chucVu IN (N'DUOC_SI', N'NHAN_VIEN_QUAN_LY')),
         trangThaiHoatDong BIT
     );
 CREATE TABLE TaiKhoan (
@@ -33,7 +33,7 @@ CREATE TABLE CaLam (
     gioBatDau DATETIME,
     gioKetThuc DATETIME,
     trangThaiCaLam NVARCHAR(20) CHECK (
-        trangThaiCaLam IN (N 'DANG_MO', N 'DONG', N'CHUA_MO')
+        trangThaiCaLam IN (N'DANG_MO', N'DONG', N'CHUA_MO')
     ),
     tienMoCa FLOAT,
     tienKetCa FLOAT,
@@ -45,7 +45,7 @@ CREATE TABLE KhachHang (
     tenKhachHang NVARCHAR(100),
     sdt VARCHAR(10),
     trangThaiKhachHang NVARCHAR(50) CHECK (
-        trangThaiKhachHang IN (N 'KHACH_HANG_THANH_VIEN', N'KHACH_LE')
+        trangThaiKhachHang IN (N'KHACH_HANG_THANH_VIEN', N'KHACH_LE')
     )
 );
 CREATE TABLE KhuyenMai (
@@ -53,14 +53,14 @@ CREATE TABLE KhuyenMai (
     tenKhuyenMai NVARCHAR(200),
     thoiGianBatDau DATETIME,
     thoiGianKetThuc DATETIME,
-    loaiKhuyenMai NVARCHAR(20) CHECK (loaiKhuyenMai IN (N 'PHAN_TRAM', N 'TANG_KEM')),
+    loaiKhuyenMai NVARCHAR(20) CHECK (loaiKhuyenMai IN (N'PHAN_TRAM', N'TANG_KEM')),
     khuyenMaiPhanTram FLOAT,
     giaTriDonHangToiThieu FLOAT
 );
 CREATE TABLE SanPham (
     maSanPham VARCHAR(20) PRIMARY KEY,
     tenSanPham NVARCHAR(200) NOT NULL,
-    loaiSanPham NVARCHAR(20) CHECK (loaiSanPham IN (N'ETC', N'OTC', N 'TPCN')),
+    loaiSanPham NVARCHAR(20) CHECK (loaiSanPham IN (N'ETC', N'OTC', N'TPCN', N'MY_PHAM')),
     soLuongTon INT DEFAULT 0,
     moTa NVARCHAR(MAX),
     hoatChat NVARCHAR(200),
@@ -71,11 +71,15 @@ CREATE TABLE SanPham (
 CREATE TABLE DonViQuyDoi (
     maDonVi VARCHAR(20) PRIMARY KEY,
     tenDonVi NVARCHAR(20) CHECK (
-        tenDonVi IN (N 'VIEN', N'VI', N'HOP', N'TUYP', N'CHAI', N'CAI')
+        tenDonVi IN (N'VIEN', N'VI', N'HOP', N'TUYP', N'CHAI', N'CAI')
     ),
     heSoQuyDoi INT,
-    maSanPham VARCHAR(20) FOREIGN KEY REFERENCES SanPham(maSanPham)
+    maSanPham VARCHAR(20) FOREIGN KEY REFERENCES SanPham(maSanPham),
+    barcode VARCHAR(50)
 );
+CREATE UNIQUE NONCLUSTERED INDEX UQ_DonViQuyDoi_Barcode
+ON DonViQuyDoi(barcode)
+WHERE barcode IS NOT NULL;
 CREATE TABLE QuaTang (
     maKhuyenMai VARCHAR(10) FOREIGN KEY REFERENCES KhuyenMai(maKhuyenMai),
     maDonVi VARCHAR(20) FOREIGN KEY REFERENCES DonViQuyDoi(maDonVi),
@@ -104,14 +108,14 @@ CREATE TABLE HoaDon (
     maKhachHang VARCHAR(10) FOREIGN KEY REFERENCES KhachHang(maKhachHang),
     maKhuyenMai VARCHAR(10) FOREIGN KEY REFERENCES KhuyenMai(maKhuyenMai),
     loaiHoaDon NVARCHAR(20) CHECK (
-        loaiHoaDon IN (N 'BAN_HANG', N 'DOI_HANG', N 'TRA_HANG')
+        loaiHoaDon IN (N'BAN_HANG', N'DOI_HANG', N'TRA_HANG')
     ),
     maCa VARCHAR(10) FOREIGN KEY REFERENCES CaLam(maCa),
     ghiChu NVARCHAR(MAX),
     maHoaDonDoiTra VARCHAR(20) FOREIGN KEY REFERENCES HoaDon(maHoaDon),
     maDonThuoc VARCHAR(20) FOREIGN KEY REFERENCES DonThuoc(maDonThuoc),
     phuongThucThanhToan NVARCHAR(20) CHECK (
-        phuongThucThanhToan IN (N 'TIEN_MAT', N 'CHUYEN_KHOAN')
+        phuongThucThanhToan IN (N'TIEN_MAT', N'CHUYEN_KHOAN')
     )
 );
 CREATE TABLE ChiTietHoaDon (
@@ -134,10 +138,8 @@ CREATE TABLE SuPhanBoLo (
         REFERENCES ChiTietHoaDon(maHoaDon, maDonVi, laQuaTangKem),
     PRIMARY KEY (maHoaDon, maDonVi, maLo, laQuaTangKem, biLoi)
 );
-GO --- =================================================== ---
-    --- 4. CHÈN DỮ LIỆU MẪU (ÁP DỤNG QUY TẮC MÃ ĐỊNH DANH MỚI)
-    --- =================================================== ---
-    -- 4.1. NHÂN VIÊN & TÀI KHOẢN
+GO
+
 INSERT INTO NhanVien (
         maNhanVien,
         tenNhanVien,
@@ -151,7 +153,7 @@ VALUES (
         N'Phan Hoài Bảo',
         '079200000001',
         '0901234567',
-        N 'NHAN_VIEN_QUAN_LY',
+        N'NHAN_VIEN_QUAN_LY',
         1
     ),
     (
@@ -159,23 +161,23 @@ VALUES (
         N'Trần Tấn Tài',
         '079200000002',
         '0901234568',
-        N 'NHAN_VIEN_QUAN_LY',
+        N'NHAN_VIEN_QUAN_LY',
         1
     ),
     (
         'QL003',
-        N 'Nguyễn Xuân Trường',
+        N'Nguyễn Xuân Trường',
         '079200000003',
         '0901234569',
-        N 'NHAN_VIEN_QUAN_LY',
+        N'NHAN_VIEN_QUAN_LY',
         1
     ),
     (
         'QL004',
-        N 'Nguyễn Minh Nhật',
+        N'Nguyễn Minh Nhật',
         '079200000004',
         '0901234570',
-        N 'NHAN_VIEN_QUAN_LY',
+        N'NHAN_VIEN_QUAN_LY',
         1
     ),
     (
@@ -227,27 +229,27 @@ VALUES (
     ),
     (
         'TV000001',
-        N 'Ngô Thị Em',
+        N'Ngô Thị Em',
         '0922222222',
-        N 'KHACH_HANG_THANH_VIEN'
+        N'KHACH_HANG_THANH_VIEN'
     ),
     (
         'TV000002',
         N'Vũ Văn Phong',
         '0933333333',
-        N 'KHACH_HANG_THANH_VIEN'
+        N'KHACH_HANG_THANH_VIEN'
     ),
     (
         'TV000003',
         N'Đặng Thị Giang',
         '0944444444',
-        N 'KHACH_HANG_THANH_VIEN'
+        N'KHACH_HANG_THANH_VIEN'
     ),
     (
         'TV000004',
         N'Bùi Văn Hùng',
         '0955555555',
-        N 'KHACH_HANG_THANH_VIEN'
+        N'KHACH_HANG_THANH_VIEN'
     );
 -- 4.3. KHUYẾN MÃI
 INSERT INTO KhuyenMai (
@@ -264,7 +266,7 @@ VALUES (
         N'Giảm 10% đơn từ 500k',
         '2026-04-01',
         '2026-05-01',
-        N 'PHAN_TRAM',
+        N'PHAN_TRAM',
         10,
         500000
     ),
@@ -273,7 +275,7 @@ VALUES (
         N'Tặng Vitamin C từ đơn 50k',
         '2026-04-15',
         '2026-04-30',
-        N 'TANG_KEM',
+        N'TANG_KEM',
         0,
         50000
     ),
@@ -282,7 +284,7 @@ VALUES (
         N'Giảm giá 5% Lễ đơn 200k',
         '2026-04-25',
         '2026-05-05',
-        N 'PHAN_TRAM',
+        N'PHAN_TRAM',
         5,
         200000
     ),
@@ -291,7 +293,7 @@ VALUES (
         N'Tặng Allerphast cho đơn từ 100k',
         '2026-04-01',
         '2026-12-31',
-        N 'TANG_KEM',
+        N'TANG_KEM',
         0,
         100000
     ),
@@ -300,7 +302,7 @@ VALUES (
         N'Tặng Contractubex đơn từ 100k',
         '2026-10-01',
         '2026-10-31',
-        N 'TANG_KEM',
+        N'TANG_KEM',
         0,
         100000
     );
@@ -308,7 +310,7 @@ VALUES (
 INSERT INTO DonThuoc (maDonThuoc, tenBacSi, coSoKhamBenh, ngayKeDon)
 VALUES (
         'DT200426001',
-        N 'BS. Nguyễn Văn A',
+        N'BS. Nguyễn Văn A',
         N'Bệnh viện Chợ Rẫy',
         '2026-04-20'
     ),
@@ -332,14 +334,14 @@ VALUES (
     ),
     (
         'DT240426001',
-        N 'BS. Ngô Văn E',
-        N 'Bệnh viện Nhi Đồng',
+        N'BS. Ngô Văn E',
+        N'Bệnh viện Nhi Đồng',
         '2026-04-24'
     ),
     (
         'DT300426001',
         N'BS. Hoàng Trọng E',
-        N 'Bệnh viện Nhân dân Gia Định',
+        N'Bệnh viện Nhân dân Gia Định',
         '2026-04-30'
     );
 -- 4.5. CA LÀM
@@ -359,7 +361,7 @@ VALUES (
         'QL001',
         '2026-04-20 08:00:00',
         '2026-04-20 16:00:00',
-        N 'DONG',
+        N'DONG',
         1000000,
         5000000,
         4000000,
@@ -370,7 +372,7 @@ VALUES (
         'DS001',
         '2026-04-20 16:00:00',
         '2026-04-20 22:00:00',
-        N 'DONG',
+        N'DONG',
         5000000,
         8000000,
         3000000,
@@ -381,7 +383,7 @@ VALUES (
         'DS001',
         '2026-04-21 08:00:00',
         '2026-04-21 16:00:00',
-        N 'DONG',
+        N'DONG',
         1000000,
         6000000,
         5000000,
@@ -392,7 +394,7 @@ VALUES (
         'DS001',
         '2026-04-21 16:00:00',
         '2026-04-21 22:00:00',
-        N 'DONG',
+        N'DONG',
         6000000,
         9000000,
         3000000,
@@ -403,7 +405,7 @@ VALUES (
         'DS001',
         '2026-04-22 08:00:00',
         '2026-04-22 08:00:00',
-        N 'DONG',
+        N'DONG',
         1000000,
         1000000,
         0,
@@ -414,7 +416,7 @@ VALUES (
         'DS001',
         '2026-04-26 08:00:00',
         '2026-04-26 16:00:00',
-        N 'DONG',
+        N'DONG',
         1000000,
         5000000,
         4000000,
@@ -425,7 +427,7 @@ VALUES (
         'DS001',
         '2026-04-30 08:00:00',
         '2026-04-30 16:00:00',
-        N 'DONG',
+        N'DONG',
         1000000,
         6000000,
         5000000,
@@ -436,13 +438,13 @@ VALUES (
         'QL001',
         '2026-05-02 08:00:00',
         '2026-05-02 16:00:00',
-        N 'DONG',
+        N'DONG',
         1000000,
         5000000,
         4000000,
         N'Đang trực'
     );
--- 4.6. SẢN PHẨM & ĐƠN VỊ QUY ĐỔI (SỬA ĐƠN GIÁ CƠ BẢN LÀ GIÁ 1 VIÊN/1 TUÝP)
+-- 4.6. SẢN PHẨM & ĐƠN VỊ QUY ĐỔI 
 INSERT INTO SanPham (
         maSanPham,
         tenSanPham,
@@ -489,7 +491,7 @@ VALUES (
     ),
     (
         'OTC-NIZ-004',
-        N 'Nizoral Shampoo Janssen',
+        N'Nizoral Shampoo Janssen',
         N'OTC',
         100,
         N'Dầu gội trị nấm da đầu',
@@ -908,7 +910,7 @@ VALUES (
     (
         'TPCN-BPK-039',
         N'Bio Plus Kenko',
-        N 'TPCN',
+        N'TPCN',
         500,
         N'Bổ sung vitamin và khoáng chất tổng hợp',
         N'Multi Vitamin & Minerals',
@@ -918,8 +920,8 @@ VALUES (
     ),
     (
         'TPCN-BNI-040',
-        N 'Bổ Não Ích Trí Gold',
-        N 'TPCN',
+        N'Bổ Não Ích Trí Gold',
+        N'TPCN',
         500,
         N'Bổ não, tăng cường trí nhớ',
         N'Ginkgo Biloba & Thảo dược',
@@ -930,7 +932,7 @@ VALUES (
     (
         'TPCN-BPL-041',
         N'Bổ Phế Labebe',
-        N 'TPCN',
+        N'TPCN',
         500,
         N'Bổ phế, hỗ trợ hô hấp',
         N'Thảo dược',
@@ -941,7 +943,7 @@ VALUES (
     (
         'TPCN-CDK-042',
         N'Canxi D3 K2 Kingphar',
-        N 'TPCN',
+        N'TPCN',
         220,
         N'Canxi kết hợp Vitamin D3 và K2',
         N'Calcium, Vitamin D3, K2',
@@ -951,8 +953,8 @@ VALUES (
     ),
     (
         'TPCN-D3D-043',
-        N 'D3 Drops DAO Nordic Health',
-        N 'TPCN',
+        N'D3 Drops DAO Nordic Health',
+        N'TPCN',
         500,
         N'Vitamin D3 dạng giọt',
         N'Vitamin D3',
@@ -963,7 +965,7 @@ VALUES (
     (
         'TPCN-HPM-044',
         N'High Potency MK-7 Drops',
-        N 'TPCN',
+        N'TPCN',
         500,
         N'Vitamin K2 MK-7 cao cấp',
         N'Vitamin K2 MK-7',
@@ -974,7 +976,7 @@ VALUES (
     (
         'TPCN-HHT-045',
         N'Hoạt Huyết Thống Mạch Gold TW3',
-        N 'TPCN',
+        N'TPCN',
         500,
         N'Hoạt huyết thông mạch',
         N'Thảo dược',
@@ -985,7 +987,7 @@ VALUES (
     (
         'TPCN-IMU-046',
         N'Immuvita Easylife',
-        N 'TPCN',
+        N'TPCN',
         500,
         N'Tăng cường sức đề kháng',
         N'Vitamin & Immuno Support',
@@ -996,7 +998,7 @@ VALUES (
     (
         'TPCN-KAN-047',
         N'Kanzo Gold',
-        N 'TPCN',
+        N'TPCN',
         500,
         N'Bổ gan Kanzo',
         N'Thảo dược',
@@ -1007,7 +1009,7 @@ VALUES (
     (
         'TPCN-KID-048',
         N'KID GROW Kenko',
-        N 'TPCN',
+        N'TPCN',
         500,
         N'Vitamin tăng trưởng cho trẻ em',
         N'Multi Vitamin',
@@ -1018,7 +1020,7 @@ VALUES (
     (
         'TPCN-LBG-049',
         N'Lacto Biomin Gold',
-        N 'TPCN',
+        N'TPCN',
         500,
         N'Men vi sinh Biomin',
         N'Probiotics',
@@ -1029,7 +1031,7 @@ VALUES (
     (
         'TPCN-LAC-050',
         N'Lactobact Intima 30V',
-        N 'TPCN',
+        N'TPCN',
         500,
         N'Men vi sinh phụ khoa',
         N'Lactobacillus',
@@ -1039,8 +1041,8 @@ VALUES (
     ),
     (
         'TPCN-NUT-051',
-        N 'NutriGrow Nutrimed',
-        N 'TPCN',
+        N'NutriGrow Nutrimed',
+        N'TPCN',
         500,
         N'Bổ sung dinh dưỡng trẻ em',
         N'Multi Vitamin',
@@ -1051,7 +1053,7 @@ VALUES (
     (
         'TPCN-OMP-052',
         N'Omega 3 Plus Kenko',
-        N 'TPCN',
+        N'TPCN',
         500,
         N'Omega 3 cao cấp',
         N'Omega-3 Fish Oil',
@@ -1061,10 +1063,10 @@ VALUES (
     ),
     (
         'TPCN-OPD-053',
-        N 'Omega 3 Power DAO Nordic Health',
-        N 'TPCN',
+        N'Omega 3 Power DAO Nordic Health',
+        N'TPCN',
         500,
-        N 'Omega 3 Nordic Health',
+        N'Omega 3 Nordic Health',
         N'Omega-3',
         258000,
         1,
@@ -1073,7 +1075,7 @@ VALUES (
     (
         'TPCN-OMX-054',
         N'Omexxel 3-6-9 Premium',
-        N 'TPCN',
+        N'TPCN',
         500,
         N'Omega 3-6-9 Premium',
         N'Omega 3,6,9',
@@ -1084,7 +1086,7 @@ VALUES (
     (
         'TPCN-OMG-055',
         N'Omexxel Ginkgo 120 Premium',
-        N 'TPCN',
+        N'TPCN',
         300,
         N'Ginkgo Biloba 120mg',
         N'Ginkgo Biloba',
@@ -1095,7 +1097,7 @@ VALUES (
     (
         'TPCN-PIK-056',
         N'Pikolin Ocavill',
-        N 'TPCN',
+        N'TPCN',
         500,
         N'Sắt Pikolin dễ hấp thu',
         N'Iron Pikolin',
@@ -1106,7 +1108,7 @@ VALUES (
     (
         'TPCN-POB-057',
         N'Premium Omexxel Bone Health',
-        N 'TPCN',
+        N'TPCN',
         500,
         N'Hỗ trợ xương khớp cao cấp',
         N'Calcium + Vitamin D & K2',
@@ -1117,7 +1119,7 @@ VALUES (
     (
         'TPCN-SKI-058',
         N'SkillMax Ocavill',
-        N 'TPCN',
+        N'TPCN',
         500,
         N'Hỗ trợ trí não',
         N'Ginkgo & Phosphatidylserine',
@@ -1128,119 +1130,180 @@ VALUES (
     (
         'TPCN-VTC-059',
         N'Vitamin C 500mg Enervon',
-        N 'TPCN',
+        N'TPCN',
         1000,
         N'Bổ sung Vitamin C và Vitamin B',
         N'Vitamin C 500mg',
         35000,
         1,
         10
+    ),
+    (
+        'MY_PHAM-LRP-001',
+        N'La Roche-Posay Cicaplast B5+',
+        N'MY_PHAM',
+        300,
+        N'Kem dưỡng phục hồi và làm dịu da',
+        N'La Roche-Posay',
+        285000,
+        1,
+        10
+    ),
+    (
+        'MY_PHAM-VIC-002',
+        N'Vichy Mineral 89 Serum',
+        N'MY_PHAM',
+        200,
+        N'Dưỡng chất khoáng cô đặc phục hồi da',
+        N'Vichy',
+        565000,
+        1,
+        10
+    ),
+    (
+        'MY_PHAM-CER-003',
+        N'CeraVe Hydrating Cleanser',
+        N'MY_PHAM',
+        400,
+        N'Sữa rửa mặt dưỡng ẩm cho da thường đến da khô',
+        N'CeraVe',
+        320000,
+        1,
+        10
+    ),
+    (
+        'MY_PHAM-EUC-004',
+        N'Eucerin Sun Dry Touch',
+        N'MY_PHAM',
+        250,
+        N'Kem chống nắng kiểm soát dầu',
+        N'Eucerin',
+        415000,
+        1,
+        10
+    ),
+    (
+        'MY_PHAM-BIO-005',
+        N'Bioderma Sensibio H2O Micellar Water',
+        N'MY_PHAM',
+        500,
+        N'Nước tẩy trang dịu nhẹ cho da nhạy cảm',
+        N'Bioderma',
+        195000,
+        1,
+        10
     );
-INSERT INTO DonViQuyDoi (maDonVi, tenDonVi, heSoQuyDoi, maSanPham)
-VALUES ('DV001', N'TUYP', 1, 'OTC-BIA-001'),
-    ('DV002', N'TUYP', 1, 'OTC-CON-002'),
-    ('DV003', N'CHAI', 1, 'OTC-MIN-003'),
-    ('DV004', N'CHAI', 1, 'OTC-NIZ-004'),
-    ('DV005', N'TUYP', 1, 'OTC-REM-005'),
-    ('DV006', N'CHAI', 1, 'OTC-CIC-013'),
-    ('DV007', N'TUYP', 1, 'ETC-BET-019'),
-    ('DV008', N'TUYP', 1, 'ETC-SRI-022'),
-    ('DV009', N'TUYP', 1, 'ETC-TOM-023'),
-    ('DV010', N'CHAI', 1, 'TPCN-D3D-043'),
-    ('DV011', N'CHAI', 1, 'TPCN-HPM-044'),
-    ('DV012', N'CHAI', 1, 'TPCN-LBG-049'),
-    ('DV013', N'CHAI', 1, 'TPCN-KAN-047'),
-    ('DV014', N'CHAI', 1, 'OTC-COR-017'),
-    ('DV015', N 'VIEN', 1, 'OTC-ALL-006'),
-    ('DV016', N'VI', 10, 'OTC-ALL-006'),
-    ('DV017', N'HOP', 100, 'OTC-ALL-006'),
-    ('DV018', N 'VIEN', 1, 'OTC-CET-007'),
-    ('DV019', N'VI', 10, 'OTC-CET-007'),
-    ('DV020', N'HOP', 100, 'OTC-CET-007'),
-    ('DV021', N 'VIEN', 1, 'OTC-CLO-008'),
-    ('DV022', N'VI', 10, 'OTC-CLO-008'),
-    ('DV023', N'HOP', 100, 'OTC-CLO-008'),
-    ('DV024', N 'VIEN', 1, 'OTC-EXO-009'),
-    ('DV025', N'VI', 10, 'OTC-EXO-009'),
-    ('DV026', N'HOP', 100, 'OTC-EXO-009'),
-    ('DV027', N 'VIEN', 1, 'OTC-HIS-010'),
-    ('DV028', N'VI', 10, 'OTC-HIS-010'),
-    ('DV029', N'HOP', 100, 'OTC-HIS-010'),
-    ('DV030', N 'VIEN', 1, 'OTC-ATS-011'),
-    ('DV031', N'VI', 10, 'OTC-ATS-011'),
-    ('DV032', N'HOP', 100, 'OTC-ATS-011'),
-    ('DV033', N 'VIEN', 1, 'OTC-FUG-012'),
-    ('DV034', N'VI', 1, 'OTC-FUG-012'),
-    ('DV035', N'HOP', 1, 'OTC-FUG-012'),
-    ('DV036', N 'VIEN', 1, 'ETC-DEX-020'),
-    ('DV037', N'VI', 10, 'ETC-DEX-020'),
-    ('DV038', N'HOP', 100, 'ETC-DEX-020'),
-    ('DV039', N 'VIEN', 1, 'ETC-BIL-024'),
-    ('DV040', N'VI', 10, 'ETC-BIL-024'),
-    ('DV041', N'HOP', 30, 'ETC-BIL-024'),
-    ('DV042', N 'VIEN', 1, 'ETC-LOD-025'),
-    ('DV043', N'VI', 10, 'ETC-LOD-025'),
-    ('DV044', N'HOP', 100, 'ETC-LOD-025'),
-    ('DV045', N 'VIEN', 1, 'ETC-RUP-026'),
-    ('DV046', N'VI', 10, 'ETC-RUP-026'),
-    ('DV047', N'HOP', 30, 'ETC-RUP-026'),
-    ('DV048', N 'VIEN', 1, 'ETC-CLE-029'),
-    ('DV049', N'VI', 7, 'ETC-CLE-029'),
-    ('DV050', N'HOP', 14, 'ETC-CLE-029'),
-    ('DV051', N 'VIEN', 1, 'ETC-FLU-030'),
-    ('DV052', N'VI', 1, 'ETC-FLU-030'),
-    ('DV053', N'HOP', 1, 'ETC-FLU-030'),
-    ('DV054', N 'VIEN', 1, 'ETC-IME-031'),
-    ('DV055', N'VI', 10, 'ETC-IME-031'),
-    ('DV056', N'HOP', 20, 'ETC-IME-031'),
-    ('DV057', N 'VIEN', 1, 'ETC-FEB-034'),
-    ('DV058', N'VI', 10, 'ETC-FEB-034'),
-    ('DV059', N'HOP', 30, 'ETC-FEB-034'),
-    ('DV060', N 'VIEN', 1, 'ETC-MET-036'),
-    ('DV061', N'VI', 10, 'ETC-MET-036'),
-    ('DV062', N'HOP', 50, 'ETC-MET-036'),
-    ('DV063', N 'VIEN', 1, 'TPCN-BPK-039'),
-    ('DV064', N'VI', 10, 'TPCN-BPK-039'),
-    ('DV065', N'HOP', 60, 'TPCN-BPK-039'),
-    ('DV066', N 'VIEN', 1, 'TPCN-BNI-040'),
-    ('DV067', N'VI', 10, 'TPCN-BNI-040'),
-    ('DV068', N'HOP', 30, 'TPCN-BNI-040'),
-    ('DV069', N 'VIEN', 1, 'TPCN-CDK-042'),
-    ('DV070', N'VI', 10, 'TPCN-CDK-042'),
-    ('DV071', N'HOP', 30, 'TPCN-CDK-042'),
-    ('DV072', N 'VIEN', 1, 'TPCN-OMP-052'),
-    ('DV073', N'VI', 15, 'TPCN-OMP-052'),
-    ('DV074', N'HOP', 60, 'TPCN-OMP-052'),
-    ('DV075', N 'VIEN', 1, 'TPCN-OMG-055'),
-    ('DV076', N'VI', 10, 'TPCN-OMG-055'),
-    ('DV077', N'HOP', 30, 'TPCN-OMG-055'),
-    ('DV078', N 'VIEN', 1, 'TPCN-POB-057'),
-    ('DV079', N'VI', 10, 'TPCN-POB-057'),
-    ('DV080', N'HOP', 30, 'TPCN-POB-057'),
-    ('DV081', N 'VIEN', 1, 'OTC-CAL-016'),
-    ('DV082', N'VI', 10, 'OTC-CAL-016'),
-    ('DV083', N'HOP', 100, 'OTC-CAL-016'),
-    ('DV084', N 'VIEN', 1, 'OTC-CST-018'),
-    ('DV085', N'VI', 10, 'OTC-CST-018'),
-    ('DV086', N'HOP', 100, 'OTC-CST-018'),
-    ('DV087', N 'VIEN', 1, 'OTC-XKH-020'),
-    ('DV088', N'VI', 10, 'OTC-XKH-020'),
-    ('DV089', N'HOP', 60, 'OTC-XKH-020'),
-    ('DV090', N 'VIEN', 1, 'TPCN-IMU-046'),
-    ('DV091', N'VI', 10, 'TPCN-IMU-046'),
-    ('DV092', N'HOP', 30, 'TPCN-IMU-046'),
-    ('DV093', N 'VIEN', 1, 'TPCN-LAC-050'),
-    ('DV094', N'VI', 10, 'TPCN-LAC-050'),
-    ('DV095', N'HOP', 30, 'TPCN-LAC-050'),
-    ('DV096', N 'VIEN', 1, 'TPCN-PIK-056'),
-    ('DV097', N'VI', 10, 'TPCN-PIK-056'),
-    ('DV098', N'HOP', 30, 'TPCN-PIK-056'),
-    ('DV099', N 'VIEN', 1, 'TPCN-SKI-058'),
-    ('DV100', N'VI', 10, 'TPCN-SKI-058'),
-    ('DV101', N'HOP', 30, 'TPCN-SKI-058'),
-    ('DV102', N 'VIEN', 1, 'TPCN-VTC-059'),
-    ('DV103', N'VI', 10, 'TPCN-VTC-059'),
-    ('DV104', N'HOP', 100, 'TPCN-VTC-059');
+INSERT INTO DonViQuyDoi (maDonVi, tenDonVi, heSoQuyDoi, maSanPham, barcode)
+VALUES ('DV001', N'TUYP', 1, 'OTC-BIA-001', '8934567890123'),
+    ('DV002', N'TUYP', 1, 'OTC-CON-002', NULL),
+    ('DV003', N'CHAI', 1, 'OTC-MIN-003', NULL),
+    ('DV004', N'CHAI', 1, 'OTC-NIZ-004', NULL),
+    ('DV005', N'TUYP', 1, 'OTC-REM-005', NULL),
+    ('DV006', N'CHAI', 1, 'OTC-CIC-013', NULL),
+    ('DV007', N'TUYP', 1, 'ETC-BET-019', NULL),
+    ('DV008', N'TUYP', 1, 'ETC-SRI-022', NULL),
+    ('DV009', N'TUYP', 1, 'ETC-TOM-023', NULL),
+    ('DV010', N'CHAI', 1, 'TPCN-D3D-043', NULL),
+    ('DV011', N'CHAI', 1, 'TPCN-HPM-044', NULL),
+    ('DV012', N'CHAI', 1, 'TPCN-LBG-049', NULL),
+    ('DV013', N'CHAI', 1, 'TPCN-KAN-047', NULL),
+    ('DV014', N'CHAI', 1, 'OTC-COR-017', NULL),
+    ('DV015', N'VIEN', 1, 'OTC-ALL-006', '8931111111111'),
+    ('DV016', N'VI', 10, 'OTC-ALL-006', '8932222222222'),
+    ('DV017', N'HOP', 100, 'OTC-ALL-006', '8933333333333'),
+    ('DV018', N'VIEN', 1, 'OTC-CET-007', NULL),
+    ('DV019', N'VI', 10, 'OTC-CET-007', NULL),
+    ('DV020', N'HOP', 100, 'OTC-CET-007', NULL),
+    ('DV021', N'VIEN', 1, 'OTC-CLO-008', NULL),
+    ('DV022', N'VI', 10, 'OTC-CLO-008', NULL),
+    ('DV023', N'HOP', 100, 'OTC-CLO-008', NULL),
+    ('DV024', N'VIEN', 1, 'OTC-EXO-009', NULL),
+    ('DV025', N'VI', 10, 'OTC-EXO-009', NULL),
+    ('DV026', N'HOP', 100, 'OTC-EXO-009', NULL),
+    ('DV027', N'VIEN', 1, 'OTC-HIS-010', NULL),
+    ('DV028', N'VI', 10, 'OTC-HIS-010', NULL),
+    ('DV029', N'HOP', 100, 'OTC-HIS-010', NULL),
+    ('DV030', N'VIEN', 1, 'OTC-ATS-011', NULL),
+    ('DV031', N'VI', 10, 'OTC-ATS-011', NULL),
+    ('DV032', N'HOP', 100, 'OTC-ATS-011', NULL),
+    ('DV033', N'VIEN', 1, 'OTC-FUG-012', NULL),
+    ('DV034', N'VI', 1, 'OTC-FUG-012', NULL),
+    ('DV035', N'HOP', 1, 'OTC-FUG-012', NULL),
+    ('DV036', N'VIEN', 1, 'ETC-DEX-020', NULL),
+    ('DV037', N'VI', 10, 'ETC-DEX-020', NULL),
+    ('DV038', N'HOP', 100, 'ETC-DEX-020', NULL),
+    ('DV039', N'VIEN', 1, 'ETC-BIL-024', NULL),
+    ('DV040', N'VI', 10, 'ETC-BIL-024', NULL),
+    ('DV041', N'HOP', 30, 'ETC-BIL-024', NULL),
+    ('DV042', N'VIEN', 1, 'ETC-LOD-025', NULL),
+    ('DV043', N'VI', 10, 'ETC-LOD-025', NULL),
+    ('DV044', N'HOP', 100, 'ETC-LOD-025', NULL),
+    ('DV045', N'VIEN', 1, 'ETC-RUP-026', NULL),
+    ('DV046', N'VI', 10, 'ETC-RUP-026', NULL),
+    ('DV047', N'HOP', 30, 'ETC-RUP-026', NULL),
+    ('DV048', N'VIEN', 1, 'ETC-CLE-029', NULL),
+    ('DV049', N'VI', 7, 'ETC-CLE-029', NULL),
+    ('DV050', N'HOP', 14, 'ETC-CLE-029', NULL),
+    ('DV051', N'VIEN', 1, 'ETC-FLU-030', NULL),
+    ('DV052', N'VI', 1, 'ETC-FLU-030', NULL),
+    ('DV053', N'HOP', 1, 'ETC-FLU-030', NULL),
+    ('DV054', N'VIEN', 1, 'ETC-IME-031', NULL),
+    ('DV055', N'VI', 10, 'ETC-IME-031', NULL),
+    ('DV056', N'HOP', 20, 'ETC-IME-031', NULL),
+    ('DV057', N'VIEN', 1, 'ETC-FEB-034', NULL),
+    ('DV058', N'VI', 10, 'ETC-FEB-034', NULL),
+    ('DV059', N'HOP', 30, 'ETC-FEB-034', NULL),
+    ('DV060', N'VIEN', 1, 'ETC-MET-036', NULL),
+    ('DV061', N'VI', 10, 'ETC-MET-036', NULL),
+    ('DV062', N'HOP', 50, 'ETC-MET-036', NULL),
+    ('DV063', N'VIEN', 1, 'TPCN-BPK-039', NULL),
+    ('DV064', N'VI', 10, 'TPCN-BPK-039', NULL),
+    ('DV065', N'HOP', 60, 'TPCN-BPK-039', NULL),
+    ('DV066', N'VIEN', 1, 'TPCN-BNI-040', NULL),
+    ('DV067', N'VI', 10, 'TPCN-BNI-040', NULL),
+    ('DV068', N'HOP', 30, 'TPCN-BNI-040', NULL),
+    ('DV069', N'VIEN', 1, 'TPCN-CDK-042', NULL),
+    ('DV070', N'VI', 10, 'TPCN-CDK-042', NULL),
+    ('DV071', N'HOP', 30, 'TPCN-CDK-042', NULL),
+    ('DV072', N'VIEN', 1, 'TPCN-OMP-052', NULL),
+    ('DV073', N'VI', 15, 'TPCN-OMP-052', NULL),
+    ('DV074', N'HOP', 60, 'TPCN-OMP-052', NULL),
+    ('DV075', N'VIEN', 1, 'TPCN-OMG-055', NULL),
+    ('DV076', N'VI', 10, 'TPCN-OMG-055', NULL),
+    ('DV077', N'HOP', 30, 'TPCN-OMG-055', NULL),
+    ('DV078', N'VIEN', 1, 'TPCN-POB-057', NULL),
+    ('DV079', N'VI', 10, 'TPCN-POB-057', NULL),
+    ('DV080', N'HOP', 30, 'TPCN-POB-057', NULL),
+    ('DV081', N'VIEN', 1, 'OTC-CAL-016', NULL),
+    ('DV082', N'VI', 10, 'OTC-CAL-016', NULL),
+    ('DV083', N'HOP', 100, 'OTC-CAL-016', NULL),
+    ('DV084', N'VIEN', 1, 'OTC-CST-018', NULL),
+    ('DV085', N'VI', 10, 'OTC-CST-018', NULL),
+    ('DV086', N'HOP', 100, 'OTC-CST-018', NULL),
+    ('DV087', N'VIEN', 1, 'OTC-XKH-020', NULL),
+    ('DV088', N'VI', 10, 'OTC-XKH-020', NULL),
+    ('DV089', N'HOP', 60, 'OTC-XKH-020', NULL),
+    ('DV090', N'VIEN', 1, 'TPCN-IMU-046', NULL),
+    ('DV091', N'VI', 10, 'TPCN-IMU-046', NULL),
+    ('DV092', N'HOP', 30, 'TPCN-IMU-046', NULL),
+    ('DV093', N'VIEN', 1, 'TPCN-LAC-050', NULL),
+    ('DV094', N'VI', 10, 'TPCN-LAC-050', NULL),
+    ('DV095', N'HOP', 30, 'TPCN-LAC-050', NULL),
+    ('DV096', N'VIEN', 1, 'TPCN-PIK-056', NULL),
+    ('DV097', N'VI', 10, 'TPCN-PIK-056', NULL),
+    ('DV098', N'HOP', 30, 'TPCN-PIK-056', NULL),
+    ('DV099', N'VIEN', 1, 'TPCN-SKI-058', NULL),
+    ('DV100', N'VI', 10, 'TPCN-SKI-058', NULL),
+    ('DV101', N'HOP', 30, 'TPCN-SKI-058', NULL),
+    ('DV102', N'VIEN', 1, 'TPCN-VTC-059', NULL),
+    ('DV103', N'VI', 10, 'TPCN-VTC-059', NULL),
+    ('DV104', N'HOP', 100, 'TPCN-VTC-059', NULL),
+    ('DV105', N'TUYP', 1, 'MY_PHAM-LRP-001', '3337875816809'),
+    ('DV106', N'CHAI', 1, 'MY_PHAM-VIC-002', '8931111222222'),
+    ('DV107', N'CHAI', 1, 'MY_PHAM-CER-003', '8931111222223'),
+    ('DV108', N'TUYP', 1, 'MY_PHAM-EUC-004', '8931111222224'),
+    ('DV109', N'CHAI', 1, 'MY_PHAM-BIO-005', '8931111222225');
+
 -- 4.7. LÔ HÀNG (SỬA LẠI GIÁ NHẬP CHO CÓ LÃI VÀ KHỚP ĐƠN VỊ CƠ BẢN)
 INSERT INTO Lo (
         maLo,
@@ -1254,7 +1317,7 @@ VALUES (
         'LO010126001',
         'L001',
         '2028-01-01',
-        500,
+        498,
         'OTC-BIA-001',
         10000
     ),
@@ -1278,7 +1341,7 @@ VALUES (
         'LO200326001',
         'L004',
         '2026-10-01',
-        2000,
+        795,
         'OTC-ALL-006',
         15000
     ),
@@ -1673,6 +1736,46 @@ VALUES (
         500,
         'TPCN-SKI-058',
         1500
+    ),
+    (
+        'LO070526049',
+        'LN044',
+        '2028-12-31',
+        300,
+        'MY_PHAM-LRP-001',
+        180000
+    ),
+    (
+        'LO070526050',
+        'LN045',
+        '2028-12-31',
+        200,
+        'MY_PHAM-VIC-002',
+        380000
+    ),
+    (
+        'LO070526051',
+        'LN046',
+        '2028-12-31',
+        400,
+        'MY_PHAM-CER-003',
+        220000
+    ),
+    (
+        'LO070526052',
+        'LN047',
+        '2028-12-31',
+        250,
+        'MY_PHAM-EUC-004',
+        290000
+    ),
+    (
+        'LO070526053',
+        'LN048',
+        '2028-12-31',
+        500,
+        'MY_PHAM-BIO-005',
+        130000
     );
 -- 4.8. QUÀ TẶNG 
 INSERT INTO QuaTang (maKhuyenMai, maDonVi, soLuongTang)
@@ -1703,12 +1806,12 @@ VALUES (
         1,
         'TV000001',
         'KM010401',
-        N 'BAN_HANG',
+        N'BAN_HANG',
         'CA20042601',
         N'',
         NULL,
         NULL,
-        N 'TIEN_MAT'
+        N'TIEN_MAT'
     ),
     (
         'HDB200426002',
@@ -1717,12 +1820,12 @@ VALUES (
         1,
         'KH_LE',
         NULL,
-        N 'BAN_HANG',
+        N'BAN_HANG',
         'CA20042601',
         N'',
         NULL,
         'DT200426001',
-        N 'CHUYEN_KHOAN'
+        N'CHUYEN_KHOAN'
     ),
     (
         'HDB210426001',
@@ -1731,12 +1834,12 @@ VALUES (
         1,
         'TV000002',
         'KM150401',
-        N 'BAN_HANG',
+        N'BAN_HANG',
         'CA21042601',
         N'',
         NULL,
         NULL,
-        N 'TIEN_MAT'
+        N'TIEN_MAT'
     ),
     (
         'HDB210426002',
@@ -1745,12 +1848,12 @@ VALUES (
         1,
         'TV000003',
         NULL,
-        N 'BAN_HANG',
+        N'BAN_HANG',
         'CA21042601',
         N'',
         NULL,
         'DT210426001',
-        N 'CHUYEN_KHOAN'
+        N'CHUYEN_KHOAN'
     ),
     (
         'HDB220426001',
@@ -1759,12 +1862,12 @@ VALUES (
         1,
         'TV000004',
         'KM010402',
-        N 'BAN_HANG',
+        N'BAN_HANG',
         'CA22042601',
         N'',
         NULL,
         NULL,
-        N 'TIEN_MAT'
+        N'TIEN_MAT'
     ),
     (
         'HDB260426001',
@@ -1773,12 +1876,12 @@ VALUES (
         1,
         'TV000002',
         'KM150401',
-        N 'BAN_HANG',
+        N'BAN_HANG',
         'CA26042601',
         N'',
         NULL,
         NULL,
-        N 'TIEN_MAT'
+        N'TIEN_MAT'
     ),
     (
         'HDB300426001',
@@ -1787,12 +1890,12 @@ VALUES (
         1,
         'TV000003',
         NULL,
-        N 'BAN_HANG',
+        N'BAN_HANG',
         'CA30042601',
         N'',
         NULL,
         'DT300426001',
-        N 'CHUYEN_KHOAN'
+        N'CHUYEN_KHOAN'
     ),
     (
         'HDB020526001',
@@ -1801,12 +1904,12 @@ VALUES (
         1,
         'TV000004',
         'KM010402',
-        N 'BAN_HANG',
+        N'BAN_HANG',
         'CA02052601',
         N'',
         NULL,
         NULL,
-        N 'TIEN_MAT'
+        N'TIEN_MAT'
     );
 -- SỬA LẠI TOÀN BỘ ĐƠN GIÁ (BẰNG DONGIACOBAN * HESOQUYDOI)
 INSERT INTO ChiTietHoaDon (maHoaDon, maDonVi, soLuong, donGia, laQuaTangKem)

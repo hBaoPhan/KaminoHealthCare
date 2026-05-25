@@ -3,7 +3,8 @@ package com.example.entity.enums;
 public enum LoaiSanPham {
     ETC("Thuốc kê đơn"),
     OTC("Thuốc không kê đơn"),
-    TPCN("Thực phẩm chức năng");
+    TPCN("Thực phẩm chức năng"),
+    MY_PHAM("Mỹ phẩm");
 
     private final String moTa;
 

@@ -21,6 +21,8 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -52,6 +54,8 @@ public class DoiHangPanel extends JPanel {
     private List<ChiTietHoaDon> chiTietHoaDonGocList = new ArrayList<>();
     private double tongTienHoaDonGocBanDau = 0;
     private TaiKhoan taiKhoanDangNhap;
+    private final StringBuilder barcodeBuffer = new StringBuilder();
+    private long lastKeyTime = 0;
 
     public DoiHangPanel(TaiKhoan tk) {
         this.taiKhoanDangNhap = tk;
@@ -110,6 +114,90 @@ public class DoiHangPanel extends JPanel {
 
         initSuggestionPopup();
         initEvents();
+
+        KeyboardFocusManager.getCurrentKeyboardFocusManager().addPropertyChangeListener("focusOwner", evt -> {
+            if (!isShowing()) {
+                return;
+            }
+            Component focused = (Component) evt.getNewValue();
+            if (focused != null && SwingUtilities.isDescendingFrom(focused, DoiHangPanel.this)) {
+                boolean isEditableText = (focused instanceof javax.swing.text.JTextComponent) 
+                                        && ((javax.swing.text.JTextComponent) focused).isEditable();
+                boolean isInteractiveControl = (focused instanceof JComboBox)
+                                            || (focused instanceof JCheckBox)
+                                            || (focused instanceof JRadioButton)
+                                            || (focused instanceof JButton);
+                boolean isTableEditing = (tblHoaDonGoc != null && tblHoaDonGoc.isEditing() && SwingUtilities.isDescendingFrom(focused, tblHoaDonGoc))
+                                      || (tblSanPham != null && tblSanPham.isEditing() && SwingUtilities.isDescendingFrom(focused, tblSanPham));
+
+                if (!isEditableText && !isInteractiveControl && !isTableEditing) {
+                    SwingUtilities.invokeLater(() -> {
+                        if (txtSearchSanPham != null && txtSearchSanPham.isShowing()) {
+                            txtSearchSanPham.requestFocusInWindow();
+                        }
+                    });
+                }
+            }
+        });
+
+        this.addHierarchyListener(e -> {
+            if ((e.getChangeFlags() & java.awt.event.HierarchyEvent.SHOWING_CHANGED) != 0) {
+                if (isShowing()) {
+                    SwingUtilities.invokeLater(() -> {
+                        if (txtSearchSanPham != null && txtSearchSanPham.isShowing()) {
+                            txtSearchSanPham.requestFocusInWindow();
+                        }
+                    });
+                }
+            }
+        });
+
+        // Thiết lập bộ đón bắt phím toàn cục (KeyEventDispatcher) cho máy quét barcode
+        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(e -> {
+            if (!isShowing()) {
+                return false;
+            }
+
+            // Ngăn ngừa lỗi đúp sự kiện khi người dùng đang active focus trong các ô nhập văn bản (txtSearchSanPham, txtSearchHoaDon, v.v.)
+            Component focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+            boolean isEditableFocused = (focusOwner instanceof javax.swing.text.JTextComponent) 
+                                        && ((javax.swing.text.JTextComponent) focusOwner).isEditable();
+            if (isEditableFocused) {
+                return false;
+            }
+
+            if (e.getID() == KeyEvent.KEY_TYPED) {
+                long now = System.currentTimeMillis();
+                char c = e.getKeyChar();
+
+                // Nếu khoảng cách giữa 2 ký tự lớn hơn 50ms, coi như nhập liệu thủ công bằng bàn phím
+                if (now - lastKeyTime > 50) {
+                    barcodeBuffer.setLength(0);
+                }
+                lastKeyTime = now;
+
+                if (c == '\n') {
+                    String barcode = barcodeBuffer.toString().trim();
+                    if (!barcode.isEmpty() && barcode.length() >= 5) {
+                        DonViQuyDoi dv = donViQuyDoiService.timTheoBarcode(barcode);
+                        if (dv != null) {
+                            SwingUtilities.invokeLater(() -> {
+                                xuLyQuetBarcode(dv);
+                                if (txtSearchSanPham != null) {
+                                    txtSearchSanPham.setText("");
+                                }
+                            });
+                            barcodeBuffer.setLength(0);
+                            return true; // Tiêu hủy sự kiện phím Enter
+                        }
+                    }
+                    barcodeBuffer.setLength(0);
+                } else if (Character.isLetterOrDigit(c)) {
+                    barcodeBuffer.append(c);
+                }
+            }
+            return false;
+        });
     }
 
     private void setupPlaceholder(JTextField textField, String placeholder) {
@@ -174,6 +262,27 @@ public class DoiHangPanel extends JPanel {
                     String kw = txtSearchHoaDon.getText().trim();
                     if (!kw.isEmpty() && !kw.equals("Nhập mã hóa đơn gốc..."))
                         timKiemHoaDonGoc(kw);
+                }
+            }
+        });
+
+        txtSearchSanPham.addActionListener(e -> {
+            String text = txtSearchSanPham.getText().trim();
+            if (!text.isEmpty() && !text.equals("Nhập mã/tên sản phẩm...")) {
+                DonViQuyDoi dv = donViQuyDoiService.timTheoBarcode(text);
+                if (dv != null) {
+                    xuLyQuetBarcode(dv);
+                    txtSearchSanPham.setText("");
+                } else {
+                    SanPham sp = sanPhamService.timTheoMa(text);
+                    if (sp != null) {
+                        List<DonViQuyDoi> donVis = donViQuyDoiService.timTheoMaSanPham(sp.getMaSanPham());
+                        if (!donVis.isEmpty()) {
+                            themSanPhamVaoBang(sp, donVis.get(0));
+                            txtSearchSanPham.setText("");
+                            popupGoiY.setVisible(false);
+                        }
+                    }
                 }
             }
         });
@@ -350,7 +459,41 @@ public class DoiHangPanel extends JPanel {
         tinhToanToanBoTien();
     }
 
+    private void xuLyQuetBarcode(DonViQuyDoi dv) {
+        if (dv == null) {
+            return;
+        }
+        // Check if this product is in the original invoice tblHoaDonGoc
+        DefaultTableModel modelGoc = (DefaultTableModel) tblHoaDonGoc.getModel();
+        boolean foundInGoc = false;
+        for (int i = 0; i < modelGoc.getRowCount(); i++) {
+            if (modelGoc.getValueAt(i, 0).equals(dv.getSanPham().getMaSanPham())
+                    && modelGoc.getValueAt(i, 2).equals(dv.getTenDonVi().getMoTa())) {
+                int slGoc = chiTietHoaDonGocList.get(i).getSoLuong();
+                int slTraHienTai = Integer.parseInt(modelGoc.getValueAt(i, 3).toString());
+                if (slTraHienTai < slGoc) {
+                    modelGoc.setValueAt(slTraHienTai + 1, i, 3);
+                    xuLyKhiThayDoiDonVi(tblHoaDonGoc, i, 3);
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                            "Đã đạt số lượng tối đa có thể đổi cho sản phẩm này trong hóa đơn gốc!",
+                            "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+                }
+                foundInGoc = true;
+                break;
+            }
+        }
+        if (!foundInGoc) {
+            themSanPhamVaoBang(dv.getSanPham(), dv);
+        }
+        popupGoiY.setVisible(false);
+    }
+
     private void themSanPhamVaoBang(SanPham sp) {
+        themSanPhamVaoBang(sp, null);
+    }
+
+    private void themSanPhamVaoBang(SanPham sp, DonViQuyDoi selectedDv) {
         if (sp.getLoaiSanPham().name().equals("ETC")) {
             JOptionPane.showMessageDialog(this, "Thuốc kê đơn không được phép đổi trả!", "Cảnh báo",
                     JOptionPane.ERROR_MESSAGE);
@@ -374,13 +517,14 @@ public class DoiHangPanel extends JPanel {
             return;
         }
 
+        DonViQuyDoi targetDv = selectedDv != null ? selectedDv : dsDV.get(0);
+        String donViStr = targetDv.getTenDonVi().getMoTa();
+
         DefaultTableModel model = (DefaultTableModel) tblSanPham.getModel();
         for (int i = 0; i < model.getRowCount(); i++) {
-            if (model.getValueAt(i, 0).equals(sp.getMaSanPham())) {
+            if (model.getValueAt(i, 0).equals(sp.getMaSanPham()) && model.getValueAt(i, 2).equals(donViStr)) {
                 int slHienTai = Integer.parseInt(model.getValueAt(i, 3).toString());
-
-                // Lấy hệ số quy đổi của đơn vị đang chọn
-                int heSo = dsDV.get(0).getHeSoQuyDoi();
+                int heSo = targetDv.getHeSoQuyDoi();
 
                 if ((slHienTai + 1) * heSo > spDB.getSoLuongTon()) {
                     JOptionPane.showMessageDialog(this, "Kho không đủ số lượng để đổi thêm!", "Cảnh báo",
@@ -389,14 +533,15 @@ public class DoiHangPanel extends JPanel {
                 }
 
                 model.setValueAt(slHienTai + 1, i, 3);
+                tinhToanToanBoTien();
                 return;
             }
         }
 
-        // Lấy mô tả của đơn vị đầu tiên trong danh sách để hiển thị mặc định
-        String dv = dsDV.get(0).getTenDonVi().getMoTa();
+        double donGia = sp.getDonGiaCoBan() * targetDv.getHeSoQuyDoi();
         model.addRow(
-                new Object[] { sp.getMaSanPham(), sp.getTenSanPham(), dv, 1, sp.getDonGiaCoBan(), sp.getThue(), 0.0, 0 });
+                new Object[] { sp.getMaSanPham(), sp.getTenSanPham(), donViStr, 1, donGia, sp.getThue(), 0.0, 0 });
+        tinhToanToanBoTien();
     }
 
     private void tinhToanToanBoTien() {
@@ -683,7 +828,21 @@ public class DoiHangPanel extends JPanel {
 
             // 5. THỰC THI GIAO DỊCH QUA SERVICE
             if (hoaDonService.luuHoaDonDoiHang(hdMoi, dsTraLai, dsChiTietMoi, dsPhanBoMoi)) {
-                JOptionPane.showMessageDialog(this, "Thanh toán thành công hóa đơn đổi: " + maHoaDonMoi);
+                double tienKhachDua = 0;
+                double tienThoi = 0;
+                try {
+                    String kd = txtKhachDua.getText().replaceAll("[^\\d]", "");
+                    tienKhachDua = kd.isEmpty() ? 0 : Double.parseDouble(kd);
+                    
+                    String tl = txtTienThoi.getText().replaceAll("[^\\d]", "");
+                    tienThoi = tl.isEmpty() ? 0 : Double.parseDouble(tl);
+                } catch (Exception ex) {
+                    // Bỏ qua lỗi parse
+                }
+                
+                // Hiển thị trực quan hóa đơn đổi hàng xem trước và hỏi in ấn
+                com.example.utils.InHoaDonPOS.inHoaDon(hdMoi, dsChiTietMoi, tienKhachDua, tienThoi);
+                
                 resetForm();
             } else {
                 JOptionPane.showMessageDialog(this, "Lỗi hệ thống: Giao dịch không thể hoàn tất!", "Lỗi SQL",
