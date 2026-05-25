@@ -7,6 +7,8 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import com.github.lgooddatepicker.components.DatePicker;
 import com.github.lgooddatepicker.components.DatePickerSettings;
 import com.example.service.ChiTietHoaDonService;
@@ -78,8 +80,7 @@ public class BanHangPanel extends JPanel {
     private String maHoaDonHienTai = "";
     private NhanVien nhanVienHienTai;
 
-    private final StringBuilder barcodeBuffer = new StringBuilder();
-    private long lastKeyTime = 0;
+
 
     public BanHangPanel(TaiKhoan taiKhoan) {
         this.nhanVienHienTai = taiKhoan.getNhanVien();
@@ -90,44 +91,44 @@ public class BanHangPanel extends JPanel {
         add(createLeftPanel(), BorderLayout.CENTER);
         add(createRightSidebar(), BorderLayout.EAST);
 
-        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(e -> {
-            if (!isShowing()) {
-                return false;
-            }
 
-            if (e.getID() == KeyEvent.KEY_TYPED) {
-                long now = System.currentTimeMillis();
-                char c = e.getKeyChar();
-
-                if (now - lastKeyTime > 50) {
-                    barcodeBuffer.setLength(0);
-                }
-                lastKeyTime = now;
-
-                if (c == '\n') {
-                    String barcode = barcodeBuffer.toString().trim();
-                    if (!barcode.isEmpty() && barcode.length() >= 5) {
-                        DonViQuyDoi dv = donViQuyDoiService.timTheoBarcode(barcode);
-                        if (dv != null) {
-                            SwingUtilities.invokeLater(() -> {
-                                addProductToTable(dv.getSanPham(), dv);
-                                if (txtSearch != null) {
-                                    txtSearch.setText("");
-                                }
-                            });
-                            barcodeBuffer.setLength(0);
-                            return true; // Tiêu hủy sự kiện Enter
-                        }
-                    }
-                    barcodeBuffer.setLength(0);
-                } else if (Character.isLetterOrDigit(c)) {
-                    barcodeBuffer.append(c);
-                }
-            }
-            return false;
-        });
 
         SwingUtilities.invokeLater(this::loadHoaDonChuaThanhToan);
+
+        KeyboardFocusManager.getCurrentKeyboardFocusManager().addPropertyChangeListener("focusOwner", evt -> {
+            if (!isShowing()) {
+                return;
+            }
+            Component focused = (Component) evt.getNewValue();
+            if (focused != null && SwingUtilities.isDescendingFrom(focused, BanHangPanel.this)) {
+                boolean isEditableText = (focused instanceof javax.swing.text.JTextComponent) 
+                                        && ((javax.swing.text.JTextComponent) focused).isEditable();
+                boolean isInteractiveControl = (focused instanceof JComboBox)
+                                            || (focused instanceof JCheckBox)
+                                            || (focused instanceof JRadioButton);
+                boolean isTableEditing = table != null && table.isEditing() && SwingUtilities.isDescendingFrom(focused, table);
+
+                if (!isEditableText && !isInteractiveControl && !isTableEditing) {
+                    SwingUtilities.invokeLater(() -> {
+                        if (txtSearch != null && txtSearch.isShowing()) {
+                            txtSearch.requestFocusInWindow();
+                        }
+                    });
+                }
+            }
+        });
+
+        this.addHierarchyListener(e -> {
+            if ((e.getChangeFlags() & java.awt.event.HierarchyEvent.SHOWING_CHANGED) != 0) {
+                if (isShowing()) {
+                    SwingUtilities.invokeLater(() -> {
+                        if (txtSearch != null && txtSearch.isShowing()) {
+                            txtSearch.requestFocusInWindow();
+                        }
+                    });
+                }
+            }
+        });
     }
 
     public void loadHoaDonChuaThanhToan() {
