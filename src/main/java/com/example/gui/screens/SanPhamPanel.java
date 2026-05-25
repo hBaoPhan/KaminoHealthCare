@@ -41,7 +41,7 @@ public class SanPhamPanel extends JPanel {
     private JTextArea txtMoTa;
 
     // Đơn vị quy đổi UI
-    private JTextField txtHeSoQuyDoi;
+    private JTextField txtHeSoQuyDoi, txtBarcodeDonVi;
     private JComboBox<DonVi> cbDonViQuyDoi;
     private JButton btnThemDonVi;
     private JButton btnXoaDonVi;
@@ -295,7 +295,7 @@ public class SanPhamPanel extends JPanel {
         JPanel pnlHeSo = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
         pnlHeSo.setBackground(Color.WHITE);
         txtHeSoQuyDoi = new RoundedTextField("", 5);
-        txtHeSoQuyDoi.setPreferredSize(new Dimension(60, 32));
+        txtHeSoQuyDoi.setPreferredSize(new Dimension(50, 32));
 
         DonVi[] dsDonVi = { DonVi.HOP, DonVi.VI, DonVi.VIEN, DonVi.CHAI, DonVi.TUYP, DonVi.CAI };
         cbDonViQuyDoi = new JComboBox<>(dsDonVi);
@@ -310,22 +310,43 @@ public class SanPhamPanel extends JPanel {
                 return this;
             }
         });
-        cbDonViQuyDoi.setPreferredSize(new Dimension(80, 32));
+        cbDonViQuyDoi.setPreferredSize(new Dimension(65, 32));
+
+        txtBarcodeDonVi = new RoundedTextField("Mã vạch", 10);
+        txtBarcodeDonVi.setPreferredSize(new Dimension(110, 32));
+        txtBarcodeDonVi.setForeground(Color.GRAY);
+        txtBarcodeDonVi.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if ("Mã vạch".equals(txtBarcodeDonVi.getText())) {
+                    txtBarcodeDonVi.setText("");
+                    txtBarcodeDonVi.setForeground(Color.BLACK);
+                }
+            }
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (txtBarcodeDonVi.getText().trim().isEmpty()) {
+                    txtBarcodeDonVi.setText("Mã vạch");
+                    txtBarcodeDonVi.setForeground(Color.GRAY);
+                }
+            }
+        });
 
         btnThemDonVi = new RoundedButton("+ Thêm");
         btnThemDonVi.setBackground(new Color(0, 153, 51));
         btnThemDonVi.setForeground(Color.WHITE);
-        btnThemDonVi.setPreferredSize(new Dimension(80, 32));
+        btnThemDonVi.setPreferredSize(new Dimension(75, 32));
         btnThemDonVi.addActionListener(e -> themDonViVaoBang());
 
         btnXoaDonVi = new RoundedButton("- Xóa");
         btnXoaDonVi.setBackground(new Color(255, 102, 102));
         btnXoaDonVi.setForeground(Color.WHITE);
-        btnXoaDonVi.setPreferredSize(new Dimension(70, 32));
+        btnXoaDonVi.setPreferredSize(new Dimension(65, 32));
         btnXoaDonVi.addActionListener(e -> xoaDonViKhoiBang());
 
         pnlHeSo.add(txtHeSoQuyDoi);
         pnlHeSo.add(cbDonViQuyDoi);
+        pnlHeSo.add(txtBarcodeDonVi);
         pnlHeSo.add(btnThemDonVi);
         pnlHeSo.add(btnXoaDonVi);
 
@@ -342,7 +363,7 @@ public class SanPhamPanel extends JPanel {
         formPanel.add(new JLabel("Đơn vị hiện có:"), gbc);
 
         donViQuyDoiModel = new DefaultTableModel(
-                new Object[] { "Đơn vị", "Số lượng quy đổi" }, 0) {
+                new Object[] { "Đơn vị", "Số lượng quy đổi", "Mã vạch" }, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -738,6 +759,11 @@ public class SanPhamPanel extends JPanel {
             return;
         }
 
+        String barcode = txtBarcodeDonVi.getText().trim();
+        if ("Mã vạch".equals(barcode)) {
+            barcode = "";
+        }
+
         // Kiểm tra trùng lặp đơn vị trong bảng
         for (int i = 0; i < donViQuyDoiModel.getRowCount(); i++) {
             String tenDVHienTai = donViQuyDoiModel.getValueAt(i, 0).toString();
@@ -748,8 +774,10 @@ public class SanPhamPanel extends JPanel {
             }
         }
 
-        donViQuyDoiModel.addRow(new Object[] { hienThiTenDonVi(dv), soLuong });
+        donViQuyDoiModel.addRow(new Object[] { hienThiTenDonVi(dv), soLuong, barcode });
         txtHeSoQuyDoi.setText("");
+        txtBarcodeDonVi.setText("Mã vạch");
+        txtBarcodeDonVi.setForeground(Color.GRAY);
     }
 
     private void xoaDonViKhoiBang() {
@@ -775,7 +803,11 @@ public class SanPhamPanel extends JPanel {
 
         for (DonViQuyDoi dv : ds) {
             if (dv != null && dv.getTenDonVi() != null) {
-                donViQuyDoiModel.addRow(new Object[] { hienThiTenDonVi(dv.getTenDonVi()), dv.getHeSoQuyDoi() });
+                donViQuyDoiModel.addRow(new Object[] { 
+                    hienThiTenDonVi(dv.getTenDonVi()), 
+                    dv.getHeSoQuyDoi(),
+                    dv.getBarcode() != null ? dv.getBarcode() : "" 
+                });
             }
         }
     }
@@ -1018,6 +1050,10 @@ public class SanPhamPanel extends JPanel {
         lblImageRight.setIcon(null);
         lblImageRight.setText("Chưa có ảnh");
         txtHeSoQuyDoi.setText("");
+        if (txtBarcodeDonVi != null) {
+            txtBarcodeDonVi.setText("Mã vạch");
+            txtBarcodeDonVi.setForeground(Color.GRAY);
+        }
         if (donViQuyDoiModel != null) {
             donViQuyDoiModel.setRowCount(0);
         }
@@ -1034,6 +1070,9 @@ public class SanPhamPanel extends JPanel {
         for (int i = 0; i < donViQuyDoiModel.getRowCount(); i++) {
             String tenHienThi = donViQuyDoiModel.getValueAt(i, 0).toString();
             int heSo = Integer.parseInt(donViQuyDoiModel.getValueAt(i, 1).toString());
+            Object barcodeObj = donViQuyDoiModel.getValueAt(i, 2);
+            String barcodeVal = (barcodeObj != null) ? barcodeObj.toString().trim() : "";
+            
             DonVi donViEnum = getDonViTuTenHienThi(tenHienThi);
             dsTenDonViTrenBang.add(donViEnum.name());
 
@@ -1047,6 +1086,7 @@ public class SanPhamPanel extends JPanel {
 
             if (dvCu != null) {
                 dvCu.setHeSoQuyDoi(heSo);
+                dvCu.setBarcode(barcodeVal.isEmpty() ? null : barcodeVal);
                 donViQuyDoiService.capNhat(dvCu);
             } else {
                 DonViQuyDoi dvMoi = new DonViQuyDoi();
@@ -1054,6 +1094,7 @@ public class SanPhamPanel extends JPanel {
                 dvMoi.setTenDonVi(donViEnum);
                 dvMoi.setHeSoQuyDoi(heSo);
                 dvMoi.setSanPham(sp);
+                dvMoi.setBarcode(barcodeVal.isEmpty() ? null : barcodeVal);
                 donViQuyDoiService.them(dvMoi);
             }
         }

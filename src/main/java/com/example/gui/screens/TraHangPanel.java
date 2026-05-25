@@ -351,7 +351,17 @@ public class TraHangPanel extends JPanel {
                         txtMaHoaGoc.getText().trim(), dsTra);
 
                 if (hoaDonService.luuHoaDonTraHang(hoaDonTra, dsPhanBoTra)) {
-                    JOptionPane.showMessageDialog(TraHangPanel.this, "Thanh toán và hoàn kho thành công!");
+                    double tienHoanLai = 0;
+                    try {
+                        String raw = txtTienTraLai.getText().replaceAll("[^\\d]", "");
+                        tienHoanLai = raw.isEmpty() ? 0 : Double.parseDouble(raw);
+                    } catch (Exception ex) {
+                        // Bỏ qua lỗi parse
+                    }
+                    
+                    // Hiển thị trực quan hóa đơn trả hàng xem trước và hỏi in ấn
+                    com.example.utils.InHoaDonPOS.inHoaDon(hoaDonTra, dsTra, tienHoanLai, 0);
+
                     // Xóa sạch dữ liệu trên giao diện để làm hóa đơn mới
                     lamMoiGiaoDien(); 
                 } else {

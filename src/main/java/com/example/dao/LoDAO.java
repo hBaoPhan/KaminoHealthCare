@@ -213,4 +213,19 @@ public class LoDAO {
         }
         return danhSach;
     }
+
+    public int tinhTongTonKhoSanPham(String maSanPham) {
+        String sql = "SELECT SUM(soLuongSanPham) FROM Lo WHERE maSanPham = ?";
+        try (PreparedStatement lenh = ConnectDB.getConnection().prepareStatement(sql)) {
+            lenh.setString(1, maSanPham);
+            try (ResultSet rs = lenh.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
 }

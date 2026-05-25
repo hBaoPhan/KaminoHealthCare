@@ -28,6 +28,22 @@ public class SuPhanBoLoDAO {
         return pst.executeUpdate() > 0;
     }
 
+    /**
+     * Overload an toàn: nhận maHoaDon trực tiếp, tránh NPE khi ChiTietHoaDon.getHoaDon() == null.
+     */
+    public boolean themSuPhanBoLo(SuPhanBoLo spbl, String maHoaDon) throws SQLException {
+        String sql = "INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong, laQuaTangKem, biLoi) VALUES (?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement pst = ConnectDB.getConnection().prepareStatement(sql)) {
+            pst.setString(1, maHoaDon);
+            pst.setString(2, spbl.getChiTietHoaDon().getDonViQuyDoi().getMaDonVi());
+            pst.setString(3, spbl.getLo().getMaLo());
+            pst.setInt(4, spbl.getSoLuong());
+            pst.setBoolean(5, spbl.getChiTietHoaDon().isLaQuaTangKem());
+            pst.setBoolean(6, spbl.isLoi());
+            return pst.executeUpdate() > 0;
+        }
+    }
+
     public boolean themNhieu(List<SuPhanBoLo> ds, String maHoaDon) throws SQLException {
         if (ds == null || ds.isEmpty())
             return true;
