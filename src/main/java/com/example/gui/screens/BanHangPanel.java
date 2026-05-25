@@ -1020,11 +1020,18 @@ public class BanHangPanel extends JPanel {
         model.addRow(row);
 
         if (sp.getLoaiSanPham() != null && sp.getLoaiSanPham() == LoaiSanPham.ETC) {
-            if (cboDonThuoc != null && cboDonThuoc.getSelectedIndex() == 0) {
-                JOptionPane.showMessageDialog(this,
-                        "Sản phẩm [" + sp.getTenSanPham()
-                                + "] là thuốc kê đơn (ETC).\nVui lòng chọn Đơn thuốc cho hóa đơn này!",
-                        "Yêu cầu Đơn thuốc", JOptionPane.INFORMATION_MESSAGE);
+            boolean thieuDonThuoc = (cboDonThuoc != null && cboDonThuoc.getSelectedIndex() == 0);
+            boolean thieuKhachHangTV = (khachHangHienTai == null || khachHangHienTai.getTrangThai() != TrangThaiKhachHang.KHACH_HANG_THANH_VIEN);
+            if (thieuDonThuoc || thieuKhachHangTV) {
+                StringBuilder message = new StringBuilder("Sản phẩm [").append(sp.getTenSanPham()).append("] là thuốc kê đơn (ETC).\n");
+                message.append("Khi bán thuốc ETC, bắt buộc phải có:\n");
+                if (thieuDonThuoc) {
+                    message.append("- Đơn thuốc (Vui lòng chọn đơn thuốc)\n");
+                }
+                if (thieuKhachHangTV) {
+                    message.append("- Khách hàng thành viên (Vui lòng nhập SĐT hoặc đăng ký khách hàng thành viên)\n");
+                }
+                JOptionPane.showMessageDialog(this, message.toString(), "Yêu cầu bắt buộc khi bán thuốc ETC", JOptionPane.INFORMATION_MESSAGE);
             }
         }
     }
@@ -1263,13 +1270,23 @@ public class BanHangPanel extends JPanel {
             }
         }
 
-        if (hasETC && cboDonThuoc != null && cboDonThuoc.getSelectedIndex() <= 0) {
-            if (hienThongBao) {
-                JOptionPane.showMessageDialog(this,
-                        "Hóa đơn chứa thuốc kê đơn (ETC). Vui lòng chọn Đơn thuốc trước khi tiếp tục!",
-                        "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+        if (hasETC) {
+            boolean thieuDonThuoc = (cboDonThuoc == null || cboDonThuoc.getSelectedIndex() <= 0);
+            boolean thieuKhachHangTV = (khachHangHienTai == null || khachHangHienTai.getTrangThai() != TrangThaiKhachHang.KHACH_HANG_THANH_VIEN);
+
+            if (thieuDonThuoc || thieuKhachHangTV) {
+                if (hienThongBao) {
+                    StringBuilder thongBao = new StringBuilder("Hóa đơn chứa thuốc kê đơn (ETC). Vui lòng bổ sung đầy đủ thông tin sau trước khi tiếp tục:\n");
+                    if (thieuDonThuoc) {
+                        thongBao.append("- Đơn thuốc (Vui lòng chọn đơn thuốc cho hóa đơn này)\n");
+                    }
+                    if (thieuKhachHangTV) {
+                        thongBao.append("- Khách hàng thành viên (Bắt buộc khi bán thuốc ETC, vui lòng nhập SĐT khách hàng thành viên)\n");
+                    }
+                    JOptionPane.showMessageDialog(this, thongBao.toString(), "Thiếu thông tin bắt buộc", JOptionPane.WARNING_MESSAGE);
+                }
+                return null;
             }
-            return null;
         }
 
         CaLam caHienTai = hoaDonService.layCaHienTai(nhanVienHienTai.getMaNhanVien());
@@ -1338,11 +1355,17 @@ public class BanHangPanel extends JPanel {
     /** Thanh toán: tạo hóa đơn trước, sau đó xác nhận thanh toán + trừ kho */
     private void thanhToan(RoundedButton btnSave) {
 
-        if (model.getRowCount() == 0) {
-            JOptionPane.showMessageDialog(this, "Không có sản phẩm nào để thanh toán!", "Cảnh báo",
-                    JOptionPane.WARNING_MESSAGE);
-            return;
-        }
+            if (model.getRowCount() == 0) {
+                JOptionPane.showMessageDialog(this, "Không có sản phẩm nào để thanh toán!", "Cảnh báo",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // Kiểm tra hợp lệ hóa đơn trước khi tiến hành thanh toán (Đơn thuốc & Khách hàng thành viên khi có thuốc ETC)
+            HoaDon testHd = xayDungHoaDon(true);
+            if (testHd == null) {
+                return;
+            }
 
         String soTien = lblThanhTien.getText().replace("Thành tiền : ", "");
         int confirm = JOptionPane.showConfirmDialog(this,
