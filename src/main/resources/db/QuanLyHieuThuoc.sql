@@ -1978,43 +1978,4 @@ FROM SanPham sp
 END
 END;
 GO
---- =================================================== ---
---- 6. Triggers for Profitability Check
---- =================================================== ---
-GO
-CREATE TRIGGER trg_Lo_KiemTraGiaBanCoLai
-ON Lo
-AFTER INSERT, UPDATE
-AS
-BEGIN
-    SET NOCOUNT ON;
-    IF EXISTS (
-        SELECT 1
-        FROM inserted i
-        INNER JOIN SanPham sp ON i.maSanPham = sp.maSanPham
-        WHERE i.giaNhap >= sp.donGiaCoBan
-    )
-    BEGIN
-        RAISERROR (N'Lỗi: Giá nhập của Lô phải nhỏ hơn đơn giá bán cơ bản của sản phẩm để đảm bảo bán có lãi!', 16, 1);
-        ROLLBACK TRANSACTION;
-    END
-END;
-GO
-CREATE TRIGGER trg_SanPham_KiemTraGiaBanCoLai
-ON SanPham
-AFTER UPDATE
-AS
-BEGIN
-    SET NOCOUNT ON;
-    IF EXISTS (
-        SELECT 1
-        FROM inserted i
-        INNER JOIN Lo l ON i.maSanPham = l.maSanPham
-        WHERE i.donGiaCoBan <= l.giaNhap
-    )
-    BEGIN
-        RAISERROR (N'Lỗi: Đơn giá bán cơ bản phải lớn hơn giá nhập của các Lô hiện tại để đảm bảo bán có lãi!', 16, 1);
-        ROLLBACK TRANSACTION;
-    END
-END;
-GO
+
