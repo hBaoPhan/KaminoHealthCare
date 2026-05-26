@@ -520,9 +520,9 @@ public class DoiHangPanel extends JPanel {
                     ChiTietHoaDon ctGoc = chiTietHoaDonGocList.get(row);
                     int slDaMua = ctGoc.getSoLuongBan();
                     int slGiuLai = slDaMua - sl;
-                    model.setValueAt(slGiuLai * giaMoiThucTe * (1 + thueTiLe / 100.0), row, 6);
+                    model.setValueAt(slGiuLai * giaMoiThucTe, row, 6);
                 } else {
-                    model.setValueAt(sl * giaMoiThucTe * (1 + thueTiLe / 100.0), row, 6);
+                    model.setValueAt(sl * giaMoiThucTe, row, 6);
                 }
 
                 tinhToanToanBoTien();
@@ -681,11 +681,7 @@ public class DoiHangPanel extends JPanel {
 
                 String donVi = modelDoi.getValueAt(i, 2).toString();
                 int qty = Integer.parseInt(modelDoi.getValueAt(i, 3).toString());
-                double price = Double.parseDouble(modelDoi.getValueAt(i, 4).toString());
-                
-                // THÊM 2 DÒNG NÀY: Lấy thuế và tính giá sau thuế
-                double thueTiLe = Double.parseDouble(modelDoi.getValueAt(i, 5).toString().replace("%", ""));
-                double priceSauThue = price * (1 + thueTiLe / 100.0);
+                double price = Double.parseDouble(modelDoi.getValueAt(i, 4).toString()); // Đây là giá TRƯỚC thuế
 
                 int slTra = 0;
                 for (int j = 0; j < modelGoc.getRowCount(); j++) {
@@ -695,8 +691,9 @@ public class DoiHangPanel extends JPanel {
                 }
 
                 int slThucMuaMoi = Math.max(0, qty - slTra);
-                // SỬA DÒNG NÀY: Nhân với priceSauThue thay vì price
-                tongTienMuaMoiBase += slThucMuaMoi * priceSauThue; 
+                
+                // SỬA LẠI: Chỉ nhân với price (Giá trước thuế)
+                tongTienMuaMoiBase += slThucMuaMoi * price; 
             }
         }
 
@@ -754,11 +751,7 @@ public class DoiHangPanel extends JPanel {
 
                 String donVi = modelDoi.getValueAt(i, 2).toString();
                 int qty = Integer.parseInt(modelDoi.getValueAt(i, 3).toString());
-                double price = Double.parseDouble(modelDoi.getValueAt(i, 4).toString());
-                
-                // THÊM 2 DÒNG NÀY
-                double thueTiLe = Double.parseDouble(modelDoi.getValueAt(i, 5).toString().replace("%", ""));
-                double priceSauThue = price * (1 + thueTiLe / 100.0);
+                double price = Double.parseDouble(modelDoi.getValueAt(i, 4).toString()); // Đây là giá TRƯỚC thuế
 
                 int slTra = 0;
                 for (int j = 0; j < modelGoc.getRowCount(); j++) {
@@ -768,8 +761,9 @@ public class DoiHangPanel extends JPanel {
                 }
 
                 int slThucMuaMoi = Math.max(0, qty - slTra);
-                // SỬA DÒNG NÀY:
-                tongTienMuaMoiBase += slThucMuaMoi * priceSauThue;
+                
+                // SỬA LẠI: Chỉ nhân với price
+                tongTienMuaMoiBase += slThucMuaMoi * price;
             }
         }
 
@@ -821,37 +815,53 @@ public class DoiHangPanel extends JPanel {
     }
 
     private void tinhToanToanBoTien() {
-        // 1. Lấy tổng tiền từ 2 bảng (Hàm tinhTienChoBang mới đã bao gồm logic áp % KM cũ vào phần đổi ngang)
-        double tongTienGocSauThayDoi = tinhTienChoBang(tblHoaDonGoc);
-        double tongTienHangDoiMoi = tinhTienChoBang(tblSanPham);
+        // Cập nhật lại UI bảng (gọi hàm để Render lại giao diện)
+        tinhTienChoBang(tblHoaDonGoc);
+        tinhTienChoBang(tblSanPham);
 
-        // 2. Tính tiền giảm giá mới (Chỉ áp dụng cho giá trị mua thêm của hàng KHÔNG phải ETC)
-        double soTienGiamMoi = 0;
+        DefaultTableModel modelDoi = (DefaultTableModel) tblSanPham.getModel();
+        DefaultTableModel modelGoc = (DefaultTableModel) tblHoaDonGoc.getModel();
+
+        // 1. Lấy tỉ lệ giảm của hóa đơn gốc
+        double tiLeGiamGoc = 0;
+        if (hoaDonGocHienTai != null && hoaDonGocHienTai.getKhuyenMai() != null &&
+                hoaDonGocHienTai.getKhuyenMai().getLoaiKhuyenMai() == LoaiKhuyenMai.PHAN_TRAM) {
+            tiLeGiamGoc = hoaDonGocHienTai.getKhuyenMai().getKhuyenMaiPhanTram();
+        }
+
+        // 2. Tính tiền hàng gốc giữ lại (Tính toán độc lập để tránh nhiễu từ UI)
+        double tongTienGocSauThayDoi = 0;
+        for (int i = 0; i < modelGoc.getRowCount(); i++) {
+            int slTra = Integer.parseInt(modelGoc.getValueAt(i, 3).toString());
+            double price = Double.parseDouble(modelGoc.getValueAt(i, 4).toString());
+            double thueTiLe = Double.parseDouble(modelGoc.getValueAt(i, 5).toString().replace("%", ""));
+            
+            ChiTietHoaDon ctGoc = chiTietHoaDonGocList.get(i);
+            int slDaMua = ctGoc.getSoLuongBan();
+            int slGiuLai = slDaMua - slTra;
+
+            tongTienGocSauThayDoi += slGiuLai * price * (1 - tiLeGiamGoc / 100.0) * (1 + thueTiLe / 100.0);
+        }
+
+        // 3. Tính tiền giảm giá mới (Áp dụng trên giá TRƯỚC THUẾ)
+        double soTienGiamMoiHienThi = 0; 
+        double tiLeGiamMoi = 0;
         int idx = (cboKhuyenMai != null) ? cboKhuyenMai.getSelectedIndex() - 1 : -1;
         
         if (idx >= 0 && idx < dsKhuyenMai.size()) {
             KhuyenMai km = dsKhuyenMai.get(idx);
-            double tongTienMuaMoiBase = 0;
-            DefaultTableModel modelDoi = (DefaultTableModel) tblSanPham.getModel();
-            DefaultTableModel modelGoc = (DefaultTableModel) tblHoaDonGoc.getModel();
+            double tongTienMuaMoiBasePreTax = 0;
 
             for (int i = 0; i < modelDoi.getRowCount(); i++) {
                 Boolean isGift = (Boolean) modelDoi.getValueAt(i, 8);
                 if (isGift == null || !isGift) {
                     String maSP = modelDoi.getValueAt(i, 0).toString();
-
                     SanPham sp = sanPhamService.timTheoMa(maSP);
-                    if (sp != null && sp.getLoaiSanPham().name().equals("ETC")) {
-                        continue;
-                    }
+                    if (sp != null && sp.getLoaiSanPham().name().equals("ETC")) continue;
 
                     String donVi = modelDoi.getValueAt(i, 2).toString();
                     int qty = Integer.parseInt(modelDoi.getValueAt(i, 3).toString());
-                    double price = Double.parseDouble(modelDoi.getValueAt(i, 4).toString()); 
-                    
-                    // THÊM 2 DÒNG NÀY
-                    double thueTiLe = Double.parseDouble(modelDoi.getValueAt(i, 5).toString().replace("%", ""));
-                    double priceSauThue = price * (1 + thueTiLe / 100.0);
+                    double price = Double.parseDouble(modelDoi.getValueAt(i, 4).toString()); // GIÁ TRƯỚC THUẾ
 
                     int slTra = 0;
                     for (int j = 0; j < modelGoc.getRowCount(); j++) {
@@ -861,41 +871,81 @@ public class DoiHangPanel extends JPanel {
                     }
 
                     int slThucMuaMoi = Math.max(0, qty - slTra);
-                    // SỬA DÒNG NÀY
-                    tongTienMuaMoiBase += slThucMuaMoi * priceSauThue;
+                    tongTienMuaMoiBasePreTax += slThucMuaMoi * price;
                 }
             }
             
-            if (tongTienMuaMoiBase >= km.getGiaTriDonHangToiThieu()
-                    && km.getLoaiKhuyenMai() == LoaiKhuyenMai.PHAN_TRAM) {
-                soTienGiamMoi = tongTienMuaMoiBase * (km.getKhuyenMaiPhanTram() / 100.0);
+            if (tongTienMuaMoiBasePreTax >= km.getGiaTriDonHangToiThieu() && km.getLoaiKhuyenMai() == LoaiKhuyenMai.PHAN_TRAM) {
+                tiLeGiamMoi = km.getKhuyenMaiPhanTram();
+                soTienGiamMoiHienThi = tongTienMuaMoiBasePreTax * (tiLeGiamMoi / 100.0);
             }
         }
 
-        // 3. Cập nhật giao diện tiền KM
+        // 4. Tính tổng tiền hóa đơn đổi (Áp dụng: Giảm trên giá trước thuế -> Tính thuế sau)
+        double tongTienHangDoiMoiFinal = 0; 
+        for (int i = 0; i < modelDoi.getRowCount(); i++) {
+            String maSP = modelDoi.getValueAt(i, 0).toString();
+            String donVi = modelDoi.getValueAt(i, 2).toString();
+            int qty = Integer.parseInt(modelDoi.getValueAt(i, 3).toString());
+            double price = Double.parseDouble(modelDoi.getValueAt(i, 4).toString());
+            double thueTiLe = Double.parseDouble(modelDoi.getValueAt(i, 5).toString().replace("%", ""));
+            Boolean isGift = (Boolean) modelDoi.getValueAt(i, 8);
+
+            int slTra = 0;
+            for (int j = 0; j < modelGoc.getRowCount(); j++) {
+                if (modelGoc.getValueAt(j, 0).equals(maSP) && modelGoc.getValueAt(j, 2).equals(donVi)) {
+                    slTra += Integer.parseInt(modelGoc.getValueAt(j, 3).toString());
+                }
+            }
+
+            int slDoiNgang = Math.min(qty, slTra);
+            int slMuaThem = Math.max(0, qty - slTra);
+
+            // a. Phần đổi ngang: Giữ nguyên % KM cũ
+            double tienDoiNgangThucTe = slDoiNgang * price * (1 - tiLeGiamGoc / 100.0) * (1 + thueTiLe / 100.0);
+
+            // b. Phần mua thêm:
+            double tienMuaThemThucTe = 0;
+            if (isGift != null && isGift) {
+                tienMuaThemThucTe = 0;
+            } else {
+                SanPham sp = sanPhamService.timTheoMa(maSP);
+                if (sp != null && sp.getLoaiSanPham().name().equals("ETC")) {
+                    tienMuaThemThucTe = slMuaThem * price * (1 + thueTiLe / 100.0);
+                } else {
+                    // CÔNG THỨC CHUẨN: Trừ % KM trước, cộng thuế sau
+                    double preTaxMuaThem = slMuaThem * price;
+                    double preTaxSauGiam = preTaxMuaThem * (1 - tiLeGiamMoi / 100.0);
+                    tienMuaThemThucTe = preTaxSauGiam * (1 + thueTiLe / 100.0);
+                }
+            }
+
+            tongTienHangDoiMoiFinal += (tienDoiNgangThucTe + tienMuaThemThucTe);
+        }
+
+        // 5. Cập nhật giao diện tiền KM
         if (txtKhuyenMaiMoi != null) {
-            txtKhuyenMaiMoi.setText("-" + formatVND(soTienGiamMoi));
-            if (soTienGiamMoi > 0)
+            txtKhuyenMaiMoi.setText("-" + formatVND(soTienGiamMoiHienThi));
+            if (soTienGiamMoiHienThi > 0)
                 txtKhuyenMaiMoi.setForeground(new Color(40, 167, 69));
             else
                 txtKhuyenMaiMoi.setForeground(Color.BLACK);
         }
 
-        // 4. Tính toán chênh lệch cuối cùng
-        // Tiền HĐ mới = (Tiền hàng cũ giữ lại) + (Tiền hàng mới chọn) - (Khuyến mãi mới được hưởng)
-        double tongTienHoaDonMoi = tongTienGocSauThayDoi + tongTienHangDoiMoi - soTienGiamMoi;
+        // 6. Tính toán chênh lệch cuối cùng
+        // LƯU Ý: tongTienHangDoiMoiFinal ĐÃ TỰ ĐỘNG TRỪ TIỀN KM ở trên, nên ta KHÔNG trừ soTienGiamMoiHienThi ở đây nữa.
+        double tongTienHoaDonMoi = tongTienGocSauThayDoi + tongTienHangDoiMoiFinal;
         txtTienDoi.setText(formatVND(tongTienHoaDonMoi));
         
-        // Chênh lệch = Tiền HĐ mới - Tiền HĐ gốc ban đầu (đã bao gồm KM cũ)
         double chenhLech = tongTienHoaDonMoi - tongTienHoaDonGocBanDau;
         txtChenhLech.setText(formatVND(chenhLech));
 
-        // 5. Làm tròn và hiển thị thanh toán
+        // 7. Làm tròn và hiển thị thanh toán
         double soTienLamTron = Math.round(Math.abs(chenhLech) / 1000.0) * 1000;
 
         if (chenhLech < 0) {
             txtThanhTienLamTron.setText(formatVND(soTienLamTron));
-            txtThanhTienLamTron.setForeground(new Color(220, 53, 69)); // Màu đỏ (hoàn tiền)
+            txtThanhTienLamTron.setForeground(new Color(220, 53, 69));
             txtKhachDua.setText("0");
             txtKhachDua.setEnabled(false);
             txtTienThoi.setText(formatVND(soTienLamTron));
@@ -918,7 +968,7 @@ public class DoiHangPanel extends JPanel {
     }
 
     private double tinhTienChoBang(JTable table) {
-        double total = 0;
+        double totalCoThue = 0; // Vẫn tính tổng có thuế để hệ thống chốt số liệu
         DefaultTableModel model = (DefaultTableModel) table.getModel();
         boolean isGoc = (table == tblHoaDonGoc);
         
@@ -937,15 +987,19 @@ public class DoiHangPanel extends JPanel {
                 double gia = Double.parseDouble(String.valueOf(model.getValueAt(i, 4)));
                 double thueTiLe = Double.parseDouble(String.valueOf(model.getValueAt(i, 5)).replace("%", ""));
 
-                double tt;
+                double ttHienThi = 0; // Để đẩy lên giao diện (Không Thuế)
+                double ttThucTe = 0;  // Để cộng vào tổng đơn hàng (Có Thuế)
+                
                 if (isGoc) {
                     // BẢNG TRÊN: Tính tiền phần hàng khách GIỮ LẠI
                     ChiTietHoaDon ctGoc = chiTietHoaDonGocList.get(i);
                     int slDaMua = ctGoc.getSoLuongBan();
                     int slGiuLai = slDaMua - sl; 
                     
-                    // SỬA Ở ĐÂY: Áp dụng trừ khuyến mãi cho sản phẩm giữ lại để khớp với Tiền HĐ gốc
-                    tt = slGiuLai * gia * (1 + thueTiLe / 100.0) * (1 - tiLeGiamGoc / 100.0);
+                    // Cột hiển thị không nhân thuế
+                    ttHienThi = slGiuLai * gia * (1 - tiLeGiamGoc / 100.0);
+                    // Tổng tiền ngầm vẫn tính thuế
+                    ttThucTe = slGiuLai * gia * (1 + thueTiLe / 100.0) * (1 - tiLeGiamGoc / 100.0);
                 } else {
                     // BẢNG DƯỚI: Tính tiền hàng đổi
                     DefaultTableModel modelGoc = (DefaultTableModel) tblHoaDonGoc.getModel();
@@ -959,17 +1013,23 @@ public class DoiHangPanel extends JPanel {
                     int slDoiNgang = Math.min(sl, slTra);
                     int slMuaThem = Math.max(0, sl - slTra);
                     
-                    double tienDoiNgang = slDoiNgang * gia * (1 + thueTiLe / 100.0) * (1 - tiLeGiamGoc / 100.0);
-                    double tienMuaThem = slMuaThem * gia * (1 + thueTiLe / 100.0);
-                    
-                    tt = tienDoiNgang + tienMuaThem;
+                    // Cột hiển thị không nhân thuế
+                    double tienDoiNgangHienThi = slDoiNgang * gia * (1 - tiLeGiamGoc / 100.0);
+                    double tienMuaThemHienThi = slMuaThem * gia;
+                    ttHienThi = tienDoiNgangHienThi + tienMuaThemHienThi;
+
+                    // Tổng tiền ngầm vẫn tính thuế
+                    double tienDoiNgangThucTe = slDoiNgang * gia * (1 + thueTiLe / 100.0) * (1 - tiLeGiamGoc / 100.0);
+                    double tienMuaThemThucTe = slMuaThem * gia * (1 + thueTiLe / 100.0);
+                    ttThucTe = tienDoiNgangThucTe + tienMuaThemThucTe;
                 }
-                model.setValueAt(tt, i, 6); 
-                total += tt;
+                
+                model.setValueAt(ttHienThi, i, 6); // Cập nhật lên giao diện (Cột Thành tiền)
+                totalCoThue += ttThucTe; // Cộng dồn trả về cho hàm tinhToanToanBoTien()
             } catch (Exception ignored) {
             }
         }
-        return total;
+        return totalCoThue;
     }
 
     private void tinhTienThoi() {
