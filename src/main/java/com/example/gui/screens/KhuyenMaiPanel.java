@@ -99,7 +99,7 @@ public class KhuyenMaiPanel extends JPanel {
 
         txtSearch = new JTextField("Tìm kiếm...");
         txtSearch.setForeground(Color.GRAY);
-        txtSearch.setPreferredSize(new Dimension(250, 35));
+        txtSearch.setPreferredSize(new Dimension(150, 35));
         txtSearch.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {

@@ -17,6 +17,7 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 	private CardLayout cardLayout;
 	private JLabel lblTenTaiKhoan;
 	private JLabel lblChucVu;
+	private JLabel lblRealTime;
 	private Color textHoverColor = Color.decode("#1A73E8");
 	private Color textDefaultColor = Color.BLACK;
 	private Font customFont = new Font("Segoe UI", Font.BOLD, 12);
@@ -102,8 +103,24 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 		lblChucVu.setForeground(Color.decode("#00A651"));
 		lblChucVu.setFont(new Font("Segoe UI", Font.BOLD, 12));
 		lblChucVu.setAlignmentX(Component.CENTER_ALIGNMENT);
-		lblChucVu.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+		lblChucVu.setBorder(BorderFactory.createEmptyBorder(0, 0, 4, 0));
 		sidebar.add(lblChucVu);
+
+		lblRealTime = new JLabel();
+		lblRealTime.setFont(new Font("Segoe UI", Font.BOLD, 14));
+		lblRealTime.setForeground(Color.decode("#5F6368"));
+		lblRealTime.setAlignmentX(Component.CENTER_ALIGNMENT);
+		lblRealTime.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+		lblRealTime.setText(java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
+		sidebar.add(lblRealTime);
+
+		javax.swing.Timer realTimeTimer = new javax.swing.Timer(1000, new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				lblRealTime.setText(java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
+			}
+		});
+		realTimeTimer.start();
 
 		sidebar.add(Box.createVerticalStrut(10));
 
@@ -168,9 +185,9 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 	}
 
 	private void renderSidebar() {
-		// GIỮ LẠI HEADER (LOGO + INFO), XÓA CÁC MỤC MENU CŨ
-		// Index 0: Logo, 1: Name, 2: Welcome, 3: ChucVu, 4: Spacer
-		for (int i = sidebar.getComponentCount() - 1; i >= 5; i--) {
+		// GIỮ LẠI HEADER (LOGO + INFO + REALTIME), XÓA CÁC MỤC MENU CŨ
+		// Index 0: Logo, 1: KAMINO, 2: TenTaiKhoan, 3: ChucVu, 4: RealTime, 5: Spacer
+		for (int i = sidebar.getComponentCount() - 1; i >= 6; i--) {
 			sidebar.remove(i);
 		}
 		menuLabels.clear();
@@ -272,6 +289,10 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 			case "Quản Lý Ca Làm" -> {
 				if (pnlCaLam != null)
 					pnlCaLam.taiLaiDanhSach();
+			}
+			case "Thống Kê" -> {
+				if (pnlThongKe != null)
+					pnlThongKe.loadData();
 			}
 		}
 	}

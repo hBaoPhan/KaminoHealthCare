@@ -98,4 +98,12 @@ public class LoService {
     public int tinhTongTonKhoSanPham(String maSanPham) {
         return loDAO.tinhTongTonKhoSanPham(maSanPham);
     }
+
+    public int tinhSoLuongNhapBanDau(String maLo) {
+        return loDAO.tinhSoLuongNhapBanDau(maLo);
+    }
+
+    public int tinhTongTonKhoKhongHetHan(String maSanPham, LocalDate date) {
+        return loDAO.tinhTongTonKhoKhongHetHan(maSanPham, date);
+    }
 }

@@ -354,20 +354,6 @@ public class LoPanel extends JPanel {
             danhSachSanPham = sanPhamService.layTatCa();
         danhSachLo = loService.layTatCa();
 
-        boolean hasChanged = false;
-        java.time.LocalDate now = java.time.LocalDate.now();
-        for (Lo lo : danhSachLo) {
-            if (lo.getSoLuongSanPham() > 0 && !lo.getNgayHetHan().isAfter(now.plusDays(30))) {
-                lo.setSoLuongSanPham(0);
-                loService.capNhat(lo);
-                hasChanged = true;
-            }
-        }
-
-        if (hasChanged) {
-            danhSachLo = loService.layTatCa();
-        }
-
         locVaHienThiLo(txtSearch != null ? txtSearch.getText().trim() : "");
     }
 
@@ -557,6 +543,7 @@ public class LoPanel extends JPanel {
             lo.setNgayHetHan(dateChooserNgayHetHan.getDate().toInstant()
                     .atZone(ZoneId.systemDefault()).toLocalDate());
             lo.setSoLuongSanPham(Integer.parseInt(txtSoLuong.getText().trim()));
+            lo.setSoLuongNhap(lo.getSoLuongSanPham());
             lo.setSanPham(new SanPham(txtMaSanPham.getText().trim()));
             lo.setGiaNhap(Double.parseDouble(txtGiaNhap.getText().trim().replace(",", "")));
 
@@ -584,6 +571,7 @@ public class LoPanel extends JPanel {
             lo.setNgayHetHan(dateChooserNgayHetHan.getDate().toInstant()
                     .atZone(ZoneId.systemDefault()).toLocalDate());
             lo.setSoLuongSanPham(Integer.parseInt(txtSoLuong.getText().trim()));
+            lo.setSoLuongNhap(lo.getSoLuongSanPham());
             lo.setSanPham(new SanPham(txtMaSanPham.getText().trim()));
             lo.setGiaNhap(Double.parseDouble(txtGiaNhap.getText().trim().replace(",", "")));
 

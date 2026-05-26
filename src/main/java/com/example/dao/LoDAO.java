@@ -13,12 +13,42 @@ import java.util.List;
 
 public class LoDAO {
 
+    public LoDAO() {
+        ensureColumnSoLuongNhapExists();
+    }
+
+    private void ensureColumnSoLuongNhapExists() {
+        try {
+            Connection con = ConnectDB.getConnection();
+            DatabaseMetaData meta = con.getMetaData();
+            boolean exists = false;
+            try (ResultSet rs = meta.getColumns(null, null, "Lo", "soLuongNhap")) {
+                if (rs.next()) {
+                    exists = true;
+                }
+            }
+            if (!exists) {
+                try (Statement stmt = con.createStatement()) {
+                    stmt.execute("ALTER TABLE Lo ADD soLuongNhap INT");
+                    stmt.execute("UPDATE Lo SET soLuongNhap = soLuongSanPham");
+                }
+            }
+            // Ensure any NULLs in newly imported tables are populated on startup
+            try (Statement stmt = con.createStatement()) {
+                stmt.execute("UPDATE Lo SET soLuongNhap = soLuongSanPham WHERE soLuongNhap IS NULL");
+            }
+        } catch (Exception e) {
+            // Safe fall-through or logging
+            e.printStackTrace();
+        }
+    }
+
     /**
      * Lấy tất cả lô hàng
      */
     public List<Lo> layTatCa() {
         List<Lo> danhSach = new ArrayList<>();
-        String sql = "SELECT l.maLo, l.soLo, l.ngayHetHan, l.soLuongSanPham, l.giaNhap, " +
+        String sql = "SELECT l.maLo, l.soLo, l.ngayHetHan, l.soLuongSanPham, l.giaNhap, l.soLuongNhap, " +
                      "s.maSanPham, s.tenSanPham, s.loaiSanPham, s.soLuongTon, s.moTa, s.hoatChat, s.donGiaCoBan, s.trangThaiKinhDoanh, s.thue " +
                      "FROM Lo l " +
                      "INNER JOIN SanPham s ON l.maSanPham = s.maSanPham " +
@@ -33,6 +63,7 @@ public class LoDAO {
                 lo.setSoLo(ketQua.getString("soLo"));
                 lo.setNgayHetHan(ketQua.getDate("ngayHetHan").toLocalDate());
                 lo.setSoLuongSanPham(ketQua.getInt("soLuongSanPham"));
+                lo.setSoLuongNhap(ketQua.getInt("soLuongNhap"));
                 
                 SanPham sp = new SanPham();
                 sp.setMaSanPham(ketQua.getString("maSanPham"));
@@ -76,8 +107,8 @@ public class LoDAO {
      * Thêm lô mới
      */
     public boolean themLo(Lo lo) {
-        String sql = "INSERT INTO Lo(maLo, soLo, ngayHetHan, soLuongSanPham, maSanPham, giaNhap) " +
-                "VALUES(?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Lo(maLo, soLo, ngayHetHan, soLuongSanPham, maSanPham, giaNhap, soLuongNhap) " +
+                "VALUES(?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = ConnectDB.getConnection().prepareStatement(sql)) {
 
             stmt.setString(1, lo.getMaLo());
@@ -86,6 +117,7 @@ public class LoDAO {
             stmt.setInt(4, lo.getSoLuongSanPham());
             stmt.setString(5, lo.getSanPham().getMaSanPham());
             stmt.setDouble(6, lo.getGiaNhap());
+            stmt.setInt(7, lo.getSoLuongNhap() > 0 ? lo.getSoLuongNhap() : lo.getSoLuongSanPham());
 
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -99,7 +131,7 @@ public class LoDAO {
      */
     public boolean capNhatLo(Lo lo) {
         String sql = "UPDATE Lo SET soLo = ?, ngayHetHan = ?, soLuongSanPham = ?, " +
-                "maSanPham = ?, giaNhap = ? WHERE maLo = ?";
+                "maSanPham = ?, giaNhap = ?, soLuongNhap = ? WHERE maLo = ?";
         try (PreparedStatement stmt = ConnectDB.getConnection().prepareStatement(sql)) {
 
             stmt.setString(1, lo.getSoLo());
@@ -107,7 +139,8 @@ public class LoDAO {
             stmt.setInt(3, lo.getSoLuongSanPham());
             stmt.setString(4, lo.getSanPham().getMaSanPham());
             stmt.setDouble(5, lo.getGiaNhap());
-            stmt.setString(6, lo.getMaLo());
+            stmt.setInt(6, lo.getSoLuongNhap() > 0 ? lo.getSoLuongNhap() : lo.getSoLuongSanPham());
+            stmt.setString(7, lo.getMaLo());
 
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -149,6 +182,7 @@ public class LoDAO {
                 lo.setSoLuongSanPham(ketQua.getInt("soLuongSanPham"));
                 lo.setSanPham(new SanPham(ketQua.getString("maSanPham")));
                 lo.setGiaNhap(ketQua.getDouble("giaNhap"));
+                lo.setSoLuongNhap(ketQua.getInt("soLuongNhap"));
                 return lo;
             }
         } catch (SQLException e) {
@@ -177,7 +211,7 @@ public class LoDAO {
                 if (isCong && sp.isLoi()) {
                     continue; // Skip defective items when returning/adding to stock
                 }
-                pst.setInt(1, sp.getSoLuong());
+                pst.setInt(1, sp.getSoLuongPhanBo());
                 pst.setString(2, sp.getLo().getMaLo());
                 pst.addBatch();
                 hasBatch = true;
@@ -207,6 +241,7 @@ public class LoDAO {
                     lo.setSoLuongSanPham(ketQua.getInt("soLuongSanPham"));
                     lo.setSanPham(new SanPham(ketQua.getString("maSanPham")));
                     lo.setGiaNhap(ketQua.getDouble("giaNhap"));
+                    lo.setSoLuongNhap(ketQua.getInt("soLuongNhap"));
                     danhSach.add(lo);
                 }
             }
@@ -218,6 +253,37 @@ public class LoDAO {
         String sql = "SELECT SUM(soLuongSanPham) FROM Lo WHERE maSanPham = ?";
         try (PreparedStatement lenh = ConnectDB.getConnection().prepareStatement(sql)) {
             lenh.setString(1, maSanPham);
+            try (ResultSet rs = lenh.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public int tinhSoLuongNhapBanDau(String maLo) {
+        String sql = "SELECT soLuongNhap FROM Lo WHERE maLo = ?";
+        try (PreparedStatement stmt = ConnectDB.getConnection().prepareStatement(sql)) {
+            stmt.setString(1, maLo);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("soLuongNhap");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public int tinhTongTonKhoKhongHetHan(String maSanPham, LocalDate date) {
+        String sql = "SELECT SUM(soLuongSanPham) FROM Lo WHERE maSanPham = ? AND ngayHetHan > ?";
+        try (PreparedStatement lenh = ConnectDB.getConnection().prepareStatement(sql)) {
+            lenh.setString(1, maSanPham);
+            lenh.setDate(2, Date.valueOf(date));
             try (ResultSet rs = lenh.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(1);

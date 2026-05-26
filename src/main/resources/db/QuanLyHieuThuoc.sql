@@ -56,7 +56,7 @@ CREATE TABLE KhuyenMai (
     loaiKhuyenMai NVARCHAR(20) CHECK (loaiKhuyenMai IN (N'PHAN_TRAM', N'TANG_KEM')),
     khuyenMaiPhanTram FLOAT,
     giaTriDonHangToiThieu FLOAT,
-    uuDaiThanhVien BIT NOT NULL DEFAULT 0  -- 1 = Chỉ dành cho khách hàng thành viên
+    uuDaiThanhVien BIT NOT NULL DEFAULT 0  
 );
 CREATE TABLE SanPham (
     maSanPham VARCHAR(20) PRIMARY KEY,
@@ -93,7 +93,8 @@ CREATE TABLE Lo (
     ngayHetHan DATE,
     soLuongSanPham INT,
     maSanPham VARCHAR(20) FOREIGN KEY REFERENCES SanPham(maSanPham),
-    giaNhap FLOAT
+    giaNhap FLOAT,
+    soLuongNhap INT
 );
 CREATE TABLE DonThuoc (
     maDonThuoc VARCHAR(20) PRIMARY KEY,
@@ -122,7 +123,7 @@ CREATE TABLE HoaDon (
 CREATE TABLE ChiTietHoaDon (
     maHoaDon VARCHAR(20) FOREIGN KEY REFERENCES HoaDon(maHoaDon),
     maDonVi VARCHAR(20) FOREIGN KEY REFERENCES DonViQuyDoi(maDonVi),
-    soLuong INT,
+    soLuongBan INT,
     donGia FLOAT,
     laQuaTangKem BIT DEFAULT 0,
     PRIMARY KEY (maHoaDon, maDonVi, laQuaTangKem)
@@ -131,7 +132,7 @@ CREATE TABLE SuPhanBoLo (
     maHoaDon VARCHAR(20),
     maDonVi VARCHAR(20),
     maLo VARCHAR(20) FOREIGN KEY REFERENCES Lo(maLo),
-    soLuong INT,
+    soLuongPhanBo INT,
     laQuaTangKem BIT DEFAULT 0,
     biLoi BIT DEFAULT 0,
     CONSTRAINT FK_SuPhanBoLo_ChiTiet 
@@ -139,6 +140,65 @@ CREATE TABLE SuPhanBoLo (
         REFERENCES ChiTietHoaDon(maHoaDon, maDonVi, laQuaTangKem),
     PRIMARY KEY (maHoaDon, maDonVi, maLo, laQuaTangKem, biLoi)
 );
+GO
+---- INDEX
+
+-- 1. Bảng HoaDon
+CREATE NONCLUSTERED INDEX IX_HoaDon_TrangThai_ThoiGian
+ON HoaDon(trangThaiThanhToan, thoiGianTao)
+INCLUDE (maKhachHang, maNhanVien, loaiHoaDon);
+
+CREATE NONCLUSTERED INDEX IX_HoaDon_Loai_TrangThai_ThoiGian
+ON HoaDon(loaiHoaDon, trangThaiThanhToan, thoiGianTao DESC);
+
+CREATE NONCLUSTERED INDEX IX_HoaDon_KhachHang
+ON HoaDon(maKhachHang)
+INCLUDE (thoiGianTao, trangThaiThanhToan);
+
+CREATE NONCLUSTERED INDEX IX_HoaDon_Ca
+ON HoaDon(maCa, trangThaiThanhToan);
+
+-- 2. Bảng Lo
+CREATE NONCLUSTERED INDEX IX_Lo_SanPham_HetHan_SoLuong
+ON Lo(maSanPham, ngayHetHan)
+INCLUDE (soLuongSanPham);
+
+CREATE NONCLUSTERED INDEX IX_Lo_NgayHetHan_SoLuong
+ON Lo(ngayHetHan, soLuongSanPham)
+INCLUDE (maSanPham, soLo);
+
+-- 3. Bảng ChiTietHoaDon & SuPhanBoLo
+CREATE NONCLUSTERED INDEX IX_ChiTietHoaDon_DonVi
+ON ChiTietHoaDon(maDonVi);
+
+CREATE NONCLUSTERED INDEX IX_SuPhanBoLo_Lo
+ON SuPhanBoLo(maLo);
+
+CREATE NONCLUSTERED INDEX IX_SuPhanBoLo_BiLoi
+ON SuPhanBoLo(biLoi)
+WHERE biLoi = 1;
+
+-- 4. Bảng SanPham & DonViQuyDoi
+CREATE NONCLUSTERED INDEX IX_SanPham_TenSanPham
+ON SanPham(tenSanPham);
+
+CREATE NONCLUSTERED INDEX IX_SanPham_TrangThai_Loai
+ON SanPham(trangThaiKinhDoanh, loaiSanPham);
+
+CREATE NONCLUSTERED INDEX IX_DonViQuyDoi_SanPham
+ON DonViQuyDoi(maSanPham);
+
+-- 5. Bảng KhachHang & CaLam
+CREATE NONCLUSTERED INDEX IX_KhachHang_SDT
+ON KhachHang(sdt);
+
+CREATE NONCLUSTERED INDEX IX_CaLam_NhanVien_TrangThai
+ON CaLam(maNhanVien, trangThaiCaLam)
+INCLUDE (gioBatDau);
+
+CREATE NONCLUSTERED INDEX IX_CaLam_GioBatDau
+ON CaLam(gioBatDau);
+
 GO
 
 INSERT INTO NhanVien (
@@ -215,7 +275,7 @@ VALUES (
         '$2a$12$bfiVg8.pufHx/TEcJYISSeteaaAWStGxzGbIzNkwdgY.2HFhp79Ym',
         'DS001'
     );
--- 4.2. KHÁCH HÀNG
+--  KHÁCH HÀNG
 INSERT INTO KhachHang (
         maKhachHang,
         tenKhachHang,
@@ -230,8 +290,8 @@ VALUES (
     ),
     (
         'TV000001',
-        N'Ngô Thị Em',
-        '0922222222',
+        N'Nguyễn Thành Long',
+        '0335806335',
         N'KHACH_HANG_THANH_VIEN'
     ),
     (
@@ -252,7 +312,7 @@ VALUES (
         '0955555555',
         N'KHACH_HANG_THANH_VIEN'
     );
--- 4.3. KHUYẾN MÃI
+--  KHUYẾN MÃI
 INSERT INTO KhuyenMai (
         maKhuyenMai,
         tenKhuyenMai,
@@ -313,7 +373,7 @@ VALUES (
         100000,
         0   
     );
--- 4.4. ĐƠN THUỐC
+--  ĐƠN THUỐC
 INSERT INTO DonThuoc (maDonThuoc, tenBacSi, coSoKhamBenh, ngayKeDon)
 VALUES (
         'DT200426001',
@@ -351,7 +411,7 @@ VALUES (
         N'Bệnh viện Nhân dân Gia Định',
         '2026-04-30'
     );
--- 4.5. CA LÀM
+--  CA LÀM
 INSERT INTO CaLam (
         maCa,
         maNhanVien,
@@ -451,7 +511,7 @@ VALUES (
         4000000,
         N'Đang trực'
     );
--- 4.6. SẢN PHẨM & ĐƠN VỊ QUY ĐỔI 
+--  SẢN PHẨM & ĐƠN VỊ QUY ĐỔI 
 INSERT INTO SanPham (
         maSanPham,
         tenSanPham,
@@ -1302,16 +1362,14 @@ VALUES ('DV001', N'TUYP', 1, 'OTC-BIA-001', '8934567890123'),
     ('DV099', N'VIEN', 1, 'TPCN-SKI-058', NULL),
     ('DV100', N'VI', 10, 'TPCN-SKI-058', NULL),
     ('DV101', N'HOP', 30, 'TPCN-SKI-058', NULL),
-    ('DV102', N'VIEN', 1, 'TPCN-VTC-059', NULL),
-    ('DV103', N'VI', 10, 'TPCN-VTC-059', NULL),
-    ('DV104', N'HOP', 100, 'TPCN-VTC-059', NULL),
+    ('DV102', N'CHAI', 1, 'TPCN-VTC-059', '8935206026306'),
     ('DV105', N'TUYP', 1, 'MY_PHAM-LRP-001', '3337875816809'),
     ('DV106', N'CHAI', 1, 'MY_PHAM-VIC-002', '8931111222222'),
     ('DV107', N'CHAI', 1, 'MY_PHAM-CER-003', '8931111222223'),
     ('DV108', N'TUYP', 1, 'MY_PHAM-EUC-004', '8931111222224'),
     ('DV109', N'CHAI', 1, 'MY_PHAM-BIO-005', '8931111222225');
 
--- 4.7. LÔ HÀNG (SỬA LẠI GIÁ NHẬP CHO CÓ LÃI VÀ KHỚP ĐƠN VỊ CƠ BẢN)
+-- LÔ HÀNG (SỬA LẠI GIÁ NHẬP CHO CÓ LÃI VÀ KHỚP ĐƠN VỊ CƠ BẢN)
 INSERT INTO Lo (
         maLo,
         soLo,
@@ -1326,7 +1384,7 @@ VALUES (
         '2028-01-01',
         498,
         'OTC-BIA-001',
-        10000
+        4980000
     ),
     (
         'LO010226001',
@@ -1334,7 +1392,7 @@ VALUES (
         '2027-06-01',
         500,
         'OTC-BIA-001',
-        11000
+        5500000
     ),
     (
         'LO150326001',
@@ -1342,7 +1400,7 @@ VALUES (
         '2027-12-31',
         500,
         'OTC-CON-002',
-        35000
+        17500000
     ),
     (
         'LO200326001',
@@ -1350,7 +1408,7 @@ VALUES (
         '2026-10-01',
         795,
         'OTC-ALL-006',
-        500
+        397500
     ),
     (
         'LO250326001',
@@ -1358,7 +1416,7 @@ VALUES (
         '2029-01-01',
         3000,
         'ETC-DEX-020',
-        400
+        1200000
     ),
     (
         'LO070526001',
@@ -1366,7 +1424,7 @@ VALUES (
         '2028-05-07',
         1000,
         'TPCN-VTC-059',
-        5000
+        5000000
     ),
     (
         'LO070526002',
@@ -1374,7 +1432,7 @@ VALUES (
         '2028-12-01',
         100,
         'OTC-MIN-003',
-        150000
+        15000000
     ),
     (
         'LO070526003',
@@ -1382,7 +1440,7 @@ VALUES (
         '2027-05-01',
         100,
         'OTC-NIZ-004',
-        100000
+        10000000
     ),
     (
         'LO070526004',
@@ -1390,7 +1448,7 @@ VALUES (
         '2029-01-01',
         500,
         'TPCN-BPK-039',
-        1200
+        600000
     ),
     (
         'LO070526005',
@@ -1398,7 +1456,7 @@ VALUES (
         '2028-01-01',
         300,
         'TPCN-OMG-055',
-        1500
+        450000
     ),
     (
         'LO070526006',
@@ -1406,7 +1464,7 @@ VALUES (
         '2028-12-31',
         1000,
         'OTC-CAL-016',
-        1000
+        1000000
     ),
     (
         'LO070526007',
@@ -1414,7 +1472,7 @@ VALUES (
         '2028-12-31',
         1000,
         'OTC-COR-017',
-        120000
+        120000000
     ),
     (
         'LO070526008',
@@ -1422,7 +1480,7 @@ VALUES (
         '2028-12-31',
         1000,
         'OTC-CST-018',
-        600
+        600000
     ),
     (
         'LO070526009',
@@ -1430,7 +1488,7 @@ VALUES (
         '2028-12-31',
         1000,
         'OTC-KID-019',
-        100000
+        100000000
     ),
     (
         'LO070526010',
@@ -1438,7 +1496,7 @@ VALUES (
         '2028-12-31',
         1000,
         'OTC-XKH-020',
-        1500
+        1500000
     ),
     (
         'LO070526011',
@@ -1446,7 +1504,7 @@ VALUES (
         '2028-12-31',
         500,
         'ETC-BET-019',
-        65000
+        32500000
     ),
     (
         'LO070526012',
@@ -1454,7 +1512,7 @@ VALUES (
         '2028-12-31',
         500,
         'ETC-MAX-021',
-        250000
+        125000000
     ),
     (
         'LO070526013',
@@ -1462,7 +1520,7 @@ VALUES (
         '2028-12-31',
         500,
         'ETC-SRI-022',
-        75000
+        37500000
     ),
     (
         'LO070526014',
@@ -1470,7 +1528,7 @@ VALUES (
         '2028-12-31',
         500,
         'ETC-TOM-023',
-        60000
+        30000000
     ),
     (
         'LO070526015',
@@ -1478,7 +1536,7 @@ VALUES (
         '2028-12-31',
         500,
         'ETC-BIL-024',
-        800
+        400000
     ),
     (
         'LO070526016',
@@ -1486,7 +1544,7 @@ VALUES (
         '2028-12-31',
         500,
         'ETC-LOD-025',
-        650
+        325000
     ),
     (
         'LO070526017',
@@ -1494,7 +1552,7 @@ VALUES (
         '2028-12-31',
         500,
         'ETC-RUP-026',
-        750
+        375000
     ),
     (
         'LO070526018',
@@ -1502,7 +1560,7 @@ VALUES (
         '2028-12-31',
         500,
         'ETC-RUT-027',
-        700
+        350000
     ),
     (
         'LO070526019',
@@ -1510,7 +1568,7 @@ VALUES (
         '2028-12-31',
         500,
         'ETC-ZYR-028',
-        600
+        300000
     ),
     (
         'LO070526020',
@@ -1518,7 +1576,7 @@ VALUES (
         '2028-12-31',
         500,
         'ETC-ZYR-029',
-        600
+        300000
     ),
     (
         'LO070526021',
@@ -1526,7 +1584,7 @@ VALUES (
         '2028-12-31',
         500,
         'ETC-CLE-029',
-        1000
+        500000
     ),
     (
         'LO070526022',
@@ -1534,7 +1592,7 @@ VALUES (
         '2028-12-31',
         500,
         'ETC-FLU-030',
-        95000
+        47500000
     ),
     (
         'LO070526023',
@@ -1542,7 +1600,7 @@ VALUES (
         '2028-12-31',
         500,
         'ETC-IME-031',
-        700
+        350000
     ),
     (
         'LO070526024',
@@ -1550,7 +1608,7 @@ VALUES (
         '2028-12-31',
         500,
         'ETC-IME-032',
-        1000
+        500000
     ),
     (
         'LO070526025',
@@ -1558,7 +1616,7 @@ VALUES (
         '2028-12-31',
         500,
         'ETC-LEC-033',
-        1200
+        600000
     ),
     (
         'LO070526026',
@@ -1566,7 +1624,7 @@ VALUES (
         '2028-12-31',
         500,
         'ETC-FEB-034',
-        1400
+        700000
     ),
     (
         'LO070526027',
@@ -1574,7 +1632,7 @@ VALUES (
         '2028-12-31',
         500,
         'ETC-FEB-035',
-        1800
+        900000
     ),
     (
         'LO070526028',
@@ -1582,7 +1640,7 @@ VALUES (
         '2028-12-31',
         500,
         'ETC-MET-036',
-        800
+        400000
     ),
     (
         'LO070526029',
@@ -1590,7 +1648,7 @@ VALUES (
         '2028-12-31',
         500,
         'ETC-OPE-037',
-        1200
+        600000
     ),
     (
         'LO070526030',
@@ -1598,7 +1656,7 @@ VALUES (
         '2028-12-31',
         500,
         'ETC-OPE-038',
-        1600
+        800000
     ),
     (
         'LO070526031',
@@ -1606,7 +1664,7 @@ VALUES (
         '2028-12-31',
         500,
         'TPCN-BNI-040',
-        1800
+        900000
     ),
     (
         'LO070526032',
@@ -1614,7 +1672,7 @@ VALUES (
         '2028-12-31',
         500,
         'TPCN-BPL-041',
-        120000
+        60000000
     ),
     (
         'LO070526033',
@@ -1622,7 +1680,7 @@ VALUES (
         '2028-12-31',
         220,
         'TPCN-CDK-042',
-        1200
+        264000
     ),
     (
         'LO070526034',
@@ -1630,7 +1688,7 @@ VALUES (
         '2028-12-31',
         500,
         'TPCN-D3D-043',
-        95000
+        47500000
     ),
     (
         'LO070526035',
@@ -1638,7 +1696,7 @@ VALUES (
         '2028-12-31',
         500,
         'TPCN-HPM-044',
-        160000
+        80000000
     ),
     (
         'LO070526036',
@@ -1646,7 +1704,7 @@ VALUES (
         '2028-12-31',
         500,
         'TPCN-HHT-045',
-        185000
+        92500000
     ),
     (
         'LO070526037',
@@ -1654,7 +1712,7 @@ VALUES (
         '2028-12-31',
         500,
         'TPCN-IMU-046',
-        1300
+        650000
     ),
     (
         'LO070526038',
@@ -1662,7 +1720,7 @@ VALUES (
         '2028-12-31',
         500,
         'TPCN-KAN-047',
-        145000
+        72500000
     ),
     (
         'LO070526039',
@@ -1670,7 +1728,7 @@ VALUES (
         '2028-12-31',
         500,
         'TPCN-KID-048',
-        125000
+        62500000
     ),
     (
         'LO070526040',
@@ -1678,7 +1736,7 @@ VALUES (
         '2028-12-31',
         500,
         'TPCN-LBG-049',
-        115000
+        57500000
     ),
     (
         'LO070526041',
@@ -1686,7 +1744,7 @@ VALUES (
         '2028-12-31',
         500,
         'TPCN-LAC-050',
-        1800
+        900000
     ),
     (
         'LO070526042',
@@ -1694,7 +1752,7 @@ VALUES (
         '2028-12-31',
         500,
         'TPCN-NUT-051',
-        120000
+        60000000
     ),
     (
         'LO070526043',
@@ -1702,7 +1760,7 @@ VALUES (
         '2028-12-31',
         500,
         'TPCN-OMP-052',
-        1600
+        800000
     ),
     (
         'LO070526044',
@@ -1710,7 +1768,7 @@ VALUES (
         '2028-12-31',
         500,
         'TPCN-OPD-053',
-        195000
+        97500000
     ),
     (
         'LO070526045',
@@ -1718,7 +1776,7 @@ VALUES (
         '2028-12-31',
         500,
         'TPCN-OMX-054',
-        210000
+        105000000
     ),
     (
         'LO070526046',
@@ -1726,7 +1784,7 @@ VALUES (
         '2028-12-31',
         500,
         'TPCN-PIK-056',
-        1400
+        700000
     ),
     (
         'LO070526047',
@@ -1734,7 +1792,7 @@ VALUES (
         '2028-12-31',
         500,
         'TPCN-POB-057',
-        2100
+        1050000
     ),
     (
         'LO070526048',
@@ -1742,7 +1800,7 @@ VALUES (
         '2028-12-31',
         500,
         'TPCN-SKI-058',
-        1500
+        750000
     ),
     (
         'LO070526049',
@@ -1750,7 +1808,7 @@ VALUES (
         '2028-12-31',
         300,
         'MY_PHAM-LRP-001',
-        180000
+        54000000
     ),
     (
         'LO070526050',
@@ -1758,7 +1816,7 @@ VALUES (
         '2028-12-31',
         200,
         'MY_PHAM-VIC-002',
-        380000
+        76000000
     ),
     (
         'LO070526051',
@@ -1766,7 +1824,7 @@ VALUES (
         '2028-12-31',
         400,
         'MY_PHAM-CER-003',
-        220000
+        88000000
     ),
     (
         'LO070526052',
@@ -1774,7 +1832,7 @@ VALUES (
         '2028-12-31',
         250,
         'MY_PHAM-EUC-004',
-        290000
+        72500000
     ),
     (
         'LO070526053',
@@ -1782,16 +1840,15 @@ VALUES (
         '2028-12-31',
         500,
         'MY_PHAM-BIO-005',
-        130000
+        65000000
     );
--- 4.8. QUÀ TẶNG 
+-- QUÀ TẶNG 
 INSERT INTO QuaTang (maKhuyenMai, maDonVi, soLuongTang)
-VALUES ('KM150401', 'DV103', 1),
+VALUES ('KM150401', 'DV102', 1),
     ('KM010402', 'DV016', 1),
-    ('KM150401', 'DV102', 10),
     ('KM010402', 'DV015', 5),
     ('KM011001', 'DV002', 1);
--- 4.9. HÓA ĐƠN & CHI TIẾT 
+--  HÓA ĐƠN & CHI TIẾT 
 INSERT INTO HoaDon (
         maHoaDon,
         thoiGianTao,
@@ -1919,7 +1976,7 @@ VALUES (
         N'TIEN_MAT'
     );
 -- SỬA LẠI TOÀN BỘ ĐƠN GIÁ (BẰNG DONGIACOBAN * HESOQUYDOI)
-INSERT INTO ChiTietHoaDon (maHoaDon, maDonVi, soLuong, donGia, laQuaTangKem)
+INSERT INTO ChiTietHoaDon (maHoaDon, maDonVi, soLuongBan, donGia, laQuaTangKem)
 VALUES ('HDB200426001', 'DV001', 2, 95000, 0),
     ('HDB200426001', 'DV015', 1, 850, 0),
     ('HDB200426002', 'DV016', 10, 8500, 0),
@@ -1928,7 +1985,7 @@ VALUES ('HDB200426001', 'DV001', 2, 95000, 0),
     ('HDB260426001', 'DV016', 10, 8500, 0),
     ('HDB300426001', 'DV015', 2, 850, 0),
     ('HDB020526001', 'DV017', 5, 85000, 0);
-INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong, laQuaTangKem)
+INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuongPhanBo, laQuaTangKem)
 VALUES ('HDB200426001', 'DV001', 'LO010126001', 2, 0),
     ('HDB200426001', 'DV015', 'LO200326001', 1, 0),
     ('HDB200426002', 'DV016', 'LO200326001', 10, 0),
@@ -1937,16 +1994,15 @@ VALUES ('HDB200426001', 'DV001', 'LO010126001', 2, 0),
     ('HDB260426001', 'DV016', 'LO200326001', 10, 0),
     ('HDB300426001', 'DV015', 'LO200326001', 2, 0),
     ('HDB020526001', 'DV017', 'LO200326001', 5, 0);
-GO --- =================================================== ---
-    --- 5. Trigger
-    --- =================================================== ---
+GO 
+    --- Trigger  -----
     CREATE TRIGGER trg_Lo_UpdateTonKho ON Lo
 AFTER
 INSERT,
     UPDATE,
     DELETE AS BEGIN
 SET NOCOUNT ON;
--- Xử lý phần dữ liệu bị mất đi (Dành cho sự kiện DELETE và UPDATE)
+-- Xử lý phần dữ liệu bị mất đi (DELETE/UPDATE)
 -- Lấy số lượng cũ từ bảng ảo 'deleted' trừ khỏi kho
 IF EXISTS (
     SELECT 1
@@ -1956,13 +2012,13 @@ UPDATE sp
 SET sp.soLuongTon = ISNULL(sp.soLuongTon, 0) - d.TongSoLuongCu
 FROM SanPham sp
     INNER JOIN (
-        -- Tính tổng số lượng lô bị xóa/cũ theo từng mã sản phẩm
+        --Tính tổng số lượng lô bị xóa/cũ theo từng mã sản phẩm
         SELECT maSanPham,
             SUM(soLuongSanPham) AS TongSoLuongCu
         FROM deleted
         GROUP BY maSanPham
     ) d ON sp.maSanPham = d.maSanPham;
-END -- Xử lý phần dữ liệu mới được thêm (Dành cho sự kiện INSERT và UPDATE)
+END -- Xử lý phần dữ liệu mới được thêm (INSERT/UPDATE)
 -- Lấy số lượng mới từ bảng ảo 'inserted' cộng vào kho
 IF EXISTS (
     SELECT 1
@@ -1981,43 +2037,4 @@ FROM SanPham sp
 END
 END;
 GO
---- =================================================== ---
---- 6. Triggers for Profitability Check
---- =================================================== ---
-GO
-CREATE TRIGGER trg_Lo_KiemTraGiaBanCoLai
-ON Lo
-AFTER INSERT, UPDATE
-AS
-BEGIN
-    SET NOCOUNT ON;
-    IF EXISTS (
-        SELECT 1
-        FROM inserted i
-        INNER JOIN SanPham sp ON i.maSanPham = sp.maSanPham
-        WHERE i.giaNhap >= sp.donGiaCoBan
-    )
-    BEGIN
-        RAISERROR (N'Lỗi: Giá nhập của Lô phải nhỏ hơn đơn giá bán cơ bản của sản phẩm để đảm bảo bán có lãi!', 16, 1);
-        ROLLBACK TRANSACTION;
-    END
-END;
-GO
-CREATE TRIGGER trg_SanPham_KiemTraGiaBanCoLai
-ON SanPham
-AFTER UPDATE
-AS
-BEGIN
-    SET NOCOUNT ON;
-    IF EXISTS (
-        SELECT 1
-        FROM inserted i
-        INNER JOIN Lo l ON i.maSanPham = l.maSanPham
-        WHERE i.donGiaCoBan <= l.giaNhap
-    )
-    BEGIN
-        RAISERROR (N'Lỗi: Đơn giá bán cơ bản phải lớn hơn giá nhập của các Lô hiện tại để đảm bảo bán có lãi!', 16, 1);
-        ROLLBACK TRANSACTION;
-    END
-END;
-GO
+
