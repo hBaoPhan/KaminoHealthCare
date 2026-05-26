@@ -797,7 +797,7 @@ public class ThongKePanel extends JPanel {
         }
     }
 
-    private void loadData() {
+    public void loadData() {
         LocalDate tuNgay = datePickerTu.getDate();
         LocalDate denNgay = datePickerDen.getDate();
 
@@ -861,6 +861,14 @@ public class ThongKePanel extends JPanel {
         for (HoaDon hd : dsHoaDon) {
             int hour = hd.getThoiGianTao().getHour();
             double finalTotal = hd.tinhTongTienThanhToan();
+            if (hd.getLoaiHoaDon() == LoaiHoaDon.DOI_HANG && hd.getHoaDonDoiTra() != null) {
+                String maGoc = hd.getHoaDonDoiTra().getMaHoaDon();
+                HoaDon hdGoc = new com.example.service.HoaDonService().timTheoMa(maGoc);
+                if (hdGoc != null) {
+                    hdGoc.setDsChiTiet(new com.example.service.ChiTietHoaDonService().layTheoMaHoaDon(maGoc));
+                    finalTotal -= hdGoc.tinhTongTienThanhToan();
+                }
+            }
 
             double cost = 0.0;
             if (hd.getDsChiTiet() != null) {
@@ -869,8 +877,8 @@ public class ThongKePanel extends JPanel {
                         for (SuPhanBoLo spbl : ct.getDsPhanBoLo()) {
                             if (spbl.getLo() != null) {
                                 double giaNhapLoo = spbl.getLo().getGiaNhap();
-                                int slTonLo = spbl.getLo().getSoLuongSanPham();
-                                double giaNhapDonVi = slTonLo > 0 ? (giaNhapLoo / slTonLo) : 0;
+                                int slBanDau = new com.example.dao.LoDAO().tinhSoLuongNhapBanDau(spbl.getLo().getMaLo());
+                                double giaNhapDonVi = slBanDau > 0 ? (giaNhapLoo / slBanDau) : 0;
                                 cost += spbl.getSoLuongPhanBo() * giaNhapDonVi;
                             }
                         }
@@ -888,18 +896,20 @@ public class ThongKePanel extends JPanel {
                     hrCost.put(hour, hrCost.get(hour) + cost);
                 }
             } else if (hd.getLoaiHoaDon() == LoaiHoaDon.TRA_HANG) {
+                totalRevenue -= finalTotal;
                 totalRefund += finalTotal;
                 totalCost -= cost;
                 totalReturns++;
 
                 if (hour >= 7 && hour <= 21) {
+                    hrRevenue.put(hour, hrRevenue.get(hour) - finalTotal);
                     hrRefund.put(hour, hrRefund.get(hour) + finalTotal);
                     hrCost.put(hour, hrCost.get(hour) - cost);
                 }
             }
         }
 
-        double totalProfit = totalRevenue - totalRefund - totalCost;
+        double totalProfit = totalRevenue - totalCost;
 
         modelTable.addRow(new Object[] {
                 targetDate.format(dateFormatter),
@@ -914,9 +924,8 @@ public class ThongKePanel extends JPanel {
         for (int h = 7; h <= 21; h++) {
             labels.add(h + ":00");
             double rev = hrRevenue.get(h);
-            double ref = hrRefund.get(h);
             double cst = hrCost.get(h);
-            double prf = rev - ref - cst;
+            double prf = rev - cst;
 
             revenues.add(rev);
             profits.add(prf);
@@ -957,6 +966,14 @@ public class ThongKePanel extends JPanel {
 
             for (HoaDon hd : list) {
                 double finalTotal = hd.tinhTongTienThanhToan();
+                if (hd.getLoaiHoaDon() == LoaiHoaDon.DOI_HANG && hd.getHoaDonDoiTra() != null) {
+                    String maGoc = hd.getHoaDonDoiTra().getMaHoaDon();
+                    HoaDon hdGoc = new com.example.service.HoaDonService().timTheoMa(maGoc);
+                    if (hdGoc != null) {
+                        hdGoc.setDsChiTiet(new com.example.service.ChiTietHoaDonService().layTheoMaHoaDon(maGoc));
+                        finalTotal -= hdGoc.tinhTongTienThanhToan();
+                    }
+                }
 
                 double cstVal = 0.0;
                 if (hd.getDsChiTiet() != null) {
@@ -965,8 +982,8 @@ public class ThongKePanel extends JPanel {
                             for (SuPhanBoLo spbl : ct.getDsPhanBoLo()) {
                                 if (spbl.getLo() != null) {
                                     double giaNhapLoo = spbl.getLo().getGiaNhap();
-                                    int slTonLo = spbl.getLo().getSoLuongSanPham();
-                                    double giaNhapDonVi = slTonLo > 0 ? (giaNhapLoo / slTonLo) : 0;
+                                    int slBanDau = new com.example.dao.LoDAO().tinhSoLuongNhapBanDau(spbl.getLo().getMaLo());
+                                    double giaNhapDonVi = slBanDau > 0 ? (giaNhapLoo / slBanDau) : 0;
                                     cstVal += spbl.getSoLuongPhanBo() * giaNhapDonVi;
                                 }
                             }
@@ -979,13 +996,14 @@ public class ThongKePanel extends JPanel {
                     cost += cstVal;
                     invoices++;
                 } else if (hd.getLoaiHoaDon() == LoaiHoaDon.TRA_HANG) {
+                    rev -= finalTotal;
                     refund += finalTotal;
                     cost -= cstVal;
                     returns++;
                 }
             }
 
-            double profit = rev - refund - cost;
+            double profit = rev - cost;
 
             modelTable.addRow(new Object[] {
                     curr.format(dateFormatter),
@@ -1038,8 +1056,8 @@ public class ThongKePanel extends JPanel {
                         for (SuPhanBoLo spbl : ct.getDsPhanBoLo()) {
                             if (spbl.getLo() != null) {
                                 double giaNhapLoo = spbl.getLo().getGiaNhap();
-                                int slTonLo = spbl.getLo().getSoLuongSanPham();
-                                double giaNhapDonVi = slTonLo > 0 ? (giaNhapLoo / slTonLo) : 0;
+                                int slBanDau = new com.example.dao.LoDAO().tinhSoLuongNhapBanDau(spbl.getLo().getMaLo());
+                                double giaNhapDonVi = slBanDau > 0 ? (giaNhapLoo / slBanDau) : 0;
                                 cost += spbl.getSoLuongPhanBo() * giaNhapDonVi;
                             }
                         }
@@ -1145,6 +1163,14 @@ public class ThongKePanel extends JPanel {
 
         for (HoaDon hd : dsHoaDon) {
             double finalTotal = hd.tinhTongTienThanhToan();
+            if (hd.getLoaiHoaDon() == LoaiHoaDon.DOI_HANG && hd.getHoaDonDoiTra() != null) {
+                String maGoc = hd.getHoaDonDoiTra().getMaHoaDon();
+                HoaDon hdGoc = new com.example.service.HoaDonService().timTheoMa(maGoc);
+                if (hdGoc != null) {
+                    hdGoc.setDsChiTiet(new com.example.service.ChiTietHoaDonService().layTheoMaHoaDon(maGoc));
+                    finalTotal -= hdGoc.tinhTongTienThanhToan();
+                }
+            }
             com.example.entity.KhachHang kh = hd.getKhachHang();
 
             if (kh == null || kh.getMaKhachHang() == null || kh.getMaKhachHang().trim().isEmpty()) {

@@ -557,6 +557,7 @@ public class LoPanel extends JPanel {
             lo.setNgayHetHan(dateChooserNgayHetHan.getDate().toInstant()
                     .atZone(ZoneId.systemDefault()).toLocalDate());
             lo.setSoLuongSanPham(Integer.parseInt(txtSoLuong.getText().trim()));
+            lo.setSoLuongNhap(lo.getSoLuongSanPham());
             lo.setSanPham(new SanPham(txtMaSanPham.getText().trim()));
             lo.setGiaNhap(Double.parseDouble(txtGiaNhap.getText().trim().replace(",", "")));
 
@@ -584,6 +585,7 @@ public class LoPanel extends JPanel {
             lo.setNgayHetHan(dateChooserNgayHetHan.getDate().toInstant()
                     .atZone(ZoneId.systemDefault()).toLocalDate());
             lo.setSoLuongSanPham(Integer.parseInt(txtSoLuong.getText().trim()));
+            lo.setSoLuongNhap(lo.getSoLuongSanPham());
             lo.setSanPham(new SanPham(txtMaSanPham.getText().trim()));
             lo.setGiaNhap(Double.parseDouble(txtGiaNhap.getText().trim().replace(",", "")));
 

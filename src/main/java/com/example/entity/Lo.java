@@ -11,6 +11,7 @@ public class Lo {
     private int soLuongSanPham;
     private SanPham sanPham;
     private double giaNhap;
+    private int soLuongNhap;
 
     public Lo() {
     }
@@ -26,6 +27,17 @@ public class Lo {
         this.soLuongSanPham = soLuongSanPham;
         this.sanPham = sanPham;
         this.giaNhap = giaNhap;
+        this.soLuongNhap = soLuongSanPham;
+    }
+
+    public Lo(String maLo, String soLo, LocalDate ngayHetHan, int soLuongSanPham, SanPham sanPham, double giaNhap, int soLuongNhap) {
+        this.maLo = maLo;
+        this.soLo = soLo;
+        this.ngayHetHan = ngayHetHan;
+        this.soLuongSanPham = soLuongSanPham;
+        this.sanPham = sanPham;
+        this.giaNhap = giaNhap;
+        this.soLuongNhap = soLuongNhap;
     }
 
     public String getMaLo() {
@@ -76,6 +88,14 @@ public class Lo {
         this.giaNhap = giaNhap;
     }
 
+    public int getSoLuongNhap() {
+        return soLuongNhap;
+    }
+
+    public void setSoLuongNhap(int soLuongNhap) {
+        this.soLuongNhap = soLuongNhap;
+    }
+
     public boolean daHetHan() {
         return ngayHetHan != null && ngayHetHan.isBefore(LocalDate.now());
     }
@@ -102,6 +122,7 @@ public class Lo {
                 ", soLuongSanPham=" + soLuongSanPham +
                 ", sanPham=" + sanPham +
                 ", giaNhap=" + giaNhap +
+                ", soLuongNhap=" + soLuongNhap +
                 '}';
     }
 }

@@ -273,6 +273,10 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 				if (pnlCaLam != null)
 					pnlCaLam.taiLaiDanhSach();
 			}
+			case "Thống Kê" -> {
+				if (pnlThongKe != null)
+					pnlThongKe.loadData();
+			}
 		}
 	}
 
