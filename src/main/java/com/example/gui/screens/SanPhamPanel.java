@@ -1781,8 +1781,8 @@ public class SanPhamPanel extends JPanel {
         double giaNhapDonVi = slTonLo > 0 ? (giaNhapLoo / slTonLo) : 0;
 
         int heSo = hangLoiDangChon.getChiTietHoaDon().getDonViQuyDoi().getHeSoQuyDoi();
-        int qtySelectedUnit = hangLoiDangChon.getSoLuong() / heSo;
-        double tongTienHoan = hangLoiDangChon.getSoLuong() * giaNhapDonVi;
+        int qtySelectedUnit = hangLoiDangChon.getSoLuongPhanBo() / heSo;
+        double tongTienHoan = hangLoiDangChon.getSoLuongPhanBo() * giaNhapDonVi;
 
         String msg = String.format("Bạn có chắc chắn muốn trả sản phẩm lỗi này về Nhà sản xuất không?\n" +
                 "Sản phẩm: %s\n" +
