@@ -354,20 +354,6 @@ public class LoPanel extends JPanel {
             danhSachSanPham = sanPhamService.layTatCa();
         danhSachLo = loService.layTatCa();
 
-        boolean hasChanged = false;
-        java.time.LocalDate now = java.time.LocalDate.now();
-        for (Lo lo : danhSachLo) {
-            if (lo.getSoLuongSanPham() > 0 && !lo.getNgayHetHan().isAfter(now.plusDays(30))) {
-                lo.setSoLuongSanPham(0);
-                loService.capNhat(lo);
-                hasChanged = true;
-            }
-        }
-
-        if (hasChanged) {
-            danhSachLo = loService.layTatCa();
-        }
-
         locVaHienThiLo(txtSearch != null ? txtSearch.getText().trim() : "");
     }
 

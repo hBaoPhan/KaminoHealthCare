@@ -355,6 +355,7 @@ public class ManHinhChinhPanel extends JPanel {
 
         int soHoaDon = dsHoaDon.size();
         double doanhThu = 0;
+        double tongGiaVon = 0;
 
         double[] doanhThuTheoGio = new double[24];
         double dtETC = 0;
@@ -362,43 +363,55 @@ public class ManHinhChinhPanel extends JPanel {
         double dtTPCN = 0;
 
         for (HoaDon hd : dsHoaDon) {
-            // Chỉ tính doanh thu cho các hóa đơn ĐÃ THANH TOÁN
+            // Chỉ tính doanh thu/lợi nhuận cho các hóa đơn ĐÃ THANH TOÁN
             if (!hd.isTrangThaiThanhToan())
                 continue;
 
-            double tienHD = 0;
-            double tongHienTai = hd.tinhTongTienThanhToan();
+            double finalTotal = hd.tinhTongTienThanhToan();
             LoaiHoaDon loai = hd.getLoaiHoaDon();
 
-            if (loai == LoaiHoaDon.BAN_HANG || loai == null) {
-                tienHD = tongHienTai;
-            } else {
-                double tongGoc = 0;
-                if (hd.getHoaDonDoiTra() != null) {
-                    String maGoc = hd.getHoaDonDoiTra().getMaHoaDon();
-                    HoaDon hdGoc = hoaDonService.timTheoMa(maGoc);
-                    if (hdGoc != null) {
-                        hdGoc.setDsChiTiet(chiTietHoaDonService.layTheoMaHoaDon(maGoc));
-                        tongGoc = hdGoc.tinhTongTienThanhToan();
-                    }
-                }
-
-                if (loai == LoaiHoaDon.DOI_HANG) {
-                    tienHD = tongHienTai - tongGoc;
-                } else if (loai == LoaiHoaDon.TRA_HANG) {
-                    tienHD = -tongHienTai;
-                } else {
-                    tienHD = tongHienTai;
+            if (loai == LoaiHoaDon.DOI_HANG && hd.getHoaDonDoiTra() != null) {
+                String maGoc = hd.getHoaDonDoiTra().getMaHoaDon();
+                HoaDon hdGoc = hoaDonService.timTheoMa(maGoc);
+                if (hdGoc != null) {
+                    hdGoc.setDsChiTiet(chiTietHoaDonService.layTheoMaHoaDon(maGoc));
+                    finalTotal -= hdGoc.tinhTongTienThanhToan();
                 }
             }
 
-            doanhThu += tienHD;
+            double cost = 0.0;
+            if (hd.getDsChiTiet() != null) {
+                for (ChiTietHoaDon ct : hd.getDsChiTiet()) {
+                    if (ct.getDsPhanBoLo() != null) {
+                        for (SuPhanBoLo spbl : ct.getDsPhanBoLo()) {
+                            if (spbl.getLo() != null) {
+                                double giaNhapLoo = spbl.getLo().getGiaNhap();
+                                int slBanDau = new com.example.dao.LoDAO().tinhSoLuongNhapBanDau(spbl.getLo().getMaLo());
+                                double giaNhapDonVi = slBanDau > 0 ? (giaNhapLoo / slBanDau) : 0;
+                                cost += spbl.getSoLuongPhanBo() * giaNhapDonVi;
+                            }
+                        }
+                    }
+                }
+            }
+
+            double tienHD = 0;
+            if (loai == LoaiHoaDon.BAN_HANG || loai == LoaiHoaDon.DOI_HANG || loai == null) {
+                tienHD = finalTotal;
+                doanhThu += finalTotal;
+                tongGiaVon += cost;
+            } else if (loai == LoaiHoaDon.TRA_HANG) {
+                tienHD = -finalTotal;
+                doanhThu -= finalTotal;
+                tongGiaVon -= cost;
+            }
 
             if (hd.getThoiGianTao() != null) {
                 int gio = hd.getThoiGianTao().getHour();
                 doanhThuTheoGio[gio] += tienHD;
             }
 
+            double tongHienTai = hd.tinhTongTienThanhToan();
             if (hd.getDsChiTiet() != null) {
                 for (ChiTietHoaDon ct : hd.getDsChiTiet()) {
                     if (ct.getDonViQuyDoi() != null && ct.getDonViQuyDoi().getSanPham() != null) {
@@ -424,45 +437,7 @@ public class ManHinhChinhPanel extends JPanel {
             }
         }
 
-        // Tính lợi nhuận thực: Doanh thu (Bán/Đổi) - Tiền trả hàng (Trả) - Giá vốn (∑
-        // soLuong × giaNhap)
-        double tongGiaVon = 0;
-        double tongTienTra = 0;
-        double tongDoanhThuBanDoi = 0;
-
-        for (HoaDon hd : dsHoaDon) {
-            if (!hd.isTrangThaiThanhToan())
-                continue;
-
-            double finalTotal = hd.tinhTongTienThanhToan();
-            double giaVonHD = 0;
-
-            if (hd.getDsChiTiet() != null) {
-                for (ChiTietHoaDon ct : hd.getDsChiTiet()) {
-                    if (ct.getDsPhanBoLo() != null) {
-                        for (SuPhanBoLo spbl : ct.getDsPhanBoLo()) {
-                            if (spbl.getLo() != null) {
-                                 double giaNhapLoo = spbl.getLo().getGiaNhap();
-                                 int slBanDau = new com.example.dao.LoDAO().tinhSoLuongNhapBanDau(spbl.getLo().getMaLo());
-                                 double giaNhapDonVi = slBanDau > 0 ? (giaNhapLoo / slBanDau) : 0;
-                                 giaVonHD += spbl.getSoLuongPhanBo() * giaNhapDonVi;
-                            }
-                        }
-                    }
-                }
-            }
-
-            LoaiHoaDon loai = hd.getLoaiHoaDon();
-            if (loai == LoaiHoaDon.BAN_HANG || loai == LoaiHoaDon.DOI_HANG || loai == null) {
-                tongDoanhThuBanDoi += finalTotal;
-                tongGiaVon += giaVonHD;
-            } else if (loai == LoaiHoaDon.TRA_HANG) {
-                tongTienTra += finalTotal;
-                tongGiaVon -= giaVonHD;
-            }
-        }
-
-        double loiNhuan = tongDoanhThuBanDoi - tongTienTra - tongGiaVon;
+        double loiNhuan = doanhThu - tongGiaVon;
 
         lblHoaDonHomNay.setText(String.valueOf(soHoaDon));
 
@@ -471,32 +446,30 @@ public class ManHinhChinhPanel extends JPanel {
         lblLoiNhuan.setText(loiNhuan == 0 ? "0 VND" : df.format(loiNhuan));
 
         List<Lo> dsLo = loService.layTatCa();
-        int loHetHan = 0;
         int loGanHetHan = 0;
+        int loNgungBan = 0;
         for (Lo lo : dsLo) {
             if (lo.getNgayHetHan() != null) {
                 long soNgay = java.time.Duration.between(today.atStartOfDay(), lo.getNgayHetHan().atStartOfDay())
                         .toDays();
-                if (soNgay <= 0) {
-                    loHetHan++;
-                } else if (soNgay <= 30) {
-                    loGanHetHan++;
+                if (soNgay > 0) {
+                    if (soNgay <= 30) {
+                        loNgungBan++;
+                    } else if (soNgay <= 37) {
+                        loGanHetHan++;
+                    }
                 }
             }
         }
-        String canhBaoText = "";
-        if (loHetHan > 0) {
-            canhBaoText += loHetHan + " lô đã hết hạn";
+        StringBuilder canhBao = new StringBuilder();
+        if (loGanHetHan > 0)
+            canhBao.append(loGanHetHan).append(" lô sắp hết");
+        if (loNgungBan > 0) {
+            if (canhBao.length() > 0)
+                canhBao.append(", ");
+            canhBao.append(loNgungBan).append(" lô ngưng bán");
         }
-        if (loGanHetHan > 0) {
-            if (!canhBaoText.isEmpty())
-                canhBaoText += ", ";
-            canhBaoText += loGanHetHan + " lô sắp hết hạn";
-        }
-        if (canhBaoText.isEmpty()) {
-            canhBaoText = "Không có cảnh báo";
-        }
-        lblCanhBao.setText(canhBaoText);
+        lblCanhBao.setText(canhBao.length() > 0 ? canhBao.toString() : "Không có cảnh báo");
 
         // Update charts
         if (barDataset != null) {
@@ -564,42 +537,15 @@ public class ManHinhChinhPanel extends JPanel {
                 // Sắp hết hạn: từ 1 ngày tới 1 tháng (<= 30 ngày)
             } else if (soNgay <= 30) {
                 modelLoThuoc.addRow(new Object[] {
-                        lo.getMaLo(), tenThuoc, ngayFormatted, "SẮP HẾT"
-                });
-                // Ngưng bán: từ 1 tháng tới 3 tháng trước ngày hết hạn (31 đến 90 ngày)
-            } else if (soNgay <= 90) {
-                modelLoThuoc.addRow(new Object[] {
                         lo.getMaLo(), tenThuoc, ngayFormatted, "NGỪNG BÁN"
                 });
+            } else if (soNgay <= 37) {
+                modelLoThuoc.addRow(new Object[] {
+                        lo.getMaLo(), tenThuoc, ngayFormatted, "SẮP HẾT HẠN"
+                });
             }
         }
     }
 
-    private double tinhDoanhThuHieuChinh(HoaDon hd) {
-        if (hd == null)
-            return 0;
-        double tongHienTai = hd.tinhTongTienThanhToan();
-        LoaiHoaDon loai = hd.getLoaiHoaDon();
 
-        if (loai == LoaiHoaDon.BAN_HANG || loai == null) {
-            return tongHienTai;
-        }
-
-        double tongGoc = 0;
-        if (hd.getHoaDonDoiTra() != null) {
-            String maGoc = hd.getHoaDonDoiTra().getMaHoaDon();
-            HoaDon hdGoc = hoaDonService.timTheoMa(maGoc);
-            if (hdGoc != null) {
-                hdGoc.setDsChiTiet(chiTietHoaDonService.layTheoMaHoaDon(maGoc));
-                tongGoc = hdGoc.tinhTongTienThanhToan();
-            }
-        }
-
-        if (loai == LoaiHoaDon.DOI_HANG) {
-            return tongHienTai - tongGoc;
-        } else if (loai == LoaiHoaDon.TRA_HANG) {
-            return tongGoc - tongHienTai;
-        }
-        return tongHienTai;
-    }
 }

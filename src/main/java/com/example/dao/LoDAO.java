@@ -278,4 +278,20 @@ public class LoDAO {
         }
         return 0;
     }
+
+    public int tinhTongTonKhoKhongHetHan(String maSanPham, LocalDate date) {
+        String sql = "SELECT SUM(soLuongSanPham) FROM Lo WHERE maSanPham = ? AND ngayHetHan > ?";
+        try (PreparedStatement lenh = ConnectDB.getConnection().prepareStatement(sql)) {
+            lenh.setString(1, maSanPham);
+            lenh.setDate(2, Date.valueOf(date));
+            try (ResultSet rs = lenh.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
 }

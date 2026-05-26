@@ -558,6 +558,11 @@ public class DoiHangPanel extends JPanel {
         if (dv == null) {
             return;
         }
+        if (hoaDonGocHienTai == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng tìm kiếm hóa đơn gốc trước khi thêm sản phẩm!", "Chưa chọn hóa đơn gốc",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
         // Check if this product is in the original invoice tblHoaDonGoc
         DefaultTableModel modelGoc = (DefaultTableModel) tblHoaDonGoc.getModel();
         boolean foundInGoc = false;
@@ -589,6 +594,11 @@ public class DoiHangPanel extends JPanel {
     }
 
     private void themSanPhamVaoBang(SanPham sp, DonViQuyDoi selectedDv) {
+        if (hoaDonGocHienTai == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng tìm kiếm hóa đơn gốc trước khi thêm sản phẩm!", "Chưa chọn hóa đơn gốc",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
         if (sp.getLoaiSanPham().name().equals("ETC")) {
             JOptionPane.showMessageDialog(this,
                     "Thuốc kê đơn (ETC) không được phép tự ý thêm mới ngoài danh mục đơn thuốc!", "Cảnh báo",

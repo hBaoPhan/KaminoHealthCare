@@ -329,10 +329,8 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
         CaLam caHienTai = caLamService.layCaHienTai(taiKhoan.getNhanVien().getMaNhanVien());
         LocalDateTime shiftStart = (caHienTai != null) ? caHienTai.getGioBatDau() : today.atStartOfDay();
 
-        // Tính doanh thu ca theo công thức đúng: DT(Bán/Đổi) - Tiền trả(Trả) - Giá vốn
-        double tongBanDoiCa = 0;
-        double tongTraHangCa = 0;
-        double tongGiaVonCa = 0;
+        // Tính doanh thu ca theo công thức đúng: DT(Bán/Đổi) - Tiền trả(Trả)
+        double doanhThuCa = 0;
 
         for (HoaDon hd : dsHoaDon) {
             // Đếm số hóa đơn của nhân viên hiện tại
@@ -360,42 +358,26 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
                 continue;
 
             double finalTotal = hd.tinhTongTienThanhToan();
-            double giaVonHD = 0;
+            LoaiHoaDon loai = hd.getLoaiHoaDon();
 
-            // Tải chi tiết nếu chưa có để tính giá vốn
-            if (hd.getDsChiTiet() == null) {
-                hd.setDsChiTiet(chiTietHoaDonService.layTheoMaHoaDon(hd.getMaHoaDon()));
-            }
-            if (hd.getDsChiTiet() != null) {
-                for (ChiTietHoaDon ct : hd.getDsChiTiet()) {
-                    if (ct.getDsPhanBoLo() != null) {
-                        for (SuPhanBoLo spbl : ct.getDsPhanBoLo()) {
-                            if (spbl.getLo() != null) {
-                                 double giaNhapLoo = spbl.getLo().getGiaNhap();
-                                 int slBanDau = new com.example.dao.LoDAO().tinhSoLuongNhapBanDau(spbl.getLo().getMaLo());
-                                 double giaNhapDonVi = slBanDau > 0 ? (giaNhapLoo / slBanDau) : 0;
-                                 giaVonHD += spbl.getSoLuongPhanBo() * giaNhapDonVi;
-                            }
-                        }
-                    }
+            if (loai == LoaiHoaDon.DOI_HANG && hd.getHoaDonDoiTra() != null) {
+                String maGoc = hd.getHoaDonDoiTra().getMaHoaDon();
+                HoaDon hdGoc = hoaDonService.timTheoMa(maGoc);
+                if (hdGoc != null) {
+                    hdGoc.setDsChiTiet(chiTietHoaDonService.layTheoMaHoaDon(maGoc));
+                    finalTotal -= hdGoc.tinhTongTienThanhToan();
                 }
             }
 
-            LoaiHoaDon loai = hd.getLoaiHoaDon();
             if (loai == LoaiHoaDon.BAN_HANG || loai == LoaiHoaDon.DOI_HANG) {
-                tongBanDoiCa += finalTotal;
-                tongGiaVonCa += giaVonHD;
+                doanhThuCa += finalTotal;
             } else if (loai == LoaiHoaDon.TRA_HANG) {
-                tongTraHangCa += finalTotal;
-                tongGiaVonCa -= giaVonHD;
+                doanhThuCa -= finalTotal;
             }
         }
 
-        // Lợi nhuận của ca = Doanh thu bán/đổi - Tiền trả hàng - Giá vốn
-        double loiNhuanCa = tongBanDoiCa - tongTraHangCa - tongGiaVonCa;
-
         lblHoaDonDaLap.setText(String.valueOf(soHoaDon));
-        lblDoanhThuCa.setText(df.format(loiNhuanCa));
+        lblDoanhThuCa.setText(df.format(doanhThuCa));
         lblKhachHang.setText(String.valueOf(khachHangService.layTatCa().size()));
 
         // 2. Lô thuốc hết hạn hôm nay & Cảnh báo
@@ -427,7 +409,7 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
             } else if (soNgay <= 37) {
                 loGanHetHan++;
                 modelLoHetHan.addRow(new Object[] {
-                        lo.getMaLo(), tenThuoc, ngayFormatted, "SẮP HẾT"
+                        lo.getMaLo(), tenThuoc, ngayFormatted, "SẮP HẾT HẠN"
                 });
             }
         }

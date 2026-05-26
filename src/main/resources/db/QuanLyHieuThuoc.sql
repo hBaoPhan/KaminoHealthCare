@@ -56,7 +56,7 @@ CREATE TABLE KhuyenMai (
     loaiKhuyenMai NVARCHAR(20) CHECK (loaiKhuyenMai IN (N'PHAN_TRAM', N'TANG_KEM')),
     khuyenMaiPhanTram FLOAT,
     giaTriDonHangToiThieu FLOAT,
-    uuDaiThanhVien BIT NOT NULL DEFAULT 0  -- 1 = Chỉ dành cho khách hàng thành viên
+    uuDaiThanhVien BIT NOT NULL DEFAULT 0  
 );
 CREATE TABLE SanPham (
     maSanPham VARCHAR(20) PRIMARY KEY,
@@ -216,7 +216,7 @@ VALUES (
         '$2a$12$bfiVg8.pufHx/TEcJYISSeteaaAWStGxzGbIzNkwdgY.2HFhp79Ym',
         'DS001'
     );
--- 4.2. KHÁCH HÀNG
+--  KHÁCH HÀNG
 INSERT INTO KhachHang (
         maKhachHang,
         tenKhachHang,
@@ -253,7 +253,7 @@ VALUES (
         '0955555555',
         N'KHACH_HANG_THANH_VIEN'
     );
--- 4.3. KHUYẾN MÃI
+--  KHUYẾN MÃI
 INSERT INTO KhuyenMai (
         maKhuyenMai,
         tenKhuyenMai,
@@ -314,7 +314,7 @@ VALUES (
         100000,
         0   
     );
--- 4.4. ĐƠN THUỐC
+--  ĐƠN THUỐC
 INSERT INTO DonThuoc (maDonThuoc, tenBacSi, coSoKhamBenh, ngayKeDon)
 VALUES (
         'DT200426001',
@@ -352,7 +352,7 @@ VALUES (
         N'Bệnh viện Nhân dân Gia Định',
         '2026-04-30'
     );
--- 4.5. CA LÀM
+--  CA LÀM
 INSERT INTO CaLam (
         maCa,
         maNhanVien,
@@ -452,7 +452,7 @@ VALUES (
         4000000,
         N'Đang trực'
     );
--- 4.6. SẢN PHẨM & ĐƠN VỊ QUY ĐỔI 
+--  SẢN PHẨM & ĐƠN VỊ QUY ĐỔI 
 INSERT INTO SanPham (
         maSanPham,
         tenSanPham,
@@ -1310,7 +1310,7 @@ VALUES ('DV001', N'TUYP', 1, 'OTC-BIA-001', '8934567890123'),
     ('DV108', N'TUYP', 1, 'MY_PHAM-EUC-004', '8931111222224'),
     ('DV109', N'CHAI', 1, 'MY_PHAM-BIO-005', '8931111222225');
 
--- 4.7. LÔ HÀNG (SỬA LẠI GIÁ NHẬP CHO CÓ LÃI VÀ KHỚP ĐƠN VỊ CƠ BẢN)
+-- LÔ HÀNG (SỬA LẠI GIÁ NHẬP CHO CÓ LÃI VÀ KHỚP ĐƠN VỊ CƠ BẢN)
 INSERT INTO Lo (
         maLo,
         soLo,
@@ -1783,13 +1783,13 @@ VALUES (
         'MY_PHAM-BIO-005',
         65000000
     );
--- 4.8. QUÀ TẶNG 
+-- QUÀ TẶNG 
 INSERT INTO QuaTang (maKhuyenMai, maDonVi, soLuongTang)
 VALUES ('KM150401', 'DV102', 1),
     ('KM010402', 'DV016', 1),
     ('KM010402', 'DV015', 5),
     ('KM011001', 'DV002', 1);
--- 4.9. HÓA ĐƠN & CHI TIẾT 
+--  HÓA ĐƠN & CHI TIẾT 
 INSERT INTO HoaDon (
         maHoaDon,
         thoiGianTao,
@@ -1935,16 +1935,15 @@ VALUES ('HDB200426001', 'DV001', 'LO010126001', 2, 0),
     ('HDB260426001', 'DV016', 'LO200326001', 10, 0),
     ('HDB300426001', 'DV015', 'LO200326001', 2, 0),
     ('HDB020526001', 'DV017', 'LO200326001', 5, 0);
-GO --- =================================================== ---
-    --- 5. Trigger
-    --- =================================================== ---
+GO 
+    --- Trigger  -----
     CREATE TRIGGER trg_Lo_UpdateTonKho ON Lo
 AFTER
 INSERT,
     UPDATE,
     DELETE AS BEGIN
 SET NOCOUNT ON;
--- Xử lý phần dữ liệu bị mất đi (Dành cho sự kiện DELETE và UPDATE)
+-- Xử lý phần dữ liệu bị mất đi (DELETE/UPDATE)
 -- Lấy số lượng cũ từ bảng ảo 'deleted' trừ khỏi kho
 IF EXISTS (
     SELECT 1
@@ -1954,13 +1953,13 @@ UPDATE sp
 SET sp.soLuongTon = ISNULL(sp.soLuongTon, 0) - d.TongSoLuongCu
 FROM SanPham sp
     INNER JOIN (
-        -- Tính tổng số lượng lô bị xóa/cũ theo từng mã sản phẩm
+        --Tính tổng số lượng lô bị xóa/cũ theo từng mã sản phẩm
         SELECT maSanPham,
             SUM(soLuongSanPham) AS TongSoLuongCu
         FROM deleted
         GROUP BY maSanPham
     ) d ON sp.maSanPham = d.maSanPham;
-END -- Xử lý phần dữ liệu mới được thêm (Dành cho sự kiện INSERT và UPDATE)
+END -- Xử lý phần dữ liệu mới được thêm (INSERT/UPDATE)
 -- Lấy số lượng mới từ bảng ảo 'inserted' cộng vào kho
 IF EXISTS (
     SELECT 1
