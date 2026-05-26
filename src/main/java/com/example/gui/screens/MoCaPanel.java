@@ -298,42 +298,130 @@ public class MoCaPanel extends JPanel implements ActionListener {
             return;
         }
 
+        // Kiểm tra xem hệ thống hiện tại có ca làm việc nào khác đang ở trạng thái DANG_MO hay không
+        CaLam caDangMoBatKy = caLamService.layCaDangMoBatKy();
+        if (caDangMoBatKy != null) {
+            com.example.service.NhanVienService nvService = new com.example.service.NhanVienService();
+            com.example.entity.NhanVien nvDangMo = nvService.timTheoMa(caDangMoBatKy.getNhanVien().getMaNhanVien());
+            String tenNVDangMo = (nvDangMo != null) ? nvDangMo.getTenNhanVien() : caDangMoBatKy.getNhanVien().getMaNhanVien();
+            
+            // Tự động xác định chức danh để hiển thị thông báo chính xác
+            String chucDanh = (nvDangMo != null && nvDangMo.getChucVu() == com.example.entity.enums.ChucVu.NHAN_VIEN_QUAN_LY) ? "Quản lý" : "Dược sĩ";
+
+            if (nhanVien.getChucVu() == com.example.entity.enums.ChucVu.NHAN_VIEN_QUAN_LY) {
+                int choice = JOptionPane.showConfirmDialog(this,
+                        "Cảnh báo: " + chucDanh + " [" + tenNVDangMo + "] hiện vẫn chưa đóng ca làm việc.\n" +
+                        "Bạn có muốn hệ thống tự động kết toán (đóng ca hộ) cho nhân viên này để mở ca mới không?",
+                        "Xác nhận đóng ca hộ", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                if (choice == JOptionPane.YES_OPTION) {
+                    com.example.service.HoaDonService hoaDonService = new com.example.service.HoaDonService();
+                    double doanhThuHeThong = hoaDonService.tinhTongDoanhThuCa(caDangMoBatKy.getMaCa());
+                    
+                    caDangMoBatKy.setTienHeThong(doanhThuHeThong);
+                    caDangMoBatKy.setTienKetCa(caDangMoBatKy.getTienMoCa() + doanhThuHeThong); // Chênh lệch bằng 0
+                    caDangMoBatKy.setGhiChu("Đóng ca hộ bởi Quản lý " + nhanVien.getTenNhanVien());
+                    
+                    if (!caLamService.dongCa(caDangMoBatKy)) {
+                        JOptionPane.showMessageDialog(this, "Không thể đóng ca hộ cho " + chucDanh.toLowerCase() + " " + tenNVDangMo + "!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                    JOptionPane.showMessageDialog(this, "Đã tự động chốt và đóng ca hộ thành công cho " + chucDanh.toLowerCase() + " " + tenNVDangMo + "!");
+                } else {
+                    return; // Quản lý chọn không đóng hộ -> dừng lại không cho mở ca mới
+                }
+            } else {
+                // Nếu là Dược sĩ, chặn tuyệt đối không cho mở
+                JOptionPane.showMessageDialog(this,
+                        "Không thể mở ca mới! Hiện tại " + chucDanh + " [" + tenNVDangMo + "] đang có ca làm việc ở trạng thái Đang Mở.\n" +
+                        "Vui lòng yêu cầu nhân viên này đóng ca trước khi bàn giao.",
+                        "Từ chối mở ca", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+        }
+
+        // =========================================================================
+        // LOGIC MỚI: TÌM CA ĐÃ ĐƯỢC LÊN LỊCH THAY VÌ TỰ ĐỘNG TẠO MỚI
+        // =========================================================================
+        LocalDateTime now = LocalDateTime.now();
+        java.util.List<CaLam> dsCaHomNay = caLamService.layCaTheoNgayVaTen(now.toLocalDate(), nhanVien.getTenNhanVien());
+        
+        CaLam caDuocLenLich = null;
+        for (CaLam cl : dsCaHomNay) {
+            // Lọc ra ca của chính nhân viên này và đang ở trạng thái CHƯA MỞ
+            if (cl.getNhanVien().getMaNhanVien().equals(nhanVien.getMaNhanVien()) 
+                && cl.getTrangThai() == TrangThaiCaLam.CHUA_MO) {
+                
+                // KIỂM TRA GIỜ: Cho phép mở ca trước tối đa 30 phút và không được mở nếu đã lố giờ kết thúc
+                if (now.isAfter(cl.getGioBatDau().minusMinutes(30)) && 
+                   (cl.getGioKetThuc() == null || now.isBefore(cl.getGioKetThuc()))) {
+                    caDuocLenLich = cl;
+                    break;
+                }
+            }
+        }
+
+        // Nếu không tìm thấy ca nào hợp lệ và là Dược sĩ (không phải quản lý), chặn luôn không cho mở!
+        if (caDuocLenLich == null && nhanVien.getChucVu() == com.example.entity.enums.ChucVu.DUOC_SI) {
+            JOptionPane.showMessageDialog(this, 
+                "Bạn không có ca làm việc nào được lên lịch vào khung giờ này!\n(Lưu ý: Chỉ được mở ca trước giờ làm việc tối đa 30 phút)", 
+                "Từ chối mở ca", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        // =========================================================================
+
+        // 2. Xử lý tính toán tiền đầu ca
         String tongTienStr = txtTienMatDauCa.getText().replaceAll("[^\\d]", "");
         if (tongTienStr.isEmpty()) {
             int confirm = JOptionPane.showConfirmDialog(this, "Bạn chưa nhập tiền mặt đầu ca. Tiếp tục mở ca với 0đ?",
                     "Xác nhận", JOptionPane.YES_NO_OPTION);
-            if (confirm != JOptionPane.YES_OPTION)
-                return;
+            if (confirm != JOptionPane.YES_OPTION) return;
             tongTienStr = "0";
         }
-
         double tienMoCa = Double.parseDouble(tongTienStr);
 
-        CaLam caLam = new CaLam();
-        // Tự động sinh mã ca: CA + Ngày (2 số) + Tháng (2 số) + Năm (2 số cuối) + Số thứ tự (2 chữ số)
-        String prefix = "CA" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("ddMMyy"));
-        int stt = caLamService.laySoLuongCaTrongNgay(prefix) + 1;
-        String maCa = String.format("%s%02d", prefix, stt);
-        caLam.setMaCa(maCa);
-        caLam.setNhanVien(nhanVien);
-        caLam.setGioBatDau(LocalDateTime.now());
-        caLam.setTrangThai(TrangThaiCaLam.DANG_MO);
-        caLam.setTienMoCa(tienMoCa);
-        caLam.setTienHeThong(0); // Initialize
-        caLam.setTienKetCa(0);
-        caLam.setGhiChu("");
+        boolean success = false;
+        String maCaMo = "";
 
-        if (caLamService.them(caLam)) {
-            JOptionPane.showMessageDialog(this, "Mở ca thành công!");
-            // Switch back to home screen or dashboard
+        if (caDuocLenLich != null) {
+            // 3. THỰC THI: CẬP NHẬT CA LÀM ĐÃ LÊN LỊCH (UPDATE)
+            caDuocLenLich.setTienMoCa(tienMoCa);
+            caDuocLenLich.setTrangThai(TrangThaiCaLam.DANG_MO);
+            caDuocLenLich.setGioBatDau(now); // Đè lại giờ bắt đầu bằng thời gian mở ca thực tế
+            caDuocLenLich.setTienHeThong(0);
+            caDuocLenLich.setTienKetCa(0);
+            success = caLamService.capNhat(caDuocLenLich);
+            maCaMo = caDuocLenLich.getMaCa();
+        } else {
+            // 3. THỰC THI: TẠO MỚI CA LÀM CHO QUẢN LÝ (INSERT)
+            CaLam caLamMoi = new CaLam();
+            String prefix = "CA" + now.format(DateTimeFormatter.ofPattern("ddMMyy"));
+            int stt = caLamService.laySoLuongCaTrongNgay(prefix) + 1;
+            String maCa = String.format("%s%02d", prefix, stt);
+            
+            caLamMoi.setMaCa(maCa);
+            caLamMoi.setNhanVien(nhanVien);
+            caLamMoi.setGioBatDau(now);
+            caLamMoi.setTrangThai(TrangThaiCaLam.DANG_MO);
+            caLamMoi.setTienMoCa(tienMoCa);
+            caLamMoi.setTienHeThong(0);
+            caLamMoi.setTienKetCa(0);
+            caLamMoi.setGhiChu("Quản lý tự tạo ca mới (không cần lịch làm)");
+            success = caLamService.them(caLamMoi);
+            maCaMo = maCa;
+        }
+
+        if (success) {
+            JOptionPane.showMessageDialog(this, "Mở ca thành công! (Mã ca: " + maCaMo + ")");
+            // Chuyển màn hình
             Container parent = getParent();
             if (parent instanceof JPanel) {
                 CardLayout layout = (CardLayout) parent.getLayout();
                 layout.show(parent, "Màn Hình Chính");
             }
         } else {
-            JOptionPane.showMessageDialog(this, "Mở ca thất bại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Mở ca thất bại do lỗi hệ thống!", "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
+
     }
 
     @Override

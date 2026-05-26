@@ -11,6 +11,7 @@ import java.awt.*;
 import java.text.DecimalFormat;
 import com.example.entity.ChiTietHoaDon;
 import com.example.entity.HoaDon;
+import com.example.entity.TaiKhoan;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.List;
@@ -44,6 +45,8 @@ public class TraHangPanel extends JPanel {
     private List<ChiTietHoaDon> dsChiTietGoc = new ArrayList<>();
     private DecimalFormat df = new DecimalFormat("###,###,### VND");
     private HoaDon hd;
+    private TaiKhoan taiKhoan;
+    private com.example.entity.NhanVien nhanVien;
     private JTable table;
     private final StringBuilder barcodeBuffer = new StringBuilder();
     private long lastKeyTime = 0;
@@ -53,6 +56,12 @@ public class TraHangPanel extends JPanel {
     // =========================================================================
 
     public TraHangPanel() {
+        this(null);
+    }
+
+    public TraHangPanel(TaiKhoan taiKhoan) {
+        this.taiKhoan = taiKhoan;
+        this.nhanVien = (taiKhoan != null) ? taiKhoan.getNhanVien() : null;
         setLayout(new BorderLayout(15, 10));
         setBorder(new EmptyBorder(15, 15, 15, 15));
         setBackground(new Color(245, 245, 245));
@@ -246,7 +255,18 @@ public class TraHangPanel extends JPanel {
                             model.setValueAt(0, row, 7); // Hoàn nguyên về 0
                             return;
                         }
-
+                        // Cập nhật cột Thành tiền trong JTable cho dòng này
+                        double donGia = 0;
+                        double thueSuat = 0;
+                        for (ChiTietHoaDon ct : dsChiTietGoc) {
+                            if (ct.getDonViQuyDoi().getSanPham().getMaSanPham().equals(maSP)) {
+                                donGia = ct.getDonGia();
+                                thueSuat = ct.getDonViQuyDoi().getSanPham().getThue();
+                                break;
+                            }
+                        }
+                        double thanhTienMoiRow = soLuongMoi * donGia * (1 + thueSuat / 100.0);
+                        model.setValueAt(df.format(thanhTienMoiRow), row, 6);
                         // Kích hoạt tính tiền lại toàn bộ
                         tinhToanTienHoanTra();
                     } catch (NumberFormatException ex) {
@@ -301,7 +321,8 @@ public class TraHangPanel extends JPanel {
         addInputRow(pnlContent, "Mã hóa gốc", txtMaHoaGoc = new JTextField("HDB27032026001"), gbc, r++);
         addInputRow(pnlContent, "Mã hóa đơn", txtMaHoaDon = new JTextField("HDT27032026001"), gbc, r++);
         addInputRow(pnlContent, "Ngày tạo", txtNgayTao = new JTextField("27/03/2026"), gbc, r++);
-        addInputRow(pnlContent, "Người tạo", txtNguoiTao = new JTextField("Phan Hoai Bao"), gbc, r++);
+       String tenNguoiTao = (nhanVien != null) ? nhanVien.getTenNhanVien() : "Phan Hoai Bao";
+        addInputRow(pnlContent, "Người tạo", txtNguoiTao = new JTextField(tenNguoiTao), gbc, r++);
         addInputRow(pnlContent, "Tên khách hàng", txtTenKhachHang = new JTextField("Tran Tan Tai"), gbc, r++);
 
         gbc.gridy = r++;
@@ -317,7 +338,7 @@ public class TraHangPanel extends JPanel {
         // Phần tính toán tiền
         addInputRow(pnlContent, "Tiền hóa đơn gốc :", txtTienGoc = new JTextField("220.500Đ"), gbc, r++);
         addInputRow(pnlContent, "Tiền hóa đơn trả :", txtTienTra = new JTextField("105.750Đ"), gbc, r++);
-        addInputRow(pnlContent, "Chênh lệch giá :", txtChenhLech = new JTextField("114.750Đ"), gbc, r++);
+        addInputRow(pnlContent, "Khuyến mãi đã áp dụng:", txtChenhLech = new JTextField("Không"), gbc, r++);
         addInputRow(pnlContent, "Tổng tiền thuế:", txtThue = new JTextField("5.250Đ"), gbc, r++);
         addInputRow(pnlContent, "Thành tiền :", txtThanhTien = new JTextField("114.750Đ"), gbc, r++);
 
@@ -370,14 +391,13 @@ public class TraHangPanel extends JPanel {
                 hdGoc.setMaHoaDon(txtMaHoaGoc.getText());
                 hoaDonTra.setHoaDonDoiTra(hdGoc);
                 hoaDonTra.setGhiChu(txtGhiChu.getText());
-
-                com.example.entity.NhanVien nvTemp = new com.example.entity.NhanVien();
-                nvTemp.setMaNhanVien("QL001"); // Tạm thời gán QL001 để test
-                hoaDonTra.setNhanVien(nvTemp);
+                
+                com.example.entity.NhanVien activeNv = (nhanVien != null) ? nhanVien : new com.example.entity.NhanVien("QL001");
+                hoaDonTra.setNhanVien(activeNv);
 
                 hoaDonTra.setLoaiHoaDon(com.example.entity.enums.LoaiHoaDon.TRA_HANG);
                 hoaDonTra.setPhuongThucThanhToan(com.example.entity.enums.PhuongThucThanhToan.TIEN_MAT);
-                com.example.entity.CaLam ca = hoaDonService.layCaHienTai(nvTemp.getMaNhanVien());
+                com.example.entity.CaLam ca = hoaDonService.layCaHienTai(activeNv.getMaNhanVien());
                 if (ca == null) {
                     JOptionPane.showMessageDialog(this, "Chưa mở ca làm việc!");
                     return;
@@ -539,12 +559,32 @@ public class TraHangPanel extends JPanel {
 
         double thanhTien = tongTienTra + tongThueTra;
 
+        
+        // Xử lý giảm trừ tiền trả lại nếu hóa đơn gốc đã áp dụng khuyến mãi giảm %
+        double soTienGiamKM = 0;
+        if (this.hd != null && this.hd.getKhuyenMai() != null) {
+            if (this.hd.getKhuyenMai().getLoaiKhuyenMai() == com.example.entity.enums.LoaiKhuyenMai.PHAN_TRAM) {
+                soTienGiamKM = thanhTien * (this.hd.getKhuyenMai().getKhuyenMaiPhanTram() / 100.0);
+            }
+        }
+        double tienTraLaiKhach = thanhTien - soTienGiamKM;
         // Cập nhật lên các ô nhập liệu bên phải
         txtTienTra.setText(df.format(tongTienTra));
         txtThue.setText(df.format(tongThueTra));
         txtThanhTien.setText(df.format(thanhTien));
-        txtTienTraLai.setText(df.format(thanhTien));
-        txtChenhLech.setText(df.format(thanhTien));
+       txtTienTraLai.setText(df.format(tienTraLaiKhach));
+        
+        // Hiển thị Khuyến mãi đã áp dụng ở txtChenhLech
+        if (this.hd != null && this.hd.getKhuyenMai() != null) {
+            String tenKM = this.hd.getKhuyenMai().getTenKhuyenMai();
+            if (this.hd.getKhuyenMai().getLoaiKhuyenMai() == com.example.entity.enums.LoaiKhuyenMai.PHAN_TRAM) {
+                txtChenhLech.setText(tenKM + " (-" + this.hd.getKhuyenMai().getKhuyenMaiPhanTram() + "%)");
+            } else {
+                txtChenhLech.setText(tenKM);
+            }
+        } else {
+            txtChenhLech.setText("Không");
+        } 
     }
 
     // =========================================================================
@@ -567,9 +607,9 @@ public class TraHangPanel extends JPanel {
         txtTienTra.setText(zero);
         txtThue.setText(zero);
         txtThanhTien.setText(zero);
-        txtTienTraLai.setText(zero);
-        txtChenhLech.setText(zero);
-
+        txtTienTraLai.setText(zero);         
+        txtChenhLech.setText("Không");
+        
         // Dọn dẹp dữ liệu logic
         model.setRowCount(0);
         this.hd = null;
@@ -588,7 +628,7 @@ public class TraHangPanel extends JPanel {
         JPanel rowPanel = new JPanel(new BorderLayout(10, 0));
         rowPanel.setOpaque(false);
         JLabel lbl = new JLabel(labelText);
-        lbl.setPreferredSize(new Dimension(130, 25));
+       lbl.setPreferredSize(new Dimension(150, 25)); // Tăng lên 150 để hiển thị nhãn dài "Khuyến mãi đã áp dụng"
         rowPanel.add(lbl, BorderLayout.WEST);
         rowPanel.add(txt, BorderLayout.CENTER);
         pnl.add(rowPanel, gbc);
