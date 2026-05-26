@@ -379,21 +379,7 @@ public class ManHinhChinhPanel extends JPanel {
                 }
             }
 
-            double cost = 0.0;
-            if (hd.getDsChiTiet() != null) {
-                for (ChiTietHoaDon ct : hd.getDsChiTiet()) {
-                    if (ct.getDsPhanBoLo() != null) {
-                        for (SuPhanBoLo spbl : ct.getDsPhanBoLo()) {
-                            if (spbl.getLo() != null) {
-                                double giaNhapLoo = spbl.getLo().getGiaNhap();
-                                int slBanDau = new com.example.dao.LoDAO().tinhSoLuongNhapBanDau(spbl.getLo().getMaLo());
-                                double giaNhapDonVi = slBanDau > 0 ? (giaNhapLoo / slBanDau) : 0;
-                                cost += spbl.getSoLuongPhanBo() * giaNhapDonVi;
-                            }
-                        }
-                    }
-                }
-            }
+            double cost = tinhGiaVonHoaDon(hd);
 
             double tienHD = 0;
             if (loai == LoaiHoaDon.BAN_HANG || loai == LoaiHoaDon.DOI_HANG || loai == null) {
@@ -547,5 +533,70 @@ public class ManHinhChinhPanel extends JPanel {
         }
     }
 
+    private double tinhGiaVonHoaDon(HoaDon hd) {
+        double cost = 0.0;
+        if (hd.getDsChiTiet() != null) {
+            for (ChiTietHoaDon ct : hd.getDsChiTiet()) {
+                if (ct.getDsPhanBoLo() != null) {
+                    for (SuPhanBoLo spbl : ct.getDsPhanBoLo()) {
+                        if (spbl.getLo() != null) {
+                            double giaNhapLoo = spbl.getLo().getGiaNhap();
+                            int slBanDau = loService.tinhSoLuongNhapBanDau(spbl.getLo().getMaLo());
+                            double giaNhapDonVi = slBanDau > 0 ? (giaNhapLoo / slBanDau) : 0;
+                            cost += spbl.getSoLuongPhanBo() * giaNhapDonVi;
+                        }
+                    }
+                }
+            }
+        }
 
+        if (hd.getLoaiHoaDon() == LoaiHoaDon.DOI_HANG && hd.getHoaDonDoiTra() != null) {
+            String maGoc = hd.getHoaDonDoiTra().getMaHoaDon();
+            HoaDon hdGoc = hoaDonService.timTheoMa(maGoc);
+            if (hdGoc != null) {
+                hdGoc.setDsChiTiet(chiTietHoaDonService.layTheoMaHoaDon(maGoc));
+                
+                java.util.List<ChiTietHoaDon> dsChiTietTra = new java.util.ArrayList<>();
+                for (ChiTietHoaDon ctGoc : hdGoc.getDsChiTiet()) {
+                    if (ctGoc.isLaQuaTangKem()) continue;
+                    
+                    int qtyGoc = ctGoc.getSoLuongBan();
+                    int qtyMoi = 0;
+                    
+                    if (hd.getDsChiTiet() != null) {
+                        for (ChiTietHoaDon ctMoi : hd.getDsChiTiet()) {
+                            if (!ctMoi.isLaQuaTangKem() && 
+                                ctMoi.getDonViQuyDoi().getMaDonVi().equals(ctGoc.getDonViQuyDoi().getMaDonVi())) {
+                                qtyMoi = ctMoi.getSoLuongBan();
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (qtyGoc > qtyMoi) {
+                        ChiTietHoaDon ctTra = new ChiTietHoaDon();
+                        ctTra.setDonViQuyDoi(ctGoc.getDonViQuyDoi());
+                        ctTra.setSoLuongBan(qtyGoc - qtyMoi);
+                        ctTra.setDonGia(ctGoc.getDonGia());
+                        dsChiTietTra.add(ctTra);
+                    }
+                }
+                
+                if (!dsChiTietTra.isEmpty()) {
+                    java.util.List<SuPhanBoLo> dsPhanBoTra = hoaDonService.layDanhSachPhanBoLoCanTra(maGoc, dsChiTietTra);
+                    double costTraLai = 0.0;
+                    for (SuPhanBoLo spbl : dsPhanBoTra) {
+                        if (spbl.getLo() != null) {
+                            double giaNhapLoo = spbl.getLo().getGiaNhap();
+                            int slBanDau = loService.tinhSoLuongNhapBanDau(spbl.getLo().getMaLo());
+                            double giaNhapDonVi = slBanDau > 0 ? (giaNhapLoo / slBanDau) : 0;
+                            costTraLai += spbl.getSoLuongPhanBo() * giaNhapDonVi;
+                        }
+                    }
+                    cost -= 2 * costTraLai;
+                }
+            }
+        }
+        return cost;
+    }
 }

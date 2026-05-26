@@ -36,6 +36,9 @@ public class InHoaDonPOS {
         if (hd.getPhuongThucThanhToan() == PhuongThucThanhToan.TIEN_MAT && hd.getLoaiHoaDon() != LoaiHoaDon.TRA_HANG) {
             height += 20;
         }
+        if (hd.getHoaDonDoiTra() != null) {
+            height += 12;
+        }
 
         paper.setSize(width, height);
         paper.setImageableArea(0, 0, width, height);
@@ -224,6 +227,34 @@ public class InHoaDonPOS {
                 }
                 g2d.drawString(df.format(finalTotal), startX + 165, y);
                 y += 12;
+
+                // Thêm hàng chênh lệch so với hóa đơn gốc nếu là hóa đơn đổi/trả
+                boolean coHoaDonGoc = hd.getHoaDonDoiTra() != null && hd.getHoaDonDoiTra().getMaHoaDon() != null;
+                if (coHoaDonGoc) {
+                    try {
+                        HoaDon hdGoc = new com.example.service.HoaDonService().timTheoMa(hd.getHoaDonDoiTra().getMaHoaDon());
+                        if (hdGoc != null) {
+                            double tongGoc = hdGoc.tinhTongTienThanhToan();
+
+                            // TRA_HANG: chênh lệch = tiền gốc - tiền trả lại (số tiền khách được hoàn)
+                            // DOI_HANG: chênh lệch = hóa đơn mới - hóa đơn gốc (khách trả thêm hay nhận lại)
+                            double chenhLech = (hd.getLoaiHoaDon() == LoaiHoaDon.TRA_HANG)
+                                    ? tongGoc - finalTotal
+                                    : finalTotal - tongGoc;
+
+                            g2d.setFont(fontNormal);
+                            if (hd.getLoaiHoaDon() == LoaiHoaDon.TRA_HANG) {
+                                g2d.drawString("Tiền hoàn trả KH:", startX, y);
+                            } else {
+                                g2d.drawString("Chênh lệch:", startX, y);
+                            }
+                            String sign = chenhLech > 0 ? "+" : (chenhLech < 0 ? "-" : "");
+                            g2d.drawString(sign + df.format(Math.abs(chenhLech)), startX + 165, y);
+                            y += 10;
+                        }
+                    } catch (Exception ignored) {
+                    }
+                }
 
                 drawSeparator("------------------------------------------------------------------", g2d, startX, y);
                 y += 10;

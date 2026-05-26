@@ -385,6 +385,7 @@ public class TraHangPanel extends JPanel {
 
                 if (hd != null) {
                     hoaDonTra.setKhachHang(hd.getKhachHang());
+                    hoaDonTra.setKhuyenMai(hd.getKhuyenMai());
                 }
 
                 HoaDon hdGoc = new HoaDon();

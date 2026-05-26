@@ -13,33 +13,40 @@ import java.util.List;
 
 public class LoDAO {
 
+    private static boolean hasEnsuredColumn = false;
+
     public LoDAO() {
         ensureColumnSoLuongNhapExists();
     }
 
     private void ensureColumnSoLuongNhapExists() {
-        try {
-            Connection con = ConnectDB.getConnection();
-            DatabaseMetaData meta = con.getMetaData();
-            boolean exists = false;
-            try (ResultSet rs = meta.getColumns(null, null, "Lo", "soLuongNhap")) {
-                if (rs.next()) {
-                    exists = true;
+        if (hasEnsuredColumn) return;
+        synchronized (LoDAO.class) {
+            if (hasEnsuredColumn) return;
+            try {
+                Connection con = ConnectDB.getConnection();
+                DatabaseMetaData meta = con.getMetaData();
+                boolean exists = false;
+                try (ResultSet rs = meta.getColumns(null, null, "Lo", "soLuongNhap")) {
+                    if (rs.next()) {
+                        exists = true;
+                    }
                 }
-            }
-            if (!exists) {
+                if (!exists) {
+                    try (Statement stmt = con.createStatement()) {
+                        stmt.execute("ALTER TABLE Lo ADD soLuongNhap INT");
+                        stmt.execute("UPDATE Lo SET soLuongNhap = soLuongSanPham");
+                    }
+                }
+                // Ensure any NULLs in newly imported tables are populated on startup
                 try (Statement stmt = con.createStatement()) {
-                    stmt.execute("ALTER TABLE Lo ADD soLuongNhap INT");
-                    stmt.execute("UPDATE Lo SET soLuongNhap = soLuongSanPham");
+                    stmt.execute("UPDATE Lo SET soLuongNhap = soLuongSanPham WHERE soLuongNhap IS NULL");
                 }
+            } catch (Exception e) {
+                // Safe fall-through or logging
+                e.printStackTrace();
             }
-            // Ensure any NULLs in newly imported tables are populated on startup
-            try (Statement stmt = con.createStatement()) {
-                stmt.execute("UPDATE Lo SET soLuongNhap = soLuongSanPham WHERE soLuongNhap IS NULL");
-            }
-        } catch (Exception e) {
-            // Safe fall-through or logging
-            e.printStackTrace();
+            hasEnsuredColumn = true;
         }
     }
 
