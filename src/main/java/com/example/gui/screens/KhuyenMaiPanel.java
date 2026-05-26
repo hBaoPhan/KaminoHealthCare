@@ -55,6 +55,7 @@ public class KhuyenMaiPanel extends JPanel {
     private JTextField txtSanPhamQuaTang;
     private JTextField txtSoLuongTang;
     private JTextField txtGiaTriDonHangToiThieu;
+    private JCheckBox chkUuDaiThanhVien;
     
     private JPopupMenu popupMenuSuggestions;
     private JList<String> listSuggestions;
@@ -141,7 +142,7 @@ public class KhuyenMaiPanel extends JPanel {
         topBar.add(searchWrapper, BorderLayout.EAST);
 
         // Table
-        String[] columns = {"STT", "Mã KM", "Tên KM", "Loại KM", "Giảm (%)", "Quà tặng", "Giá trị ĐH tối thiểu", "Bắt đầu", "Kết thúc"};
+        String[] columns = {"STT", "Mã KM", "Tên KM", "Loại KM", "Giảm (%)", "Quà tặng", "Giá trị ĐH tối thiểu", "Bắt đầu", "Kết thúc", "Đối tượng"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -305,6 +306,10 @@ public class KhuyenMaiPanel extends JPanel {
             }
         });
 
+        chkUuDaiThanhVien = new JCheckBox("Chỉ áp dụng cho thành viên");
+        chkUuDaiThanhVien.setBackground(Color.WHITE);
+        chkUuDaiThanhVien.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+
         // FIX 2: Khai báo row TRƯỚC khi dùng, thêm field đúng thứ tự, không trùng lặp
         int row = 0;
         addFormField(formPanel, gbc, row++, "Mã khuyến mãi:", txtMaKhuyenMai);
@@ -332,6 +337,7 @@ public class KhuyenMaiPanel extends JPanel {
         row++;
 
         addFormField(formPanel, gbc, row++, "Giá trị đơn hàng tối thiểu:", txtGiaTriDonHangToiThieu);
+        addFormField(formPanel, gbc, row++, "Đối tượng:", chkUuDaiThanhVien);
 
         cboLoaiKhuyenMai.addActionListener(e -> updateFormFieldsByLoai());
         updateFormFieldsByLoai();
@@ -762,6 +768,7 @@ public class KhuyenMaiPanel extends JPanel {
         // An toàn vì đã validate trước
         String giaTriStr = txtGiaTriDonHangToiThieu.getText().trim();
         km.setGiaTriDonHangToiThieu(giaTriStr.isEmpty() ? 0 : Double.parseDouble(giaTriStr));
+        km.setUuDaiThanhVien(chkUuDaiThanhVien.isSelected());
 
         if (km.getLoaiKhuyenMai() == LoaiKhuyenMai.PHAN_TRAM) {
             try {
@@ -896,7 +903,8 @@ public class KhuyenMaiPanel extends JPanel {
                     km.getGiaTriDonHangToiThieu() > 0
                             ? String.format("%,.0f", km.getGiaTriDonHangToiThieu()) : "",
                     km.getThoiGianBatDau().toLocalDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
-                    km.getThoiGianKetThuc().toLocalDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                    km.getThoiGianKetThuc().toLocalDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                    km.isUuDaiThanhVien() ? "👑 Thành viên" : "Tất cả"
             });
         }
     }
@@ -937,6 +945,8 @@ public class KhuyenMaiPanel extends JPanel {
                         km.getGiaTriDonHangToiThieu() > 0
                                 ? String.valueOf((int) km.getGiaTriDonHangToiThieu()) : "");
 
+                chkUuDaiThanhVien.setSelected(km.isUuDaiThanhVien());
+
                 updateFormFieldsByLoai();
                 updateButtonStates();
                 break;
@@ -954,6 +964,7 @@ public class KhuyenMaiPanel extends JPanel {
         txtSanPhamQuaTang.setText("");
         txtSoLuongTang.setText("");
         txtGiaTriDonHangToiThieu.setText("");
+        chkUuDaiThanhVien.setSelected(false);
         
         cboDonViQuaTang.removeAllItems();
         for (DonVi dv : DonVi.values()) {

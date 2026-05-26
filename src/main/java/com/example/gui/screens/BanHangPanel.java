@@ -181,6 +181,16 @@ public class BanHangPanel extends JPanel {
     }
 
     public void loadKhuyenMai() {
+        boolean isThanhVien = khachHangHienTai != null
+                && khachHangHienTai.getTrangThai() == TrangThaiKhachHang.KHACH_HANG_THANH_VIEN;
+        loadKhuyenMai(isThanhVien);
+    }
+
+    /**
+     * Tải danh sách khuyến mãi theo trạng thái thành viên của khách hàng.
+     * KM có uuDaiThanhVien = true sẽ chỉ hiện khi isThanhVien = true.
+     */
+    public void loadKhuyenMai(boolean isThanhVien) {
         if (cboKhuyenMai == null) {
             return;
         }
@@ -189,7 +199,7 @@ public class BanHangPanel extends JPanel {
         try {
             cboKhuyenMai.removeAllItems();
             cboKhuyenMai.addItem("-- Không áp dụng --");
-            dsKhuyenMai = khuyenMaiService.layKhuyenMaiConHan();
+            dsKhuyenMai = khuyenMaiService.layKhuyenMaiConHan(isThanhVien);
             if (dsKhuyenMai != null) {
                 for (KhuyenMai km : dsKhuyenMai) {
                     cboKhuyenMai.addItem(km.getTenKhuyenMai());
@@ -796,6 +806,10 @@ public class BanHangPanel extends JPanel {
                 txtTenKhachHang.setText("");
                 txtSoDienThoai.setEditable(true);
             }
+            // Reload KM theo trạng thái khách hàng mới
+            loadKhuyenMai();
+            autoSelectBestKhuyenMai();
+            updateSummary();
         });
 
         JPanel chkWrapper = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
@@ -865,7 +879,9 @@ public class BanHangPanel extends JPanel {
                         }
                     }
                     KhuyenMai km = dsKhuyenMai.get(index - 1);
-                    String text = km.getTenKhuyenMai();
+                    // Hiện badge cho KM ưu đãi thành viên
+                    String prefix = km.isUuDaiThanhVien() ? "★ [Thành viên] " : "";
+                    String text = prefix + km.getTenKhuyenMai();
                     if (tongTienHang >= km.getGiaTriDonHangToiThieu()) {
                         if (km.getLoaiKhuyenMai() == LoaiKhuyenMai.PHAN_TRAM) {
                             double giam = tongTienHang * km.getKhuyenMaiPhanTram() / 100.0;
@@ -877,6 +893,10 @@ public class BanHangPanel extends JPanel {
                         text += " (Chưa đủ điều kiện)";
                     }
                     setText(text);
+                    // Tô vàng cho KM thành viên để phân biệt
+                    if (km.isUuDaiThanhVien()) {
+                        setForeground(new Color(180, 120, 0));
+                    }
                 }
                 return this;
             }
@@ -1177,6 +1197,10 @@ public class BanHangPanel extends JPanel {
             txtTenKhachHang.setText("");
             khachHangHienTai = null;
         }
+        // Reload KM theo trạng thái thành viên mới được xác định
+        loadKhuyenMai();
+        autoSelectBestKhuyenMai();
+        updateSummary();
     }
 
     private void tinhTienThoi() {
@@ -1230,8 +1254,12 @@ public class BanHangPanel extends JPanel {
             }
         }
 
-        // Ủy quyền logic chọn KM tốt nhất cho Service
-        int bestIndex = khuyenMaiService.chonKhuyenMaiTotNhat(dsKhuyenMai, tongTienHang);
+        // Xác định khách có phải thành viên không
+        boolean isThanhVien = khachHangHienTai != null
+                && khachHangHienTai.getTrangThai() == TrangThaiKhachHang.KHACH_HANG_THANH_VIEN;
+
+        // Ủy quyền logic chọn KM tốt nhất cho Service, truyền thêm trạng thái thành viên
+        int bestIndex = khuyenMaiService.chonKhuyenMaiTotNhat(dsKhuyenMai, tongTienHang, isThanhVien);
         int cboIndex = bestIndex + 1; // +1 vì index 0 là "-- Không áp dụng --"
 
         if (cboKhuyenMai.getSelectedIndex() != cboIndex) {

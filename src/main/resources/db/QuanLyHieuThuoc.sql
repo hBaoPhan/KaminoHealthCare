@@ -25,7 +25,7 @@ GO
 CREATE TABLE TaiKhoan (
     tenDangNhap VARCHAR(50) PRIMARY KEY,
     matKhau VARCHAR(255) NOT NULL,
-    maNhanVien VARCHAR(10) FOREIGN KEY REFERENCES NhanVien(maNhanVien)
+    maNhanVien VARCHAR(10) UNIQUE FOREIGN KEY REFERENCES NhanVien(maNhanVien)
 );
 CREATE TABLE CaLam (
     maCa VARCHAR(10) PRIMARY KEY,
@@ -55,7 +55,8 @@ CREATE TABLE KhuyenMai (
     thoiGianKetThuc DATETIME,
     loaiKhuyenMai NVARCHAR(20) CHECK (loaiKhuyenMai IN (N'PHAN_TRAM', N'TANG_KEM')),
     khuyenMaiPhanTram FLOAT,
-    giaTriDonHangToiThieu FLOAT
+    giaTriDonHangToiThieu FLOAT,
+    uuDaiThanhVien BIT NOT NULL DEFAULT 0  -- 1 = Chỉ dành cho khách hàng thành viên
 );
 CREATE TABLE SanPham (
     maSanPham VARCHAR(20) PRIMARY KEY,
@@ -259,43 +260,48 @@ INSERT INTO KhuyenMai (
         thoiGianKetThuc,
         loaiKhuyenMai,
         khuyenMaiPhanTram,
-        giaTriDonHangToiThieu
+        giaTriDonHangToiThieu,
+        uuDaiThanhVien
     )
 VALUES (
         'KM010401',
-        N'Giảm 10% đơn từ 500k',
+        N'Giảm 10% đơn từ 200k',
         '2026-04-01',
-        '2026-05-01',
+        '2026-07-01',
         N'PHAN_TRAM',
         10,
-        500000
+        200000,
+        1   
     ),
     (
         'KM150401',
-        N'Tặng Vitamin C từ đơn 50k',
-        '2026-04-15',
-        '2026-04-30',
+        N'Tặng Vitamin C từ đơn 0k',
+        '2026-05-01',
+        '2026-06-30',
         N'TANG_KEM',
         0,
-        50000
+        0,
+        1 
     ),
     (
         'KM250401',
         N'Giảm giá 5% Lễ đơn 200k',
         '2026-04-25',
-        '2026-05-05',
+        '2026-08-30',
         N'PHAN_TRAM',
         5,
-        200000
+        200000,
+        0  
     ),
     (
         'KM010402',
         N'Tặng Allerphast cho đơn từ 100k',
         '2026-04-01',
-        '2026-12-31',
+        '2026-05-01',
         N'TANG_KEM',
         0,
-        100000
+        100000,
+        0 
     ),
     (
         'KM011001',
@@ -304,7 +310,8 @@ VALUES (
         '2026-10-31',
         N'TANG_KEM',
         0,
-        100000
+        100000,
+        0   
     );
 -- 4.4. ĐƠN THUỐC
 INSERT INTO DonThuoc (maDonThuoc, tenBacSi, coSoKhamBenh, ngayKeDon)

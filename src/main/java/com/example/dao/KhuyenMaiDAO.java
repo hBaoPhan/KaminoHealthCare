@@ -92,7 +92,7 @@ public class KhuyenMaiDAO {
 
         try (PreparedStatement lenh = ConnectDB.getConnection().prepareStatement(
                 "INSERT INTO KhuyenMai (maKhuyenMai, tenKhuyenMai, thoiGianBatDau, thoiGianKetThuc, " +
-                        "loaiKhuyenMai, khuyenMaiPhanTram, giaTriDonHangToiThieu) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
+                        "loaiKhuyenMai, khuyenMaiPhanTram, giaTriDonHangToiThieu, uuDaiThanhVien) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
 
             lenh.setString(1, km.getMaKhuyenMai());
             lenh.setString(2, km.getTenKhuyenMai());
@@ -101,6 +101,7 @@ public class KhuyenMaiDAO {
             lenh.setString(5, km.getLoaiKhuyenMai().name());
             lenh.setDouble(6, km.getKhuyenMaiPhanTram());
             lenh.setDouble(7, km.getGiaTriDonHangToiThieu());
+            lenh.setBoolean(8, km.isUuDaiThanhVien());
 
             boolean success = lenh.executeUpdate() > 0;
 
@@ -121,7 +122,7 @@ public class KhuyenMaiDAO {
     public boolean capNhat(KhuyenMai km) {
         try (PreparedStatement lenh = ConnectDB.getConnection().prepareStatement(
                 "UPDATE KhuyenMai SET tenKhuyenMai = ?, thoiGianBatDau = ?, thoiGianKetThuc = ?, " +
-                        "loaiKhuyenMai = ?, khuyenMaiPhanTram = ?, giaTriDonHangToiThieu = ? WHERE maKhuyenMai = ?")) {
+                        "loaiKhuyenMai = ?, khuyenMaiPhanTram = ?, giaTriDonHangToiThieu = ?, uuDaiThanhVien = ? WHERE maKhuyenMai = ?")) {
 
             lenh.setString(1, km.getTenKhuyenMai());
             lenh.setTimestamp(2, Timestamp.valueOf(km.getThoiGianBatDau()));
@@ -129,7 +130,8 @@ public class KhuyenMaiDAO {
             lenh.setString(4, km.getLoaiKhuyenMai().name());
             lenh.setDouble(5, km.getKhuyenMaiPhanTram());
             lenh.setDouble(6, km.getGiaTriDonHangToiThieu());
-            lenh.setString(7, km.getMaKhuyenMai());
+            lenh.setBoolean(7, km.isUuDaiThanhVien());
+            lenh.setString(8, km.getMaKhuyenMai());
 
             boolean success = lenh.executeUpdate() > 0;
 
@@ -176,6 +178,7 @@ public class KhuyenMaiDAO {
         km.setLoaiKhuyenMai(LoaiKhuyenMai.valueOf(rs.getString("loaiKhuyenMai")));
         km.setKhuyenMaiPhanTram(rs.getDouble("khuyenMaiPhanTram"));
         km.setGiaTriDonHangToiThieu(rs.getDouble("giaTriDonHangToiThieu"));
+        km.setUuDaiThanhVien(rs.getBoolean("uuDaiThanhVien"));
         return km;
     }
 }
