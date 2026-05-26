@@ -871,7 +871,7 @@ public class ThongKePanel extends JPanel {
                                 double giaNhapLoo = spbl.getLo().getGiaNhap();
                                 int slTonLo = spbl.getLo().getSoLuongSanPham();
                                 double giaNhapDonVi = slTonLo > 0 ? (giaNhapLoo / slTonLo) : 0;
-                                cost += spbl.getSoLuong() * giaNhapDonVi;
+                                cost += spbl.getSoLuongPhanBo() * giaNhapDonVi;
                             }
                         }
                     }
@@ -967,7 +967,7 @@ public class ThongKePanel extends JPanel {
                                     double giaNhapLoo = spbl.getLo().getGiaNhap();
                                     int slTonLo = spbl.getLo().getSoLuongSanPham();
                                     double giaNhapDonVi = slTonLo > 0 ? (giaNhapLoo / slTonLo) : 0;
-                                    cstVal += spbl.getSoLuong() * giaNhapDonVi;
+                                    cstVal += spbl.getSoLuongPhanBo() * giaNhapDonVi;
                                 }
                             }
                         }
@@ -1040,7 +1040,7 @@ public class ThongKePanel extends JPanel {
                                 double giaNhapLoo = spbl.getLo().getGiaNhap();
                                 int slTonLo = spbl.getLo().getSoLuongSanPham();
                                 double giaNhapDonVi = slTonLo > 0 ? (giaNhapLoo / slTonLo) : 0;
-                                cost += spbl.getSoLuong() * giaNhapDonVi;
+                                cost += spbl.getSoLuongPhanBo() * giaNhapDonVi;
                             }
                         }
                     }

@@ -445,7 +445,7 @@ public class ManHinhChinhPanel extends JPanel {
                                 double giaNhapLoo = spbl.getLo().getGiaNhap();
                                 int slTonLo = spbl.getLo().getSoLuongSanPham();
                                 double giaNhapDonVi = slTonLo > 0 ? (giaNhapLoo / slTonLo) : 0;
-                                giaVonHD += spbl.getSoLuong() * giaNhapDonVi;
+                                giaVonHD += spbl.getSoLuongPhanBo() * giaNhapDonVi;
                             }
                         }
                     }
@@ -475,7 +475,8 @@ public class ManHinhChinhPanel extends JPanel {
         int loGanHetHan = 0;
         for (Lo lo : dsLo) {
             if (lo.getNgayHetHan() != null) {
-                long soNgay = java.time.Duration.between(today.atStartOfDay(), lo.getNgayHetHan().atStartOfDay()).toDays();
+                long soNgay = java.time.Duration.between(today.atStartOfDay(), lo.getNgayHetHan().atStartOfDay())
+                        .toDays();
                 if (soNgay <= 0) {
                     loHetHan++;
                 } else if (soNgay <= 30) {
@@ -560,12 +561,12 @@ public class ManHinhChinhPanel extends JPanel {
                 modelLoThuoc.addRow(new Object[] {
                         lo.getMaLo(), tenThuoc, ngayFormatted, "HẾT HẠN"
                 });
-            // Sắp hết hạn: từ 1 ngày tới 1 tháng (<= 30 ngày)
+                // Sắp hết hạn: từ 1 ngày tới 1 tháng (<= 30 ngày)
             } else if (soNgay <= 30) {
                 modelLoThuoc.addRow(new Object[] {
                         lo.getMaLo(), tenThuoc, ngayFormatted, "SẮP HẾT"
                 });
-            // Ngưng bán: từ 1 tháng tới 3 tháng trước ngày hết hạn (31 đến 90 ngày)
+                // Ngưng bán: từ 1 tháng tới 3 tháng trước ngày hết hạn (31 đến 90 ngày)
             } else if (soNgay <= 90) {
                 modelLoThuoc.addRow(new Object[] {
                         lo.getMaLo(), tenThuoc, ngayFormatted, "NGỪNG BÁN"
