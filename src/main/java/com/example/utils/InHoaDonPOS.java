@@ -26,14 +26,14 @@ public class InHoaDonPOS {
 
         // Tính toán chiều cao cuộn giấy động để vừa khít nội dung, tiết kiệm giấy in
         // nhiệt
-        double height = 280 + (dsChiTiet.size() * 22);
+        double height = 320 + (dsChiTiet.size() * 22);
         if (hd.getDonThuoc() != null) {
             height += 20;
         }
         if (hd.getKhuyenMai() != null) {
             height += 10;
         }
-        if (hd.getPhuongThucThanhToan() == PhuongThucThanhToan.TIEN_MAT) {
+        if (hd.getPhuongThucThanhToan() == PhuongThucThanhToan.TIEN_MAT && hd.getLoaiHoaDon() != LoaiHoaDon.TRA_HANG) {
             height += 20;
         }
 
@@ -142,6 +142,23 @@ public class InHoaDonPOS {
                 // --- DANH SÁCH CHI TIẾT SẢN PHẨM ---
                 g2d.setFont(fontNormal);
                 double tongTienHang = 0;
+                for (ChiTietHoaDon ct : dsChiTiet) {
+                    if (!ct.isLaQuaTangKem()) {
+                        tongTienHang += ct.getSoLuongBan() * ct.getDonGia();
+                    }
+                }
+
+                double soTienGiam = 0;
+                if (hd.getKhuyenMai() != null) {
+                    KhuyenMai km = hd.getKhuyenMai();
+                    if (tongTienHang >= km.getGiaTriDonHangToiThieu()) {
+                        if (km.getLoaiKhuyenMai() == LoaiKhuyenMai.PHAN_TRAM) {
+                            soTienGiam = tongTienHang * km.getKhuyenMaiPhanTram() / 100.0;
+                        }
+                    }
+                }
+                double discountRatio = (tongTienHang > 0) ? (tongTienHang - soTienGiam) / tongTienHang : 1.0;
+
                 double tongThue = 0;
 
                 for (ChiTietHoaDon ct : dsChiTiet) {
@@ -151,8 +168,7 @@ public class InHoaDonPOS {
                     int qty = ct.getSoLuongBan();
                     double price = ct.getDonGia();
                     double thuePt = dv.getSanPham() != null ? dv.getSanPham().getThue() : 0;
-                    double priceWithTax = price * (1 + thuePt / 100);
-                    double total = qty * priceWithTax;
+                    double total = qty * price;
 
                     if (ct.isLaQuaTangKem()) {
                         tenSP += " (Quà tặng)";
@@ -173,8 +189,7 @@ public class InHoaDonPOS {
                     y += 12;
 
                     if (!ct.isLaQuaTangKem()) {
-                        tongTienHang += qty * price;
-                        tongThue += qty * price * (thuePt / 100);
+                        tongThue += qty * price * (thuePt / 100.0) * discountRatio;
                     }
                 }
 
@@ -182,28 +197,19 @@ public class InHoaDonPOS {
                 y += 10;
 
                 // --- PHẦN TỔNG HỢP TÀI CHÍNH ---
-                double soTienGiam = 0;
-                if (hd.getKhuyenMai() != null) {
-                    KhuyenMai km = hd.getKhuyenMai();
-                    if (tongTienHang >= km.getGiaTriDonHangToiThieu()) {
-                        if (km.getLoaiKhuyenMai() == LoaiKhuyenMai.PHAN_TRAM) {
-                            soTienGiam = tongTienHang * km.getKhuyenMaiPhanTram() / 100.0;
-                        }
-                    }
-                }
                 double finalTotal = tongTienHang + tongThue - soTienGiam;
 
                 g2d.drawString("Cộng tiền hàng:", startX, y);
-                g2d.drawString(df.format(tongTienHang), startX + 130, y);
+                g2d.drawString(df.format(tongTienHang), startX + 165, y);
                 y += 10;
 
                 g2d.drawString("Thuế GTGT:", startX, y);
-                g2d.drawString(df.format(tongThue), startX + 130, y);
+                g2d.drawString(df.format(tongThue), startX + 165, y);
                 y += 10;
 
                 if (soTienGiam > 0) {
                     g2d.drawString("Khuyến mãi:", startX, y);
-                    g2d.drawString("-" + df.format(soTienGiam), startX + 130, y);
+                    g2d.drawString("-" + df.format(soTienGiam), startX + 165, y);
                     y += 10;
                 }
 
@@ -211,8 +217,12 @@ public class InHoaDonPOS {
                 y += 12;
 
                 g2d.setFont(fontHeader);
-                g2d.drawString("TỔNG CỘNG:", startX, y);
-                g2d.drawString(df.format(finalTotal), startX + 130, y);
+                if (hd.getLoaiHoaDon() == LoaiHoaDon.TRA_HANG) {
+                    g2d.drawString("TIỀN TRẢ KHÁCH:", startX, y);
+                } else {
+                    g2d.drawString("TỔNG CỘNG:", startX, y);
+                }
+                g2d.drawString(df.format(finalTotal), startX + 165, y);
                 y += 12;
 
                 drawSeparator("------------------------------------------------------------------", g2d, startX, y);
@@ -225,7 +235,7 @@ public class InHoaDonPOS {
                         startX, y);
                 y += 10;
 
-                if (hd.getPhuongThucThanhToan() == PhuongThucThanhToan.TIEN_MAT) {
+                if (hd.getPhuongThucThanhToan() == PhuongThucThanhToan.TIEN_MAT && hd.getLoaiHoaDon() != LoaiHoaDon.TRA_HANG) {
                     g2d.drawString("Khách đưa     : " + df.format(tienKhachDua), startX, y);
                     y += 10;
                     g2d.drawString("Tiền thối lại : " + df.format(tienThoi), startX, y);
@@ -237,6 +247,24 @@ public class InHoaDonPOS {
 
                 g2d.setFont(fontItalic);
                 drawCenteredString("CẢM ƠN QUÝ KHÁCH & HẸN GẶP LẠI!", endX, g2d, y);
+                y += 15;
+
+                // --- VẼ MÃ VẠCH HÓA ĐƠN ---
+                String maHD = hd.getMaHoaDon();
+                if (maHD != null && !maHD.isEmpty()) {
+                    double narrowWidth = 0.8;
+                    double wideWidth = 2.0;
+                    double gap = 0.8;
+                    double charWidth = 3 * wideWidth + 6 * narrowWidth + gap; // 11.6
+                    double barcodeWidth = (maHD.length() + 2) * charWidth - gap;
+                    double barcodeX = (width - barcodeWidth) / 2.0;
+                    
+                    drawBarcode(g2d, maHD, barcodeX, y, 20);
+                    y += 28;
+                    
+                    g2d.setFont(fontNormal);
+                    drawCenteredString(maHD, endX, g2d, y);
+                }
 
                 return Printable.PAGE_EXISTS;
             }
@@ -376,6 +404,82 @@ public class InHoaDonPOS {
             } catch (PrinterException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private static final java.util.Map<Character, String> CODE39_PATTERNS = new java.util.HashMap<>();
+    static {
+        CODE39_PATTERNS.put('*', "010010100");
+        CODE39_PATTERNS.put('0', "000110100");
+        CODE39_PATTERNS.put('1', "100100001");
+        CODE39_PATTERNS.put('2', "001100001");
+        CODE39_PATTERNS.put('3', "101100000");
+        CODE39_PATTERNS.put('4', "000110001");
+        CODE39_PATTERNS.put('5', "100110000");
+        CODE39_PATTERNS.put('6', "001110000");
+        CODE39_PATTERNS.put('7', "000100101");
+        CODE39_PATTERNS.put('8', "100100100");
+        CODE39_PATTERNS.put('9', "001100100");
+        CODE39_PATTERNS.put('A', "100001001");
+        CODE39_PATTERNS.put('B', "001001001");
+        CODE39_PATTERNS.put('C', "101001000");
+        CODE39_PATTERNS.put('D', "000011001");
+        CODE39_PATTERNS.put('E', "100011000");
+        CODE39_PATTERNS.put('F', "001011000");
+        CODE39_PATTERNS.put('G', "000001101");
+        CODE39_PATTERNS.put('H', "100001100");
+        CODE39_PATTERNS.put('I', "001001100");
+        CODE39_PATTERNS.put('J', "000011100");
+        CODE39_PATTERNS.put('K', "100000011");
+        CODE39_PATTERNS.put('L', "001000011");
+        CODE39_PATTERNS.put('M', "101000010");
+        CODE39_PATTERNS.put('N', "000010011");
+        CODE39_PATTERNS.put('O', "100010010");
+        CODE39_PATTERNS.put('P', "001010010");
+        CODE39_PATTERNS.put('Q', "000000111");
+        CODE39_PATTERNS.put('R', "100000110");
+        CODE39_PATTERNS.put('S', "001000110");
+        CODE39_PATTERNS.put('T', "000010110");
+        CODE39_PATTERNS.put('U', "110000001");
+        CODE39_PATTERNS.put('V', "011000001");
+        CODE39_PATTERNS.put('W', "111000000");
+        CODE39_PATTERNS.put('X', "010010001");
+        CODE39_PATTERNS.put('Y', "110010000");
+        CODE39_PATTERNS.put('Z', "011010000");
+        CODE39_PATTERNS.put('-', "001100001");
+        CODE39_PATTERNS.put('.', "101100001");
+        CODE39_PATTERNS.put(' ', "011000010");
+    }
+
+    private static void drawBarcode(Graphics2D g2d, String data, double x, double y, double height) {
+        String dataUpper = data.toUpperCase();
+        String fullData = "*" + dataUpper + "*";
+        
+        double narrowWidth = 0.8;
+        double wideWidth = 2.0;
+        double gap = 0.8;
+        
+        g2d.setColor(Color.BLACK);
+        double currentX = x;
+        
+        for (int i = 0; i < fullData.length(); i++) {
+            char c = fullData.charAt(i);
+            String pattern = CODE39_PATTERNS.get(c);
+            if (pattern == null) {
+                continue;
+            }
+            
+            for (int j = 0; j < 9; j++) {
+                boolean isBar = (j % 2 == 0);
+                boolean isWide = (pattern.charAt(j) == '1');
+                double w = isWide ? wideWidth : narrowWidth;
+                
+                if (isBar) {
+                    g2d.fill(new java.awt.geom.Rectangle2D.Double(currentX, y, w, height));
+                }
+                currentX += w;
+            }
+            currentX += gap;
         }
     }
 }

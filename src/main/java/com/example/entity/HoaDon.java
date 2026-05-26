@@ -149,34 +149,43 @@ public class HoaDon {
     public void setDsChiTiet(List<ChiTietHoaDon> dsChiTiet) {
         this.dsChiTiet = dsChiTiet;
     }
-// Tính tổng tiền hàng tạm thời (chưa trừ khuyến mãi)
+// Tính tổng tiền hàng tạm thời (chưa trừ khuyến mãi, chưa cộng thuế)
     public double tinhTongTienTamThoi() {
-    	if (dsChiTiet == null || dsChiTiet.isEmpty()) return 0.0;
+        if (dsChiTiet == null || dsChiTiet.isEmpty()) return 0.0;
         double tongTienHang = 0;
         for (ChiTietHoaDon chiTiet : dsChiTiet) {
-            tongTienHang += chiTiet.tinhThanhTien();
+            if (!chiTiet.isLaQuaTangKem()) {
+                tongTienHang += chiTiet.getSoLuongBan() * chiTiet.getDonGia();
+            }
         }
         return tongTienHang;
     }
 
     public double tinhTongThue() {
-    	if (dsChiTiet == null || dsChiTiet.isEmpty()) return 0.0;
-        double tongThue = 0;
-        for (ChiTietHoaDon chiTiet : dsChiTiet) {
-            tongThue += chiTiet.tinhTienThue();
-        }
-        return tongThue;
-    }
-// Tính tổng tiền hàng cuối cùng
-    public double tinhTongTienThanhToan() {
+        if (dsChiTiet == null || dsChiTiet.isEmpty()) return 0.0;
         double tongTienHang = tinhTongTienTamThoi();
         double soTienGiam = 0.0;
-        
         if (this.khuyenMai != null && this.khuyenMai.getLoaiKhuyenMai() == LoaiKhuyenMai.PHAN_TRAM) {
             soTienGiam = tongTienHang * (this.khuyenMai.getKhuyenMaiPhanTram() / 100.0);
         }
-        
-        return tongTienHang - soTienGiam;
+        double discountRatio = (tongTienHang > 0) ? (tongTienHang - soTienGiam) / tongTienHang : 1.0;
+
+        double tongThue = 0;
+        for (ChiTietHoaDon chiTiet : dsChiTiet) {
+            tongThue += chiTiet.tinhTienThue() * discountRatio;
+        }
+        return tongThue;
+    }
+
+// Tính tổng tiền hàng cuối cùng (bao gồm thuế đã giảm trừ sau khuyến mãi)
+    public double tinhTongTienThanhToan() {
+        double tongTienHang = tinhTongTienTamThoi();
+        double soTienGiam = 0.0;
+        if (this.khuyenMai != null && this.khuyenMai.getLoaiKhuyenMai() == LoaiKhuyenMai.PHAN_TRAM) {
+            soTienGiam = tongTienHang * (this.khuyenMai.getKhuyenMaiPhanTram() / 100.0);
+        }
+        double thue = tinhTongThue();
+        return tongTienHang - soTienGiam + thue;
     }
     
     @Override
