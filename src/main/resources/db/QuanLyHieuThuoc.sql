@@ -93,7 +93,8 @@ CREATE TABLE Lo (
     ngayHetHan DATE,
     soLuongSanPham INT,
     maSanPham VARCHAR(20) FOREIGN KEY REFERENCES SanPham(maSanPham),
-    giaNhap FLOAT
+    giaNhap FLOAT,
+    soLuongNhap INT
 );
 CREATE TABLE DonThuoc (
     maDonThuoc VARCHAR(20) PRIMARY KEY,

@@ -1777,8 +1777,8 @@ public class SanPhamPanel extends JPanel {
         }
 
         double giaNhapLoo = hangLoiDangChon.getLo().getGiaNhap();
-        int slTonLo = hangLoiDangChon.getLo().getSoLuongSanPham();
-        double giaNhapDonVi = slTonLo > 0 ? (giaNhapLoo / slTonLo) : 0;
+        int slBanDau = new com.example.dao.LoDAO().tinhSoLuongNhapBanDau(hangLoiDangChon.getLo().getMaLo());
+        double giaNhapDonVi = slBanDau > 0 ? (giaNhapLoo / slBanDau) : 0;
 
         int heSo = hangLoiDangChon.getChiTietHoaDon().getDonViQuyDoi().getHeSoQuyDoi();
         int qtySelectedUnit = hangLoiDangChon.getSoLuongPhanBo() / heSo;
