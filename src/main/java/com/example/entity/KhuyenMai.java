@@ -13,6 +13,7 @@ public class KhuyenMai {
     private double khuyenMaiPhanTram;
     private QuaTang quaTangKem;
     private double giaTriDonHangToiThieu;
+    private boolean uuDaiThanhVien; // true = chỉ áp dụng cho khách hàng thành viên
 
     public KhuyenMai() {
     }
@@ -23,7 +24,7 @@ public class KhuyenMai {
 
     public KhuyenMai(String maKhuyenMai, String tenKhuyenMai, LocalDateTime thoiGianBatDau,
             LocalDateTime thoiGianKetThuc, LoaiKhuyenMai loaiKhuyenMai, double khuyenMaiPhanTram, QuaTang quaTangKem,
-            double giaTriDonHangToiThieu) {
+            double giaTriDonHangToiThieu, boolean uuDaiThanhVien) {
         this.maKhuyenMai = maKhuyenMai;
         this.tenKhuyenMai = tenKhuyenMai;
         this.thoiGianBatDau = thoiGianBatDau;
@@ -32,6 +33,7 @@ public class KhuyenMai {
         this.khuyenMaiPhanTram = khuyenMaiPhanTram;
         this.quaTangKem = quaTangKem;
         this.giaTriDonHangToiThieu = giaTriDonHangToiThieu;
+        this.uuDaiThanhVien = uuDaiThanhVien;
     }
 
     public String getMaKhuyenMai() {
@@ -96,6 +98,14 @@ public class KhuyenMai {
 
     public void setGiaTriDonHangToiThieu(double giaTriDonHangToiThieu) {
         this.giaTriDonHangToiThieu = giaTriDonHangToiThieu;
+    }
+
+    public boolean isUuDaiThanhVien() {
+        return uuDaiThanhVien;
+    }
+
+    public void setUuDaiThanhVien(boolean uuDaiThanhVien) {
+        this.uuDaiThanhVien = uuDaiThanhVien;
     }
 
     public boolean daHetHan() {
