@@ -34,6 +34,11 @@ public class SanPhamPanel extends JPanel {
     private DonViQuyDoiService donViQuyDoiService = new DonViQuyDoiService();
     private List<SanPham> danhSachSanPham = new ArrayList<>();
 
+    // Cache ảnh sản phẩm: maSanPham -> ImageIcon (kích thước 160x90)
+    private final java.util.Map<String, ImageIcon> imageCache = new java.util.concurrent.ConcurrentHashMap<>();
+    // Cache đơn vị quy đổi: maSanPham -> List<DonViQuyDoi>
+    private final java.util.Map<String, List<DonViQuyDoi>> donViCache = new java.util.HashMap<>();
+
     // Các biến phục vụ phần Sản phẩm lỗi
     private final SuPhanBoLoService suPhanBoLoService = new SuPhanBoLoService();
     private final CaLamService caLamService = new CaLamService();
@@ -532,9 +537,33 @@ public class SanPhamPanel extends JPanel {
     // ====================== LOGIC ======================
 
     public void loadDanhSachSanPham() {
+        // Xóa cache khi reload toàn bộ để bảo đảm dữ liệu luôn mới nhất
+        imageCache.clear();
+        donViCache.clear();
         danhSachSanPham = sanPhamService.laySanPhamDangKinhDoanh();
-        hienThiSanPhamLenGrid(danhSachSanPham);
-        loadDanhSachLoi();
+        // Pre-fetch tất cả DonViQuyDoi cho toàn bộ sản phẩm trong background
+        // để tránh N query riêng lẻ khi tạo từng card
+        new javax.swing.SwingWorker<java.util.Map<String, List<DonViQuyDoi>>, Void>() {
+            @Override
+            protected java.util.Map<String, List<DonViQuyDoi>> doInBackground() {
+                java.util.Map<String, List<DonViQuyDoi>> map = new java.util.HashMap<>();
+                for (SanPham sp : danhSachSanPham) {
+                    List<DonViQuyDoi> dvList = donViQuyDoiService.timTheoMaSanPham(sp.getMaSanPham());
+                    if (dvList != null) {
+                        map.put(sp.getMaSanPham(), dvList);
+                    }
+                }
+                return map;
+            }
+            @Override
+            protected void done() {
+                try {
+                    donViCache.putAll(get());
+                } catch (Exception ignored) {}
+                hienThiSanPhamLenGrid(danhSachSanPham);
+                loadDanhSachLoi();
+            }
+        }.execute();
     }
 
     private void updateSearch() {
@@ -622,7 +651,14 @@ public class SanPhamPanel extends JPanel {
         gridPanel.removeAll();
 
         for (SanPham sp : danhSach) {
-            JPanel card = createProductCard(sp);
+            // Lấy DonViQuyDoi từ cache, nếu chưa có thì query rồi cache lại
+            List<DonViQuyDoi> dvList = donViCache.computeIfAbsent(
+                    sp.getMaSanPham(),
+                    k -> {
+                        List<DonViQuyDoi> r = donViQuyDoiService.timTheoMaSanPham(k);
+                        return r != null ? r : new ArrayList<>();
+                    });
+            JPanel card = createProductCard(sp, dvList);
             gridPanel.add(card);
         }
 
@@ -630,7 +666,7 @@ public class SanPhamPanel extends JPanel {
         gridPanel.repaint();
     }
 
-    private JPanel createProductCard(SanPham sp) {
+    private JPanel createProductCard(SanPham sp, List<DonViQuyDoi> dsDVPreloaded) {
         RoundedPanel card = new RoundedPanel(14, true);
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
         card.setBackground(Color.WHITE);
@@ -652,16 +688,13 @@ public class SanPhamPanel extends JPanel {
         imgContainer.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel lblImage = new JLabel("", SwingConstants.CENTER);
-        ImageIcon icon = loadProductImageIcon(sp.getMaSanPham(), 160, 90);
-        if (icon != null) {
-            lblImage.setIcon(icon);
-        } else {
-            lblImage.setIcon(null);
-            lblImage.setText("Ảnh SP");
-            lblImage.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-            lblImage.setForeground(Color.GRAY);
-        }
+        lblImage.setText("Ảnh SP");
+        lblImage.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblImage.setForeground(Color.GRAY);
         imgContainer.add(lblImage, BorderLayout.CENTER);
+
+        // Load ảnh bất đồng bộ — không chặn EDT, giúp grid render tức thì
+        loadProductImageAsync(sp.getMaSanPham(), 160, 90, lblImage);
 
         // 2. Tên sản phẩm
         JLabel lblName = new JLabel("<html><div style='text-align: center; width: 140px; font-family: Segoe UI;'>"
@@ -707,9 +740,8 @@ public class SanPhamPanel extends JPanel {
         infoPanel.add(Box.createRigidArea(new Dimension(0, 3)));
         infoPanel.add(lblStock);
 
-        // Lấy danh sách các đơn vị quy đổi
-        List<DonViQuyDoi> tempDV = donViQuyDoiService.timTheoMaSanPham(sp.getMaSanPham());
-        final List<DonViQuyDoi> dsDV = (tempDV != null) ? tempDV : new java.util.ArrayList<>();
+        // Sử dụng dsDV được truyền vào từ cache (tránh query DB riêng lẻ cho từng card)
+        final List<DonViQuyDoi> dsDV = (dsDVPreloaded != null) ? new ArrayList<>(dsDVPreloaded) : new ArrayList<>();
         // Sắp xếp đơn vị từ lớn đến nhỏ (Hộp -> Vỉ -> Viên)
         dsDV.sort((d1, d2) -> Integer.compare(d2.getHeSoQuyDoi(), d1.getHeSoQuyDoi()));
 
@@ -1002,10 +1034,57 @@ public class SanPhamPanel extends JPanel {
         }
     }
 
+    /**
+     * Load ảnh bất đồng bộ trên background thread.
+     * Hiển thị ảnh trên lblImage sau khi load xong (không block EDT).
+     * Kết quả được cache trong imageCache để tái sử dụng.
+     */
+    private void loadProductImageAsync(String maSanPham, int w, int h, JLabel lblImage) {
+        if (maSanPham == null || maSanPham.trim().isEmpty()) return;
+        // Kiểm tra cache trước — nếu đã load thì hiển thị ngay không cần worker
+        ImageIcon cached = imageCache.get(maSanPham + "_" + w + "x" + h);
+        if (cached != null) {
+            lblImage.setIcon(cached);
+            lblImage.setText("");
+            return;
+        }
+        // Nếu đây là sentinel "not found" thì bỏ qua
+        if (imageCache.containsKey(maSanPham + "_NONE")) return;
+
+        new javax.swing.SwingWorker<ImageIcon, Void>() {
+            @Override
+            protected ImageIcon doInBackground() {
+                return loadProductImageIcon(maSanPham, w, h);
+            }
+            @Override
+            protected void done() {
+                try {
+                    ImageIcon icon = get();
+                    if (icon != null) {
+                        imageCache.put(maSanPham + "_" + w + "x" + h, icon);
+                        lblImage.setIcon(icon);
+                        lblImage.setText("");
+                    } else {
+                        // Đánh dấu sentinel để không load lại nữa
+                        imageCache.put(maSanPham + "_NONE", null);
+                    }
+                } catch (Exception ignored) {}
+            }
+        }.execute();
+    }
+
+    /**
+     * Load và scale ảnh sản phẩm đồng bộ (chỉ dùng khi cần kết quả ngay, vd: panel thông tin bên phải).
+     * Dùng Graphics2D thay cho SCALE_SMOOTH để scale nhanh hơn.
+     */
     private ImageIcon loadProductImageIcon(String maSanPham, int w, int h) {
         if (maSanPham == null || maSanPham.trim().isEmpty()) {
             return null;
         }
+        // Kiểm tra cache trước
+        String cacheKey = maSanPham + "_" + w + "x" + h;
+        if (imageCache.containsKey(cacheKey)) return imageCache.get(cacheKey);
+
         String base = maSanPham.trim();
         String[] exts = new String[] { "png", "jpg", "jpeg" };
 
@@ -1013,11 +1092,9 @@ public class SanPhamPanel extends JPanel {
             String fileName = base + "." + ext;
 
             // 1) Thử load từ Classpath (Jar/Target)
-            // Lưu ý: ClassLoader.getResource không bắt đầu bằng /
             String resourcePath = "images/anhSanPham/" + fileName;
             java.net.URL url = getClass().getClassLoader().getResource(resourcePath);
             if (url == null) {
-                // Thử thêm / nếu dùng getClass().getResource()
                 url = getClass().getResource("/" + resourcePath);
             }
 
@@ -1027,7 +1104,6 @@ public class SanPhamPanel extends JPanel {
                     bImage = ImageIO.read(url);
                 } else {
                     // 2) Fallback: Load trực tiếp từ Filesystem (Dùng cho môi trường dev)
-                    // Sử dụng Paths.get để tự động xử lý dấu gạch chéo hệ điều hành
                     java.nio.file.Path[] paths = {
                             java.nio.file.Paths.get("src", "main", "resources", "images", "anhSanPham", fileName),
                             java.nio.file.Paths.get(System.getProperty("user.dir", ""), "src", "main", "resources",
@@ -1044,8 +1120,16 @@ public class SanPhamPanel extends JPanel {
                 }
 
                 if (bImage != null) {
-                    Image scaled = bImage.getScaledInstance(w, h, Image.SCALE_SMOOTH);
-                    return new ImageIcon(scaled);
+                    // Dùng Graphics2D thay cho SCALE_SMOOTH để tránh block thread
+                    BufferedImage scaled = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+                    Graphics2D g2d = scaled.createGraphics();
+                    g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                    g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                    g2d.drawImage(bImage, 0, 0, w, h, null);
+                    g2d.dispose();
+                    ImageIcon icon = new ImageIcon(scaled);
+                    imageCache.put(cacheKey, icon);
+                    return icon;
                 }
             } catch (Exception e) {
                 // Tiếp tục thử định dạng khác nếu lỗi
