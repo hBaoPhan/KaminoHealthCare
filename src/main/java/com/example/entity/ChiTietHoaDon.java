@@ -7,7 +7,7 @@ import java.util.Objects;
 public class ChiTietHoaDon {
     private HoaDon hoaDon;
     private DonViQuyDoi donViQuyDoi;
-    private int soLuong;
+    private int soLuongBan;
     private double donGia;
     private boolean laQuaTangKem;
     private List<SuPhanBoLo> dsPhanBoLo;
@@ -16,12 +16,12 @@ public class ChiTietHoaDon {
     public ChiTietHoaDon() {
     }
 
-    public ChiTietHoaDon(HoaDon hoaDon, DonViQuyDoi donViQuyDoi, int soLuong, double donGia, boolean laQuaTangKem,
+    public ChiTietHoaDon(HoaDon hoaDon, DonViQuyDoi donViQuyDoi, int soLuongBan, double donGia, boolean laQuaTangKem,
 			List<SuPhanBoLo> dsPhanBoLo) {
 		super();
 		this.hoaDon = hoaDon;
 		this.donViQuyDoi = donViQuyDoi;
-		this.soLuong = soLuong;
+		this.soLuongBan = soLuongBan;
 		this.donGia = donGia;
 		this.laQuaTangKem = laQuaTangKem;
 		this.dsPhanBoLo = dsPhanBoLo;
@@ -52,12 +52,12 @@ public class ChiTietHoaDon {
         this.donViQuyDoi = donViQuyDoi;
     }
 
-    public int getSoLuong() {
-        return soLuong;
+    public int getSoLuongBan() {
+        return soLuongBan;
     }
 
-    public void setSoLuong(int soLuong) {
-        this.soLuong = soLuong;
+    public void setSoLuongBan(int soLuongBan) {
+        this.soLuongBan = soLuongBan;
     }
 
     public double getDonGia() {
@@ -87,7 +87,7 @@ public class ChiTietHoaDon {
 
 	public double tinhThanhTien() {
         if (laQuaTangKem) return 0;
-        return this.soLuong * this.donGia + tinhTienThue();
+        return this.soLuongBan * this.donGia + tinhTienThue();
     }
 	
 	public double tinhTienThue() {
@@ -95,7 +95,7 @@ public class ChiTietHoaDon {
             return 0.0;
         }
         double thueSuat = donViQuyDoi.getSanPham().getThue();
-        return (this.soLuong * this.donGia) * (thueSuat / 100.0);
+        return (this.soLuongBan * this.donGia) * (thueSuat / 100.0);
     }
 	
     @Override
@@ -115,7 +115,7 @@ public class ChiTietHoaDon {
     public String toString() {
         return "ChiTietHoaDon{" +
                 "donViQuyDoi=" + (donViQuyDoi != null ? donViQuyDoi.getMaDonVi() : "null") +
-                ", soLuong=" + soLuong +
+                ", soLuongBan=" + soLuongBan +
                 ", donGia=" + donGia +
                 ", laQuaTangKem=" + laQuaTangKem +
                 '}';
