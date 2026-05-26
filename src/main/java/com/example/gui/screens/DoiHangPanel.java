@@ -497,6 +497,7 @@ public class DoiHangPanel extends JPanel {
         }
         DefaultTableModel model = (DefaultTableModel) tblHoaDonGoc.getModel();
         model.setRowCount(0);
+        ((DefaultTableModel) tblSanPham.getModel()).setRowCount(0);
         tongTienHoaDonGocBanDau = 0;
 
         for (ChiTietHoaDon ct : chiTietHoaDonGocList) {
@@ -611,10 +612,40 @@ public class DoiHangPanel extends JPanel {
         DefaultTableModel modelDoi = (DefaultTableModel) tblSanPham.getModel();
         DefaultTableModel modelGoc = (DefaultTableModel) tblHoaDonGoc.getModel();
         
+        // Không tự động chọn khuyến mãi khi đổi thuốc ETC
+        boolean hasETC = false;
+        for (int i = 0; i < modelDoi.getRowCount(); i++) {
+            String maSP = modelDoi.getValueAt(i, 0).toString();
+            SanPham sp = sanPhamService.timTheoMa(maSP);
+            if (sp != null && sp.getLoaiSanPham().name().equals("ETC")) {
+                hasETC = true;
+                break;
+            }
+        }
+        if (hasETC) {
+            if (cboKhuyenMai.getSelectedIndex() != 0) {
+                isAutoSelectingPromotion = true;
+                try {
+                    cboKhuyenMai.setSelectedIndex(0);
+                } finally {
+                    isAutoSelectingPromotion = false;
+                }
+                capNhatQuaTang();
+            }
+            return;
+        }
+        
         for (int i = 0; i < modelDoi.getRowCount(); i++) {
             Boolean isGift = (Boolean) modelDoi.getValueAt(i, 8);
             if (isGift == null || !isGift) {
                 String maSP = modelDoi.getValueAt(i, 0).toString();
+                
+                // Thuốc ETC đổi 1-1 thì không áp dụng KM
+                SanPham sp = sanPhamService.timTheoMa(maSP);
+                if (sp != null && sp.getLoaiSanPham().name().equals("ETC")) {
+                    continue;
+                }
+
                 String donVi = modelDoi.getValueAt(i, 2).toString();
                 int qty = Integer.parseInt(modelDoi.getValueAt(i, 3).toString());
                 double price = Double.parseDouble(modelDoi.getValueAt(i, 4).toString());
@@ -666,6 +697,13 @@ public class DoiHangPanel extends JPanel {
             Boolean isGift = (Boolean) modelDoi.getValueAt(i, 8);
             if (isGift == null || !isGift) {
                 String maSP = modelDoi.getValueAt(i, 0).toString();
+                
+                // Thuốc ETC đổi 1-1 thì không áp dụng KM
+                SanPham sp = sanPhamService.timTheoMa(maSP);
+                if (sp != null && sp.getLoaiSanPham().name().equals("ETC")) {
+                    continue;
+                }
+
                 String donVi = modelDoi.getValueAt(i, 2).toString();
                 int qty = Integer.parseInt(modelDoi.getValueAt(i, 3).toString());
                 double price = Double.parseDouble(modelDoi.getValueAt(i, 4).toString());
@@ -750,6 +788,13 @@ public class DoiHangPanel extends JPanel {
                 Boolean isGift = (Boolean) modelDoi.getValueAt(i, 8);
                 if (isGift == null || !isGift) {
                     String maSP = modelDoi.getValueAt(i, 0).toString();
+                    
+                    // Thuốc ETC đổi 1-1 thì không áp dụng KM
+                    SanPham sp = sanPhamService.timTheoMa(maSP);
+                    if (sp != null && sp.getLoaiSanPham().name().equals("ETC")) {
+                        continue;
+                    }
+
                     String donVi = modelDoi.getValueAt(i, 2).toString();
                     int qty = Integer.parseInt(modelDoi.getValueAt(i, 3).toString());
                     double price = Double.parseDouble(modelDoi.getValueAt(i, 4).toString());
@@ -1047,6 +1092,19 @@ public class DoiHangPanel extends JPanel {
 
             if (hoaDonService.luuHoaDonDoiHang(hdMoi, dsTraLai, dsChiTietMoi, dsPhanBoMoi, soTienThucTeGiaoDich)) {
                 JOptionPane.showMessageDialog(this, "Thanh toán thành công hóa đơn đổi: " + maHoaDonMoi);
+                
+                double tienKhachDua = 0;
+                double tienThoi = 0;
+                try {
+                    String kd = txtKhachDua.getText().replaceAll("[^\\d]", "");
+                    tienKhachDua = kd.isEmpty() ? 0 : Double.parseDouble(kd);
+
+                    String tt = txtTienThoi.getText().replaceAll("[^\\d]", "");
+                    tienThoi = tt.isEmpty() ? 0 : Double.parseDouble(tt);
+                } catch (Exception ignored) {}
+                
+                com.example.utils.InHoaDonPOS.inHoaDon(hdMoi, dsChiTietMoi, tienKhachDua, tienThoi);
+                
                 resetForm();
             } else {
                 JOptionPane.showMessageDialog(this, "Lỗi hệ thống: Giao dịch không thể hoàn tất!", "Lỗi SQL",
@@ -1260,14 +1318,33 @@ public class DoiHangPanel extends JPanel {
                 
                 if (index > 0 && dsKhuyenMai != null && index - 1 < dsKhuyenMai.size()) {
                     double tongTienMuaMoiBase = 0;
-                    if (tblSanPham != null && tblSanPham.getModel() != null) {
+                    if (tblSanPham != null && tblSanPham.getModel() != null && tblHoaDonGoc != null && tblHoaDonGoc.getModel() != null) {
                         DefaultTableModel modelDoi = (DefaultTableModel) tblSanPham.getModel();
+                        DefaultTableModel modelGoc = (DefaultTableModel) tblHoaDonGoc.getModel();
                         for (int i = 0; i < modelDoi.getRowCount(); i++) {
                             Boolean isGift = (Boolean) modelDoi.getValueAt(i, 8);
                             if (isGift == null || !isGift) {
+                                String maSP = modelDoi.getValueAt(i, 0).toString();
+                                
+                                // Thuốc ETC đổi 1-1 thì không áp dụng KM
+                                SanPham sp = sanPhamService.timTheoMa(maSP);
+                                if (sp != null && sp.getLoaiSanPham().name().equals("ETC")) {
+                                    continue;
+                                }
+
+                                String donVi = modelDoi.getValueAt(i, 2).toString();
                                 int qty = Integer.parseInt(modelDoi.getValueAt(i, 3).toString());
                                 double price = Double.parseDouble(modelDoi.getValueAt(i, 4).toString());
-                                tongTienMuaMoiBase += qty * price;
+                                
+                                int slTra = 0;
+                                for (int j = 0; j < modelGoc.getRowCount(); j++) {
+                                    if (modelGoc.getValueAt(j, 0).equals(maSP) && modelGoc.getValueAt(j, 2).equals(donVi)) {
+                                        slTra += Integer.parseInt(modelGoc.getValueAt(j, 3).toString());
+                                    }
+                                }
+                                
+                                int slThucMuaMoi = Math.max(0, qty - slTra);
+                                tongTienMuaMoiBase += slThucMuaMoi * price;
                             }
                         }
                     }

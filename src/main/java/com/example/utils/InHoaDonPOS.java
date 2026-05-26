@@ -17,6 +17,7 @@ public class InHoaDonPOS {
 
         // Cấu hình trang cho máy in POS 80mm
         PageFormat pf = job.defaultPage();
+        pf.setOrientation(PageFormat.PORTRAIT);
         Paper paper = new Paper();
 
         // Chiều rộng cuộn giấy 80mm = 80 / 25.4 * 72 = ~226.7 pt.

@@ -130,7 +130,7 @@ public class SanPhamPanel extends JPanel {
         lblTitle.setForeground(new Color(50, 50, 50));
         leftBar.add(lblTitle);
 
-        cbDanhMuc = new JComboBox<>(new String[] { "Tất cả", "Thuốc ETC", "Thuốc OTC", "TPCN" });
+        cbDanhMuc = new JComboBox<>(new String[] { "Tất cả", "Thuốc ETC", "Thuốc OTC", "TPCN", "Mỹ phẩm" });
         cbDanhMuc.setPreferredSize(new Dimension(150, 35));
         cbDanhMuc.addActionListener(e -> locVaHienThiSanPham());
         leftBar.add(cbDanhMuc);
@@ -310,7 +310,7 @@ public class SanPhamPanel extends JPanel {
         txtMoTa.setLineWrap(true);
         txtMoTa.setWrapStyleWord(true);
 
-        cbLoaiSP = new JComboBox<>(new String[] { "ETC", "OTC", "TPCN" });
+        cbLoaiSP = new JComboBox<>(new String[] { "ETC", "OTC", "TPCN", "MY_PHAM" });
 
         addFormField(formPanel, gbc, row++, "Mã sản phẩm:", txtMaSP, false);
         addFormField(formPanel, gbc, row++, "Tên sản phẩm:", txtTenSP, true);
@@ -335,10 +335,14 @@ public class SanPhamPanel extends JPanel {
         gbc.weightx = 0.3;
         formPanel.add(new JLabel("Hệ số quy đổi:"), gbc);
 
-        JPanel pnlHeSo = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        JPanel pnlHeSo = new JPanel(new GridBagLayout());
         pnlHeSo.setBackground(Color.WHITE);
+        GridBagConstraints subGbc = new GridBagConstraints();
+        subGbc.fill = GridBagConstraints.HORIZONTAL;
+        subGbc.insets = new Insets(2, 0, 2, 0);
+
         txtHeSoQuyDoi = new RoundedTextField("", 5);
-        txtHeSoQuyDoi.setPreferredSize(new Dimension(50, 32));
+        txtHeSoQuyDoi.setPreferredSize(new Dimension(60, 32));
 
         DonVi[] dsDonVi = { DonVi.HOP, DonVi.VI, DonVi.VIEN, DonVi.CHAI, DonVi.TUYP, DonVi.CAI };
         cbDonViQuyDoi = new JComboBox<>(dsDonVi);
@@ -353,10 +357,10 @@ public class SanPhamPanel extends JPanel {
                 return this;
             }
         });
-        cbDonViQuyDoi.setPreferredSize(new Dimension(65, 32));
+        cbDonViQuyDoi.setPreferredSize(new Dimension(80, 32));
 
         txtBarcodeDonVi = new RoundedTextField("Mã vạch", 10);
-        txtBarcodeDonVi.setPreferredSize(new Dimension(110, 32));
+        txtBarcodeDonVi.setPreferredSize(new Dimension(100, 32));
         txtBarcodeDonVi.setForeground(Color.GRAY);
         txtBarcodeDonVi.addFocusListener(new FocusAdapter() {
             @Override
@@ -376,22 +380,46 @@ public class SanPhamPanel extends JPanel {
         });
 
         btnThemDonVi = new RoundedButton("+ Thêm");
-        btnThemDonVi.setBackground(new Color(0, 153, 51));
+        btnThemDonVi.setBackground(new Color(40, 167, 69)); // Premium Green
         btnThemDonVi.setForeground(Color.WHITE);
-        btnThemDonVi.setPreferredSize(new Dimension(75, 32));
+        btnThemDonVi.setPreferredSize(new Dimension(100, 32));
         btnThemDonVi.addActionListener(e -> themDonViVaoBang());
 
         btnXoaDonVi = new RoundedButton("- Xóa");
-        btnXoaDonVi.setBackground(new Color(255, 102, 102));
+        btnXoaDonVi.setBackground(new Color(220, 53, 69)); // Premium Red
         btnXoaDonVi.setForeground(Color.WHITE);
-        btnXoaDonVi.setPreferredSize(new Dimension(65, 32));
+        btnXoaDonVi.setPreferredSize(new Dimension(100, 32));
         btnXoaDonVi.addActionListener(e -> xoaDonViKhoiBang());
 
-        pnlHeSo.add(txtHeSoQuyDoi);
-        pnlHeSo.add(cbDonViQuyDoi);
-        pnlHeSo.add(txtBarcodeDonVi);
-        pnlHeSo.add(btnThemDonVi);
-        pnlHeSo.add(btnXoaDonVi);
+        // Hàng 1: Đầu vào (Sử dụng GridBagLayout để co giãn tự động)
+        JPanel pnlInputs = new JPanel(new GridBagLayout());
+        pnlInputs.setBackground(Color.WHITE);
+        GridBagConstraints inputGbc = new GridBagConstraints();
+        inputGbc.fill = GridBagConstraints.HORIZONTAL;
+        inputGbc.insets = new Insets(0, 0, 0, 5);
+
+        inputGbc.gridx = 0; inputGbc.weightx = 0.2;
+        pnlInputs.add(txtHeSoQuyDoi, inputGbc);
+
+        inputGbc.gridx = 1; inputGbc.weightx = 0.3;
+        pnlInputs.add(cbDonViQuyDoi, inputGbc);
+
+        inputGbc.gridx = 2; inputGbc.weightx = 0.5;
+        inputGbc.insets = new Insets(0, 0, 0, 0); // Không có khoảng cách bên phải cho phần tử cuối
+        pnlInputs.add(txtBarcodeDonVi, inputGbc);
+
+        // Hàng 2: Các nút bấm (Sử dụng GridLayout chia đều diện tích)
+        JPanel pnlButtons = new JPanel(new GridLayout(1, 2, 8, 0));
+        pnlButtons.setBackground(Color.WHITE);
+        pnlButtons.add(btnThemDonVi);
+        pnlButtons.add(btnXoaDonVi);
+
+        subGbc.gridx = 0; subGbc.gridy = 0; subGbc.weightx = 1.0;
+        pnlHeSo.add(pnlInputs, subGbc);
+
+        subGbc.gridx = 0; subGbc.gridy = 1; subGbc.weightx = 1.0;
+        subGbc.insets = new Insets(6, 0, 0, 0); // Khoảng cách giữa dòng nhập và dòng nút bấm
+        pnlHeSo.add(pnlButtons, subGbc);
 
         gbc.gridx = 1;
         gbc.weightx = 0.7;
@@ -413,12 +441,17 @@ public class SanPhamPanel extends JPanel {
             }
         };
         tblDonViQuyDoi = new JTable(donViQuyDoiModel);
-        tblDonViQuyDoi.setRowHeight(26);
+        tblDonViQuyDoi.setRowHeight(28);
         tblDonViQuyDoi.getTableHeader().setReorderingAllowed(false);
         tblDonViQuyDoi.setFillsViewportHeight(true);
 
+        // Đặt kích thước cột phù hợp để không bị cắt chữ trong panel thông tin
+        tblDonViQuyDoi.getColumnModel().getColumn(0).setPreferredWidth(75);
+        tblDonViQuyDoi.getColumnModel().getColumn(1).setPreferredWidth(110);
+        tblDonViQuyDoi.getColumnModel().getColumn(2).setPreferredWidth(100);
+
         JScrollPane donViScroll = new JScrollPane(tblDonViQuyDoi);
-        donViScroll.setPreferredSize(new Dimension(200, 120));
+        donViScroll.setPreferredSize(new Dimension(200, 180));
 
         gbc.gridx = 1;
         gbc.weightx = 0.7;
@@ -555,7 +588,8 @@ public class SanPhamPanel extends JPanel {
             boolean khopDanhMuc = danhMuc.equals("Tất cả") ||
                     (danhMuc.equals("Thuốc ETC") && sp.getLoaiSanPham() == LoaiSanPham.ETC) ||
                     (danhMuc.equals("Thuốc OTC") && sp.getLoaiSanPham() == LoaiSanPham.OTC) ||
-                    (danhMuc.equals("TPCN") && sp.getLoaiSanPham() == LoaiSanPham.TPCN);
+                    (danhMuc.equals("TPCN") && sp.getLoaiSanPham() == LoaiSanPham.TPCN) ||
+                    (danhMuc.equals("Mỹ phẩm") && sp.getLoaiSanPham() == LoaiSanPham.MY_PHAM);
 
             if (khopTuKhoa && khopDanhMuc) {
                 ketQua.add(sp);
@@ -1286,7 +1320,7 @@ public class SanPhamPanel extends JPanel {
         lblTitle.setForeground(new Color(50, 50, 50));
         leftBar.add(lblTitle);
 
-        cbDanhMucLoi = new JComboBox<>(new String[] { "Tất cả", "Thuốc ETC", "Thuốc OTC", "TPCN" });
+        cbDanhMucLoi = new JComboBox<>(new String[] { "Tất cả", "Thuốc ETC", "Thuốc OTC", "TPCN", "Mỹ phẩm" });
         cbDanhMucLoi.setPreferredSize(new Dimension(140, 35));
         cbDanhMucLoi.addActionListener(e -> locVaHienThiLoi());
         leftBar.add(cbDanhMucLoi);
@@ -1427,7 +1461,7 @@ public class SanPhamPanel extends JPanel {
         txtMoTaLoi.setEditable(false);
         txtMoTaLoi.setBackground(new Color(235, 235, 235));
 
-        cbLoaiSPLoi = new JComboBox<>(new String[] { "ETC", "OTC", "TPCN" });
+        cbLoaiSPLoi = new JComboBox<>(new String[] { "ETC", "OTC", "TPCN", "MY_PHAM" });
         cbLoaiSPLoi.setEnabled(false);
 
         addFormFieldLoi(formPanel, gbc, row++, "Mã đơn hàng:", txtMaHoaDonLoi);
@@ -1665,6 +1699,7 @@ public class SanPhamPanel extends JPanel {
                 if ("Thuốc ETC".equals(targetCategory) && !"ETC".equals(cat)) continue;
                 if ("Thuốc OTC".equals(targetCategory) && !"OTC".equals(cat)) continue;
                 if ("TPCN".equals(targetCategory) && !"TPCN".equals(cat)) continue;
+                if ("Mỹ phẩm".equals(targetCategory) && !"MY_PHAM".equals(cat)) continue;
             }
 
             results.add(spb);

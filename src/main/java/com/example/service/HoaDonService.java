@@ -226,15 +226,7 @@ public class HoaDonService {
             ctService.themNhieu(dsChiTietMoi, hoaDonMoi.getMaHoaDon());
 
             // -----------------------------------------------------------------
-            // BƯỚC 3: LƯU VẾT PHÂN BỔ LÔ HÀNG TRẢ (BẢNG CON)
-            // -----------------------------------------------------------------
-            if (dsTraLai != null && !dsTraLai.isEmpty()) {
-                // Giờ ChiTietHoaDon đã tồn tại, lưu SuPhanBoLo sẽ không bị lỗi Khóa Ngoại
-                spbService.themNhieu(dsTraLai, hoaDonMoi.getMaHoaDon());
-            }
-
-            // -----------------------------------------------------------------
-            // BƯỚC 4: XỬ LÝ HÀNG MUA MỚI (XUẤT KHO & LƯU VẾT)
+            // BƯỚC 3 & 4: LƯU VẾT PHÂN BỔ LÔ HÀNG (GỘP ĐỂ TRÁNH LỖI TRÙNG KHÓA CHÍNH)
             // -----------------------------------------------------------------
             if (dsPhanBoMoi != null && !dsPhanBoMoi.isEmpty()) {
                 for (SuPhanBoLo spMoi : dsPhanBoMoi) {
@@ -248,11 +240,64 @@ public class HoaDonService {
                 
                 // Trừ tồn kho theo Lô
                 loService.capNhatTonKhoNhieu(dsPhanBoMoi, false);
-                
-                // Lưu vết phân bổ Lô xuất mới (Sau khi bảng cha ChiTietHoaDon đã có)
-                spbService.themNhieu(dsPhanBoMoi, hoaDonMoi.getMaHoaDon());
+            }
 
-                // Trừ tồn kho tổng SanPham
+            // Gộp các bản ghi phân bổ lô trùng khóa chính (maDonVi, maLo, laQuaTangKem, biLoi)
+            java.util.List<SuPhanBoLo> dsGop = new java.util.ArrayList<>();
+            if (dsTraLai != null) {
+                for (SuPhanBoLo pb : dsTraLai) {
+                    boolean found = false;
+                    for (SuPhanBoLo existing : dsGop) {
+                        if (existing.getChiTietHoaDon().getDonViQuyDoi().getMaDonVi().equals(pb.getChiTietHoaDon().getDonViQuyDoi().getMaDonVi())
+                                && existing.getLo().getMaLo().equals(pb.getLo().getMaLo())
+                                && existing.getChiTietHoaDon().isLaQuaTangKem() == pb.getChiTietHoaDon().isLaQuaTangKem()
+                                && existing.isLoi() == pb.isLoi()) {
+                            existing.setSoLuong(existing.getSoLuong() + pb.getSoLuong());
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        SuPhanBoLo clone = new SuPhanBoLo();
+                        clone.setChiTietHoaDon(pb.getChiTietHoaDon());
+                        clone.setLo(pb.getLo());
+                        clone.setSoLuong(pb.getSoLuong());
+                        clone.setLoi(pb.isLoi());
+                        dsGop.add(clone);
+                    }
+                }
+            }
+            if (dsPhanBoMoi != null) {
+                for (SuPhanBoLo pb : dsPhanBoMoi) {
+                    boolean found = false;
+                    for (SuPhanBoLo existing : dsGop) {
+                        if (existing.getChiTietHoaDon().getDonViQuyDoi().getMaDonVi().equals(pb.getChiTietHoaDon().getDonViQuyDoi().getMaDonVi())
+                                && existing.getLo().getMaLo().equals(pb.getLo().getMaLo())
+                                && existing.getChiTietHoaDon().isLaQuaTangKem() == pb.getChiTietHoaDon().isLaQuaTangKem()
+                                && existing.isLoi() == pb.isLoi()) {
+                            existing.setSoLuong(existing.getSoLuong() + pb.getSoLuong());
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        SuPhanBoLo clone = new SuPhanBoLo();
+                        clone.setChiTietHoaDon(pb.getChiTietHoaDon());
+                        clone.setLo(pb.getLo());
+                        clone.setSoLuong(pb.getSoLuong());
+                        clone.setLoi(pb.isLoi());
+                        dsGop.add(clone);
+                    }
+                }
+            }
+
+            if (!dsGop.isEmpty()) {
+                // Lưu tất cả các phân bổ lô đã gộp sạch vào DB trong 1 đợt duy nhất
+                spbService.themNhieu(dsGop, hoaDonMoi.getMaHoaDon());
+            }
+
+            // Trừ tồn kho tổng SanPham
+            if (dsPhanBoMoi != null && !dsPhanBoMoi.isEmpty()) {
                 String sqlUpdateTonTongXuat = "UPDATE SanPham SET soLuongTon = soLuongTon - ? WHERE maSanPham = ?";
                 try (PreparedStatement pstSP = ketNoi.prepareStatement(sqlUpdateTonTongXuat)) {
                     for (SuPhanBoLo spb : dsPhanBoMoi) {
