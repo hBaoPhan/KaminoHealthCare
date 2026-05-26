@@ -524,16 +524,85 @@ public class HoaDonPanel extends JPanel {
         panel.add(scrollPane, BorderLayout.CENTER);
 
         // Footer Info
-        JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JPanel footerPanel = new JPanel(new GridBagLayout());
         footerPanel.setBackground(Color.WHITE);
+        footerPanel.setBorder(new EmptyBorder(10, 20, 10, 20));
 
         hd.setDsChiTiet(dsChiTiet);
+        double tongTienHang = hd.tinhTongTienTamThoi();
+        double tongThue = hd.tinhTongThue();
         double tongTienCuoiCung = hd.tinhTongTienThanhToan();
+        double soTienGiam = 0.0;
+        if (hd.getKhuyenMai() != null && hd.getKhuyenMai().getLoaiKhuyenMai() == com.example.entity.enums.LoaiKhuyenMai.PHAN_TRAM) {
+            soTienGiam = tongTienHang * (hd.getKhuyenMai().getKhuyenMaiPhanTram() / 100.0);
+        }
 
-        JLabel lblTong = new JLabel("Tổng tiền: " + nf.format(tongTienCuoiCung));
-        lblTong.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        lblTong.setForeground(new Color(220, 53, 69)); // Red color
-        footerPanel.add(lblTong);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(4, 5, 4, 5);
+
+        // Row 1: Cộng tiền hàng
+        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 1.0; gbc.anchor = GridBagConstraints.EAST;
+        JLabel lblCongLabel = new JLabel("Cộng tiền hàng:", SwingConstants.RIGHT);
+        lblCongLabel.setFont(FONT_TEXT);
+        lblCongLabel.setForeground(COLOR_TEXT_DIM);
+        footerPanel.add(lblCongLabel, gbc);
+
+        gbc.gridx = 1; gbc.weightx = 0.0;
+        JLabel lblCongVal = new JLabel(nf.format(tongTienHang), SwingConstants.RIGHT);
+        lblCongVal.setFont(FONT_LABEL);
+        lblCongVal.setPreferredSize(new Dimension(150, 20));
+        footerPanel.add(lblCongVal, gbc);
+
+        // Row 2: Khuyến mãi (chỉ hiện khi có giảm giá > 0)
+        int rowIdx = 1;
+        if (soTienGiam > 0) {
+            gbc.gridx = 0; gbc.gridy = rowIdx; gbc.weightx = 1.0;
+            JLabel lblKMLabel = new JLabel("Khuyến mãi (" + hd.getKhuyenMai().getTenKhuyenMai() + "):", SwingConstants.RIGHT);
+            lblKMLabel.setFont(FONT_TEXT);
+            lblKMLabel.setForeground(new Color(40, 167, 69)); // Green color for promotions
+            footerPanel.add(lblKMLabel, gbc);
+
+            gbc.gridx = 1; gbc.weightx = 0.0;
+            JLabel lblKMVal = new JLabel("-" + nf.format(soTienGiam), SwingConstants.RIGHT);
+            lblKMVal.setFont(FONT_LABEL);
+            lblKMVal.setForeground(new Color(40, 167, 69));
+            footerPanel.add(lblKMVal, gbc);
+            rowIdx++;
+        }
+
+        // Row 3: Tổng tiền thuế
+        gbc.gridx = 0; gbc.gridy = rowIdx; gbc.weightx = 1.0;
+        JLabel lblThueLabel = new JLabel("Thuế GTGT:", SwingConstants.RIGHT);
+        lblThueLabel.setFont(FONT_TEXT);
+        lblThueLabel.setForeground(COLOR_TEXT_DIM);
+        footerPanel.add(lblThueLabel, gbc);
+
+        gbc.gridx = 1; gbc.weightx = 0.0;
+        JLabel lblThueVal = new JLabel(nf.format(tongThue), SwingConstants.RIGHT);
+        lblThueVal.setFont(FONT_LABEL);
+        footerPanel.add(lblThueVal, gbc);
+        rowIdx++;
+
+        // Row 4: Divider Line
+        gbc.gridx = 0; gbc.gridy = rowIdx; gbc.gridwidth = 2; gbc.weightx = 1.0;
+        JSeparator sep = new JSeparator(JSeparator.HORIZONTAL);
+        sep.setForeground(COLOR_BORDER);
+        footerPanel.add(sep, gbc);
+        rowIdx++;
+
+        // Row 5: Tổng cộng thanh toán
+        gbc.gridx = 0; gbc.gridy = rowIdx; gbc.gridwidth = 1; gbc.weightx = 1.0;
+        JLabel lblTongLabel = new JLabel("Tổng tiền thanh toán:", SwingConstants.RIGHT);
+        lblTongLabel.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        lblTongLabel.setForeground(Color.BLACK);
+        footerPanel.add(lblTongLabel, gbc);
+
+        gbc.gridx = 1; gbc.weightx = 0.0;
+        JLabel lblTongVal = new JLabel(nf.format(tongTienCuoiCung), SwingConstants.RIGHT);
+        lblTongVal.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        lblTongVal.setForeground(new Color(220, 53, 69)); // Bold red total
+        footerPanel.add(lblTongVal, gbc);
 
         panel.add(footerPanel, BorderLayout.SOUTH);
 
