@@ -503,7 +503,7 @@ public class HoaDonPanel extends JPanel {
             String dvt = ct.getDonViQuyDoi() != null && ct.getDonViQuyDoi().getTenDonVi() != null
                     ? ct.getDonViQuyDoi().getTenDonVi().toString()
                     : "";
-            int sl = ct.getSoLuong();
+            int sl = ct.getSoLuongBan();
             double thanhTienNum = ct.tinhThanhTien();
             tongTien += thanhTienNum;
             String donGia = nf.format(ct.getDonGia());
@@ -591,7 +591,7 @@ public class HoaDonPanel extends JPanel {
             String dvt = ct.getDonViQuyDoi() != null && ct.getDonViQuyDoi().getTenDonVi() != null
                     ? ct.getDonViQuyDoi().getTenDonVi().toString()
                     : "";
-            int sl = ct.getSoLuong();
+            int sl = ct.getSoLuongBan();
             String donGia = nf.format(ct.getDonGia());
             String thanhTien = nf.format(ct.tinhThanhTien());
             String quaTang = ct.isLaQuaTangKem() ? "Có" : "Không";

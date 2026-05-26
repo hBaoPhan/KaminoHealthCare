@@ -16,13 +16,13 @@ import com.example.connectDB.ConnectDB;
 public class SuPhanBoLoDAO {
 
     public boolean themSuPhanBoLo(SuPhanBoLo spbl) throws SQLException {
-        String sql = "INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong, laQuaTangKem, biLoi) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuongPhanBo, laQuaTangKem, biLoi) VALUES (?, ?, ?, ?, ?, ?)";
         PreparedStatement pst = ConnectDB.getConnection().prepareStatement(sql);
 
         pst.setString(1, spbl.getChiTietHoaDon().getHoaDon().getMaHoaDon());
         pst.setString(2, spbl.getChiTietHoaDon().getDonViQuyDoi().getMaDonVi());
         pst.setString(3, spbl.getLo().getMaLo());
-        pst.setInt(4, spbl.getSoLuong());
+        pst.setInt(4, spbl.getSoLuongPhanBo());
         pst.setBoolean(5, spbl.getChiTietHoaDon().isLaQuaTangKem());
         pst.setBoolean(6, spbl.isLoi());
 
@@ -33,12 +33,12 @@ public class SuPhanBoLoDAO {
      * Overload an toàn: nhận maHoaDon trực tiếp, tránh NPE khi ChiTietHoaDon.getHoaDon() == null.
      */
     public boolean themSuPhanBoLo(SuPhanBoLo spbl, String maHoaDon) throws SQLException {
-        String sql = "INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong, laQuaTangKem, biLoi) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuongPhanBo, laQuaTangKem, biLoi) VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement pst = ConnectDB.getConnection().prepareStatement(sql)) {
             pst.setString(1, maHoaDon);
             pst.setString(2, spbl.getChiTietHoaDon().getDonViQuyDoi().getMaDonVi());
             pst.setString(3, spbl.getLo().getMaLo());
-            pst.setInt(4, spbl.getSoLuong());
+            pst.setInt(4, spbl.getSoLuongPhanBo());
             pst.setBoolean(5, spbl.getChiTietHoaDon().isLaQuaTangKem());
             pst.setBoolean(6, spbl.isLoi());
             return pst.executeUpdate() > 0;
@@ -48,13 +48,13 @@ public class SuPhanBoLoDAO {
     public boolean themNhieu(List<SuPhanBoLo> ds, String maHoaDon) throws SQLException {
         if (ds == null || ds.isEmpty())
             return true;
-        String sql = "INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong, laQuaTangKem, biLoi) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuongPhanBo, laQuaTangKem, biLoi) VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement pst = ConnectDB.getConnection().prepareStatement(sql)) {
             for (SuPhanBoLo spbl : ds) {
                 pst.setString(1, maHoaDon);
                 pst.setString(2, spbl.getChiTietHoaDon().getDonViQuyDoi().getMaDonVi());
                 pst.setString(3, spbl.getLo().getMaLo());
-                pst.setInt(4, spbl.getSoLuong());
+                pst.setInt(4, spbl.getSoLuongPhanBo());
                 pst.setBoolean(5, spbl.getChiTietHoaDon().isLaQuaTangKem());
                 pst.setBoolean(6, spbl.isLoi());
                 pst.addBatch();
@@ -66,9 +66,7 @@ public class SuPhanBoLoDAO {
 
     public List<SuPhanBoLo> layPhanBoLoCuaChiTiet(String maHD, String maDV, boolean laQuaTangKem) {
         List<SuPhanBoLo> ds = new ArrayList<>();
-        String sql = "SELECT s.* FROM SuPhanBoLo s " +
-                "JOIN ChiTietHoaDon c ON s.maHoaDon = c.maHoaDon AND s.maDonVi = c.maDonVi " +
-                "WHERE s.maHoaDon = ? AND s.maDonVi = ? AND c.laQuaTangKem = ?";
+        String sql = "SELECT * FROM SuPhanBoLo WHERE maHoaDon = ? AND maDonVi = ? AND laQuaTangKem = ?";
 
         try {
             // 1. Lấy connection bình thường (Không đặt trong try-with-resources)
@@ -87,7 +85,7 @@ public class SuPhanBoLoDAO {
                         SuPhanBoLo spb = new SuPhanBoLo();
                         Lo lo = loDAO.timTheoMa(rs.getString("maLo"));
                         spb.setLo(lo);
-                        spb.setSoLuong(rs.getInt("soLuong"));
+                        spb.setSoLuongPhanBo(rs.getInt("soLuongPhanBo"));
                         spb.setLoi(rs.getBoolean("biLoi"));
                         ds.add(spb);
                     }
@@ -112,21 +110,22 @@ public class SuPhanBoLoDAO {
      */
     public List<SuPhanBoLo> layDanhSachPhanBoLoCanTra(String maHoaDonGoc, List<ChiTietHoaDon> dsChiTietTra) {
         List<SuPhanBoLo> dsPhanBoTra = new ArrayList<>();
-        String sql = "SELECT maLo, soLuong FROM SuPhanBoLo WHERE maHoaDon = ? AND maDonVi = ?";
+        String sql = "SELECT maLo, soLuongPhanBo FROM SuPhanBoLo WHERE maHoaDon = ? AND maDonVi = ? AND laQuaTangKem = ?";
         try {
             Connection con = ConnectDB.getConnection();
             try (PreparedStatement ps = con.prepareStatement(sql)) {
                 for (ChiTietHoaDon ctMoi : dsChiTietTra) {
                     int heSo = ctMoi.getDonViQuyDoi().getHeSoQuyDoi();
-                    int soLuongCanTra = ctMoi.getSoLuong() * heSo;
+                    int soLuongCanTra = ctMoi.getSoLuongBan() * heSo;
                     int soLuongLoiRemaining = ctMoi.getSoLuongLoi() * heSo;
                     ps.setString(1, maHoaDonGoc);
                     ps.setString(2, ctMoi.getDonViQuyDoi().getMaDonVi());
+                    ps.setBoolean(3, ctMoi.isLaQuaTangKem());
 
                     try (ResultSet rs = ps.executeQuery()) {
                         while (rs.next() && soLuongCanTra > 0) {
                             String maLoGoc = rs.getString("maLo");
-                            int slGocTrongLo = rs.getInt("soLuong");
+                            int slGocTrongLo = rs.getInt("soLuongPhanBo");
                             int slTraVaoLo = Math.min(soLuongCanTra, slGocTrongLo);
 
                             // Phân bổ phần lỗi
@@ -138,7 +137,7 @@ public class SuPhanBoLoDAO {
                                 SuPhanBoLo spbLoi = new SuPhanBoLo();
                                 spbLoi.setLo(lo);
                                 spbLoi.setChiTietHoaDon(ctMoi);
-                                spbLoi.setSoLuong(slLoiVaoLo);
+                                spbLoi.setSoLuongPhanBo(slLoiVaoLo);
                                 spbLoi.setLoi(true);
                                 dsPhanBoTra.add(spbLoi);
 
@@ -154,7 +153,7 @@ public class SuPhanBoLoDAO {
                                 SuPhanBoLo spbNormal = new SuPhanBoLo();
                                 spbNormal.setLo(lo);
                                 spbNormal.setChiTietHoaDon(ctMoi);
-                                spbNormal.setSoLuong(slNormalVaoLo);
+                                spbNormal.setSoLuongPhanBo(slNormalVaoLo);
                                 spbNormal.setLoi(false);
                                 dsPhanBoTra.add(spbNormal);
                             }
@@ -175,7 +174,7 @@ public class SuPhanBoLoDAO {
      */
     public List<SuPhanBoLo> layDanhSachLoi() {
         List<SuPhanBoLo> ds = new ArrayList<>();
-        String sql = "SELECT s.maHoaDon, s.maDonVi, s.maLo, s.soLuong, s.laQuaTangKem, s.biLoi, h.thoiGianTao " +
+        String sql = "SELECT s.maHoaDon, s.maDonVi, s.maLo, s.soLuongPhanBo, s.laQuaTangKem, s.biLoi, h.thoiGianTao " +
                      "FROM SuPhanBoLo s " +
                      "JOIN HoaDon h ON s.maHoaDon = h.maHoaDon " +
                      "WHERE s.biLoi = 1";
@@ -187,7 +186,7 @@ public class SuPhanBoLoDAO {
                 DonViQuyDoiDAO dvDAO = new DonViQuyDoiDAO();
                 while (rs.next()) {
                     SuPhanBoLo spb = new SuPhanBoLo();
-                    spb.setSoLuong(rs.getInt("soLuong"));
+                    spb.setSoLuongPhanBo(rs.getInt("soLuongPhanBo"));
                     spb.setLoi(rs.getBoolean("biLoi"));
 
                     Lo lo = loDAO.timTheoMa(rs.getString("maLo"));

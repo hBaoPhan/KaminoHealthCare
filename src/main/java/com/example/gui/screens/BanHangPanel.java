@@ -274,12 +274,12 @@ public class BanHangPanel extends JPanel {
                 DonViQuyDoi dv = ct.getDonViQuyDoi();
                 String tenDonVi = dv.getTenDonVi() != null ? dv.getTenDonVi().getMoTa() : dv.getMaDonVi();
                 double thue = dv.getSanPham() != null ? dv.getSanPham().getThue() : 0;
-                double thanhTien = ct.getSoLuong() * ct.getDonGia() * (1 + thue / 100);
+                double thanhTien = ct.getSoLuongBan() * ct.getDonGia() * (1 + thue / 100);
                 model.addRow(new Object[] {
                         dv.getSanPham() != null ? dv.getSanPham().getMaSanPham() : "",
                         dv.getSanPham() != null ? dv.getSanPham().getTenSanPham() : "",
                         tenDonVi,
-                        ct.getSoLuong(),
+                        ct.getSoLuongBan(),
                         ct.getDonGia(),
                         thue + "%",
                         thanhTien,
@@ -1230,7 +1230,7 @@ public class BanHangPanel extends JPanel {
             ChiTietHoaDon ct = new ChiTietHoaDon();
             ct.setHoaDon(hd);
             ct.setDonViQuyDoi((DonViQuyDoi) model.getValueAt(i, 7));
-            ct.setSoLuong(Integer.parseInt(model.getValueAt(i, 3).toString()));
+            ct.setSoLuongBan(Integer.parseInt(model.getValueAt(i, 3).toString()));
             ct.setDonGia(Double.parseDouble(model.getValueAt(i, 4).toString()));
             ct.setLaQuaTangKem((Boolean) model.getValueAt(i, 8));
             dsChiTiet.add(ct);

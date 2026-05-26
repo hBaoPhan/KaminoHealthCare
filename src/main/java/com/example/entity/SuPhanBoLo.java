@@ -4,22 +4,22 @@ import com.example.entity.enums.*;
 public class SuPhanBoLo {
     private ChiTietHoaDon chiTietHoaDon;
     private Lo lo;
-    private int soLuong;
+    private int soLuongPhanBo;
     private boolean isLoi; // default is false
 
     public SuPhanBoLo() {}
 
-    public SuPhanBoLo(ChiTietHoaDon chiTietHoaDon, Lo lo, int soLuong) {
+    public SuPhanBoLo(ChiTietHoaDon chiTietHoaDon, Lo lo, int soLuongPhanBo) {
         this.chiTietHoaDon = chiTietHoaDon;
         this.lo = lo;
-        this.soLuong = soLuong;
+        this.soLuongPhanBo = soLuongPhanBo;
         this.isLoi = false;
     }
 
-    public SuPhanBoLo(ChiTietHoaDon chiTietHoaDon, Lo lo, int soLuong, boolean isLoi) {
+    public SuPhanBoLo(ChiTietHoaDon chiTietHoaDon, Lo lo, int soLuongPhanBo, boolean isLoi) {
         this.chiTietHoaDon = chiTietHoaDon;
         this.lo = lo;
-        this.soLuong = soLuong;
+        this.soLuongPhanBo = soLuongPhanBo;
         this.isLoi = isLoi;
     }
 
@@ -27,13 +27,13 @@ public class SuPhanBoLo {
     public void setChiTietHoaDon(ChiTietHoaDon chiTietHoaDon) { this.chiTietHoaDon = chiTietHoaDon; }
     public Lo getLo() { return lo; }
     public void setLo(Lo lo) { this.lo = lo; }
-    public int getSoLuong() { return soLuong; }
-    public void setSoLuong(int soLuong) { this.soLuong = soLuong; }
+    public int getSoLuongPhanBo() { return soLuongPhanBo; }
+    public void setSoLuongPhanBo(int soLuongPhanBo) { this.soLuongPhanBo = soLuongPhanBo; }
     public boolean isLoi() { return isLoi; }
     public void setLoi(boolean isLoi) { this.isLoi = isLoi; }
 
     @Override
     public String toString() {
-        return "SuPhanBoLo{" + "lo=" + (lo != null ? lo.getMaLo() : "null") + ", soLuong=" + soLuong + ", isLoi=" + isLoi + '}';
+        return "SuPhanBoLo{" + "lo=" + (lo != null ? lo.getMaLo() : "null") + ", soLuongPhanBo=" + soLuongPhanBo + ", isLoi=" + isLoi + '}';
     }
 }

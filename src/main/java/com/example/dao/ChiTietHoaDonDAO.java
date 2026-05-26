@@ -25,7 +25,7 @@ public class ChiTietHoaDonDAO {
             
             while (rs.next()) {
                 ChiTietHoaDon ct = new ChiTietHoaDon();
-                ct.setSoLuong(rs.getInt("soLuong"));
+                ct.setSoLuongBan(rs.getInt("soLuongBan"));
                 ct.setDonGia(rs.getDouble("donGia"));
                 ct.setLaQuaTangKem(rs.getBoolean("laQuaTangKem"));
                 
@@ -42,12 +42,12 @@ public class ChiTietHoaDonDAO {
     }
 
     public boolean them(ChiTietHoaDon ct) throws SQLException {
-        String truyVan = "INSERT INTO ChiTietHoaDon (maHoaDon, maDonVi, soLuong, donGia, laQuaTangKem) VALUES (?, ?, ?, ?, ?)";
+        String truyVan = "INSERT INTO ChiTietHoaDon (maHoaDon, maDonVi, soLuongBan, donGia, laQuaTangKem) VALUES (?, ?, ?, ?, ?)";
        
         PreparedStatement lenh = ConnectDB.getConnection().prepareStatement(truyVan);
         lenh.setString(1, ct.getHoaDon().getMaHoaDon());
         lenh.setString(2, ct.getDonViQuyDoi().getMaDonVi());
-        lenh.setInt(3, ct.getSoLuong());
+        lenh.setInt(3, ct.getSoLuongBan());
         lenh.setDouble(4, ct.getDonGia());
         lenh.setBoolean(5, ct.isLaQuaTangKem());
         
@@ -56,12 +56,12 @@ public class ChiTietHoaDonDAO {
 
     public boolean themNhieu(List<ChiTietHoaDon> ds, String maHoaDon) throws SQLException {
         if (ds == null || ds.isEmpty()) return true;
-        String truyVan = "INSERT INTO ChiTietHoaDon (maHoaDon, maDonVi, soLuong, donGia, laQuaTangKem) VALUES (?, ?, ?, ?, ?)";
+        String truyVan = "INSERT INTO ChiTietHoaDon (maHoaDon, maDonVi, soLuongBan, donGia, laQuaTangKem) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement lenh = ConnectDB.getConnection().prepareStatement(truyVan)) {
             for (ChiTietHoaDon ct : ds) {
                 lenh.setString(1, maHoaDon);
                 lenh.setString(2, ct.getDonViQuyDoi().getMaDonVi());
-                lenh.setInt(3, ct.getSoLuong());
+                lenh.setInt(3, ct.getSoLuongBan());
                 lenh.setDouble(4, ct.getDonGia());
                 lenh.setBoolean(5, ct.isLaQuaTangKem());
                 lenh.addBatch();
@@ -73,12 +73,12 @@ public class ChiTietHoaDonDAO {
 
     public boolean capNhat(ChiTietHoaDon ct) {
         int soDongThayDoi = 0;
-        String truyVan = "UPDATE ChiTietHoaDon SET soLuong = ?, donGia = ? WHERE maHoaDon = ? AND maDonVi = ? AND laQuaTangKem = ?";
+        String truyVan = "UPDATE ChiTietHoaDon SET soLuongBan = ?, donGia = ? WHERE maHoaDon = ? AND maDonVi = ? AND laQuaTangKem = ?";
         
         Connection ketNoi = ConnectDB.getConnection();
         try (PreparedStatement lenh = ketNoi.prepareStatement(truyVan)) {
             
-            lenh.setInt(1, ct.getSoLuong());
+            lenh.setInt(1, ct.getSoLuongBan());
             lenh.setDouble(2, ct.getDonGia());
             lenh.setString(3, ct.getHoaDon().getMaHoaDon());
             lenh.setString(4, ct.getDonViQuyDoi().getMaDonVi());

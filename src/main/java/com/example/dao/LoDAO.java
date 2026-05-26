@@ -177,7 +177,7 @@ public class LoDAO {
                 if (isCong && sp.isLoi()) {
                     continue; // Skip defective items when returning/adding to stock
                 }
-                pst.setInt(1, sp.getSoLuong());
+                pst.setInt(1, sp.getSoLuongPhanBo());
                 pst.setString(2, sp.getLo().getMaLo());
                 pst.addBatch();
                 hasBatch = true;
