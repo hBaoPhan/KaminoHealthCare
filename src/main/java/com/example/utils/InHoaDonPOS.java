@@ -232,12 +232,19 @@ public class InHoaDonPOS {
                 boolean coHoaDonGoc = hd.getHoaDonDoiTra() != null && hd.getHoaDonDoiTra().getMaHoaDon() != null;
                 if (coHoaDonGoc) {
                     try {
-                        HoaDon hdGoc = new com.example.service.HoaDonService().timTheoMa(hd.getHoaDonDoiTra().getMaHoaDon());
+                        String maHDGoc = hd.getHoaDonDoiTra().getMaHoaDon();
+                        HoaDon hdGoc = new com.example.service.HoaDonService().timTheoMa(maHDGoc);
                         if (hdGoc != null) {
+                            // Load đầy đủ dsChiTiet cho hóa đơn gốc để tính đúng tổng tiền
+                            // (timTheoMa() không load dsChiTiet nên tinhTongTienThanhToan() sẽ trả về 0 nếu không load)
+                            List<com.example.entity.ChiTietHoaDon> dsChiTietGoc =
+                                    new com.example.service.ChiTietHoaDonService().layTheoMaHoaDon(maHDGoc);
+                            hdGoc.setDsChiTiet(dsChiTietGoc);
+
                             double tongGoc = hdGoc.tinhTongTienThanhToan();
 
                             // TRA_HANG: chênh lệch = tiền gốc - tiền trả lại (số tiền khách được hoàn)
-                            // DOI_HANG: chênh lệch = hóa đơn mới - hóa đơn gốc (khách trả thêm hay nhận lại)
+                            // DOI_HANG: chênh lệch = hd đổi (mới) - hd gốc (khách trả thêm nếu > 0, nhận lại nếu < 0)
                             double chenhLech = (hd.getLoaiHoaDon() == LoaiHoaDon.TRA_HANG)
                                     ? tongGoc - finalTotal
                                     : finalTotal - tongGoc;
