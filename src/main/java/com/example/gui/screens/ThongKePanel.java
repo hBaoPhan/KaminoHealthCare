@@ -1031,8 +1031,8 @@ public class ThongKePanel extends JPanel {
                         return i;
                     });
 
-                    int baseQty = ct.getSoLuong() * ct.getDonViQuyDoi().getHeSoQuyDoi();
-                    double revenue = ct.getSoLuong() * ct.getDonGia();
+                    int baseQty = ct.getSoLuongBan() * ct.getDonViQuyDoi().getHeSoQuyDoi();
+                    double revenue = ct.getSoLuongBan() * ct.getDonGia();
                     double cost = 0.0;
                     if (ct.getDsPhanBoLo() != null) {
                         for (SuPhanBoLo spbl : ct.getDsPhanBoLo()) {

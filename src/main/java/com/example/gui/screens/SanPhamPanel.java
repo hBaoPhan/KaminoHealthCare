@@ -62,7 +62,8 @@ public class SanPhamPanel extends JPanel {
     private JComboBox<String> cbSortTimeLoi;
     private JPanel rightPanelLoi;
     private JLabel lblImageRightLoi;
-    private JTextField txtMaHoaDonLoi, txtMaSPLoi, txtTenSPLoi, txtHoatChatLoi, txtSoLuongLoi, txtDonGiaLoi, txtSoLoLoi, txtHSDLoi;
+    private JTextField txtMaHoaDonLoi, txtMaSPLoi, txtTenSPLoi, txtHoatChatLoi, txtSoLuongLoi, txtDonGiaLoi, txtSoLoLoi,
+            txtHSDLoi;
     private JComboBox<String> cbLoaiSPLoi;
     private JTextArea txtMoTaLoi;
     private JButton btnTraNSX;
@@ -328,7 +329,9 @@ public class SanPhamPanel extends JPanel {
         formPanel.add(new JLabel("Mô tả:"), gbc);
         gbc.gridx = 1;
         gbc.weightx = 0.7;
-        formPanel.add(new JScrollPane(txtMoTa), gbc);
+        JScrollPane moTaScroll = new JScrollPane(txtMoTa);
+        moTaScroll.setPreferredSize(new Dimension(200, 80));
+        formPanel.add(moTaScroll, gbc);
         row++;
 
         // Hệ số quy đổi (Thêm mới)
@@ -372,6 +375,7 @@ public class SanPhamPanel extends JPanel {
                     txtBarcodeDonVi.setForeground(Color.BLACK);
                 }
             }
+
             @Override
             public void focusLost(FocusEvent e) {
                 if (txtBarcodeDonVi.getText().trim().isEmpty()) {
@@ -400,13 +404,16 @@ public class SanPhamPanel extends JPanel {
         inputGbc.fill = GridBagConstraints.HORIZONTAL;
         inputGbc.insets = new Insets(0, 0, 0, 5);
 
-        inputGbc.gridx = 0; inputGbc.weightx = 0.2;
+        inputGbc.gridx = 0;
+        inputGbc.weightx = 0.2;
         pnlInputs.add(txtHeSoQuyDoi, inputGbc);
 
-        inputGbc.gridx = 1; inputGbc.weightx = 0.3;
+        inputGbc.gridx = 1;
+        inputGbc.weightx = 0.3;
         pnlInputs.add(cbDonViQuyDoi, inputGbc);
 
-        inputGbc.gridx = 2; inputGbc.weightx = 0.5;
+        inputGbc.gridx = 2;
+        inputGbc.weightx = 0.5;
         inputGbc.insets = new Insets(0, 0, 0, 0); // Không có khoảng cách bên phải cho phần tử cuối
         pnlInputs.add(txtBarcodeDonVi, inputGbc);
 
@@ -416,10 +423,14 @@ public class SanPhamPanel extends JPanel {
         pnlButtons.add(btnThemDonVi);
         pnlButtons.add(btnXoaDonVi);
 
-        subGbc.gridx = 0; subGbc.gridy = 0; subGbc.weightx = 1.0;
+        subGbc.gridx = 0;
+        subGbc.gridy = 0;
+        subGbc.weightx = 1.0;
         pnlHeSo.add(pnlInputs, subGbc);
 
-        subGbc.gridx = 0; subGbc.gridy = 1; subGbc.weightx = 1.0;
+        subGbc.gridx = 0;
+        subGbc.gridy = 1;
+        subGbc.weightx = 1.0;
         subGbc.insets = new Insets(6, 0, 0, 0); // Khoảng cách giữa dòng nhập và dòng nút bấm
         pnlHeSo.add(pnlButtons, subGbc);
 
@@ -453,7 +464,8 @@ public class SanPhamPanel extends JPanel {
         tblDonViQuyDoi.getColumnModel().getColumn(2).setPreferredWidth(100);
 
         JScrollPane donViScroll = new JScrollPane(tblDonViQuyDoi);
-        donViScroll.setPreferredSize(new Dimension(200, 180));
+        donViScroll.setPreferredSize(new Dimension(300, 250));
+        donViScroll.setMaximumSize(new Dimension(300, 250));
 
         gbc.gridx = 1;
         gbc.weightx = 0.7;
@@ -465,7 +477,12 @@ public class SanPhamPanel extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.WEST;
 
-        panel.add(formPanel, BorderLayout.CENTER);
+        JScrollPane formScroll = new JScrollPane(formPanel);
+        formScroll.setBorder(null);
+        formScroll.getViewport().setBackground(Color.WHITE);
+        formScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        formScroll.getVerticalScrollBar().setUnitIncrement(16);
+        panel.add(formScroll, BorderLayout.CENTER);
 
         // Buttons
         JPanel buttonPanel = new JPanel(new GridLayout(1, 4, 10, 0));
@@ -884,10 +901,10 @@ public class SanPhamPanel extends JPanel {
 
         for (DonViQuyDoi dv : ds) {
             if (dv != null && dv.getTenDonVi() != null) {
-                donViQuyDoiModel.addRow(new Object[] { 
-                    hienThiTenDonVi(dv.getTenDonVi()), 
-                    dv.getHeSoQuyDoi(),
-                    dv.getBarcode() != null ? dv.getBarcode() : "" 
+                donViQuyDoiModel.addRow(new Object[] {
+                        hienThiTenDonVi(dv.getTenDonVi()),
+                        dv.getHeSoQuyDoi(),
+                        dv.getBarcode() != null ? dv.getBarcode() : ""
                 });
             }
         }
@@ -1155,7 +1172,7 @@ public class SanPhamPanel extends JPanel {
             int heSo = Integer.parseInt(donViQuyDoiModel.getValueAt(i, 1).toString());
             Object barcodeObj = donViQuyDoiModel.getValueAt(i, 2);
             String barcodeVal = (barcodeObj != null) ? barcodeObj.toString().trim() : "";
-            
+
             DonVi donViEnum = getDonViTuTenHienThi(tenHienThi);
             dsTenDonViTrenBang.add(donViEnum.name());
 
@@ -1184,7 +1201,11 @@ public class SanPhamPanel extends JPanel {
 
         for (DonViQuyDoi dv : dsHienCo) {
             if (!dsTenDonViTrenBang.contains(dv.getTenDonVi().name())) {
-                donViQuyDoiService.xoa(dv.getMaDonVi());
+                boolean xoaThanhCong = donViQuyDoiService.xoa(dv.getMaDonVi());
+                if (!xoaThanhCong) {
+                    throw new RuntimeException("Không thể xóa đơn vị '" + hienThiTenDonVi(dv.getTenDonVi()) 
+                        + "' vì đơn vị này đã phát sinh giao dịch hoặc đang được áp dụng trong chương trình quà tặng!");
+                }
             }
         }
     }
@@ -1272,7 +1293,7 @@ public class SanPhamPanel extends JPanel {
             }
         };
 
-        for (JButton btn : new JButton[]{btnTabNormal, btnTabLoi}) {
+        for (JButton btn : new JButton[] { btnTabNormal, btnTabLoi }) {
             btn.setContentAreaFilled(false);
             btn.setBorderPainted(false);
             btn.setFocusPainted(false);
@@ -1302,7 +1323,10 @@ public class SanPhamPanel extends JPanel {
         bar.add(btnTabLoi);
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0; gbc.gridy = 0; gbc.anchor = GridBagConstraints.WEST; gbc.weightx = 1.0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.weightx = 1.0;
         container.add(bar, gbc);
 
         return container;
@@ -1362,11 +1386,19 @@ public class SanPhamPanel extends JPanel {
         txtSearchLoi.addActionListener(e -> locVaHienThiLoi());
         txtSearchLoi.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
             @Override
-            public void insertUpdate(javax.swing.event.DocumentEvent e) { locVaHienThiLoi(); }
+            public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                locVaHienThiLoi();
+            }
+
             @Override
-            public void removeUpdate(javax.swing.event.DocumentEvent e) { locVaHienThiLoi(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                locVaHienThiLoi();
+            }
+
             @Override
-            public void changedUpdate(javax.swing.event.DocumentEvent e) { locVaHienThiLoi(); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                locVaHienThiLoi();
+            }
         });
 
         JButton btnSearchLoi = new RoundedButton("Tìm");
@@ -1485,10 +1517,17 @@ public class SanPhamPanel extends JPanel {
         formPanel.add(new JLabel("Mô tả:"), gbc);
         gbc.gridx = 1;
         gbc.weightx = 0.7;
-        formPanel.add(new JScrollPane(txtMoTaLoi), gbc);
+        JScrollPane moTaLoiScroll = new JScrollPane(txtMoTaLoi);
+        moTaLoiScroll.setPreferredSize(new Dimension(200, 80));
+        formPanel.add(moTaLoiScroll, gbc);
         row++;
 
-        panel.add(formPanel, BorderLayout.CENTER);
+        JScrollPane formScrollLoi = new JScrollPane(formPanel);
+        formScrollLoi.setBorder(null);
+        formScrollLoi.getViewport().setBackground(Color.WHITE);
+        formScrollLoi.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        formScrollLoi.getVerticalScrollBar().setUnitIncrement(16);
+        panel.add(formScrollLoi, BorderLayout.CENTER);
 
         // Buttons
         JPanel buttonPanel = new JPanel(new GridLayout(1, 1, 10, 0));
@@ -1506,7 +1545,8 @@ public class SanPhamPanel extends JPanel {
         return panel;
     }
 
-    private void addFormFieldLoi(JPanel panel, GridBagConstraints gbc, int row, String labelText, JComponent inputComp) {
+    private void addFormFieldLoi(JPanel panel, GridBagConstraints gbc, int row, String labelText,
+            JComponent inputComp) {
         gbc.gridx = 0;
         gbc.gridy = row;
         gbc.weightx = 0.3;
@@ -1527,7 +1567,7 @@ public class SanPhamPanel extends JPanel {
         SanPham sp = spb.getChiTietHoaDon().getDonViQuyDoi().getSanPham();
         DonViQuyDoi dv = spb.getChiTietHoaDon().getDonViQuyDoi();
         int heSo = dv.getHeSoQuyDoi();
-        int soLuongLoi = spb.getSoLuong() / heSo;
+        int soLuongLoi = spb.getSoLuongPhanBo() / heSo;
         double donGia = spb.getChiTietHoaDon().getDonGia();
 
         RoundedPanel card = new RoundedPanel(14, true);
@@ -1596,12 +1636,14 @@ public class SanPhamPanel extends JPanel {
         infoPanel.setPreferredSize(new Dimension(160, 60));
         infoPanel.setMaximumSize(new Dimension(160, 60));
 
-        JLabel lblPrice = new JLabel(String.format("Giá: %,.0fđ / %s", donGia, hienThiTenDonVi(dv.getTenDonVi())), SwingConstants.LEFT);
+        JLabel lblPrice = new JLabel(String.format("Giá: %,.0fđ / %s", donGia, hienThiTenDonVi(dv.getTenDonVi())),
+                SwingConstants.LEFT);
         lblPrice.setFont(new Font("Segoe UI", Font.BOLD, 12));
         lblPrice.setForeground(new Color(220, 53, 69));
         lblPrice.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel lblStock = new JLabel("Số lượng lỗi: " + soLuongLoi + " " + hienThiTenDonVi(dv.getTenDonVi()), SwingConstants.LEFT);
+        JLabel lblStock = new JLabel("Số lượng lỗi: " + soLuongLoi + " " + hienThiTenDonVi(dv.getTenDonVi()),
+                SwingConstants.LEFT);
         lblStock.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         lblStock.setForeground(new Color(100, 100, 100));
         lblStock.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -1639,13 +1681,13 @@ public class SanPhamPanel extends JPanel {
         txtMaSPLoi.setText(sp.getMaSanPham());
         txtTenSPLoi.setText(sp.getTenSanPham());
         txtHoatChatLoi.setText(sp.getHoatChat() != null ? sp.getHoatChat() : "");
-        txtSoLuongLoi.setText(String.valueOf(spb.getSoLuong() / heSo) + " " + hienThiTenDonVi(dv.getTenDonVi()));
+        txtSoLuongLoi.setText(String.valueOf(spb.getSoLuongPhanBo() / heSo) + " " + hienThiTenDonVi(dv.getTenDonVi()));
         txtDonGiaLoi.setText(String.format("%,.0f đ", spb.getChiTietHoaDon().getDonGia()));
         txtSoLoLoi.setText(spb.getLo().getSoLo() != null ? spb.getLo().getSoLo() : "");
-        
+
         java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
         txtHSDLoi.setText(spb.getLo().getNgayHetHan() != null ? spb.getLo().getNgayHetHan().format(dtf) : "");
-        
+
         txtMoTaLoi.setText(sp.getMoTa() != null ? sp.getMoTa() : "");
         cbLoaiSPLoi.setSelectedItem(sp.getLoaiSanPham().name());
 
@@ -1687,24 +1729,28 @@ public class SanPhamPanel extends JPanel {
         }
 
         String targetCategory = (String) cbDanhMucLoi.getSelectedItem();
-        boolean sortDesc = cbSortTimeLoi.getSelectedIndex() == 0; 
+        boolean sortDesc = cbSortTimeLoi.getSelectedIndex() == 0;
 
         List<SuPhanBoLo> results = new ArrayList<>();
         for (SuPhanBoLo spb : danhSachLoi) {
             SanPham sp = spb.getChiTietHoaDon().getDonViQuyDoi().getSanPham();
-            
+
             String maHoaDon = spb.getChiTietHoaDon().getHoaDon().getMaHoaDon().toLowerCase();
             String maSanPham = sp.getMaSanPham().toLowerCase();
             if (!keyword.isEmpty() && !maHoaDon.contains(keyword) && !maSanPham.contains(keyword)) {
                 continue;
             }
 
-            String cat = sp.getLoaiSanPham().name(); 
+            String cat = sp.getLoaiSanPham().name();
             if (!"Tất cả".equals(targetCategory)) {
-                if ("Thuốc ETC".equals(targetCategory) && !"ETC".equals(cat)) continue;
-                if ("Thuốc OTC".equals(targetCategory) && !"OTC".equals(cat)) continue;
-                if ("TPCN".equals(targetCategory) && !"TPCN".equals(cat)) continue;
-                if ("Mỹ phẩm".equals(targetCategory) && !"MY_PHAM".equals(cat)) continue;
+                if ("Thuốc ETC".equals(targetCategory) && !"ETC".equals(cat))
+                    continue;
+                if ("Thuốc OTC".equals(targetCategory) && !"OTC".equals(cat))
+                    continue;
+                if ("TPCN".equals(targetCategory) && !"TPCN".equals(cat))
+                    continue;
+                if ("Mỹ phẩm".equals(targetCategory) && !"MY_PHAM".equals(cat))
+                    continue;
             }
 
             results.add(spb);
@@ -1713,8 +1759,10 @@ public class SanPhamPanel extends JPanel {
         results.sort((s1, s2) -> {
             LocalDateTime t1 = s1.getChiTietHoaDon().getHoaDon().getThoiGianTao();
             LocalDateTime t2 = s2.getChiTietHoaDon().getHoaDon().getThoiGianTao();
-            if (t1 == null) return sortDesc ? 1 : -1;
-            if (t2 == null) return sortDesc ? -1 : 1;
+            if (t1 == null)
+                return sortDesc ? 1 : -1;
+            if (t2 == null)
+                return sortDesc ? -1 : 1;
             return sortDesc ? t2.compareTo(t1) : t1.compareTo(t2);
         });
 
@@ -1723,7 +1771,8 @@ public class SanPhamPanel extends JPanel {
 
     private void traVeNSX() {
         if (hangLoiDangChon == null) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn sản phẩm lỗi cần trả về NSX!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn sản phẩm lỗi cần trả về NSX!", "Thông báo",
+                    JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -1740,7 +1789,7 @@ public class SanPhamPanel extends JPanel {
                 "Đơn vị: %s\n" +
                 "Số lượng trả: %d\n" +
                 "Đơn giá nhập: %,.0fđ\n" +
-                "Tổng tiền hoàn ước tính: %,.0fđ", 
+                "Tổng tiền hoàn ước tính: %,.0fđ",
                 hangLoiDangChon.getChiTietHoaDon().getDonViQuyDoi().getSanPham().getTenSanPham(),
                 hienThiTenDonVi(hangLoiDangChon.getChiTietHoaDon().getDonViQuyDoi().getTenDonVi()),
                 qtySelectedUnit,
@@ -1753,8 +1802,7 @@ public class SanPhamPanel extends JPanel {
                     hangLoiDangChon.getChiTietHoaDon().getHoaDon().getMaHoaDon(),
                     hangLoiDangChon.getChiTietHoaDon().getDonViQuyDoi().getMaDonVi(),
                     hangLoiDangChon.getLo().getMaLo(),
-                    hangLoiDangChon.getChiTietHoaDon().isLaQuaTangKem()
-            );
+                    hangLoiDangChon.getChiTietHoaDon().isLaQuaTangKem());
 
             if (success) {
                 CaLam caMo = caLamService.layCaDangMoBatKy();
@@ -1764,16 +1812,18 @@ public class SanPhamPanel extends JPanel {
                     caLamService.capNhat(caMo);
                     bonusMsg = String.format("\nSố tiền quỹ ca làm việc được hoàn trả: %,.0fđ.", tongTienHoan);
                 } else {
-                    bonusMsg = String.format("\nKhông tìm thấy ca làm việc đang mở. Tiền hoàn trả từ NSX: %,.0fđ.", tongTienHoan);
+                    bonusMsg = String.format("\nKhông tìm thấy ca làm việc đang mở. Tiền hoàn trả từ NSX: %,.0fđ.",
+                            tongTienHoan);
                 }
 
-                JOptionPane.showMessageDialog(this, 
+                JOptionPane.showMessageDialog(this,
                         "Đã hoàn tất trả sản phẩm lỗi về nhà sản xuất." + bonusMsg,
                         "Thành công", JOptionPane.INFORMATION_MESSAGE);
                 loadDanhSachLoi();
                 lamMoiFormLoi();
             } else {
-                JOptionPane.showMessageDialog(this, "Xảy ra lỗi khi thực hiện giao dịch hoàn trả!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Xảy ra lỗi khi thực hiện giao dịch hoàn trả!", "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
             }
         }
     }

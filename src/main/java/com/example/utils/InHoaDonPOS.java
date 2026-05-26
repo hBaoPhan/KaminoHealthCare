@@ -148,7 +148,7 @@ public class InHoaDonPOS {
                     DonViQuyDoi dv = ct.getDonViQuyDoi();
                     String tenSP = dv.getSanPham() != null ? dv.getSanPham().getTenSanPham() : "";
                     String tenDonVi = dv.getTenDonVi() != null ? dv.getTenDonVi().getMoTa() : dv.getMaDonVi();
-                    int qty = ct.getSoLuong();
+                    int qty = ct.getSoLuongBan();
                     double price = ct.getDonGia();
                     double thuePt = dv.getSanPham() != null ? dv.getSanPham().getThue() : 0;
                     double priceWithTax = price * (1 + thuePt / 100);

@@ -122,7 +122,7 @@ CREATE TABLE HoaDon (
 CREATE TABLE ChiTietHoaDon (
     maHoaDon VARCHAR(20) FOREIGN KEY REFERENCES HoaDon(maHoaDon),
     maDonVi VARCHAR(20) FOREIGN KEY REFERENCES DonViQuyDoi(maDonVi),
-    soLuong INT,
+    soLuongBan INT,
     donGia FLOAT,
     laQuaTangKem BIT DEFAULT 0,
     PRIMARY KEY (maHoaDon, maDonVi, laQuaTangKem)
@@ -131,7 +131,7 @@ CREATE TABLE SuPhanBoLo (
     maHoaDon VARCHAR(20),
     maDonVi VARCHAR(20),
     maLo VARCHAR(20) FOREIGN KEY REFERENCES Lo(maLo),
-    soLuong INT,
+    soLuongPhanBo INT,
     laQuaTangKem BIT DEFAULT 0,
     biLoi BIT DEFAULT 0,
     CONSTRAINT FK_SuPhanBoLo_ChiTiet 
@@ -1302,9 +1302,7 @@ VALUES ('DV001', N'TUYP', 1, 'OTC-BIA-001', '8934567890123'),
     ('DV099', N'VIEN', 1, 'TPCN-SKI-058', NULL),
     ('DV100', N'VI', 10, 'TPCN-SKI-058', NULL),
     ('DV101', N'HOP', 30, 'TPCN-SKI-058', NULL),
-    ('DV102', N'VIEN', 1, 'TPCN-VTC-059', NULL),
-    ('DV103', N'VI', 10, 'TPCN-VTC-059', NULL),
-    ('DV104', N'HOP', 100, 'TPCN-VTC-059', NULL),
+    ('DV102', N'CHAI', 1, 'TPCN-VTC-059', '8935206026306'),
     ('DV105', N'TUYP', 1, 'MY_PHAM-LRP-001', '3337875816809'),
     ('DV106', N'CHAI', 1, 'MY_PHAM-VIC-002', '8931111222222'),
     ('DV107', N'CHAI', 1, 'MY_PHAM-CER-003', '8931111222223'),
@@ -1786,9 +1784,8 @@ VALUES (
     );
 -- 4.8. QUÀ TẶNG 
 INSERT INTO QuaTang (maKhuyenMai, maDonVi, soLuongTang)
-VALUES ('KM150401', 'DV103', 1),
+VALUES ('KM150401', 'DV102', 1),
     ('KM010402', 'DV016', 1),
-    ('KM150401', 'DV102', 10),
     ('KM010402', 'DV015', 5),
     ('KM011001', 'DV002', 1);
 -- 4.9. HÓA ĐƠN & CHI TIẾT 
@@ -1919,7 +1916,7 @@ VALUES (
         N'TIEN_MAT'
     );
 -- SỬA LẠI TOÀN BỘ ĐƠN GIÁ (BẰNG DONGIACOBAN * HESOQUYDOI)
-INSERT INTO ChiTietHoaDon (maHoaDon, maDonVi, soLuong, donGia, laQuaTangKem)
+INSERT INTO ChiTietHoaDon (maHoaDon, maDonVi, soLuongBan, donGia, laQuaTangKem)
 VALUES ('HDB200426001', 'DV001', 2, 95000, 0),
     ('HDB200426001', 'DV015', 1, 850, 0),
     ('HDB200426002', 'DV016', 10, 8500, 0),
@@ -1928,7 +1925,7 @@ VALUES ('HDB200426001', 'DV001', 2, 95000, 0),
     ('HDB260426001', 'DV016', 10, 8500, 0),
     ('HDB300426001', 'DV015', 2, 850, 0),
     ('HDB020526001', 'DV017', 5, 85000, 0);
-INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuong, laQuaTangKem)
+INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuongPhanBo, laQuaTangKem)
 VALUES ('HDB200426001', 'DV001', 'LO010126001', 2, 0),
     ('HDB200426001', 'DV015', 'LO200326001', 1, 0),
     ('HDB200426002', 'DV016', 'LO200326001', 10, 0),

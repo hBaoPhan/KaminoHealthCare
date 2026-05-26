@@ -138,7 +138,7 @@ public class HoaDonService {
             hoaDonDAO.capNhatTrangThaiThanhToan(maHoaDon, true);
 
             for (ChiTietHoaDon ct : dsChiTiet) {
-                int soLuongCanTru = ct.getSoLuong() * ct.getDonViQuyDoi().getHeSoQuyDoi();
+                int soLuongCanTru = ct.getSoLuongBan() * ct.getDonViQuyDoi().getHeSoQuyDoi();
                 List<Lo> dsLo = loService.layDanhSachLoKhaDung(ct.getDonViQuyDoi().getMaDonVi());
 
                 for (Lo lo : dsLo) {
@@ -151,7 +151,7 @@ public class HoaDonService {
                     SuPhanBoLo spb = new SuPhanBoLo();
                     spb.setChiTietHoaDon(ct);
                     spb.setLo(lo);
-                    spb.setSoLuong(tru);
+                    spb.setSoLuongPhanBo(tru);
                     spbService.themSuPhanBoLo(spb, maHoaDon);
 
                     soLuongCanTru -= tru;
@@ -203,20 +203,9 @@ public class HoaDonService {
             // -----------------------------------------------------------------
             loService.capNhatTonKhoNhieu(dsTraLai, true);
 
-            if (dsTraLai != null && !dsTraLai.isEmpty()) {
-                String sqlUpdateTonTongTra = "UPDATE SanPham SET soLuongTon = soLuongTon + ? WHERE maSanPham = ?";
-                try (PreparedStatement pstSP = ketNoi.prepareStatement(sqlUpdateTonTongTra)) {
-                    for (SuPhanBoLo spb : dsTraLai) {
-                        if (spb.isLoi()) {
-                            continue; // Bỏ qua cộng kho bán đối với hàng lỗi
-                        }
-                        pstSP.setInt(1, spb.getSoLuong());
-                        pstSP.setString(2, spb.getChiTietHoaDon().getDonViQuyDoi().getSanPham().getMaSanPham());
-                        pstSP.addBatch();
-                    }
-                    pstSP.executeBatch();
-                }
-            }
+            // SanPham.soLuongTon được trigger trg_Lo_UpdateTonKho tự động cập nhật
+            // khi Lo.soLuongSanPham thay đổi ở bước capNhatTonKhoNhieu() phía trên.
+            // KHÔNG cần cập nhật thủ công ở đây — sẽ gây lỗi double-counting.
 
             // -----------------------------------------------------------------
             // BƯỚC 2: TẠO CHỨNG TỪ (BẢNG CHA & BẢNG TRUNG GIAN)
@@ -233,7 +222,7 @@ public class HoaDonService {
                     Lo lo = loService.timTheoMa(spMoi.getLo().getMaLo());
                     if (lo == null)
                         throw new RuntimeException("Không tìm thấy Lô " + spMoi.getLo().getMaLo());
-                    if (lo.getSoLuongSanPham() < spMoi.getSoLuong()) {
+                    if (lo.getSoLuongSanPham() < spMoi.getSoLuongPhanBo()) {
                         throw new RuntimeException("Lô " + spMoi.getLo().getMaLo() + " không đủ số lượng để đổi!");
                     }
                 }
@@ -252,7 +241,7 @@ public class HoaDonService {
                                 && existing.getLo().getMaLo().equals(pb.getLo().getMaLo())
                                 && existing.getChiTietHoaDon().isLaQuaTangKem() == pb.getChiTietHoaDon().isLaQuaTangKem()
                                 && existing.isLoi() == pb.isLoi()) {
-                            existing.setSoLuong(existing.getSoLuong() + pb.getSoLuong());
+                            existing.setSoLuongPhanBo(existing.getSoLuongPhanBo() + pb.getSoLuongPhanBo());
                             found = true;
                             break;
                         }
@@ -261,7 +250,7 @@ public class HoaDonService {
                         SuPhanBoLo clone = new SuPhanBoLo();
                         clone.setChiTietHoaDon(pb.getChiTietHoaDon());
                         clone.setLo(pb.getLo());
-                        clone.setSoLuong(pb.getSoLuong());
+                        clone.setSoLuongPhanBo(pb.getSoLuongPhanBo());
                         clone.setLoi(pb.isLoi());
                         dsGop.add(clone);
                     }
@@ -275,7 +264,7 @@ public class HoaDonService {
                                 && existing.getLo().getMaLo().equals(pb.getLo().getMaLo())
                                 && existing.getChiTietHoaDon().isLaQuaTangKem() == pb.getChiTietHoaDon().isLaQuaTangKem()
                                 && existing.isLoi() == pb.isLoi()) {
-                            existing.setSoLuong(existing.getSoLuong() + pb.getSoLuong());
+                            existing.setSoLuongPhanBo(existing.getSoLuongPhanBo() + pb.getSoLuongPhanBo());
                             found = true;
                             break;
                         }
@@ -284,7 +273,7 @@ public class HoaDonService {
                         SuPhanBoLo clone = new SuPhanBoLo();
                         clone.setChiTietHoaDon(pb.getChiTietHoaDon());
                         clone.setLo(pb.getLo());
-                        clone.setSoLuong(pb.getSoLuong());
+                        clone.setSoLuongPhanBo(pb.getSoLuongPhanBo());
                         clone.setLoi(pb.isLoi());
                         dsGop.add(clone);
                     }
@@ -296,18 +285,9 @@ public class HoaDonService {
                 spbService.themNhieu(dsGop, hoaDonMoi.getMaHoaDon());
             }
 
-            // Trừ tồn kho tổng SanPham
-            if (dsPhanBoMoi != null && !dsPhanBoMoi.isEmpty()) {
-                String sqlUpdateTonTongXuat = "UPDATE SanPham SET soLuongTon = soLuongTon - ? WHERE maSanPham = ?";
-                try (PreparedStatement pstSP = ketNoi.prepareStatement(sqlUpdateTonTongXuat)) {
-                    for (SuPhanBoLo spb : dsPhanBoMoi) {
-                        pstSP.setInt(1, spb.getSoLuong());
-                        pstSP.setString(2, spb.getChiTietHoaDon().getDonViQuyDoi().getSanPham().getMaSanPham());
-                        pstSP.addBatch();
-                    }
-                    pstSP.executeBatch();
-                }
-            }
+            // SanPham.soLuongTon đã được trigger trg_Lo_UpdateTonKho tự động trừ
+            // khi Lo.soLuongSanPham thay đổi ở bước capNhatTonKhoNhieu() phía trên.
+            // KHÔNG cần trừ thủ công ở đây — sẽ gây lỗi double-counting.
 
             // -----------------------------------------------------------------
             // BƯỚC 5: CẬP NHẬT DÒNG TIỀN CA LÀM VIỆC (CaLam)
