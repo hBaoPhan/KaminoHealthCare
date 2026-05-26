@@ -340,6 +340,12 @@ public class DoiHangPanel extends JPanel {
     }
     
     private void taiLaiDanhSachKhuyenMai() {
+        boolean isThanhVien = hoaDonGocHienTai != null && hoaDonGocHienTai.getKhachHang() != null
+                && hoaDonGocHienTai.getKhachHang().getTrangThai() == TrangThaiKhachHang.KHACH_HANG_THANH_VIEN;
+        taiLaiDanhSachKhuyenMai(isThanhVien);
+    }
+    
+    private void taiLaiDanhSachKhuyenMai(boolean isThanhVien) {
         if (cboKhuyenMai == null) return;
         
         // Khóa event của ComboBox tạm thời để không bị trigger lỗi tính toán trong lúc xóa item
@@ -348,8 +354,8 @@ public class DoiHangPanel extends JPanel {
         cboKhuyenMai.removeAllItems();
         cboKhuyenMai.addItem("-- Không áp dụng --");
         
-        // Lấy lại danh sách MỚI NHẤT từ database
-        dsKhuyenMai = khuyenMaiService.layKhuyenMaiConHan();
+        // Lấy lại danh sách MỚI NHẤT từ database theo trạng thái thành viên
+        dsKhuyenMai = khuyenMaiService.layKhuyenMaiConHan(isThanhVien);
         for (KhuyenMai km : dsKhuyenMai) {
             cboKhuyenMai.addItem(km.getTenKhuyenMai());
         }
@@ -627,7 +633,9 @@ public class DoiHangPanel extends JPanel {
             }
         }
 
-        int bestIndex = khuyenMaiService.chonKhuyenMaiTotNhat(dsKhuyenMai, tongTienMuaMoiBase);
+        boolean isThanhVien = hoaDonGocHienTai != null && hoaDonGocHienTai.getKhachHang() != null
+                && hoaDonGocHienTai.getKhachHang().getTrangThai() == TrangThaiKhachHang.KHACH_HANG_THANH_VIEN;
+        int bestIndex = khuyenMaiService.chonKhuyenMaiTotNhat(dsKhuyenMai, tongTienMuaMoiBase, isThanhVien);
         int cboIndex = bestIndex + 1; 
 
         if (cboKhuyenMai.getSelectedIndex() != cboIndex) {
@@ -1234,14 +1242,22 @@ public class DoiHangPanel extends JPanel {
         // Khởi tạo ComboBox Khuyến Mãi
         cboKhuyenMai = new JComboBox<>();
         cboKhuyenMai.addItem("-- Không áp dụng --");
-        dsKhuyenMai = khuyenMaiService.layKhuyenMaiConHan();
+        dsKhuyenMai = khuyenMaiService.layKhuyenMaiConHan(false);
         for (KhuyenMai km : dsKhuyenMai) {
             cboKhuyenMai.addItem(km.getTenKhuyenMai());
         }
         cboKhuyenMai.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                // Truyền isSelected và cellHasFocus là false để không hiện màu xanh khi hover
                 super.getListCellRendererComponent(list, value, index, false, false);
+                
+                if (index >= 0) {
+                    setEnabled(false); // Làm mờ các dòng trong danh sách xổ xuống
+                } else {
+                    setEnabled(true); // Ô hiển thị chính vẫn rõ nét
+                }
+                
                 if (index > 0 && dsKhuyenMai != null && index - 1 < dsKhuyenMai.size()) {
                     double tongTienMuaMoiBase = 0;
                     if (tblSanPham != null && tblSanPham.getModel() != null) {
@@ -1256,7 +1272,9 @@ public class DoiHangPanel extends JPanel {
                         }
                     }
                     KhuyenMai km = dsKhuyenMai.get(index - 1);
-                    String text = km.getTenKhuyenMai();
+                    // Hiện badge cho KM ưu đãi thành viên
+                    String prefix = km.isUuDaiThanhVien() ? "★ [Thành viên] " : "";
+                    String text = prefix + km.getTenKhuyenMai();
                     if (tongTienMuaMoiBase >= km.getGiaTriDonHangToiThieu()) {
                         if (km.getLoaiKhuyenMai() == LoaiKhuyenMai.PHAN_TRAM) {
                             double giam = tongTienMuaMoiBase * km.getKhuyenMaiPhanTram() / 100.0;
@@ -1265,9 +1283,13 @@ public class DoiHangPanel extends JPanel {
                             text += " (Tặng quà)";
                         }
                     } else {
-                        text += " (Chưa đạt)";
+                        text += " (Chưa đủ điều kiện)";
                     }
                     setText(text);
+                    // Tô vàng cho KM thành viên để phân biệt
+                    if (km.isUuDaiThanhVien()) {
+                        setForeground(new Color(180, 120, 0));
+                    }
                 }
                 return this;
             }

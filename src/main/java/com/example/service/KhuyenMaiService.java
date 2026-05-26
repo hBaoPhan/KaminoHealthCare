@@ -72,12 +72,19 @@ public class KhuyenMaiService {
             if (tongTienHang >= km.getGiaTriDonHangToiThieu()) {
                 if (km.getLoaiKhuyenMai() == LoaiKhuyenMai.PHAN_TRAM) {
                     double giam = tongTienHang * km.getKhuyenMaiPhanTram() / 100.0;
-                    if (giam > maxGiam) {
+                    // Ưu tiên giảm giá nhiều nhất. Nếu số tiền giảm bằng nhau, ưu tiên PHẦN_TRĂM hơn TẶNG_KÈM
+                    boolean isBetter = giam > maxGiam;
+                    boolean isEquivalentButBetterType = (giam == maxGiam && bestIndex >= 0 
+                            && dsKhuyenMai.get(bestIndex).getLoaiKhuyenMai() == LoaiKhuyenMai.TANG_KEM);
+                    
+                    if (isBetter || isEquivalentButBetterType) {
                         maxGiam = giam;
                         bestIndex = i;
                     }
                 } else if (km.getLoaiKhuyenMai() == LoaiKhuyenMai.TANG_KEM) {
-                    if (maxGiam <= 0) {
+                    // Chỉ chọn TẶNG_KÈM nếu chưa có KM nào được áp dụng (maxGiam < 0).
+                    // Nếu đã có KM PHẦN_TRĂM (cho dù giam = 0), ta vẫn ưu tiên PHẦN_TRĂM hơn.
+                    if (maxGiam < 0) {
                         maxGiam = 0;
                         bestIndex = i;
                     }

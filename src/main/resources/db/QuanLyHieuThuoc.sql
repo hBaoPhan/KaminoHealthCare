@@ -1350,7 +1350,7 @@ VALUES (
         '2026-10-01',
         795,
         'OTC-ALL-006',
-        15000
+        500
     ),
     (
         'LO250326001',
@@ -1358,7 +1358,7 @@ VALUES (
         '2029-01-01',
         3000,
         'ETC-DEX-020',
-        3000
+        400
     ),
     (
         'LO070526001',
@@ -1390,7 +1390,7 @@ VALUES (
         '2029-01-01',
         500,
         'TPCN-BPK-039',
-        150000
+        1200
     ),
     (
         'LO070526005',
@@ -1398,7 +1398,7 @@ VALUES (
         '2028-01-01',
         300,
         'TPCN-OMG-055',
-        200000
+        1500
     ),
     (
         'LO070526006',
@@ -1979,5 +1979,45 @@ FROM SanPham sp
         GROUP BY maSanPham
     ) i ON sp.maSanPham = i.maSanPham;
 END
+END;
+GO
+--- =================================================== ---
+--- 6. Triggers for Profitability Check
+--- =================================================== ---
+GO
+CREATE TRIGGER trg_Lo_KiemTraGiaBanCoLai
+ON Lo
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF EXISTS (
+        SELECT 1
+        FROM inserted i
+        INNER JOIN SanPham sp ON i.maSanPham = sp.maSanPham
+        WHERE i.giaNhap >= sp.donGiaCoBan
+    )
+    BEGIN
+        RAISERROR (N'Lỗi: Giá nhập của Lô phải nhỏ hơn đơn giá bán cơ bản của sản phẩm để đảm bảo bán có lãi!', 16, 1);
+        ROLLBACK TRANSACTION;
+    END
+END;
+GO
+CREATE TRIGGER trg_SanPham_KiemTraGiaBanCoLai
+ON SanPham
+AFTER UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF EXISTS (
+        SELECT 1
+        FROM inserted i
+        INNER JOIN Lo l ON i.maSanPham = l.maSanPham
+        WHERE i.donGiaCoBan <= l.giaNhap
+    )
+    BEGIN
+        RAISERROR (N'Lỗi: Đơn giá bán cơ bản phải lớn hơn giá nhập của các Lô hiện tại để đảm bảo bán có lãi!', 16, 1);
+        ROLLBACK TRANSACTION;
+    END
 END;
 GO
