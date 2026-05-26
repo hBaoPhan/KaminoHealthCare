@@ -39,6 +39,8 @@ public class CaLamPanel extends JPanel {
 
     // --- Data Logic ---
     private CaLamService caLamService = new CaLamService();
+    private com.example.service.NhanVienService nhanVienService = new com.example.service.NhanVienService();
+    private JPopupMenu nvPopup;
     private DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
     private LocalDate selectedDate = LocalDate.now();
     private List<CaLam> listCaTuan = new ArrayList<>();
@@ -69,6 +71,7 @@ public class CaLamPanel extends JPanel {
         // Mặc định load dữ liệu hôm nay
         dateChooserFilter.setDate(java.sql.Date.valueOf(LocalDate.now()));
         loadDuLieu();
+        initNhanVienAutoComplete();
     }
 
 
@@ -84,7 +87,7 @@ public class CaLamPanel extends JPanel {
         txtSearch = new JTextField(20);
         txtSearch.setPreferredSize(new Dimension(200, 35));
         txtSearch.setToolTipText("Tìm kiếm theo tên nhân viên...");
-        txtSearch.setEnabled(false);
+        
 
         cbFilterTime = new JComboBox<>(new String[]{"Hôm nay", "Ngày mai", "Tuần này", "Tuần sau", "Tùy chọn ngày"});
         cbFilterTime.setPreferredSize(new Dimension(130, 35));
@@ -139,7 +142,7 @@ public class CaLamPanel extends JPanel {
 
         inputPanel.add(new JLabel("Mã nhân viên:"));
         inputPanel.add(txtMaNV = new JTextField());
-        txtMaNV.setEnabled(false);
+        
 
         inputPanel.add(new JLabel("Tên nhân viên:"));
         inputPanel.add(txtTenNV = new JTextField());
@@ -163,7 +166,7 @@ public class CaLamPanel extends JPanel {
 
         inputPanel.add(new JLabel("Trạng thái ca:"));
         cbTrangThai = new JComboBox<>(com.example.entity.enums.TrangThaiCaLam.values());
-        cbTrangThai.setEnabled(false);
+        
         inputPanel.add(cbTrangThai);
 
         // Phần 4 nút bấm
@@ -480,12 +483,24 @@ public class CaLamPanel extends JPanel {
         if (tblDanhSach.getSelectedRow() < 0) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn ca làm cần xóa!"); return;
         }
-        if (cbTrangThai.getSelectedItem() != TrangThaiCaLam.CHUA_MO) {
+        
+        CaLam cl = caLamService.timTheoMa(txtMaCa.getText());
+        if (cl == null) {
+            JOptionPane.showMessageDialog(this, "Không tìm thấy thông tin ca làm!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (cl.getTrangThai() != TrangThaiCaLam.CHUA_MO) {
             JOptionPane.showMessageDialog(this, "Từ chối! Chỉ được xóa các ca làm TƯƠNG LAI (CHƯA MỞ).\nCa đang mở hoặc đã đóng chứa dữ liệu doanh thu không thể xóa."); return;
         }
         
+        // Kiểm tra ca ở quá khứ
+        if (cl.getGioBatDau().isBefore(LocalDateTime.now())) {
+            JOptionPane.showMessageDialog(this, "Từ chối! Không được phép xóa ca làm việc chưa mở ở quá khứ."); return;
+        }
+        
         if (JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn xóa ca làm này?", "Xác nhận", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
-            if (caLamService.xoa(txtMaCa.getText())) {
+            if (caLamService.xoa(cl.getMaCa())) {
                 JOptionPane.showMessageDialog(this, "Xóa thành công!");
                 lamMoiForm(); loadDuLieu();
             }
@@ -541,5 +556,112 @@ public class CaLamPanel extends JPanel {
         b.setBackground(c); b.setFont(new Font("Segoe UI", Font.BOLD, 13)); b.setFocusPainted(false); b.setBorderPainted(false);
         b.setCursor(new Cursor(Cursor.HAND_CURSOR));
         return b;
+    }
+
+    private boolean isUpdatingNV = false;
+
+    private void initNhanVienAutoComplete() {
+        nvPopup = new JPopupMenu();
+        nvPopup.setFocusable(false);
+
+        txtMaNV.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            @Override
+            public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                updateSuggestions();
+            }
+
+            @Override
+            public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                updateSuggestions();
+            }
+
+            @Override
+            public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                updateSuggestions();
+            }
+
+            private void updateSuggestions() {
+                if (isUpdatingNV) return;
+
+                String text = txtMaNV.getText().trim();
+                if (text.isEmpty()) {
+                    SwingUtilities.invokeLater(() -> {
+                        txtTenNV.setText("");
+                        nvPopup.setVisible(false);
+                    });
+                    return;
+                }
+
+                SwingUtilities.invokeLater(() -> {
+                    List<NhanVien> allNV = nhanVienService.layTatCa();
+                    
+                    // Kiểm tra khớp chính xác mã nhân viên
+                    NhanVien exactMatch = null;
+                    for (NhanVien nv : allNV) {
+                        if (nv.getMaNhanVien().equalsIgnoreCase(text)) {
+                            exactMatch = nv;
+                            break;
+                        }
+                    }
+
+                    if (exactMatch != null) {
+                        txtTenNV.setText(exactMatch.getTenNhanVien());
+                        nvPopup.setVisible(false);
+                        return;
+                    } else {
+                        txtTenNV.setText(""); // Xóa tên nếu chưa gõ xong / không khớp
+                    }
+
+                    // Tìm kiếm gợi ý
+                    List<NhanVien> suggestions = new ArrayList<>();
+                    for (NhanVien nv : allNV) {
+                        if (nv.getMaNhanVien().toLowerCase().contains(text.toLowerCase())
+                            || nv.getTenNhanVien().toLowerCase().contains(text.toLowerCase())) {
+                            suggestions.add(nv);
+                        }
+                    }
+
+                    nvPopup.setVisible(false);
+                    nvPopup.removeAll();
+
+                    if (suggestions.isEmpty()) {
+                        return;
+                    }
+
+                    for (NhanVien nv : suggestions) {
+                        JMenuItem item = new JMenuItem(nv.getMaNhanVien() + " - " + nv.getTenNhanVien());
+                        item.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+                        item.setPreferredSize(new Dimension(250, 30));
+                        item.addActionListener(ev -> {
+                            isUpdatingNV = true;
+                            try {
+                                txtMaNV.setText(nv.getMaNhanVien());
+                                txtTenNV.setText(nv.getTenNhanVien());
+                            } finally {
+                                isUpdatingNV = false;
+                            }
+                            nvPopup.setVisible(false);
+                        });
+                        nvPopup.add(item);
+                    }
+
+                    nvPopup.setPreferredSize(new Dimension(txtMaNV.getWidth(), Math.min(150, suggestions.size() * 30)));
+                    if (txtMaNV.isShowing()) {
+                        nvPopup.show(txtMaNV, 0, txtMaNV.getHeight());
+                        txtMaNV.requestFocus();
+                    }
+                });
+            }
+        });
+
+        // Ẩn gợi ý khi click ra ngoài hoặc textfield mất focus
+        txtMaNV.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                Timer timer = new Timer(200, ev -> nvPopup.setVisible(false));
+                timer.setRepeats(false);
+                timer.start();
+            }
+        });
     }
 }
