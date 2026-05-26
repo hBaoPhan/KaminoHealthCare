@@ -1203,8 +1203,8 @@ public class SanPhamPanel extends JPanel {
             if (!dsTenDonViTrenBang.contains(dv.getTenDonVi().name())) {
                 boolean xoaThanhCong = donViQuyDoiService.xoa(dv.getMaDonVi());
                 if (!xoaThanhCong) {
-                    throw new RuntimeException("Không thể xóa đơn vị '" + hienThiTenDonVi(dv.getTenDonVi()) 
-                        + "' vì đơn vị này đã phát sinh giao dịch hoặc đang được áp dụng trong chương trình quà tặng!");
+                    throw new RuntimeException("Không thể xóa đơn vị '" + hienThiTenDonVi(dv.getTenDonVi())
+                            + "' vì đơn vị này đã phát sinh giao dịch hoặc đang được áp dụng trong chương trình quà tặng!");
                 }
             }
         }
@@ -1781,8 +1781,8 @@ public class SanPhamPanel extends JPanel {
         double giaNhapDonVi = slTonLo > 0 ? (giaNhapLoo / slTonLo) : 0;
 
         int heSo = hangLoiDangChon.getChiTietHoaDon().getDonViQuyDoi().getHeSoQuyDoi();
-        int qtySelectedUnit = hangLoiDangChon.getSoLuong() / heSo;
-        double tongTienHoan = hangLoiDangChon.getSoLuong() * giaNhapDonVi;
+        int qtySelectedUnit = hangLoiDangChon.getSoLuongPhanBo() / heSo;
+        double tongTienHoan = hangLoiDangChon.getSoLuongPhanBo() * giaNhapDonVi;
 
         String msg = String.format("Bạn có chắc chắn muốn trả sản phẩm lỗi này về Nhà sản xuất không?\n" +
                 "Sản phẩm: %s\n" +
@@ -1793,7 +1793,7 @@ public class SanPhamPanel extends JPanel {
                 hangLoiDangChon.getChiTietHoaDon().getDonViQuyDoi().getSanPham().getTenSanPham(),
                 hienThiTenDonVi(hangLoiDangChon.getChiTietHoaDon().getDonViQuyDoi().getTenDonVi()),
                 qtySelectedUnit,
-                giaNhapDonVi * heSo, 
+                giaNhapDonVi * heSo,
                 tongTienHoan);
 
         int confirm = JOptionPane.showConfirmDialog(this, msg, "Xác nhận trả về NSX", JOptionPane.YES_NO_OPTION);
