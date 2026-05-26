@@ -203,15 +203,15 @@ public class InHoaDonPOS {
                 g2d.drawString(df.format(tongTienHang), startX + 165, y);
                 y += 10;
 
-                g2d.drawString("Thuế GTGT:", startX, y);
-                g2d.drawString(df.format(tongThue), startX + 165, y);
-                y += 10;
-
                 if (soTienGiam > 0) {
                     g2d.drawString("Khuyến mãi:", startX, y);
                     g2d.drawString("-" + df.format(soTienGiam), startX + 165, y);
                     y += 10;
                 }
+
+                g2d.drawString("Thuế GTGT:", startX, y);
+                g2d.drawString(df.format(tongThue), startX + 165, y);
+                y += 10;
 
                 drawSeparator("------------------------------------------------------------------", g2d, startX, y);
                 y += 12;
@@ -235,7 +235,8 @@ public class InHoaDonPOS {
                         startX, y);
                 y += 10;
 
-                if (hd.getPhuongThucThanhToan() == PhuongThucThanhToan.TIEN_MAT && hd.getLoaiHoaDon() != LoaiHoaDon.TRA_HANG) {
+                if (hd.getPhuongThucThanhToan() == PhuongThucThanhToan.TIEN_MAT
+                        && hd.getLoaiHoaDon() != LoaiHoaDon.TRA_HANG) {
                     g2d.drawString("Khách đưa     : " + df.format(tienKhachDua), startX, y);
                     y += 10;
                     g2d.drawString("Tiền thối lại : " + df.format(tienThoi), startX, y);
@@ -258,10 +259,10 @@ public class InHoaDonPOS {
                     double charWidth = 3 * wideWidth + 6 * narrowWidth + gap; // 11.6
                     double barcodeWidth = (maHD.length() + 2) * charWidth - gap;
                     double barcodeX = (width - barcodeWidth) / 2.0;
-                    
+
                     drawBarcode(g2d, maHD, barcodeX, y, 20);
                     y += 28;
-                    
+
                     g2d.setFont(fontNormal);
                     drawCenteredString(maHD, endX, g2d, y);
                 }
@@ -454,26 +455,26 @@ public class InHoaDonPOS {
     private static void drawBarcode(Graphics2D g2d, String data, double x, double y, double height) {
         String dataUpper = data.toUpperCase();
         String fullData = "*" + dataUpper + "*";
-        
+
         double narrowWidth = 0.8;
         double wideWidth = 2.0;
         double gap = 0.8;
-        
+
         g2d.setColor(Color.BLACK);
         double currentX = x;
-        
+
         for (int i = 0; i < fullData.length(); i++) {
             char c = fullData.charAt(i);
             String pattern = CODE39_PATTERNS.get(c);
             if (pattern == null) {
                 continue;
             }
-            
+
             for (int j = 0; j < 9; j++) {
                 boolean isBar = (j % 2 == 0);
                 boolean isWide = (pattern.charAt(j) == '1');
                 double w = isWide ? wideWidth : narrowWidth;
-                
+
                 if (isBar) {
                     g2d.fill(new java.awt.geom.Rectangle2D.Double(currentX, y, w, height));
                 }

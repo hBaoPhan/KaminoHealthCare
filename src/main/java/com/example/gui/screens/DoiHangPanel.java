@@ -149,8 +149,8 @@ public class DoiHangPanel extends JPanel {
             if ((e.getChangeFlags() & java.awt.event.HierarchyEvent.SHOWING_CHANGED) != 0) {
                 if (isShowing()) {
                     SwingUtilities.invokeLater(() -> {
-                        if (txtSearchSanPham != null && txtSearchSanPham.isShowing()) {
-                            txtSearchSanPham.requestFocusInWindow();
+                        if (txtSearchHoaDon != null && txtSearchHoaDon.isShowing()) {
+                            txtSearchHoaDon.requestFocusInWindow();
                         }
                     });
                 }
@@ -186,20 +186,32 @@ public class DoiHangPanel extends JPanel {
                 if (c == '\n') {
                     String barcode = barcodeBuffer.toString().trim();
                     if (!barcode.isEmpty() && barcode.length() >= 5) {
-                        DonViQuyDoi dv = donViQuyDoiService.timTheoBarcode(barcode);
-                        if (dv != null) {
+                        if (barcode.toUpperCase().startsWith("HD")) {
                             SwingUtilities.invokeLater(() -> {
-                                xuLyQuetBarcode(dv);
-                                if (txtSearchSanPham != null) {
-                                    txtSearchSanPham.setText("");
+                                timKiemHoaDonGoc(barcode);
+                                if (txtSearchHoaDon != null) {
+                                    txtSearchHoaDon.setText(barcode);
+                                    txtSearchHoaDon.setForeground(Color.BLACK);
                                 }
                             });
                             barcodeBuffer.setLength(0);
-                            return true; // Tiêu hủy sự kiện phím Enter
+                            return true;
+                        } else {
+                            DonViQuyDoi dv = donViQuyDoiService.timTheoBarcode(barcode);
+                            if (dv != null) {
+                                SwingUtilities.invokeLater(() -> {
+                                    xuLyQuetBarcode(dv);
+                                    if (txtSearchSanPham != null) {
+                                        txtSearchSanPham.setText("");
+                                    }
+                                });
+                                barcodeBuffer.setLength(0);
+                                return true; // Tiêu hủy sự kiện phím Enter
+                            }
                         }
                     }
                     barcodeBuffer.setLength(0);
-                } else if (Character.isLetterOrDigit(c)) {
+                } else if (Character.isLetterOrDigit(c) || c == '-') {
                     barcodeBuffer.append(c);
                 }
             }
@@ -267,8 +279,21 @@ public class DoiHangPanel extends JPanel {
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                     String kw = txtSearchHoaDon.getText().trim();
-                    if (!kw.isEmpty() && !kw.equals("Nhập mã hóa đơn gốc..."))
-                        timKiemHoaDonGoc(kw);
+                    if (!kw.isEmpty() && !kw.equals("Nhập mã hóa đơn gốc...")) {
+                        if (kw.toUpperCase().startsWith("HD")) {
+                            timKiemHoaDonGoc(kw);
+                        } else {
+                            DonViQuyDoi dv = donViQuyDoiService.timTheoBarcode(kw);
+                            if (dv != null) {
+                                xuLyQuetBarcode(dv);
+                                txtSearchHoaDon.setText("");
+                            } else {
+                                JOptionPane.showMessageDialog(DoiHangPanel.this,
+                                        "Không tìm thấy sản phẩm có mã vạch: " + kw,
+                                        "Lỗi mã vạch", JOptionPane.ERROR_MESSAGE);
+                            }
+                        }
+                    }
                 }
             }
         });
@@ -276,18 +301,27 @@ public class DoiHangPanel extends JPanel {
         txtSearchSanPham.addActionListener(e -> {
             String text = txtSearchSanPham.getText().trim();
             if (!text.isEmpty() && !text.equals("Nhập mã/tên sản phẩm...")) {
-                DonViQuyDoi dv = donViQuyDoiService.timTheoBarcode(text);
-                if (dv != null) {
-                    xuLyQuetBarcode(dv);
+                if (text.toUpperCase().startsWith("HD")) {
+                    timKiemHoaDonGoc(text);
                     txtSearchSanPham.setText("");
+                    if (txtSearchHoaDon != null) {
+                        txtSearchHoaDon.setText(text);
+                        txtSearchHoaDon.setForeground(Color.BLACK);
+                    }
                 } else {
-                    SanPham sp = sanPhamService.timTheoMa(text);
-                    if (sp != null) {
-                        List<DonViQuyDoi> donVis = donViQuyDoiService.timTheoMaSanPham(sp.getMaSanPham());
-                        if (!donVis.isEmpty()) {
-                            themSanPhamVaoBang(sp, donVis.get(0));
-                            txtSearchSanPham.setText("");
-                            popupGoiY.setVisible(false);
+                    DonViQuyDoi dv = donViQuyDoiService.timTheoBarcode(text);
+                    if (dv != null) {
+                        xuLyQuetBarcode(dv);
+                        txtSearchSanPham.setText("");
+                    } else {
+                        SanPham sp = sanPhamService.timTheoMa(text);
+                        if (sp != null) {
+                            List<DonViQuyDoi> donVis = donViQuyDoiService.timTheoMaSanPham(sp.getMaSanPham());
+                            if (!donVis.isEmpty()) {
+                                themSanPhamVaoBang(sp, donVis.get(0));
+                                txtSearchSanPham.setText("");
+                                popupGoiY.setVisible(false);
+                            }
                         }
                     }
                 }
@@ -563,29 +597,7 @@ public class DoiHangPanel extends JPanel {
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
-        // Check if this product is in the original invoice tblHoaDonGoc
-        DefaultTableModel modelGoc = (DefaultTableModel) tblHoaDonGoc.getModel();
-        boolean foundInGoc = false;
-        for (int i = 0; i < modelGoc.getRowCount(); i++) {
-            if (modelGoc.getValueAt(i, 0).equals(dv.getSanPham().getMaSanPham())
-                    && modelGoc.getValueAt(i, 2).equals(dv.getTenDonVi().getMoTa())) {
-                int slGoc = chiTietHoaDonGocList.get(i).getSoLuongBan();
-                int slTraHienTai = Integer.parseInt(modelGoc.getValueAt(i, 3).toString());
-                if (slTraHienTai < slGoc) {
-                    modelGoc.setValueAt(slTraHienTai + 1, i, 3);
-                    xuLyKhiThayDoiDonVi(tblHoaDonGoc, i, 3);
-                } else {
-                    JOptionPane.showMessageDialog(this,
-                            "Đã đạt số lượng tối đa có thể đổi cho sản phẩm này trong hóa đơn gốc!",
-                            "Cảnh báo", JOptionPane.WARNING_MESSAGE);
-                }
-                foundInGoc = true;
-                break;
-            }
-        }
-        if (!foundInGoc) {
-            themSanPhamVaoBang(dv.getSanPham(), dv);
-        }
+        themSanPhamVaoBang(dv.getSanPham(), dv);
         popupGoiY.setVisible(false);
     }
 
