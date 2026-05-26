@@ -655,17 +655,40 @@ public class DoiHangPanel extends JPanel {
         DefaultTableModel modelDoi = (DefaultTableModel) tblSanPham.getModel();
         DefaultTableModel modelGoc = (DefaultTableModel) tblHoaDonGoc.getModel();
 
-        // Không tự động chọn khuyến mãi khi đổi thuốc ETC
-        boolean hasETC = false;
+        // ĐÃ XÓA: Đoạn code chặn hasETC gây lỗi ở đây
+
         for (int i = 0; i < modelDoi.getRowCount(); i++) {
-            String maSP = modelDoi.getValueAt(i, 0).toString();
-            SanPham sp = sanPhamService.timTheoMa(maSP);
-            if (sp != null && sp.getLoaiSanPham().name().equals("ETC")) {
-                hasETC = true;
-                break;
+            Boolean isGift = (Boolean) modelDoi.getValueAt(i, 8);
+            if (isGift == null || !isGift) {
+                String maSP = modelDoi.getValueAt(i, 0).toString();
+
+                SanPham sp = sanPhamService.timTheoMa(maSP);
+                if (sp != null && sp.getLoaiSanPham().name().equals("ETC")) {
+                    continue;
+                }
+
+                String donVi = modelDoi.getValueAt(i, 2).toString();
+                int qty = Integer.parseInt(modelDoi.getValueAt(i, 3).toString());
+                double price = Double.parseDouble(modelDoi.getValueAt(i, 4).toString());
+                
+                // THÊM 2 DÒNG NÀY: Lấy thuế và tính giá sau thuế
+                double thueTiLe = Double.parseDouble(modelDoi.getValueAt(i, 5).toString().replace("%", ""));
+                double priceSauThue = price * (1 + thueTiLe / 100.0);
+
+                int slTra = 0;
+                for (int j = 0; j < modelGoc.getRowCount(); j++) {
+                    if (modelGoc.getValueAt(j, 0).equals(maSP) && modelGoc.getValueAt(j, 2).equals(donVi)) {
+                        slTra += Integer.parseInt(modelGoc.getValueAt(j, 3).toString());
+                    }
+                }
+
+                int slThucMuaMoi = Math.max(0, qty - slTra);
+                // SỬA DÒNG NÀY: Nhân với priceSauThue thay vì price
+                tongTienMuaMoiBase += slThucMuaMoi * priceSauThue; 
             }
         }
-        if (hasETC) {
+
+        if (tongTienMuaMoiBase <= 0) {
             if (cboKhuyenMai.getSelectedIndex() != 0) {
                 isAutoSelectingPromotion = true;
                 try {
@@ -676,35 +699,6 @@ public class DoiHangPanel extends JPanel {
                 capNhatQuaTang();
             }
             return;
-        }
-
-        for (int i = 0; i < modelDoi.getRowCount(); i++) {
-            Boolean isGift = (Boolean) modelDoi.getValueAt(i, 8);
-            if (isGift == null || !isGift) {
-                String maSP = modelDoi.getValueAt(i, 0).toString();
-
-                // Thuốc ETC đổi 1-1 thì không áp dụng KM
-                SanPham sp = sanPhamService.timTheoMa(maSP);
-                if (sp != null && sp.getLoaiSanPham().name().equals("ETC")) {
-                    continue;
-                }
-
-                String donVi = modelDoi.getValueAt(i, 2).toString();
-                int qty = Integer.parseInt(modelDoi.getValueAt(i, 3).toString());
-                double price = Double.parseDouble(modelDoi.getValueAt(i, 4).toString());
-
-                // Tìm số lượng tương ứng bị trả ở bảng gốc để cấn trừ
-                int slTra = 0;
-                for (int j = 0; j < modelGoc.getRowCount(); j++) {
-                    if (modelGoc.getValueAt(j, 0).equals(maSP) && modelGoc.getValueAt(j, 2).equals(donVi)) {
-                        slTra += Integer.parseInt(modelGoc.getValueAt(j, 3).toString());
-                    }
-                }
-
-                // Chỉ tính tiền KM cho phần mua dôi ra
-                int slThucMuaMoi = Math.max(0, qty - slTra);
-                tongTienMuaMoiBase += slThucMuaMoi * price;
-            }
         }
 
         boolean isThanhVien = hoaDonGocHienTai != null && hoaDonGocHienTai.getKhachHang() != null
@@ -741,7 +735,6 @@ public class DoiHangPanel extends JPanel {
             if (isGift == null || !isGift) {
                 String maSP = modelDoi.getValueAt(i, 0).toString();
 
-                // Thuốc ETC đổi 1-1 thì không áp dụng KM
                 SanPham sp = sanPhamService.timTheoMa(maSP);
                 if (sp != null && sp.getLoaiSanPham().name().equals("ETC")) {
                     continue;
@@ -750,6 +743,10 @@ public class DoiHangPanel extends JPanel {
                 String donVi = modelDoi.getValueAt(i, 2).toString();
                 int qty = Integer.parseInt(modelDoi.getValueAt(i, 3).toString());
                 double price = Double.parseDouble(modelDoi.getValueAt(i, 4).toString());
+                
+                // THÊM 2 DÒNG NÀY
+                double thueTiLe = Double.parseDouble(modelDoi.getValueAt(i, 5).toString().replace("%", ""));
+                double priceSauThue = price * (1 + thueTiLe / 100.0);
 
                 int slTra = 0;
                 for (int j = 0; j < modelGoc.getRowCount(); j++) {
@@ -759,16 +756,19 @@ public class DoiHangPanel extends JPanel {
                 }
 
                 int slThucMuaMoi = Math.max(0, qty - slTra);
-                tongTienMuaMoiBase += slThucMuaMoi * price;
+                // SỬA DÒNG NÀY:
+                tongTienMuaMoiBase += slThucMuaMoi * priceSauThue;
             }
         }
 
         int idx = cboKhuyenMai.getSelectedIndex() - 1;
         if (idx >= 0 && idx < dsKhuyenMai.size()) {
             KhuyenMai km = dsKhuyenMai.get(idx);
-            if (tongTienMuaMoiBase < km.getGiaTriDonHangToiThieu()) {
+            
+            // SỬA Ở ĐÂY: Thêm điều kiện tongTienMuaMoiBase <= 0
+            if (tongTienMuaMoiBase <= 0 || tongTienMuaMoiBase < km.getGiaTriDonHangToiThieu()) {
                 if (!isAutoSelectingPromotion) {
-                    JOptionPane.showMessageDialog(this, "Hàng mua mới chưa đạt giá trị tối thiểu (" +
+                    JOptionPane.showMessageDialog(this, "Không có sản phẩm mua mới hợp lệ hoặc chưa đạt giá trị tối thiểu (" +
                             new DecimalFormat("#,### đ").format(km.getGiaTriDonHangToiThieu())
                             + ") để áp dụng khuyến mãi!");
                     cboKhuyenMai.setSelectedIndex(0);
@@ -809,21 +809,16 @@ public class DoiHangPanel extends JPanel {
     }
 
     private void tinhToanToanBoTien() {
+        // 1. Lấy tổng tiền từ 2 bảng (Hàm tinhTienChoBang mới đã bao gồm logic áp % KM cũ vào phần đổi ngang)
         double tongTienGocSauThayDoi = tinhTienChoBang(tblHoaDonGoc);
-        if (hoaDonGocHienTai != null && hoaDonGocHienTai.getKhuyenMai() != null &&
-                hoaDonGocHienTai.getKhuyenMai().getLoaiKhuyenMai() == LoaiKhuyenMai.PHAN_TRAM) {
-            tongTienGocSauThayDoi = tongTienGocSauThayDoi * (1 -
-                    hoaDonGocHienTai.getKhuyenMai().getKhuyenMaiPhanTram() / 100.0);
-        }
+        double tongTienHangDoiMoi = tinhTienChoBang(tblSanPham);
 
-        double tongTienHangDoiMoi = tinhTienChoBang(tblSanPham); // Đã bao gồm thuế
-
-        // Tính tiền giảm giá mới (Áp dụng cho giá trị cơ bản của hàng mua mới)
+        // 2. Tính tiền giảm giá mới (Chỉ áp dụng cho giá trị mua thêm của hàng KHÔNG phải ETC)
         double soTienGiamMoi = 0;
         int idx = (cboKhuyenMai != null) ? cboKhuyenMai.getSelectedIndex() - 1 : -1;
+        
         if (idx >= 0 && idx < dsKhuyenMai.size()) {
             KhuyenMai km = dsKhuyenMai.get(idx);
-
             double tongTienMuaMoiBase = 0;
             DefaultTableModel modelDoi = (DefaultTableModel) tblSanPham.getModel();
             DefaultTableModel modelGoc = (DefaultTableModel) tblHoaDonGoc.getModel();
@@ -833,7 +828,6 @@ public class DoiHangPanel extends JPanel {
                 if (isGift == null || !isGift) {
                     String maSP = modelDoi.getValueAt(i, 0).toString();
 
-                    // Thuốc ETC đổi 1-1 thì không áp dụng KM
                     SanPham sp = sanPhamService.timTheoMa(maSP);
                     if (sp != null && sp.getLoaiSanPham().name().equals("ETC")) {
                         continue;
@@ -841,7 +835,11 @@ public class DoiHangPanel extends JPanel {
 
                     String donVi = modelDoi.getValueAt(i, 2).toString();
                     int qty = Integer.parseInt(modelDoi.getValueAt(i, 3).toString());
-                    double price = Double.parseDouble(modelDoi.getValueAt(i, 4).toString());
+                    double price = Double.parseDouble(modelDoi.getValueAt(i, 4).toString()); 
+                    
+                    // THÊM 2 DÒNG NÀY
+                    double thueTiLe = Double.parseDouble(modelDoi.getValueAt(i, 5).toString().replace("%", ""));
+                    double priceSauThue = price * (1 + thueTiLe / 100.0);
 
                     int slTra = 0;
                     for (int j = 0; j < modelGoc.getRowCount(); j++) {
@@ -851,33 +849,41 @@ public class DoiHangPanel extends JPanel {
                     }
 
                     int slThucMuaMoi = Math.max(0, qty - slTra);
-                    tongTienMuaMoiBase += slThucMuaMoi * price;
+                    // SỬA DÒNG NÀY
+                    tongTienMuaMoiBase += slThucMuaMoi * priceSauThue;
                 }
             }
+            
             if (tongTienMuaMoiBase >= km.getGiaTriDonHangToiThieu()
                     && km.getLoaiKhuyenMai() == LoaiKhuyenMai.PHAN_TRAM) {
-                soTienGiamMoi = tongTienMuaMoiBase * km.getKhuyenMaiPhanTram() / 100.0;
+                soTienGiamMoi = tongTienMuaMoiBase * (km.getKhuyenMaiPhanTram() / 100.0);
             }
         }
-        if (txtKhuyenMaiMoi != null)
+
+        // 3. Cập nhật giao diện tiền KM
+        if (txtKhuyenMaiMoi != null) {
             txtKhuyenMaiMoi.setText("-" + formatVND(soTienGiamMoi));
-        if (soTienGiamMoi > 0)
-            txtKhuyenMaiMoi.setForeground(new Color(40, 167, 69));
-        else
-            txtKhuyenMaiMoi.setForeground(Color.BLACK);
+            if (soTienGiamMoi > 0)
+                txtKhuyenMaiMoi.setForeground(new Color(40, 167, 69));
+            else
+                txtKhuyenMaiMoi.setForeground(Color.BLACK);
+        }
 
+        // 4. Tính toán chênh lệch cuối cùng
+        // Tiền HĐ mới = (Tiền hàng cũ giữ lại) + (Tiền hàng mới chọn) - (Khuyến mãi mới được hưởng)
         double tongTienHoaDonMoi = tongTienGocSauThayDoi + tongTienHangDoiMoi - soTienGiamMoi;
-
         txtTienDoi.setText(formatVND(tongTienHoaDonMoi));
+        
+        // Chênh lệch = Tiền HĐ mới - Tiền HĐ gốc ban đầu (đã bao gồm KM cũ)
         double chenhLech = tongTienHoaDonMoi - tongTienHoaDonGocBanDau;
         txtChenhLech.setText(formatVND(chenhLech));
 
+        // 5. Làm tròn và hiển thị thanh toán
         double soTienLamTron = Math.round(Math.abs(chenhLech) / 1000.0) * 1000;
 
         if (chenhLech < 0) {
             txtThanhTienLamTron.setText(formatVND(soTienLamTron));
-            txtThanhTienLamTron.setForeground(new Color(220, 53, 69));
-
+            txtThanhTienLamTron.setForeground(new Color(220, 53, 69)); // Màu đỏ (hoàn tiền)
             txtKhachDua.setText("0");
             txtKhachDua.setEnabled(false);
             txtTienThoi.setText(formatVND(soTienLamTron));
@@ -889,8 +895,8 @@ public class DoiHangPanel extends JPanel {
         } else {
             txtThanhTienLamTron.setText(formatVND(soTienLamTron));
             txtThanhTienLamTron.setForeground(Color.BLACK);
-
             txtKhachDua.setEnabled(true);
+            
             if (pnlThanhTienContainer.getComponentCount() > 0 &&
                     pnlThanhTienContainer.getComponent(0) instanceof JLabel) {
                 ((JLabel) pnlThanhTienContainer.getComponent(0)).setText("Thành tiền (đã làm tròn):");
@@ -903,22 +909,50 @@ public class DoiHangPanel extends JPanel {
         double total = 0;
         DefaultTableModel model = (DefaultTableModel) table.getModel();
         boolean isGoc = (table == tblHoaDonGoc);
+        
+        // 1. Lấy tỉ lệ giảm của hóa đơn gốc (nếu có)
+        double tiLeGiamGoc = 0;
+        if (hoaDonGocHienTai != null && hoaDonGocHienTai.getKhuyenMai() != null &&
+                hoaDonGocHienTai.getKhuyenMai().getLoaiKhuyenMai() == LoaiKhuyenMai.PHAN_TRAM) {
+            tiLeGiamGoc = hoaDonGocHienTai.getKhuyenMai().getKhuyenMaiPhanTram();
+        }
+
         for (int i = 0; i < model.getRowCount(); i++) {
             try {
+                String maSP = String.valueOf(model.getValueAt(i, 0));
+                String donVi = String.valueOf(model.getValueAt(i, 2));
                 int sl = Integer.parseInt(String.valueOf(model.getValueAt(i, 3)));
                 double gia = Double.parseDouble(String.valueOf(model.getValueAt(i, 4)));
                 double thueTiLe = Double.parseDouble(String.valueOf(model.getValueAt(i, 5)).replace("%", ""));
 
                 double tt;
                 if (isGoc) {
+                    // BẢNG TRÊN: Tính tiền phần hàng khách GIỮ LẠI
                     ChiTietHoaDon ctGoc = chiTietHoaDonGocList.get(i);
                     int slDaMua = ctGoc.getSoLuongBan();
-                    int slGiuLai = slDaMua - sl;
-                    tt = slGiuLai * gia * (1 + thueTiLe / 100.0);
+                    int slGiuLai = slDaMua - sl; 
+                    
+                    // SỬA Ở ĐÂY: Áp dụng trừ khuyến mãi cho sản phẩm giữ lại để khớp với Tiền HĐ gốc
+                    tt = slGiuLai * gia * (1 + thueTiLe / 100.0) * (1 - tiLeGiamGoc / 100.0);
                 } else {
-                    tt = sl * gia * (1 + thueTiLe / 100.0);
+                    // BẢNG DƯỚI: Tính tiền hàng đổi
+                    DefaultTableModel modelGoc = (DefaultTableModel) tblHoaDonGoc.getModel();
+                    int slTra = 0;
+                    for (int j = 0; j < modelGoc.getRowCount(); j++) {
+                        if (modelGoc.getValueAt(j, 0).equals(maSP) && modelGoc.getValueAt(j, 2).equals(donVi)) {
+                            slTra += Integer.parseInt(modelGoc.getValueAt(j, 3).toString());
+                        }
+                    }
+                    
+                    int slDoiNgang = Math.min(sl, slTra);
+                    int slMuaThem = Math.max(0, sl - slTra);
+                    
+                    double tienDoiNgang = slDoiNgang * gia * (1 + thueTiLe / 100.0) * (1 - tiLeGiamGoc / 100.0);
+                    double tienMuaThem = slMuaThem * gia * (1 + thueTiLe / 100.0);
+                    
+                    tt = tienDoiNgang + tienMuaThem;
                 }
-                model.setValueAt(tt, i, 6);
+                model.setValueAt(tt, i, 6); 
                 total += tt;
             } catch (Exception ignored) {
             }
@@ -1330,6 +1364,10 @@ public class DoiHangPanel extends JPanel {
             table.getColumnModel().getColumn(8).setMinWidth(0);
             table.getColumnModel().getColumn(8).setMaxWidth(0);
             table.getColumnModel().getColumn(8).setPreferredWidth(0);
+            
+            table.getColumnModel().getColumn(7).setMinWidth(0);
+            table.getColumnModel().getColumn(7).setMaxWidth(0);
+            table.getColumnModel().getColumn(7).setPreferredWidth(0);
         }
 
         return table;
