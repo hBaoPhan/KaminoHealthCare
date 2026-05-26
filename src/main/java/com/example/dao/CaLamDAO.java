@@ -267,4 +267,36 @@ public class CaLamDAO {
         } catch (SQLException e) { e.printStackTrace(); }
         return false;
     }
+
+    /**
+     * Lấy ca làm việc bất kỳ đang DANG_MO trong hệ thống.
+     */
+    public CaLam layCaDangMoBatKy() {
+        CaLam cl = null;
+        try {
+            Connection ketNoi = ConnectDB.getConnection();
+            String truyVan = "SELECT TOP 1 * FROM CaLam WHERE trangThaiCaLam = 'DANG_MO' ORDER BY gioBatDau DESC";
+            try (Statement lenh = ketNoi.createStatement();
+                 ResultSet ketQua = lenh.executeQuery(truyVan)) {
+                if (ketQua.next()) {
+                    cl = new CaLam();
+                    cl.setMaCa(ketQua.getString("maCa"));
+                    cl.setNhanVien(new NhanVien(ketQua.getString("maNhanVien")));
+                    cl.setGioBatDau(ketQua.getTimestamp("gioBatDau").toLocalDateTime());
+                    Timestamp ketThuc = ketQua.getTimestamp("gioKetThuc");
+                    if (ketThuc != null) {
+                        cl.setGioKetThuc(ketThuc.toLocalDateTime());
+                    }
+                    cl.setTrangThai(TrangThaiCaLam.valueOf(ketQua.getString("trangThaiCaLam")));
+                    cl.setTienMoCa(ketQua.getDouble("tienMoCa"));
+                    cl.setTienKetCa(ketQua.getDouble("tienKetCa"));
+                    cl.setTienHeThong(ketQua.getDouble("tienHeThong"));
+                    cl.setGhiChu(ketQua.getString("ghiChu"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return cl;
+    }
 }

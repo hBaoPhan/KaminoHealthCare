@@ -103,4 +103,8 @@ public class CaLamService {
     public boolean xoa(String maCa) {
         return caLamDAO.xoa(maCa);
     }
+
+    public CaLam layCaDangMoBatKy() {
+        return caLamDAO.layCaDangMoBatKy();
+    }
 }
