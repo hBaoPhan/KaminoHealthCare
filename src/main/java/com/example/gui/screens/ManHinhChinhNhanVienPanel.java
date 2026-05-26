@@ -371,7 +371,10 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
                     if (ct.getDsPhanBoLo() != null) {
                         for (SuPhanBoLo spbl : ct.getDsPhanBoLo()) {
                             if (spbl.getLo() != null) {
-                                giaVonHD += spbl.getSoLuong() * spbl.getLo().getGiaNhap();
+                                double giaNhapLoo = spbl.getLo().getGiaNhap();
+                                int slTonLo = spbl.getLo().getSoLuongSanPham();
+                                double giaNhapDonVi = slTonLo > 0 ? (giaNhapLoo / slTonLo) : 0;
+                                giaVonHD += spbl.getSoLuong() * giaNhapDonVi;
                             }
                         }
                     }

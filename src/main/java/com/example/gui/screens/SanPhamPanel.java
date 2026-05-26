@@ -50,7 +50,7 @@ public class SanPhamPanel extends JPanel {
     private JComboBox<String> cbDanhMuc;
     private JPanel rightPanel;
     private JLabel lblImageRight;
-    private JTextField txtMaSP, txtTenSP, txtHoatChat, txtSoLuong, txtDonGia;
+    private JTextField txtMaSP, txtTenSP, txtHoatChat, txtSoLuong, txtDonGia, txtThue;
     private JComboBox<String> cbLoaiSP;
     private JTextArea txtMoTa;
 
@@ -306,6 +306,7 @@ public class SanPhamPanel extends JPanel {
         txtHoatChat = new RoundedTextField("", 15);
         txtSoLuong = new RoundedTextField("", 15);
         txtDonGia = new RoundedTextField("", 15);
+        txtThue = new RoundedTextField("", 15);
         txtMoTa = new JTextArea(3, 20);
         txtMoTa.setLineWrap(true);
         txtMoTa.setWrapStyleWord(true);
@@ -319,6 +320,7 @@ public class SanPhamPanel extends JPanel {
         addFormField(formPanel, gbc, row++, "Số lượng tồn:", txtSoLuong, false);
         addFormField(formPanel, gbc, row++, "Đơn giá:", txtDonGia, true);
         addFormField(formPanel, gbc, row++, "Loại:", cbLoaiSP, true);
+        addFormField(formPanel, gbc, row++, "Thuế (%):", txtThue, true);
 
         gbc.gridx = 0;
         gbc.gridy = row;
@@ -812,6 +814,7 @@ public class SanPhamPanel extends JPanel {
         txtHoatChat.setText(sp.getHoatChat() != null ? sp.getHoatChat() : "");
         txtSoLuong.setText(String.valueOf(sp.getSoLuongTon()));
         txtDonGia.setText(String.format("%.0f", sp.getDonGiaCoBan()));
+        txtThue.setText(String.format("%.1f", sp.getThue()));
         txtMoTa.setText(sp.getMoTa() != null ? sp.getMoTa() : "");
 
         cbLoaiSP.setSelectedItem(sp.getLoaiSanPham().name());
@@ -952,7 +955,7 @@ public class SanPhamPanel extends JPanel {
 
             // Mặc định hợp lý (panel chưa có input cho 2 trường này)
             sp.setTrangThaiKinhDoanh(true);
-            sp.setThue(0.10);
+            sp.setThue(parseDoubleOrZero(txtThue.getText()));
 
             boolean success = sanPhamService.them(sp);
             if (success) {
@@ -1071,6 +1074,7 @@ public class SanPhamPanel extends JPanel {
             sanPhamDangChon.setHoatChat(txtHoatChat.getText().trim());
             // Tồn kho được cập nhật từ Lô, không sửa tại màn Sản phẩm
             sanPhamDangChon.setDonGiaCoBan(parseDoubleOrZero(txtDonGia.getText()));
+            sanPhamDangChon.setThue(parseDoubleOrZero(txtThue.getText()));
             sanPhamDangChon.setMoTa(txtMoTa.getText().trim());
             sanPhamDangChon.setLoaiSanPham(LoaiSanPham.valueOf((String) cbLoaiSP.getSelectedItem()));
 
@@ -1123,6 +1127,7 @@ public class SanPhamPanel extends JPanel {
         txtHoatChat.setText("");
         txtSoLuong.setText("");
         txtDonGia.setText("");
+        txtThue.setText("");
         txtMoTa.setText("");
         cbLoaiSP.setSelectedIndex(0);
         lblImageRight.setIcon(null);
@@ -1722,10 +1727,13 @@ public class SanPhamPanel extends JPanel {
             return;
         }
 
-        double giaNhap = hangLoiDangChon.getLo().getGiaNhap();
+        double giaNhapLoo = hangLoiDangChon.getLo().getGiaNhap();
+        int slTonLo = hangLoiDangChon.getLo().getSoLuongSanPham();
+        double giaNhapDonVi = slTonLo > 0 ? (giaNhapLoo / slTonLo) : 0;
+
         int heSo = hangLoiDangChon.getChiTietHoaDon().getDonViQuyDoi().getHeSoQuyDoi();
         int qtySelectedUnit = hangLoiDangChon.getSoLuong() / heSo;
-        double tongTienHoan = hangLoiDangChon.getSoLuong() * giaNhap;
+        double tongTienHoan = hangLoiDangChon.getSoLuong() * giaNhapDonVi;
 
         String msg = String.format("Bạn có chắc chắn muốn trả sản phẩm lỗi này về Nhà sản xuất không?\n" +
                 "Sản phẩm: %s\n" +
@@ -1736,7 +1744,7 @@ public class SanPhamPanel extends JPanel {
                 hangLoiDangChon.getChiTietHoaDon().getDonViQuyDoi().getSanPham().getTenSanPham(),
                 hienThiTenDonVi(hangLoiDangChon.getChiTietHoaDon().getDonViQuyDoi().getTenDonVi()),
                 qtySelectedUnit,
-                giaNhap * heSo, 
+                giaNhapDonVi * heSo, 
                 tongTienHoan);
 
         int confirm = JOptionPane.showConfirmDialog(this, msg, "Xác nhận trả về NSX", JOptionPane.YES_NO_OPTION);

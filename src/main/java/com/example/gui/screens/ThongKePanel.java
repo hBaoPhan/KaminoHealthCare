@@ -868,7 +868,10 @@ public class ThongKePanel extends JPanel {
                     if (ct.getDsPhanBoLo() != null) {
                         for (SuPhanBoLo spbl : ct.getDsPhanBoLo()) {
                             if (spbl.getLo() != null) {
-                                cost += spbl.getSoLuong() * spbl.getLo().getGiaNhap();
+                                double giaNhapLoo = spbl.getLo().getGiaNhap();
+                                int slTonLo = spbl.getLo().getSoLuongSanPham();
+                                double giaNhapDonVi = slTonLo > 0 ? (giaNhapLoo / slTonLo) : 0;
+                                cost += spbl.getSoLuong() * giaNhapDonVi;
                             }
                         }
                     }
@@ -961,7 +964,10 @@ public class ThongKePanel extends JPanel {
                         if (ct.getDsPhanBoLo() != null) {
                             for (SuPhanBoLo spbl : ct.getDsPhanBoLo()) {
                                 if (spbl.getLo() != null) {
-                                    cstVal += spbl.getSoLuong() * spbl.getLo().getGiaNhap();
+                                    double giaNhapLoo = spbl.getLo().getGiaNhap();
+                                    int slTonLo = spbl.getLo().getSoLuongSanPham();
+                                    double giaNhapDonVi = slTonLo > 0 ? (giaNhapLoo / slTonLo) : 0;
+                                    cstVal += spbl.getSoLuong() * giaNhapDonVi;
                                 }
                             }
                         }
@@ -1031,7 +1037,10 @@ public class ThongKePanel extends JPanel {
                     if (ct.getDsPhanBoLo() != null) {
                         for (SuPhanBoLo spbl : ct.getDsPhanBoLo()) {
                             if (spbl.getLo() != null) {
-                                cost += spbl.getSoLuong() * spbl.getLo().getGiaNhap();
+                                double giaNhapLoo = spbl.getLo().getGiaNhap();
+                                int slTonLo = spbl.getLo().getSoLuongSanPham();
+                                double giaNhapDonVi = slTonLo > 0 ? (giaNhapLoo / slTonLo) : 0;
+                                cost += spbl.getSoLuong() * giaNhapDonVi;
                             }
                         }
                     }
