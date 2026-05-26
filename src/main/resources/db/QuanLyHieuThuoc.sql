@@ -141,6 +141,65 @@ CREATE TABLE SuPhanBoLo (
     PRIMARY KEY (maHoaDon, maDonVi, maLo, laQuaTangKem, biLoi)
 );
 GO
+---- INDEX
+
+-- 1. Bảng HoaDon
+CREATE NONCLUSTERED INDEX IX_HoaDon_TrangThai_ThoiGian
+ON HoaDon(trangThaiThanhToan, thoiGianTao)
+INCLUDE (maKhachHang, maNhanVien, loaiHoaDon);
+
+CREATE NONCLUSTERED INDEX IX_HoaDon_Loai_TrangThai_ThoiGian
+ON HoaDon(loaiHoaDon, trangThaiThanhToan, thoiGianTao DESC);
+
+CREATE NONCLUSTERED INDEX IX_HoaDon_KhachHang
+ON HoaDon(maKhachHang)
+INCLUDE (thoiGianTao, trangThaiThanhToan);
+
+CREATE NONCLUSTERED INDEX IX_HoaDon_Ca
+ON HoaDon(maCa, trangThaiThanhToan);
+
+-- 2. Bảng Lo
+CREATE NONCLUSTERED INDEX IX_Lo_SanPham_HetHan_SoLuong
+ON Lo(maSanPham, ngayHetHan)
+INCLUDE (soLuongSanPham);
+
+CREATE NONCLUSTERED INDEX IX_Lo_NgayHetHan_SoLuong
+ON Lo(ngayHetHan, soLuongSanPham)
+INCLUDE (maSanPham, soLo);
+
+-- 3. Bảng ChiTietHoaDon & SuPhanBoLo
+CREATE NONCLUSTERED INDEX IX_ChiTietHoaDon_DonVi
+ON ChiTietHoaDon(maDonVi);
+
+CREATE NONCLUSTERED INDEX IX_SuPhanBoLo_Lo
+ON SuPhanBoLo(maLo);
+
+CREATE NONCLUSTERED INDEX IX_SuPhanBoLo_BiLoi
+ON SuPhanBoLo(biLoi)
+WHERE biLoi = 1;
+
+-- 4. Bảng SanPham & DonViQuyDoi
+CREATE NONCLUSTERED INDEX IX_SanPham_TenSanPham
+ON SanPham(tenSanPham);
+
+CREATE NONCLUSTERED INDEX IX_SanPham_TrangThai_Loai
+ON SanPham(trangThaiKinhDoanh, loaiSanPham);
+
+CREATE NONCLUSTERED INDEX IX_DonViQuyDoi_SanPham
+ON DonViQuyDoi(maSanPham);
+
+-- 5. Bảng KhachHang & CaLam
+CREATE NONCLUSTERED INDEX IX_KhachHang_SDT
+ON KhachHang(sdt);
+
+CREATE NONCLUSTERED INDEX IX_CaLam_NhanVien_TrangThai
+ON CaLam(maNhanVien, trangThaiCaLam)
+INCLUDE (gioBatDau);
+
+CREATE NONCLUSTERED INDEX IX_CaLam_GioBatDau
+ON CaLam(gioBatDau);
+
+GO
 
 INSERT INTO NhanVien (
         maNhanVien,
@@ -231,8 +290,8 @@ VALUES (
     ),
     (
         'TV000001',
-        N'Ngô Thị Em',
-        '0922222222',
+        N'Nguyễn Thành Long',
+        '0335806335',
         N'KHACH_HANG_THANH_VIEN'
     ),
     (

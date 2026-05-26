@@ -45,6 +45,8 @@ public class TraHangPanel extends JPanel {
     private DecimalFormat df = new DecimalFormat("###,###,### VND");
     private HoaDon hd;
     private JTable table;
+    private final StringBuilder barcodeBuffer = new StringBuilder();
+    private long lastKeyTime = 0;
 
     // =========================================================================
     // VÙNG 2: HÀM KHỞI TẠO (CONSTRUCTOR)
@@ -60,6 +62,64 @@ public class TraHangPanel extends JPanel {
 
         // --- PHẦN BÊN PHẢI: THÔNG TIN HÓA ĐƠN TRẢ HÀNG ---
         add(createInfoPanel(), BorderLayout.EAST);
+
+        // Thiết lập bộ đón bắt phím toàn cục (KeyEventDispatcher) cho máy quét barcode tìm hóa đơn
+        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(e -> {
+            if (!isShowing()) {
+                return false;
+            }
+
+            // Ngăn ngừa lỗi đúp sự kiện khi người dùng đang active focus trong các ô nhập văn bản có thể chỉnh sửa
+            Component focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+            boolean isEditableFocused = (focusOwner instanceof javax.swing.text.JTextComponent)
+                    && ((javax.swing.text.JTextComponent) focusOwner).isEditable();
+            if (isEditableFocused) {
+                return false;
+            }
+
+            if (e.getID() == java.awt.event.KeyEvent.KEY_TYPED) {
+                long now = System.currentTimeMillis();
+                char c = e.getKeyChar();
+
+                // Nếu khoảng cách giữa 2 ký tự lớn hơn 50ms, coi như nhập liệu thủ công bằng bàn phím
+                if (now - lastKeyTime > 50) {
+                    barcodeBuffer.setLength(0);
+                }
+                lastKeyTime = now;
+
+                if (c == '\n') {
+                    String barcode = barcodeBuffer.toString().trim();
+                    if (!barcode.isEmpty() && barcode.length() >= 5) {
+                        SwingUtilities.invokeLater(() -> {
+                            hienThiSanPhamHoaDon(barcode);
+                            if (txtSearch != null) {
+                                txtSearch.setText(barcode);
+                                txtSearch.setForeground(Color.BLACK);
+                            }
+                        });
+                        barcodeBuffer.setLength(0);
+                        return true; // Tiêu hủy sự kiện phím Enter
+                    }
+                    barcodeBuffer.setLength(0);
+                } else if (Character.isLetterOrDigit(c) || c == '-') {
+                    barcodeBuffer.append(c);
+                }
+            }
+            return false;
+        });
+
+        // Tự động focus vào ô tìm kiếm khi vào trang
+        this.addHierarchyListener(e -> {
+            if ((e.getChangeFlags() & java.awt.event.HierarchyEvent.SHOWING_CHANGED) != 0) {
+                if (isShowing()) {
+                    SwingUtilities.invokeLater(() -> {
+                        if (txtSearch != null && txtSearch.isShowing()) {
+                            txtSearch.requestFocusInWindow();
+                        }
+                    });
+                }
+            }
+        });
     }
 
     // =========================================================================

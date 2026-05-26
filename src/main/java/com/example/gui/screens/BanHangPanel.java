@@ -93,29 +93,6 @@ public class BanHangPanel extends JPanel {
 
         SwingUtilities.invokeLater(this::loadHoaDonChuaThanhToan);
 
-        KeyboardFocusManager.getCurrentKeyboardFocusManager().addPropertyChangeListener("focusOwner", evt -> {
-            if (!isShowing()) {
-                return;
-            }
-            Component focused = (Component) evt.getNewValue();
-            if (focused != null && SwingUtilities.isDescendingFrom(focused, BanHangPanel.this)) {
-                boolean isEditableText = (focused instanceof javax.swing.text.JTextComponent)
-                        && ((javax.swing.text.JTextComponent) focused).isEditable();
-                boolean isInteractiveControl = (focused instanceof JComboBox)
-                        || (focused instanceof JCheckBox)
-                        || (focused instanceof JRadioButton);
-                boolean isTableEditing = table != null && table.isEditing()
-                        && SwingUtilities.isDescendingFrom(focused, table);
-
-                if (!isEditableText && !isInteractiveControl && !isTableEditing) {
-                    SwingUtilities.invokeLater(() -> {
-                        if (txtSearch != null && txtSearch.isShowing()) {
-                            txtSearch.requestFocusInWindow();
-                        }
-                    });
-                }
-            }
-        });
 
         this.addHierarchyListener(e -> {
             if ((e.getChangeFlags() & java.awt.event.HierarchyEvent.SHOWING_CHANGED) != 0) {
@@ -273,7 +250,7 @@ public class BanHangPanel extends JPanel {
                 DonViQuyDoi dv = ct.getDonViQuyDoi();
                 String tenDonVi = dv.getTenDonVi() != null ? dv.getTenDonVi().getMoTa() : dv.getMaDonVi();
                 double thue = dv.getSanPham() != null ? dv.getSanPham().getThue() : 0;
-                double thanhTien = ct.getSoLuongBan() * ct.getDonGia() * (1 + thue / 100);
+                double thanhTien = ct.getSoLuongBan() * ct.getDonGia();
                 model.addRow(new Object[] {
                         dv.getSanPham() != null ? dv.getSanPham().getMaSanPham() : "",
                         dv.getSanPham() != null ? dv.getSanPham().getTenSanPham() : "",
@@ -1100,7 +1077,7 @@ public class BanHangPanel extends JPanel {
 
         double donGia = sp.getDonGiaCoBan() * dv.getHeSoQuyDoi();
         double thue = sp.getThue();
-        double thanhTien = donGia + (donGia * thue / 100);
+        double thanhTien = donGia;
 
         Object[] row = {
                 sp.getMaSanPham(),
@@ -1139,25 +1116,19 @@ public class BanHangPanel extends JPanel {
         int qty = Integer.parseInt(model.getValueAt(row, 3).toString());
         double price = Double.parseDouble(model.getValueAt(row, 4).toString());
         double tax = Double.parseDouble(model.getValueAt(row, 5).toString().replace("%", ""));
-        double total = qty * price * (1 + tax / 100);
+        double total = qty * price;
         model.setValueAt(total, row, 6);
     }
 
     private void updateSummary() {
         double tongTien = 0;
-        double thue = 0;
-
         boolean hasETC = false;
         for (int i = 0; i < model.getRowCount(); i++) {
             int qty = Integer.parseInt(model.getValueAt(i, 3).toString());
             double price = Double.parseDouble(model.getValueAt(i, 4).toString());
-            double taxRate = Double.parseDouble(model.getValueAt(i, 5).toString().replace("%", ""));
 
             double tienSanPham = qty * price;
-            double tienThue = tienSanPham * taxRate / 100;
-
             tongTien += tienSanPham;
-            thue += tienThue;
 
             DonViQuyDoi dv = (DonViQuyDoi) model.getValueAt(i, 7);
             if (dv != null && dv.getSanPham() != null && dv.getSanPham().getLoaiSanPham() == LoaiSanPham.ETC) {
@@ -1184,6 +1155,20 @@ public class BanHangPanel extends JPanel {
                 }
             }
         }
+
+        // Tính tiền thuế dựa trên tiền hóa đơn đã sau KM (nếu có)
+        double thue = 0;
+        double discountRatio = (tongTien > 0) ? (tongTien - soTienGiam) / tongTien : 1.0;
+        for (int i = 0; i < model.getRowCount(); i++) {
+            int qty = Integer.parseInt(model.getValueAt(i, 3).toString());
+            double price = Double.parseDouble(model.getValueAt(i, 4).toString());
+            double taxRate = Double.parseDouble(model.getValueAt(i, 5).toString().replace("%", ""));
+
+            double tienSanPham = qty * price;
+            double tienThue = tienSanPham * (taxRate / 100.0) * discountRatio;
+            thue += tienThue;
+        }
+
         double thanhTien = tongTien + thue - soTienGiam;
         DecimalFormat df = new DecimalFormat("#,### đ");
         lblTongTienHoaDon.setText("Tổng tiền hóa đơn : " + df.format(tongTien));
