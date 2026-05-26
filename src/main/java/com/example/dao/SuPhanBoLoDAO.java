@@ -3,6 +3,7 @@ package com.example.dao;
 import com.example.entity.Lo;
 import com.example.entity.SuPhanBoLo;
 import com.example.entity.ChiTietHoaDon;
+import com.example.entity.HoaDon;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -116,8 +117,9 @@ public class SuPhanBoLoDAO {
             Connection con = ConnectDB.getConnection();
             try (PreparedStatement ps = con.prepareStatement(sql)) {
                 for (ChiTietHoaDon ctMoi : dsChiTietTra) {
-                    int soLuongCanTra = ctMoi.getSoLuong();
-                    int soLuongLoiRemaining = ctMoi.getSoLuongLoi();
+                    int heSo = ctMoi.getDonViQuyDoi().getHeSoQuyDoi();
+                    int soLuongCanTra = ctMoi.getSoLuong() * heSo;
+                    int soLuongLoiRemaining = ctMoi.getSoLuongLoi() * heSo;
                     ps.setString(1, maHoaDonGoc);
                     ps.setString(2, ctMoi.getDonViQuyDoi().getMaDonVi());
 
@@ -166,5 +168,80 @@ public class SuPhanBoLoDAO {
             e.printStackTrace();
         }
         return dsPhanBoTra;
+    }
+
+    /**
+     * Lấy danh sách tất cả sản phẩm lỗi (biLoi = 1) kèm đầy đủ thông tin liên kết.
+     */
+    public List<SuPhanBoLo> layDanhSachLoi() {
+        List<SuPhanBoLo> ds = new ArrayList<>();
+        String sql = "SELECT s.maHoaDon, s.maDonVi, s.maLo, s.soLuong, s.laQuaTangKem, s.biLoi, h.thoiGianTao " +
+                     "FROM SuPhanBoLo s " +
+                     "JOIN HoaDon h ON s.maHoaDon = h.maHoaDon " +
+                     "WHERE s.biLoi = 1";
+        try {
+            Connection con = ConnectDB.getConnection();
+            try (PreparedStatement stmt = con.prepareStatement(sql);
+                 ResultSet rs = stmt.executeQuery()) {
+                LoDAO loDAO = new LoDAO();
+                DonViQuyDoiDAO dvDAO = new DonViQuyDoiDAO();
+                while (rs.next()) {
+                    SuPhanBoLo spb = new SuPhanBoLo();
+                    spb.setSoLuong(rs.getInt("soLuong"));
+                    spb.setLoi(rs.getBoolean("biLoi"));
+
+                    Lo lo = loDAO.timTheoMa(rs.getString("maLo"));
+                    spb.setLo(lo);
+
+                    ChiTietHoaDon ct = new ChiTietHoaDon();
+                    ct.setLaQuaTangKem(rs.getBoolean("laQuaTangKem"));
+                    ct.setDonViQuyDoi(dvDAO.timTheoMa(rs.getString("maDonVi")));
+
+                    // Lấy đơn giá gốc từ bảng ChiTietHoaDon
+                    String sqlCT = "SELECT donGia FROM ChiTietHoaDon WHERE maHoaDon = ? AND maDonVi = ? AND laQuaTangKem = ?";
+                    try (PreparedStatement stmtCT = con.prepareStatement(sqlCT)) {
+                        stmtCT.setString(1, rs.getString("maHoaDon"));
+                        stmtCT.setString(2, rs.getString("maDonVi"));
+                        stmtCT.setBoolean(3, rs.getBoolean("laQuaTangKem"));
+                        try (ResultSet rsCT = stmtCT.executeQuery()) {
+                            if (rsCT.next()) {
+                                ct.setDonGia(rsCT.getDouble("donGia"));
+                            }
+                        }
+                    }
+
+                    HoaDon hd = new HoaDon();
+                    hd.setMaHoaDon(rs.getString("maHoaDon"));
+                    hd.setThoiGianTao(rs.getTimestamp("thoiGianTao").toLocalDateTime());
+                    ct.setHoaDon(hd);
+
+                    spb.setChiTietHoaDon(ct);
+                    ds.add(spb);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return ds;
+    }
+
+    /**
+     * Giải quyết sản phẩm lỗi bằng cách xóa bản ghi lỗi tương ứng khỏi SuPhanBoLo khi trả về NSX.
+     */
+    public boolean giaiQuyetHangLoi(String maHoaDon, String maDonVi, String maLo, boolean laQuaTangKem) {
+        String sql = "DELETE FROM SuPhanBoLo WHERE maHoaDon = ? AND maDonVi = ? AND maLo = ? AND laQuaTangKem = ? AND biLoi = 1";
+        try {
+            Connection con = ConnectDB.getConnection();
+            try (PreparedStatement stmt = con.prepareStatement(sql)) {
+                stmt.setString(1, maHoaDon);
+                stmt.setString(2, maDonVi);
+                stmt.setString(3, maLo);
+                stmt.setBoolean(4, laQuaTangKem);
+                return stmt.executeUpdate() > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

@@ -59,4 +59,12 @@ public class SuPhanBoLoService {
         return suPhanBoLoDAO.layDanhSachPhanBoLoCanTra(maHoaDonGoc, dsChiTietTra);
     }
 
+    public List<SuPhanBoLo> layDanhSachLoi() {
+        return suPhanBoLoDAO.layDanhSachLoi();
+    }
+
+    public boolean giaiQuyetHangLoi(String maHoaDon, String maDonVi, String maLo, boolean laQuaTangKem) {
+        return suPhanBoLoDAO.giaiQuyetHangLoi(maHoaDon, maDonVi, maLo, laQuaTangKem);
+    }
+
 }

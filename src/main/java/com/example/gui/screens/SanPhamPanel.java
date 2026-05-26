@@ -2,8 +2,12 @@ package com.example.gui.screens;
 
 import com.example.service.DonViQuyDoiService;
 import com.example.service.SanPhamService;
+import com.example.service.SuPhanBoLoService;
+import com.example.service.CaLamService;
 import com.example.entity.DonViQuyDoi;
 import com.example.entity.SanPham;
+import com.example.entity.SuPhanBoLo;
+import com.example.entity.CaLam;
 import com.example.entity.enums.DonVi;
 import com.example.entity.enums.LoaiSanPham;
 import com.example.gui.components.*;
@@ -15,6 +19,7 @@ import javax.swing.table.DefaultTableModel;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -29,6 +34,15 @@ public class SanPhamPanel extends JPanel {
     private DonViQuyDoiService donViQuyDoiService = new DonViQuyDoiService();
     private List<SanPham> danhSachSanPham = new ArrayList<>();
 
+    // Các biến phục vụ phần Sản phẩm lỗi
+    private final SuPhanBoLoService suPhanBoLoService = new SuPhanBoLoService();
+    private final CaLamService caLamService = new CaLamService();
+    private List<SuPhanBoLo> danhSachLoi = new ArrayList<>();
+    private SuPhanBoLo hangLoiDangChon = null;
+    private CardLayout tabCardLayout;
+    private JPanel tabCardPanel;
+    private boolean isTabNormalActive = true;
+
     // Components
     private JPanel gridPanel;
     private GridLayout gridLayout;
@@ -39,6 +53,19 @@ public class SanPhamPanel extends JPanel {
     private JTextField txtMaSP, txtTenSP, txtHoatChat, txtSoLuong, txtDonGia;
     private JComboBox<String> cbLoaiSP;
     private JTextArea txtMoTa;
+
+    // Components cho Tab Sản Phẩm Lỗi
+    private JPanel gridPanelLoi;
+    private GridLayout gridLayoutLoi;
+    private JTextField txtSearchLoi;
+    private JComboBox<String> cbDanhMucLoi;
+    private JComboBox<String> cbSortTimeLoi;
+    private JPanel rightPanelLoi;
+    private JLabel lblImageRightLoi;
+    private JTextField txtMaHoaDonLoi, txtMaSPLoi, txtTenSPLoi, txtHoatChatLoi, txtSoLuongLoi, txtDonGiaLoi, txtSoLoLoi, txtHSDLoi;
+    private JComboBox<String> cbLoaiSPLoi;
+    private JTextArea txtMoTaLoi;
+    private JButton btnTraNSX;
 
     // Đơn vị quy đổi UI
     private JTextField txtHeSoQuyDoi, txtBarcodeDonVi;
@@ -57,13 +84,29 @@ public class SanPhamPanel extends JPanel {
         setLayout(new BorderLayout());
         setBackground(new Color(241, 246, 255));
 
+        tabCardLayout = new CardLayout();
+        tabCardPanel = new JPanel(tabCardLayout);
+        tabCardPanel.setOpaque(false);
+
+        // Tab 1: Sản phẩm
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
                 createLeftPanel(), createRightPanel());
         splitPane.setResizeWeight(0.65);
         splitPane.setBorder(null);
         splitPane.setContinuousLayout(true);
+        tabCardPanel.add(splitPane, "NORMAL");
 
-        add(splitPane, BorderLayout.CENTER);
+        // Tab 2: Sản phẩm lỗi
+        JSplitPane splitPaneLoi = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
+                createLeftPanelLoi(), createRightPanelLoi());
+        splitPaneLoi.setResizeWeight(0.65);
+        splitPaneLoi.setBorder(null);
+        splitPaneLoi.setContinuousLayout(true);
+        tabCardPanel.add(splitPaneLoi, "LOI");
+
+        JPanel tabBarPanel = createTabBar(tabCardLayout, tabCardPanel);
+        add(tabBarPanel, BorderLayout.NORTH);
+        add(tabCardPanel, BorderLayout.CENTER);
 
         // Load dữ liệu ban đầu
         loadDanhSachSanPham();
@@ -439,6 +482,7 @@ public class SanPhamPanel extends JPanel {
     public void loadDanhSachSanPham() {
         danhSachSanPham = sanPhamService.laySanPhamDangKinhDoanh();
         hienThiSanPhamLenGrid(danhSachSanPham);
+        loadDanhSachLoi();
     }
 
     private void updateSearch() {
@@ -1134,5 +1178,570 @@ public class SanPhamPanel extends JPanel {
         btn.setForeground(fgColor);
         btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
         return btn;
+    }
+
+    // ====================== TAB SẢN PHẨM LỖI ======================
+
+    private JPanel createTabBar(CardLayout cardLayout, JPanel cardPanel) {
+        JPanel container = new JPanel(new GridBagLayout());
+        container.setBackground(new Color(241, 246, 255));
+        container.setBorder(new EmptyBorder(10, 15, 0, 15));
+
+        JPanel bar = new JPanel(new GridLayout(1, 2, 5, 0)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(230, 235, 245));
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 16, 16);
+                g2.dispose();
+            }
+        };
+        bar.setOpaque(false);
+        bar.setPreferredSize(new Dimension(280, 40));
+        bar.setBorder(new EmptyBorder(3, 3, 3, 3));
+
+        JButton btnTabNormal = new JButton("Sản phẩm") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                if (isTabNormalActive) {
+                    g2.setColor(Color.WHITE);
+                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
+                    g2.setColor(new Color(26, 115, 232));
+                    g2.fillRect(15, getHeight() - 4, getWidth() - 30, 4);
+                }
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+
+        JButton btnTabLoi = new JButton("Sản phẩm lỗi") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                if (!isTabNormalActive) {
+                    g2.setColor(Color.WHITE);
+                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
+                    g2.setColor(new Color(26, 115, 232));
+                    g2.fillRect(15, getHeight() - 4, getWidth() - 30, 4);
+                }
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+
+        for (JButton btn : new JButton[]{btnTabNormal, btnTabLoi}) {
+            btn.setContentAreaFilled(false);
+            btn.setBorderPainted(false);
+            btn.setFocusPainted(false);
+            btn.setOpaque(false);
+            btn.setFont(new Font("Segoe UI", Font.BOLD, 13));
+            btn.setForeground(new Color(50, 50, 50));
+            btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        }
+
+        btnTabNormal.addActionListener(e -> {
+            isTabNormalActive = true;
+            cardLayout.show(cardPanel, "NORMAL");
+            btnTabNormal.repaint();
+            btnTabLoi.repaint();
+            loadDanhSachSanPham();
+        });
+
+        btnTabLoi.addActionListener(e -> {
+            isTabNormalActive = false;
+            cardLayout.show(cardPanel, "LOI");
+            btnTabNormal.repaint();
+            btnTabLoi.repaint();
+            loadDanhSachLoi();
+        });
+
+        bar.add(btnTabNormal);
+        bar.add(btnTabLoi);
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0; gbc.gridy = 0; gbc.anchor = GridBagConstraints.WEST; gbc.weightx = 1.0;
+        container.add(bar, gbc);
+
+        return container;
+    }
+
+    private JPanel createLeftPanelLoi() {
+        JPanel leftPanel = new JPanel(new BorderLayout(10, 10));
+        leftPanel.setBackground(new Color(241, 246, 255));
+        leftPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        // Top Bar
+        JPanel topBar = new JPanel(new BorderLayout(15, 0));
+        topBar.setBackground(new Color(245, 245, 245));
+
+        JPanel leftBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        leftBar.setBackground(new Color(245, 245, 245));
+
+        JLabel lblTitle = new JLabel("Danh sách sản phẩm lỗi");
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblTitle.setForeground(new Color(50, 50, 50));
+        leftBar.add(lblTitle);
+
+        cbDanhMucLoi = new JComboBox<>(new String[] { "Tất cả", "Thuốc ETC", "Thuốc OTC", "TPCN" });
+        cbDanhMucLoi.setPreferredSize(new Dimension(140, 35));
+        cbDanhMucLoi.addActionListener(e -> locVaHienThiLoi());
+        leftBar.add(cbDanhMucLoi);
+
+        cbSortTimeLoi = new JComboBox<>(new String[] { "Thời gian lưu: Mới nhất", "Thời gian lưu: Cũ nhất" });
+        cbSortTimeLoi.setPreferredSize(new Dimension(170, 35));
+        cbSortTimeLoi.addActionListener(e -> locVaHienThiLoi());
+        leftBar.add(cbSortTimeLoi);
+
+        JPanel rightBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
+        rightBar.setBackground(new Color(245, 245, 245));
+
+        txtSearchLoi = new JTextField("Tìm kiếm theo mã HD hoặc mã SP...");
+        txtSearchLoi.setForeground(Color.GRAY);
+        txtSearchLoi.setPreferredSize(new Dimension(220, 35));
+
+        txtSearchLoi.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if ("Tìm kiếm theo mã HD hoặc mã SP...".equals(txtSearchLoi.getText().trim())) {
+                    txtSearchLoi.setText("");
+                    txtSearchLoi.setForeground(Color.BLACK);
+                }
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (txtSearchLoi.getText().trim().isEmpty()) {
+                    txtSearchLoi.setText("Tìm kiếm theo mã HD hoặc mã SP...");
+                    txtSearchLoi.setForeground(Color.GRAY);
+                }
+            }
+        });
+        txtSearchLoi.addActionListener(e -> locVaHienThiLoi());
+        txtSearchLoi.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            @Override
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { locVaHienThiLoi(); }
+            @Override
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { locVaHienThiLoi(); }
+            @Override
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { locVaHienThiLoi(); }
+        });
+
+        JButton btnSearchLoi = new RoundedButton("Tìm");
+        btnSearchLoi.setPreferredSize(new Dimension(80, 35));
+        btnSearchLoi.setBackground(new Color(0, 123, 255));
+        btnSearchLoi.setForeground(Color.WHITE);
+        btnSearchLoi.addActionListener(e -> locVaHienThiLoi());
+
+        rightBar.add(txtSearchLoi);
+        rightBar.add(btnSearchLoi);
+
+        topBar.add(leftBar, BorderLayout.WEST);
+        topBar.add(rightBar, BorderLayout.EAST);
+
+        // Grid Panel
+        gridLayoutLoi = new GridLayout(0, 5, 15, 15);
+        gridPanelLoi = new JPanel(gridLayoutLoi);
+        gridPanelLoi.setBackground(new Color(245, 245, 245));
+
+        JPanel wrapperPanel = new JPanel(new BorderLayout());
+        wrapperPanel.setBackground(new Color(245, 245, 245));
+        wrapperPanel.add(gridPanelLoi, BorderLayout.NORTH);
+
+        JScrollPane scrollPaneLoi = new JScrollPane(wrapperPanel);
+        scrollPaneLoi.setBorder(null);
+        scrollPaneLoi.getVerticalScrollBar().setUnitIncrement(16);
+
+        // Responsive grid
+        scrollPaneLoi.getViewport().addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                int viewportWidth = scrollPaneLoi.getViewport().getWidth();
+                if (viewportWidth > 0) {
+                    int cols = Math.max(1, Math.min(5, viewportWidth / 195));
+                    gridLayoutLoi.setColumns(cols);
+                    gridPanelLoi.revalidate();
+                }
+            }
+        });
+
+        leftPanel.add(topBar, BorderLayout.NORTH);
+        leftPanel.add(scrollPaneLoi, BorderLayout.CENTER);
+
+        return leftPanel;
+    }
+
+    private JPanel createRightPanelLoi() {
+        RoundedPanel panel = new RoundedPanel(16, true);
+        panel.setLayout(new BorderLayout());
+        panel.setBackground(Color.WHITE);
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        JLabel lblTitle = new JLabel("THÔNG TIN SẢN PHẨM LỖI", SwingConstants.CENTER);
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblTitle.setBorder(new EmptyBorder(15, 0, 15, 0));
+        panel.add(lblTitle, BorderLayout.NORTH);
+
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setBackground(Color.WHITE);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 10, 5, 10);
+
+        int row = 0;
+
+        // Ảnh
+        JPanel imagePanel = new JPanel(new BorderLayout(5, 5));
+        imagePanel.setBackground(Color.WHITE);
+        lblImageRightLoi = new JLabel("Chưa có ảnh", SwingConstants.CENTER);
+        lblImageRightLoi.setPreferredSize(new Dimension(150, 100));
+        lblImageRightLoi.setBorder(new LineBorder(Color.LIGHT_GRAY));
+        lblImageRightLoi.setOpaque(true);
+        lblImageRightLoi.setBackground(new Color(240, 240, 240));
+        imagePanel.add(lblImageRightLoi, BorderLayout.CENTER);
+
+        gbc.gridx = 0;
+        gbc.gridy = row++;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        formPanel.add(imagePanel, gbc);
+
+        gbc.gridwidth = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+
+        // Form fields
+        txtMaHoaDonLoi = new RoundedTextField("", 15);
+        txtMaSPLoi = new RoundedTextField("", 15);
+        txtTenSPLoi = new RoundedTextField("", 15);
+        txtHoatChatLoi = new RoundedTextField("", 15);
+        txtSoLuongLoi = new RoundedTextField("", 15);
+        txtDonGiaLoi = new RoundedTextField("", 15);
+        txtSoLoLoi = new RoundedTextField("", 15);
+        txtHSDLoi = new RoundedTextField("", 15);
+        txtMoTaLoi = new JTextArea(3, 20);
+        txtMoTaLoi.setLineWrap(true);
+        txtMoTaLoi.setWrapStyleWord(true);
+        txtMoTaLoi.setEditable(false);
+        txtMoTaLoi.setBackground(new Color(235, 235, 235));
+
+        cbLoaiSPLoi = new JComboBox<>(new String[] { "ETC", "OTC", "TPCN" });
+        cbLoaiSPLoi.setEnabled(false);
+
+        addFormFieldLoi(formPanel, gbc, row++, "Mã đơn hàng:", txtMaHoaDonLoi);
+        addFormFieldLoi(formPanel, gbc, row++, "Mã sản phẩm:", txtMaSPLoi);
+        addFormFieldLoi(formPanel, gbc, row++, "Tên sản phẩm:", txtTenSPLoi);
+        addFormFieldLoi(formPanel, gbc, row++, "Hoạt chất:", txtHoatChatLoi);
+        addFormFieldLoi(formPanel, gbc, row++, "Số lượng lỗi:", txtSoLuongLoi);
+        addFormFieldLoi(formPanel, gbc, row++, "Đơn giá bán:", txtDonGiaLoi);
+        addFormFieldLoi(formPanel, gbc, row++, "Số lô:", txtSoLoLoi);
+        addFormFieldLoi(formPanel, gbc, row++, "Hạn sử dụng:", txtHSDLoi);
+        addFormFieldLoi(formPanel, gbc, row++, "Phân loại:", cbLoaiSPLoi);
+
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0.3;
+        formPanel.add(new JLabel("Mô tả:"), gbc);
+        gbc.gridx = 1;
+        gbc.weightx = 0.7;
+        formPanel.add(new JScrollPane(txtMoTaLoi), gbc);
+        row++;
+
+        panel.add(formPanel, BorderLayout.CENTER);
+
+        // Buttons
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 1, 10, 0));
+        buttonPanel.setBackground(Color.WHITE);
+        buttonPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        btnTraNSX = createStyledButton("Trả về NSX", new Color(40, 167, 69), Color.WHITE);
+        btnTraNSX.setPreferredSize(new Dimension(150, 40));
+        btnTraNSX.addActionListener(e -> traVeNSX());
+        buttonPanel.add(btnTraNSX);
+
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+
+        rightPanelLoi = panel;
+        return panel;
+    }
+
+    private void addFormFieldLoi(JPanel panel, GridBagConstraints gbc, int row, String labelText, JComponent inputComp) {
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0.3;
+        panel.add(new JLabel(labelText), gbc);
+
+        if (inputComp instanceof JTextField) {
+            ((JTextField) inputComp).setEditable(false);
+            inputComp.setBackground(new Color(235, 235, 235));
+        }
+        inputComp.setPreferredSize(new Dimension(200, 32));
+
+        gbc.gridx = 1;
+        gbc.weightx = 0.7;
+        panel.add(inputComp, gbc);
+    }
+
+    private JPanel createProductCardLoi(SuPhanBoLo spb) {
+        SanPham sp = spb.getChiTietHoaDon().getDonViQuyDoi().getSanPham();
+        DonViQuyDoi dv = spb.getChiTietHoaDon().getDonViQuyDoi();
+        int heSo = dv.getHeSoQuyDoi();
+        int soLuongLoi = spb.getSoLuong() / heSo;
+        double donGia = spb.getChiTietHoaDon().getDonGia();
+
+        RoundedPanel card = new RoundedPanel(14, true);
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setBackground(Color.WHITE);
+        card.setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(new Color(225, 225, 225), 1, true),
+                new EmptyBorder(12, 10, 12, 10)));
+        card.setPreferredSize(new Dimension(180, 270));
+        card.setMaximumSize(new Dimension(180, 270));
+        card.setMinimumSize(new Dimension(180, 270));
+
+        // 1. Ảnh sản phẩm
+        RoundedPanel imgContainer = new RoundedPanel(10, false);
+        imgContainer.setLayout(new BorderLayout());
+        imgContainer.setBackground(Color.WHITE);
+        imgContainer.setBorder(BorderFactory.createLineBorder(new Color(225, 225, 225), 1));
+        imgContainer.setPreferredSize(new Dimension(160, 90));
+        imgContainer.setMaximumSize(new Dimension(160, 90));
+        imgContainer.setMinimumSize(new Dimension(160, 90));
+        imgContainer.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel lblImage = new JLabel("", SwingConstants.CENTER);
+        ImageIcon icon = loadProductImageIcon(sp.getMaSanPham(), 160, 90);
+        if (icon != null) {
+            lblImage.setIcon(icon);
+        } else {
+            lblImage.setIcon(null);
+            lblImage.setText("Ảnh SP");
+            lblImage.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            lblImage.setForeground(Color.GRAY);
+        }
+        imgContainer.add(lblImage, BorderLayout.CENTER);
+
+        // 2. Tên sản phẩm
+        JLabel lblName = new JLabel("<html><div style='text-align: center; width: 140px; font-family: Segoe UI;'>"
+                + sp.getTenSanPham() + "</div></html>", SwingConstants.CENTER);
+        lblName.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblName.setForeground(new Color(33, 37, 41));
+        lblName.setAlignmentX(Component.CENTER_ALIGNMENT);
+        lblName.setPreferredSize(new Dimension(160, 36));
+        lblName.setMaximumSize(new Dimension(160, 36));
+
+        // 3. Badges hiển thị đơn vị quy đổi
+        JPanel badgePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
+        badgePanel.setBackground(Color.WHITE);
+        badgePanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        badgePanel.setPreferredSize(new Dimension(160, 26));
+        badgePanel.setMaximumSize(new Dimension(160, 26));
+
+        RoundedPanel badge = new RoundedPanel(8, false);
+        badge.setLayout(new FlowLayout(FlowLayout.CENTER, 6, 2));
+        badge.setBackground(new Color(245, 245, 245));
+        badge.setOpaque(false);
+        JLabel badgeLabel = new JLabel(hienThiTenDonVi(dv.getTenDonVi()));
+        badgeLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        badgeLabel.setForeground(new Color(120, 120, 120));
+        badge.add(badgeLabel);
+        badgePanel.add(badge);
+
+        // 4. Panel chứa thông tin (Giá, Số lượng tồn)
+        JPanel infoPanel = new JPanel();
+        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+        infoPanel.setBackground(Color.WHITE);
+        infoPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        infoPanel.setPreferredSize(new Dimension(160, 60));
+        infoPanel.setMaximumSize(new Dimension(160, 60));
+
+        JLabel lblPrice = new JLabel(String.format("Giá: %,.0fđ / %s", donGia, hienThiTenDonVi(dv.getTenDonVi())), SwingConstants.LEFT);
+        lblPrice.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblPrice.setForeground(new Color(220, 53, 69));
+        lblPrice.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel lblStock = new JLabel("Số lượng lỗi: " + soLuongLoi + " " + hienThiTenDonVi(dv.getTenDonVi()), SwingConstants.LEFT);
+        lblStock.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblStock.setForeground(new Color(100, 100, 100));
+        lblStock.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        infoPanel.add(lblPrice);
+        infoPanel.add(Box.createRigidArea(new Dimension(0, 3)));
+        infoPanel.add(lblStock);
+
+        card.add(imgContainer);
+        card.add(Box.createRigidArea(new Dimension(0, 8)));
+        card.add(lblName);
+        card.add(Box.createRigidArea(new Dimension(0, 6)));
+        card.add(badgePanel);
+        card.add(Box.createRigidArea(new Dimension(0, 10)));
+        card.add(infoPanel);
+
+        // Click event cho toàn bộ card
+        card.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                hienThiChiTietLoi(spb);
+            }
+        });
+
+        return card;
+    }
+
+    private void hienThiChiTietLoi(SuPhanBoLo spb) {
+        this.hangLoiDangChon = spb;
+        SanPham sp = spb.getChiTietHoaDon().getDonViQuyDoi().getSanPham();
+        DonViQuyDoi dv = spb.getChiTietHoaDon().getDonViQuyDoi();
+        int heSo = dv.getHeSoQuyDoi();
+
+        txtMaHoaDonLoi.setText(spb.getChiTietHoaDon().getHoaDon().getMaHoaDon());
+        txtMaSPLoi.setText(sp.getMaSanPham());
+        txtTenSPLoi.setText(sp.getTenSanPham());
+        txtHoatChatLoi.setText(sp.getHoatChat() != null ? sp.getHoatChat() : "");
+        txtSoLuongLoi.setText(String.valueOf(spb.getSoLuong() / heSo) + " " + hienThiTenDonVi(dv.getTenDonVi()));
+        txtDonGiaLoi.setText(String.format("%,.0f đ", spb.getChiTietHoaDon().getDonGia()));
+        txtSoLoLoi.setText(spb.getLo().getSoLo() != null ? spb.getLo().getSoLo() : "");
+        
+        java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        txtHSDLoi.setText(spb.getLo().getNgayHetHan() != null ? spb.getLo().getNgayHetHan().format(dtf) : "");
+        
+        txtMoTaLoi.setText(sp.getMoTa() != null ? sp.getMoTa() : "");
+        cbLoaiSPLoi.setSelectedItem(sp.getLoaiSanPham().name());
+
+        ImageIcon icon = loadProductImageIcon(sp.getMaSanPham(), 150, 100);
+        if (icon != null) {
+            lblImageRightLoi.setIcon(icon);
+            lblImageRightLoi.setText("");
+        } else {
+            lblImageRightLoi.setIcon(null);
+            lblImageRightLoi.setText("Không có ảnh");
+        }
+    }
+
+    private void lamMoiFormLoi() {
+        this.hangLoiDangChon = null;
+        txtMaHoaDonLoi.setText("");
+        txtMaSPLoi.setText("");
+        txtTenSPLoi.setText("");
+        txtHoatChatLoi.setText("");
+        txtSoLuongLoi.setText("");
+        txtDonGiaLoi.setText("");
+        txtSoLoLoi.setText("");
+        txtHSDLoi.setText("");
+        txtMoTaLoi.setText("");
+        cbLoaiSPLoi.setSelectedIndex(0);
+        lblImageRightLoi.setIcon(null);
+        lblImageRightLoi.setText("Chưa có ảnh");
+    }
+
+    public void loadDanhSachLoi() {
+        danhSachLoi = suPhanBoLoService.layDanhSachLoi();
+        locVaHienThiLoi();
+    }
+
+    private void locVaHienThiLoi() {
+        String keyword = txtSearchLoi.getText().trim().toLowerCase();
+        if ("tìm kiếm theo mã hd hoặc mã sp...".equals(keyword)) {
+            keyword = "";
+        }
+
+        String targetCategory = (String) cbDanhMucLoi.getSelectedItem();
+        boolean sortDesc = cbSortTimeLoi.getSelectedIndex() == 0; 
+
+        List<SuPhanBoLo> results = new ArrayList<>();
+        for (SuPhanBoLo spb : danhSachLoi) {
+            SanPham sp = spb.getChiTietHoaDon().getDonViQuyDoi().getSanPham();
+            
+            String maHoaDon = spb.getChiTietHoaDon().getHoaDon().getMaHoaDon().toLowerCase();
+            String maSanPham = sp.getMaSanPham().toLowerCase();
+            if (!keyword.isEmpty() && !maHoaDon.contains(keyword) && !maSanPham.contains(keyword)) {
+                continue;
+            }
+
+            String cat = sp.getLoaiSanPham().name(); 
+            if (!"Tất cả".equals(targetCategory)) {
+                if ("Thuốc ETC".equals(targetCategory) && !"ETC".equals(cat)) continue;
+                if ("Thuốc OTC".equals(targetCategory) && !"OTC".equals(cat)) continue;
+                if ("TPCN".equals(targetCategory) && !"TPCN".equals(cat)) continue;
+            }
+
+            results.add(spb);
+        }
+
+        results.sort((s1, s2) -> {
+            LocalDateTime t1 = s1.getChiTietHoaDon().getHoaDon().getThoiGianTao();
+            LocalDateTime t2 = s2.getChiTietHoaDon().getHoaDon().getThoiGianTao();
+            if (t1 == null) return sortDesc ? 1 : -1;
+            if (t2 == null) return sortDesc ? -1 : 1;
+            return sortDesc ? t2.compareTo(t1) : t1.compareTo(t2);
+        });
+
+        hienThiLoiLenGrid(results);
+    }
+
+    private void traVeNSX() {
+        if (hangLoiDangChon == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn sản phẩm lỗi cần trả về NSX!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        double giaNhap = hangLoiDangChon.getLo().getGiaNhap();
+        int heSo = hangLoiDangChon.getChiTietHoaDon().getDonViQuyDoi().getHeSoQuyDoi();
+        int qtySelectedUnit = hangLoiDangChon.getSoLuong() / heSo;
+        double tongTienHoan = hangLoiDangChon.getSoLuong() * giaNhap;
+
+        String msg = String.format("Bạn có chắc chắn muốn trả sản phẩm lỗi này về Nhà sản xuất không?\n" +
+                "Sản phẩm: %s\n" +
+                "Đơn vị: %s\n" +
+                "Số lượng trả: %d\n" +
+                "Đơn giá nhập: %,.0fđ\n" +
+                "Tổng tiền hoàn ước tính: %,.0fđ", 
+                hangLoiDangChon.getChiTietHoaDon().getDonViQuyDoi().getSanPham().getTenSanPham(),
+                hienThiTenDonVi(hangLoiDangChon.getChiTietHoaDon().getDonViQuyDoi().getTenDonVi()),
+                qtySelectedUnit,
+                giaNhap * heSo, 
+                tongTienHoan);
+
+        int confirm = JOptionPane.showConfirmDialog(this, msg, "Xác nhận trả về NSX", JOptionPane.YES_NO_OPTION);
+        if (confirm == JOptionPane.YES_OPTION) {
+            boolean success = suPhanBoLoService.giaiQuyetHangLoi(
+                    hangLoiDangChon.getChiTietHoaDon().getHoaDon().getMaHoaDon(),
+                    hangLoiDangChon.getChiTietHoaDon().getDonViQuyDoi().getMaDonVi(),
+                    hangLoiDangChon.getLo().getMaLo(),
+                    hangLoiDangChon.getChiTietHoaDon().isLaQuaTangKem()
+            );
+
+            if (success) {
+                CaLam caMo = caLamService.layCaDangMoBatKy();
+                String bonusMsg = "";
+                if (caMo != null) {
+                    caMo.setTienKetCa(caMo.getTienKetCa() + tongTienHoan);
+                    caLamService.capNhat(caMo);
+                    bonusMsg = String.format("\nSố tiền quỹ ca làm việc được hoàn trả: %,.0fđ.", tongTienHoan);
+                } else {
+                    bonusMsg = String.format("\nKhông tìm thấy ca làm việc đang mở. Tiền hoàn trả từ NSX: %,.0fđ.", tongTienHoan);
+                }
+
+                JOptionPane.showMessageDialog(this, 
+                        "Đã hoàn tất trả sản phẩm lỗi về nhà sản xuất." + bonusMsg,
+                        "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                loadDanhSachLoi();
+                lamMoiFormLoi();
+            } else {
+                JOptionPane.showMessageDialog(this, "Xảy ra lỗi khi thực hiện giao dịch hoàn trả!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private void hienThiLoiLenGrid(List<SuPhanBoLo> list) {
+        gridPanelLoi.removeAll();
+        for (SuPhanBoLo spb : list) {
+            JPanel card = createProductCardLoi(spb);
+            gridPanelLoi.add(card);
+        }
+        gridPanelLoi.revalidate();
+        gridPanelLoi.repaint();
     }
 }

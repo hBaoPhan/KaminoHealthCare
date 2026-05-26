@@ -97,9 +97,9 @@ public class KhuyenMaiPanel extends JPanel {
         lblDanhSach.setFont(new Font("Segoe UI", Font.BOLD, 20));
         lblDanhSach.setForeground(new Color(35, 55, 75));
 
-        txtSearch = new JTextField("Tìm kiếm mã/tên khuyến mãi...");
+        txtSearch = new JTextField("Tìm kiếm...");
         txtSearch.setForeground(Color.GRAY);
-        txtSearch.setPreferredSize(new Dimension(240, 35));
+        txtSearch.setPreferredSize(new Dimension(250, 35));
         txtSearch.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
@@ -111,7 +111,7 @@ public class KhuyenMaiPanel extends JPanel {
             @Override
             public void focusLost(FocusEvent e) {
                 if (txtSearch.getText().trim().isEmpty()) {
-                    txtSearch.setText("Tìm kiếm mã/tên khuyến mãi...");
+                    txtSearch.setText("Tìm kiếm...");
                     txtSearch.setForeground(Color.GRAY);
                 }
             }
@@ -123,12 +123,12 @@ public class KhuyenMaiPanel extends JPanel {
 
         String[] filterValues = {"Tất cả", "Phần trăm", "Tặng kèm"};
         cboFilterLoai = new JComboBox<>(filterValues);
-        cboFilterLoai.setPreferredSize(new Dimension(130, 35));
+        cboFilterLoai.setPreferredSize(new Dimension(110, 35));
         cboFilterLoai.addActionListener(e -> refreshTableData());
 
         String[] trangThaiValues = {"Tất cả", "Sắp hết hạn", "Sắp hoạt động"};
         cboFilterTrangThai = new JComboBox<>(trangThaiValues);
-        cboFilterTrangThai.setPreferredSize(new Dimension(130, 35));
+        cboFilterTrangThai.setPreferredSize(new Dimension(120, 35));
         cboFilterTrangThai.addActionListener(e -> refreshTableData());
 
         JPanel searchWrapper = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
