@@ -491,26 +491,29 @@ public class HoaDonPanel extends JPanel {
         ChiTietHoaDonService ctService = new ChiTietHoaDonService();
         List<ChiTietHoaDon> dsChiTiet = ctService.layTheoMaHoaDon(maHD);
 
-        String[] cols = { "Tên SP", "ĐVT", "SL", "Đơn giá", "Thành tiền", "Quà tặng" };
+        String[] cols = { "Tên SP", "ĐVT", "SL", "Đơn giá", "Thành tiền", "% Thuế", "Quà tặng" };
         DefaultTableModel ctModel = new DefaultTableModel(cols, 0);
         NumberFormat nf = NumberFormat.getCurrencyInstance(new java.util.Locale("vi", "VN"));
 
-        double tongTien = 0;
         for (com.example.entity.ChiTietHoaDon ct : dsChiTiet) {
             String tenSP = ct.getDonViQuyDoi() != null && ct.getDonViQuyDoi().getSanPham() != null
                     ? ct.getDonViQuyDoi().getSanPham().getTenSanPham()
                     : "";
+            if (ct.isLaQuaTangKem()) tenSP += " (Quà tặng)";
             String dvt = ct.getDonViQuyDoi() != null && ct.getDonViQuyDoi().getTenDonVi() != null
                     ? ct.getDonViQuyDoi().getTenDonVi().toString()
                     : "";
             int sl = ct.getSoLuongBan();
-            double thanhTienNum = ct.tinhThanhTien();
-            tongTien += thanhTienNum;
-            String donGia = nf.format(ct.getDonGia());
-            String thanhTien = nf.format(thanhTienNum);
-            String quaTang = ct.isLaQuaTangKem() ? "Có" : "Không";
+            // Thành tiền = trước thuế (SL × đơn giá); quà tặng = 0
+            double giaTruocThue = ct.isLaQuaTangKem() ? 0 : sl * ct.getDonGia();
+            double thueSuat = (ct.getDonViQuyDoi() != null && ct.getDonViQuyDoi().getSanPham() != null)
+                    ? ct.getDonViQuyDoi().getSanPham().getThue() : 0;
+            String donGia       = ct.isLaQuaTangKem() ? "Miễn phí" : nf.format(ct.getDonGia());
+            String thanhTien    = ct.isLaQuaTangKem() ? "0 đ"       : nf.format(giaTruocThue);
+            String phanTramThue = ct.isLaQuaTangKem() ? "-"         : (int) thueSuat + "%";
+            String quaTang      = ct.isLaQuaTangKem() ? "Có"        : "Không";
 
-            ctModel.addRow(new Object[] { tenSP, dvt, sl, donGia, thanhTien, quaTang });
+            ctModel.addRow(new Object[] { tenSP, dvt, sl, donGia, thanhTien, phanTramThue, quaTang });
         }
 
         JTable ctTable = new JTable(ctModel);
@@ -518,6 +521,13 @@ public class HoaDonPanel extends JPanel {
         ctTable.setFont(FONT_TEXT);
         ctTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
         ctTable.getTableHeader().setBackground(new Color(240, 240, 240));
+        
+        // Căn chỉnh số sang phải
+        javax.swing.table.DefaultTableCellRenderer rightRenderer = new javax.swing.table.DefaultTableCellRenderer();
+        rightRenderer.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        for (int i = 2; i < 6; i++) {
+            ctTable.getColumnModel().getColumn(i).setCellRenderer(rightRenderer);
+        }
 
         JScrollPane scrollPane = new JScrollPane(ctTable);
         scrollPane.setBorder(BorderFactory.createLineBorder(COLOR_BORDER));
@@ -533,8 +543,45 @@ public class HoaDonPanel extends JPanel {
         double tongThue = hd.tinhTongThue();
         double tongTienCuoiCung = hd.tinhTongTienThanhToan();
         double soTienGiam = 0.0;
+
         if (hd.getKhuyenMai() != null && hd.getKhuyenMai().getLoaiKhuyenMai() == com.example.entity.enums.LoaiKhuyenMai.PHAN_TRAM) {
-            soTienGiam = tongTienHang * (hd.getKhuyenMai().getKhuyenMaiPhanTram() / 100.0);
+            if (hd.getLoaiHoaDon() == com.example.entity.enums.LoaiHoaDon.DOI_HANG
+                    && hd.getHoaDonDoiTra() != null && hd.getHoaDonDoiTra().getMaHoaDon() != null) {
+                // Hóa đơn đổi hàng: chỉ áp KM lên phần mua thêm (giống DoiHangPanel)
+                try {
+                    String maHDGoc = hd.getHoaDonDoiTra().getMaHoaDon();
+                    java.util.List<com.example.entity.ChiTietHoaDon> dsGoc =
+                            new com.example.service.ChiTietHoaDonService().layTheoMaHoaDon(maHDGoc);
+                    double tongTienMuaThem = 0;
+                    for (com.example.entity.ChiTietHoaDon ctDoi : dsChiTiet) {
+                        if (ctDoi.isLaQuaTangKem()) continue;
+                        String maSP = ctDoi.getDonViQuyDoi().getSanPham() != null
+                                ? ctDoi.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
+                        String tenDV = ctDoi.getDonViQuyDoi().getTenDonVi() != null
+                                ? ctDoi.getDonViQuyDoi().getTenDonVi().name() : "";
+                        int slGoc = 0;
+                        for (com.example.entity.ChiTietHoaDon ctGoc : dsGoc) {
+                            if (ctGoc.isLaQuaTangKem()) continue;
+                            String maSPGoc = ctGoc.getDonViQuyDoi().getSanPham() != null
+                                    ? ctGoc.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
+                            String tenDVGoc = ctGoc.getDonViQuyDoi().getTenDonVi() != null
+                                    ? ctGoc.getDonViQuyDoi().getTenDonVi().name() : "";
+                            if (maSPGoc.equals(maSP) && tenDVGoc.equals(tenDV)) {
+                                slGoc += ctGoc.getSoLuongBan();
+                            }
+                        }
+                        int slMuaThem = Math.max(0, ctDoi.getSoLuongBan() - slGoc);
+                        tongTienMuaThem += slMuaThem * ctDoi.getDonGia();
+                    }
+                    double kmPt = hd.getKhuyenMai().getKhuyenMaiPhanTram();
+                    if (tongTienMuaThem >= hd.getKhuyenMai().getGiaTriDonHangToiThieu()) {
+                        soTienGiam = tongTienMuaThem * (kmPt / 100.0);
+                    }
+                } catch (Exception ignored) {}
+            } else {
+                // Hóa đơn bán hàng thường: áp KM lên toàn bộ
+                soTienGiam = tongTienHang * (hd.getKhuyenMai().getKhuyenMaiPhanTram() / 100.0);
+            }
         }
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -649,7 +696,7 @@ public class HoaDonPanel extends JPanel {
         infoPanel.add(lblTongTien);
 
         // Bảng chi tiết sản phẩm
-        String[] cols = { "Tên sản phẩm", "Đơn vị tính", "Số lượng", "Đơn giá", "Thành tiền", "Quà tặng" };
+        String[] cols = { "Tên sản phẩm", "Đơn vị tính", "Số lượng", "Đơn giá", "Thành tiền", "% Thuế", "Quà tặng" };
         DefaultTableModel ctModel = new DefaultTableModel(cols, 0);
         java.text.NumberFormat nf = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("vi", "VN"));
 
@@ -657,15 +704,20 @@ public class HoaDonPanel extends JPanel {
             String tenSP = ct.getDonViQuyDoi() != null && ct.getDonViQuyDoi().getSanPham() != null
                     ? ct.getDonViQuyDoi().getSanPham().getTenSanPham()
                     : "";
+            if (ct.isLaQuaTangKem()) tenSP += " (Quà tặng)";
             String dvt = ct.getDonViQuyDoi() != null && ct.getDonViQuyDoi().getTenDonVi() != null
                     ? ct.getDonViQuyDoi().getTenDonVi().toString()
                     : "";
             int sl = ct.getSoLuongBan();
-            String donGia = nf.format(ct.getDonGia());
-            String thanhTien = nf.format(ct.tinhThanhTien());
-            String quaTang = ct.isLaQuaTangKem() ? "Có" : "Không";
+            double giaTruocThue = ct.isLaQuaTangKem() ? 0 : sl * ct.getDonGia();
+            double thueSuat = (ct.getDonViQuyDoi() != null && ct.getDonViQuyDoi().getSanPham() != null)
+                    ? ct.getDonViQuyDoi().getSanPham().getThue() : 0;
+            String donGia       = ct.isLaQuaTangKem() ? "Miễn phí" : nf.format(ct.getDonGia());
+            String thanhTien    = ct.isLaQuaTangKem() ? "0 đ"       : nf.format(giaTruocThue);
+            String phanTramThue = ct.isLaQuaTangKem() ? "-"         : (int) thueSuat + "%";
+            String quaTang      = ct.isLaQuaTangKem() ? "Có"        : "Không";
 
-            ctModel.addRow(new Object[] { tenSP, dvt, sl, donGia, thanhTien, quaTang });
+            ctModel.addRow(new Object[] { tenSP, dvt, sl, donGia, thanhTien, phanTramThue, quaTang });
         }
 
         JTable ctTable = new JTable(ctModel);
@@ -673,6 +725,13 @@ public class HoaDonPanel extends JPanel {
         ctTable.setFont(FONT_TEXT);
         ctTable.getTableHeader().setFont(FONT_LABEL);
         ctTable.getTableHeader().setBackground(new Color(240, 240, 240));
+
+        // Căn phải các cột số: Số lượng(2), Đơn giá(3), Thành tiền(4), % Thuế(5)
+        javax.swing.table.DefaultTableCellRenderer rightRenderer2 = new javax.swing.table.DefaultTableCellRenderer();
+        rightRenderer2.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        for (int col : new int[]{2, 3, 4, 5}) {
+            ctTable.getColumnModel().getColumn(col).setCellRenderer(rightRenderer2);
+        }
 
         JScrollPane scrollPane = new JScrollPane(ctTable);
         scrollPane.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));

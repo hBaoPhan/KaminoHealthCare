@@ -44,6 +44,32 @@ public class InHoaDonPOS {
         paper.setImageableArea(0, 0, width, height);
         pf.setPaper(paper);
 
+        // --- LOAD HÓA ĐƠN GỐC trước khi vào lambda (tránh DB call trong paint thread) ---
+        final boolean laDoiHang = hd.getLoaiHoaDon() == LoaiHoaDon.DOI_HANG;
+        final List<ChiTietHoaDon> dsChiTietGocFinal;
+        final double tiLeGiamGocFinal;
+
+        if (laDoiHang && hd.getHoaDonDoiTra() != null && hd.getHoaDonDoiTra().getMaHoaDon() != null) {
+            List<ChiTietHoaDon> tmpGoc = new java.util.ArrayList<>();
+            double tmpTiLe = 0;
+            try {
+                String maHDGoc = hd.getHoaDonDoiTra().getMaHoaDon();
+                HoaDon hdGoc = new com.example.service.HoaDonService().timTheoMa(maHDGoc);
+                if (hdGoc != null) {
+                    tmpGoc = new com.example.service.ChiTietHoaDonService().layTheoMaHoaDon(maHDGoc);
+                    if (hdGoc.getKhuyenMai() != null
+                            && hdGoc.getKhuyenMai().getLoaiKhuyenMai() == LoaiKhuyenMai.PHAN_TRAM) {
+                        tmpTiLe = hdGoc.getKhuyenMai().getKhuyenMaiPhanTram();
+                    }
+                }
+            } catch (Exception ignored) {}
+            dsChiTietGocFinal = tmpGoc;
+            tiLeGiamGocFinal  = tmpTiLe;
+        } else {
+            dsChiTietGocFinal = new java.util.ArrayList<>();
+            tiLeGiamGocFinal  = 0;
+        }
+
         // Định nghĩa đối tượng Printable vẽ hóa đơn
         Printable receiptPrintable = new Printable() {
             @Override
@@ -142,24 +168,62 @@ public class InHoaDonPOS {
                 drawSeparator("------------------------------------------------------------------", g2d, startX, y);
                 y += 10;
 
+                // (không cần load lại — dữ liệu đã được load bên ngoài lambda)
+
                 // --- DANH SÁCH CHI TIẾT SẢN PHẨM ---
                 g2d.setFont(fontNormal);
-                double tongTienHang = 0;
+
+                // Tính tổng tiền hàng (dùng cho KM — chỉ phần mua thêm với hóa đơn đổi)
+                double tongTienHang = 0;       // Toàn bộ (dùng cho hiển thị "Cộng tiền hàng")
+                double tongTienMuaThem = 0;    // Chỉ phần mua thêm (cơ sở áp KM mới)
+
                 for (ChiTietHoaDon ct : dsChiTiet) {
-                    if (!ct.isLaQuaTangKem()) {
-                        tongTienHang += ct.getSoLuongBan() * ct.getDonGia();
+                    if (ct.isLaQuaTangKem()) continue;
+                    String maSPi = ct.getDonViQuyDoi().getSanPham() != null
+                            ? ct.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
+                    String tenDVi = ct.getDonViQuyDoi().getTenDonVi() != null
+                            ? ct.getDonViQuyDoi().getTenDonVi().name() : "";
+                    double tienDong = ct.getSoLuongBan() * ct.getDonGia();
+                    tongTienHang += tienDong;
+
+                    if (laDoiHang) {
+                        int slGocI = 0;
+                        for (ChiTietHoaDon ctGoc : dsChiTietGocFinal) {
+                            if (ctGoc.isLaQuaTangKem()) continue;
+                            String maSPGoc = ctGoc.getDonViQuyDoi().getSanPham() != null
+                                    ? ctGoc.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
+                            String tenDVGoc = ctGoc.getDonViQuyDoi().getTenDonVi() != null
+                                    ? ctGoc.getDonViQuyDoi().getTenDonVi().name() : "";
+                            if (maSPGoc.equals(maSPi) && tenDVGoc.equals(tenDVi)) {
+                                slGocI += ctGoc.getSoLuongBan();
+                            }
+                        }
+                        int slMuaThem = Math.max(0, ct.getSoLuongBan() - slGocI);
+                        tongTienMuaThem += slMuaThem * ct.getDonGia();
                     }
                 }
 
+                // --- TÍNH TIỀN GIẢM ---
                 double soTienGiam = 0;
                 if (hd.getKhuyenMai() != null) {
                     KhuyenMai km = hd.getKhuyenMai();
-                    if (tongTienHang >= km.getGiaTriDonHangToiThieu()) {
-                        if (km.getLoaiKhuyenMai() == LoaiKhuyenMai.PHAN_TRAM) {
-                            soTienGiam = tongTienHang * km.getKhuyenMaiPhanTram() / 100.0;
+                    if (km.getLoaiKhuyenMai() == LoaiKhuyenMai.PHAN_TRAM) {
+                        if (laDoiHang) {
+                            // Chỉ áp KM mới lên phần MUA THÊM (giống DoiHangPanel)
+                            if (tongTienMuaThem >= km.getGiaTriDonHangToiThieu()) {
+                                soTienGiam = tongTienMuaThem * km.getKhuyenMaiPhanTram() / 100.0;
+                            }
+                        } else {
+                            // Hóa đơn bán hàng thường: áp toàn bộ
+                            if (tongTienHang >= km.getGiaTriDonHangToiThieu()) {
+                                soTienGiam = tongTienHang * km.getKhuyenMaiPhanTram() / 100.0;
+                            }
                         }
                     }
                 }
+
+                // discountRatio chỉ dùng để tính thuế theo từng phần
+                // Với đổi hàng: tính thuế riêng theo đổi ngang (KM cũ) và mua thêm (KM mới)
                 double discountRatio = (tongTienHang > 0) ? (tongTienHang - soTienGiam) / tongTienHang : 1.0;
 
                 double tongThue = 0;
@@ -192,18 +256,49 @@ public class InHoaDonPOS {
                     y += 12;
 
                     if (!ct.isLaQuaTangKem()) {
-                        tongThue += qty * price * (thuePt / 100.0) * discountRatio;
+                        if (laDoiHang) {
+                            // Tính thuế theo đúng nghiệp vụ đổi hàng
+                            String maSPj = dv.getSanPham() != null ? dv.getSanPham().getMaSanPham() : "";
+                            String tenDVj = dv.getTenDonVi() != null ? dv.getTenDonVi().name() : "";
+                            int slGocJ = 0;
+                            for (ChiTietHoaDon ctGoc : dsChiTietGocFinal) {
+                                if (ctGoc.isLaQuaTangKem()) continue;
+                                String maSPGoc = ctGoc.getDonViQuyDoi().getSanPham() != null
+                                        ? ctGoc.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
+                                String tenDVGoc = ctGoc.getDonViQuyDoi().getTenDonVi() != null
+                                        ? ctGoc.getDonViQuyDoi().getTenDonVi().name() : "";
+                                if (maSPGoc.equals(maSPj) && tenDVGoc.equals(tenDVj)) {
+                                    slGocJ += ctGoc.getSoLuongBan();
+                                }
+                            }
+                            int slDoiNgangJ = Math.min(qty, slGocJ);
+                            int slMuaThemJ  = Math.max(0, qty - slGocJ);
+                            double kmMoiPt  = (hd.getKhuyenMai() != null
+                                    && hd.getKhuyenMai().getLoaiKhuyenMai() == LoaiKhuyenMai.PHAN_TRAM)
+                                    ? hd.getKhuyenMai().getKhuyenMaiPhanTram() : 0;
+                            // Thuế đổi ngang: áp KM gốc
+                            tongThue += slDoiNgangJ * price * (thuePt / 100.0) * (1 - tiLeGiamGocFinal / 100.0);
+                            // Thuế mua thêm: áp KM mới
+                            tongThue += slMuaThemJ  * price * (thuePt / 100.0) * (1 - kmMoiPt / 100.0);
+                        } else {
+                            tongThue += qty * price * (thuePt / 100.0) * discountRatio;
+                        }
                     }
                 }
 
                 drawSeparator("------------------------------------------------------------------", g2d, startX, y);
                 y += 10;
 
-                // --- PHẦN TỔNG HỢP TÀI CHÍNH ---
-                double finalTotal = tongTienHang + tongThue - soTienGiam;
+                // --- PHẦN TỔNG HỢP TÀI CHÍNH (đồng bộ với HoaDonPanel) ---
+                // Dùng entity methods sau khi inject dsChiTiet, giống createInvoiceDetailPanel()
+                hd.setDsChiTiet(dsChiTiet);
+                double tongTienHangFinal  = hd.tinhTongTienTamThoi();   // Σ(SL×giá), bỏ quà tặng
+                double tongThueFinal      = hd.tinhTongThue();           // Thuế theo discountRatio KM
+                double tongTienCuoiCung   = hd.tinhTongTienThanhToan();  // = tongTienHangFinal - giamNoi + tongThueFinal
+                // soTienGiam đã tính ở trên (DOI_HANG: chỉ phần mua thêm; còn lại: toàn bộ)
 
                 g2d.drawString("Cộng tiền hàng:", startX, y);
-                g2d.drawString(df.format(tongTienHang), startX + 165, y);
+                g2d.drawString(df.format(tongTienHangFinal), startX + 165, y);
                 y += 10;
 
                 if (soTienGiam > 0) {
@@ -213,7 +308,7 @@ public class InHoaDonPOS {
                 }
 
                 g2d.drawString("Thuế GTGT:", startX, y);
-                g2d.drawString(df.format(tongThue), startX + 165, y);
+                g2d.drawString(df.format(tongThueFinal), startX + 165, y);
                 y += 10;
 
                 drawSeparator("------------------------------------------------------------------", g2d, startX, y);
@@ -225,7 +320,7 @@ public class InHoaDonPOS {
                 } else {
                     g2d.drawString("TỔNG CỘNG:", startX, y);
                 }
-                g2d.drawString(df.format(finalTotal), startX + 165, y);
+                g2d.drawString(df.format(tongTienCuoiCung), startX + 165, y);
                 y += 12;
 
                 // Thêm hàng chênh lệch so với hóa đơn gốc nếu là hóa đơn đổi/trả
@@ -235,19 +330,17 @@ public class InHoaDonPOS {
                         String maHDGoc = hd.getHoaDonDoiTra().getMaHoaDon();
                         HoaDon hdGoc = new com.example.service.HoaDonService().timTheoMa(maHDGoc);
                         if (hdGoc != null) {
-                            // Load đầy đủ dsChiTiet cho hóa đơn gốc để tính đúng tổng tiền
-                            // (timTheoMa() không load dsChiTiet nên tinhTongTienThanhToan() sẽ trả về 0 nếu không load)
-                            List<com.example.entity.ChiTietHoaDon> dsChiTietGoc =
-                                    new com.example.service.ChiTietHoaDonService().layTheoMaHoaDon(maHDGoc);
-                            hdGoc.setDsChiTiet(dsChiTietGoc);
-
+                            // Dùng lại dsChiTietGocFinal đã load sẵn từ bên ngoài lambda
+                            hdGoc.setDsChiTiet(dsChiTietGocFinal.isEmpty()
+                                    ? new com.example.service.ChiTietHoaDonService().layTheoMaHoaDon(maHDGoc)
+                                    : dsChiTietGocFinal);
                             double tongGoc = hdGoc.tinhTongTienThanhToan();
 
                             // TRA_HANG: chênh lệch = tiền gốc - tiền trả lại (số tiền khách được hoàn)
                             // DOI_HANG: chênh lệch = hd đổi (mới) - hd gốc (khách trả thêm nếu > 0, nhận lại nếu < 0)
                             double chenhLech = (hd.getLoaiHoaDon() == LoaiHoaDon.TRA_HANG)
-                                    ? tongGoc - finalTotal
-                                    : finalTotal - tongGoc;
+                                    ? tongGoc - tongTienCuoiCung
+                                    : tongTienCuoiCung - tongGoc;
 
                             g2d.setFont(fontNormal);
                             if (hd.getLoaiHoaDon() == LoaiHoaDon.TRA_HANG) {
