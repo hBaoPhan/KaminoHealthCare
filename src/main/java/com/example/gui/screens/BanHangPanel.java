@@ -93,7 +93,6 @@ public class BanHangPanel extends JPanel {
 
         SwingUtilities.invokeLater(this::loadHoaDonChuaThanhToan);
 
-
         this.addHierarchyListener(e -> {
             if ((e.getChangeFlags() & java.awt.event.HierarchyEvent.SHOWING_CHANGED) != 0) {
                 if (isShowing()) {
@@ -722,10 +721,10 @@ public class BanHangPanel extends JPanel {
         panel.setLayout(new GridLayout(4, 1, 5, 2));
         panel.setBackground(COLOR_CARD_BG);
         panel.setBorder(new EmptyBorder(15, 20, 15, 20));
-        lblTongTienHoaDon = createSummaryLabel("Tổng tiền hóa đơn :", "0 đ");
+        lblTongTienHoaDon = createSummaryLabel("Thành tiền :", "0 đ");
         lblKhuyenMaiLabel = createSummaryLabel("Khuyến mãi :", "-0 đ");
         lblThue = createSummaryLabel("Thuế :", "0 đ");
-        lblThanhTien = new JLabel("Thành tiền : 0 đ");
+        lblThanhTien = new JLabel("Tổng tiền hóa đơn : 0 đ");
         lblThanhTien.setFont(new Font("Segoe UI", Font.BOLD, 18));
         panel.add(lblTongTienHoaDon);
         panel.add(lblKhuyenMaiLabel);
@@ -1171,11 +1170,11 @@ public class BanHangPanel extends JPanel {
 
         double thanhTien = tongTien + thue - soTienGiam;
         DecimalFormat df = new DecimalFormat("#,### đ");
-        lblTongTienHoaDon.setText("Tổng tiền hóa đơn : " + df.format(tongTien));
+        lblTongTienHoaDon.setText("Thành tiền : " + df.format(tongTien));
         lblKhuyenMaiLabel.setText("Khuyến mãi : -" + df.format(soTienGiam));
         lblKhuyenMaiLabel.setForeground(COLOR_PRIMARY); // Màu xanh lá
         lblThue.setText("Thuế : " + df.format(thue));
-        lblThanhTien.setText("Thành tiền : " + df.format(thanhTien));
+        lblThanhTien.setText("Tổng tiền hóa đơn : " + df.format(thanhTien));
         if (cboKhuyenMai != null)
             cboKhuyenMai.repaint();
         tinhTienThoi();
@@ -1427,7 +1426,6 @@ public class BanHangPanel extends JPanel {
     /** Tạo / Lưu hóa đơn (không trừ kho) */
     private boolean luuHoaDon(boolean hienThongBao) {
 
-
         HoaDon hd = xayDungHoaDon(hienThongBao);
         if (hd == null)
             return false;
@@ -1477,7 +1475,8 @@ public class BanHangPanel extends JPanel {
             }
 
             if (tienKhachDua < thanhTien) {
-                JOptionPane.showMessageDialog(this, "Tiền khách đưa không đủ để thanh toán hóa đơn!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Tiền khách đưa không đủ để thanh toán hóa đơn!", "Cảnh báo",
+                        JOptionPane.WARNING_MESSAGE);
                 txtTienKhachDua.requestFocusInWindow();
                 return;
             }

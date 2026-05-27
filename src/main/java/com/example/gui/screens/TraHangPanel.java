@@ -12,6 +12,9 @@ import java.text.DecimalFormat;
 import com.example.entity.ChiTietHoaDon;
 import com.example.entity.HoaDon;
 import com.example.entity.TaiKhoan;
+import com.example.gui.components.RoundedButton;
+import com.example.gui.components.RoundedPanel;
+import com.example.gui.components.RoundedTextField;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.List;
@@ -31,11 +34,11 @@ public class TraHangPanel extends JPanel {
     // =========================================================================
 
     // --- Các thành phần giao diện ---
-    private JTextField txtMaHoaGoc, txtMaHoaDon, txtNgayTao, txtNguoiTao, txtTenKhachHang;
-    private JTextField txtTienGoc, txtTienTra, txtChenhLech, txtThue, txtThanhTien, txtTienTraLai;
-    private JTextField txtSearch;
+    private RoundedTextField txtMaHoaGoc, txtMaHoaDon, txtNgayTao, txtNguoiTao, txtTenKhachHang;
+    private RoundedTextField txtTienGoc, txtTienTra, txtChenhLech, txtThue, txtThanhTien, txtTienTraLai;
+    private RoundedTextField txtSearch;
     private JTextArea txtGhiChu;
-    private JButton btnThanhToan;
+    private RoundedButton btnThanhToan;
     private JCheckBox chkTienMat, chkChuyenKhoan;
 
     // --- Biến xử lý dữ liệu và Database ---
@@ -72,13 +75,15 @@ public class TraHangPanel extends JPanel {
         // --- PHẦN BÊN PHẢI: THÔNG TIN HÓA ĐƠN TRẢ HÀNG ---
         add(createInfoPanel(), BorderLayout.EAST);
 
-        // Thiết lập bộ đón bắt phím toàn cục (KeyEventDispatcher) cho máy quét barcode tìm hóa đơn
+        // Thiết lập bộ đón bắt phím toàn cục (KeyEventDispatcher) cho máy quét barcode
+        // tìm hóa đơn
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(e -> {
             if (!isShowing()) {
                 return false;
             }
 
-            // Ngăn ngừa lỗi đúp sự kiện khi người dùng đang active focus trong các ô nhập văn bản có thể chỉnh sửa
+            // Ngăn ngừa lỗi đúp sự kiện khi người dùng đang active focus trong các ô nhập
+            // văn bản có thể chỉnh sửa
             Component focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
             boolean isEditableFocused = (focusOwner instanceof javax.swing.text.JTextComponent)
                     && ((javax.swing.text.JTextComponent) focusOwner).isEditable();
@@ -90,7 +95,8 @@ public class TraHangPanel extends JPanel {
                 long now = System.currentTimeMillis();
                 char c = e.getKeyChar();
 
-                // Nếu khoảng cách giữa 2 ký tự lớn hơn 50ms, coi như nhập liệu thủ công bằng bàn phím
+                // Nếu khoảng cách giữa 2 ký tự lớn hơn 50ms, coi như nhập liệu thủ công bằng
+                // bàn phím
                 if (now - lastKeyTime > 50) {
                     barcodeBuffer.setLength(0);
                 }
@@ -139,9 +145,9 @@ public class TraHangPanel extends JPanel {
      * Tạo Panel chứa bảng dữ liệu và thanh tìm kiếm phía trên
      */
     private JPanel createTablePanel(String title, String placeholder) {
-        JPanel pnl = new JPanel(new BorderLayout(5, 5));
+        RoundedPanel pnl = new RoundedPanel(16);
+        pnl.setLayout(new BorderLayout(5, 5));
         pnl.setBackground(Color.WHITE);
-        pnl.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220), 1, true));
 
         // Header Panel (Tiêu đề + Ô tìm kiếm)
         JPanel pnlHeader = new JPanel(new BorderLayout());
@@ -155,44 +161,23 @@ public class TraHangPanel extends JPanel {
         JPanel pnlSearchAction = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
         pnlSearchAction.setOpaque(false);
 
-        txtSearch = new JTextField(15);
+        txtSearch = new RoundedTextField(placeholder, 15);
         txtSearch.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                     String ma = txtSearch.getText().trim();
-                    if (!ma.isEmpty()) {
+                    if (!ma.isEmpty() && !ma.equals(placeholder)) {
                         hienThiSanPhamHoaDon(ma);
                     }
                 }
             }
         });
         txtSearch.setPreferredSize(new Dimension(180, 30));
-        txtSearch.setText(placeholder);
-        txtSearch.setForeground(Color.GRAY);
 
-        txtSearch.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusGained(java.awt.event.FocusEvent evt) {
-                if (txtSearch.getText().equals(placeholder)) {
-                    txtSearch.setText("");
-                    txtSearch.setForeground(Color.BLACK);
-                }
-            }
-
-            public void focusLost(java.awt.event.FocusEvent evt) {
-                if (txtSearch.getText().isEmpty()) {
-                    txtSearch.setForeground(Color.GRAY);
-                    txtSearch.setText(placeholder);
-                }
-            }
-        });
-
-        JButton btnSearch = new JButton("Tìm");
+        RoundedButton btnSearch = new RoundedButton("Tìm");
         btnSearch.setBackground(new Color(0, 123, 255));
-        btnSearch.setForeground(Color.WHITE);
-        btnSearch.setFocusPainted(false);
         btnSearch.setPreferredSize(new Dimension(65, 30));
-        btnSearch.setFont(new Font("Segoe UI", Font.BOLD, 13));
         btnSearch.addActionListener(e -> {
             String ma = txtSearch.getText().trim();
             if (!ma.isEmpty() && !ma.equals(placeholder)) {
@@ -299,10 +284,10 @@ public class TraHangPanel extends JPanel {
      * Tạo Panel chứa thông tin hóa đơn và thanh toán bên phải
      */
     private JPanel createInfoPanel() {
-        JPanel pnlMain = new JPanel(new BorderLayout());
+        RoundedPanel pnlMain = new RoundedPanel(16);
+        pnlMain.setLayout(new BorderLayout());
         pnlMain.setPreferredSize(new Dimension(380, 0));
         pnlMain.setBackground(new Color(248, 248, 248));
-        pnlMain.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220)));
 
         JLabel lblTitle = new JLabel("Hóa đơn trả hàng", SwingConstants.CENTER);
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
@@ -318,40 +303,77 @@ public class TraHangPanel extends JPanel {
 
         int r = 0;
         // Phần thông tin chung
-        addInputRow(pnlContent, "Mã hóa gốc", txtMaHoaGoc = new JTextField("HDB27032026001"), gbc, r++);
-        addInputRow(pnlContent, "Mã hóa đơn", txtMaHoaDon = new JTextField("HDT27032026001"), gbc, r++);
-        addInputRow(pnlContent, "Ngày tạo", txtNgayTao = new JTextField("27/03/2026"), gbc, r++);
-       String tenNguoiTao = (nhanVien != null) ? nhanVien.getTenNhanVien() : "Phan Hoai Bao";
-        addInputRow(pnlContent, "Người tạo", txtNguoiTao = new JTextField(tenNguoiTao), gbc, r++);
-        addInputRow(pnlContent, "Tên khách hàng", txtTenKhachHang = new JTextField("Tran Tan Tai"), gbc, r++);
+        txtMaHoaGoc = new RoundedTextField(15);
+        txtMaHoaGoc.setText("HDB27032026001");
+        addInputRow(pnlContent, "Mã hóa gốc", txtMaHoaGoc, gbc, r++);
+
+        txtMaHoaDon = new RoundedTextField(15);
+        txtMaHoaDon.setText("HDT27032026001");
+        addInputRow(pnlContent, "Mã hóa đơn", txtMaHoaDon, gbc, r++);
+
+        txtNgayTao = new RoundedTextField(15);
+        txtNgayTao.setText("27/03/2026");
+        addInputRow(pnlContent, "Ngày tạo", txtNgayTao, gbc, r++);
+
+        String tenNguoiTao = (nhanVien != null) ? nhanVien.getTenNhanVien() : "Phan Hoai Bao";
+        txtNguoiTao = new RoundedTextField(15);
+        txtNguoiTao.setText(tenNguoiTao);
+        addInputRow(pnlContent, "Người tạo", txtNguoiTao, gbc, r++);
+
+        txtTenKhachHang = new RoundedTextField(15);
+        txtTenKhachHang.setText("Tran Tan Tai");
+        addInputRow(pnlContent, "Tên khách hàng", txtTenKhachHang, gbc, r++);
 
         gbc.gridy = r++;
-        pnlContent.add(new JLabel("Chi chú"), gbc);
+        JLabel lblGhiChu = new JLabel("Ghi chú:");
+        lblGhiChu.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        pnlContent.add(lblGhiChu, gbc);
         gbc.gridy = r++;
-        txtGhiChu = new JTextArea(4, 20);
-        txtGhiChu.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
-        pnlContent.add(new JScrollPane(txtGhiChu), gbc);
+        txtGhiChu = new JTextArea(6, 20);
+        txtGhiChu.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txtGhiChu.setLineWrap(true);
+        txtGhiChu.setWrapStyleWord(true);
+        txtGhiChu.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Color.LIGHT_GRAY),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+        JScrollPane scrollGhiChu = new JScrollPane(txtGhiChu);
+        scrollGhiChu.setPreferredSize(new Dimension(200, 80));
+        scrollGhiChu.setMinimumSize(new Dimension(200, 80));
+        pnlContent.add(scrollGhiChu, gbc);
 
         gbc.gridy = r++;
         pnlContent.add(Box.createRigidArea(new Dimension(0, 10)), gbc);
 
         // Phần tính toán tiền
-        addInputRow(pnlContent, "Tiền hóa đơn gốc :", txtTienGoc = new JTextField("220.500Đ"), gbc, r++);
-        addInputRow(pnlContent, "Tiền hóa đơn trả :", txtTienTra = new JTextField("105.750Đ"), gbc, r++);
-        addInputRow(pnlContent, "Khuyến mãi đã áp dụng:", txtChenhLech = new JTextField("Không"), gbc, r++);
-        addInputRow(pnlContent, "Tổng tiền thuế:", txtThue = new JTextField("5.250Đ"), gbc, r++);
-        addInputRow(pnlContent, "Thành tiền :", txtThanhTien = new JTextField("114.750Đ"), gbc, r++);
+        txtTienGoc = new RoundedTextField(15);
+        txtTienGoc.setText("220.500Đ");
+        addInputRow(pnlContent, "Tiền hóa đơn gốc :", txtTienGoc, gbc, r++);
+
+        txtTienTra = new RoundedTextField(15);
+        txtTienTra.setText("105.750Đ");
+        addInputRow(pnlContent, "Tiền hóa đơn trả :", txtTienTra, gbc, r++);
+
+        txtChenhLech = new RoundedTextField(15);
+        txtChenhLech.setText("Không");
+        addInputRow(pnlContent, "Khuyến mãi đã áp dụng:", txtChenhLech, gbc, r++);
+
+        txtThue = new RoundedTextField(15);
+        txtThue.setText("5.250Đ");
+        addInputRow(pnlContent, "Tổng tiền thuế:", txtThue, gbc, r++);
+
+        txtThanhTien = new RoundedTextField(15);
+        txtThanhTien.setText("114.750Đ");
+        addInputRow(pnlContent, "Thành tiền :", txtThanhTien, gbc, r++);
 
         // Phương thức thanh toán mặc định là tiền mặt (không cho chọn trên UI)
 
-        addInputRow(pnlContent, "Tiền trả lại:", txtTienTraLai = new JTextField("114.750Đ"), gbc, r++);
+        txtTienTraLai = new RoundedTextField(15);
+        txtTienTraLai.setText("114.750Đ");
+        addInputRow(pnlContent, "Tiền trả lại:", txtTienTraLai, gbc, r++);
 
         // Nút Thanh Toán
-        btnThanhToan = new JButton("Thanh Toán");
+        btnThanhToan = new RoundedButton("Thanh Toán");
         btnThanhToan.setBackground(new Color(40, 167, 69));
-        btnThanhToan.setForeground(Color.WHITE);
-        btnThanhToan.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        btnThanhToan.setFocusPainted(false);
         btnThanhToan.setPreferredSize(new Dimension(0, 45));
 
         // Sự kiện Thanh toán và Trả hàng
@@ -385,8 +407,9 @@ public class TraHangPanel extends JPanel {
                 hdGoc.setMaHoaDon(txtMaHoaGoc.getText());
                 hoaDonTra.setHoaDonDoiTra(hdGoc);
                 hoaDonTra.setGhiChu(txtGhiChu.getText());
-                
-                com.example.entity.NhanVien activeNv = (nhanVien != null) ? nhanVien : new com.example.entity.NhanVien("QL001");
+
+                com.example.entity.NhanVien activeNv = (nhanVien != null) ? nhanVien
+                        : new com.example.entity.NhanVien("QL001");
                 hoaDonTra.setNhanVien(activeNv);
 
                 hoaDonTra.setLoaiHoaDon(com.example.entity.enums.LoaiHoaDon.TRA_HANG);
@@ -491,11 +514,13 @@ public class TraHangPanel extends JPanel {
         dsChiTietGoc = chiTietHoaDonService.layTheoMaHoaDon(maHD);
 
         // --- XỬ LÝ LỖI DUPLICATE ---
-        // Không load các sản phẩm là Quà Tặng (isLaQuaTangKem = true) lên danh sách trả hàng.
+        // Không load các sản phẩm là Quà Tặng (isLaQuaTangKem = true) lên danh sách trả
+        // hàng.
         dsChiTietGoc.removeIf(ChiTietHoaDon::isLaQuaTangKem);
 
         // --- KHÔNG CHO TRẢ THUỐC ETC ---
-        dsChiTietGoc.removeIf(ct -> ct.getDonViQuyDoi().getSanPham().getLoaiSanPham() == com.example.entity.enums.LoaiSanPham.ETC);
+        dsChiTietGoc.removeIf(
+                ct -> ct.getDonViQuyDoi().getSanPham().getLoaiSanPham() == com.example.entity.enums.LoaiSanPham.ETC);
 
         this.hd.setDsChiTiet(dsChiTietGoc);
 
@@ -553,7 +578,6 @@ public class TraHangPanel extends JPanel {
 
         double thanhTien = tongTienTra + tongThueTra;
 
-        
         // Xử lý giảm trừ tiền trả lại nếu hóa đơn gốc đã áp dụng khuyến mãi giảm %
         double soTienGiamKM = 0;
         if (this.hd != null && this.hd.getKhuyenMai() != null) {
@@ -566,8 +590,8 @@ public class TraHangPanel extends JPanel {
         txtTienTra.setText(df.format(tongTienTra));
         txtThue.setText(df.format(tongThueTra));
         txtThanhTien.setText(df.format(thanhTien));
-       txtTienTraLai.setText(df.format(tienTraLaiKhach));
-        
+        txtTienTraLai.setText(df.format(tienTraLaiKhach));
+
         // Hiển thị Khuyến mãi đã áp dụng ở txtChenhLech
         if (this.hd != null && this.hd.getKhuyenMai() != null) {
             String tenKM = this.hd.getKhuyenMai().getTenKhuyenMai();
@@ -578,7 +602,7 @@ public class TraHangPanel extends JPanel {
             }
         } else {
             txtChenhLech.setText("Không");
-        } 
+        }
     }
 
     // =========================================================================
@@ -587,8 +611,7 @@ public class TraHangPanel extends JPanel {
 
     /** Làm mới toàn bộ giao diện về trạng thái rỗng */
     private void lamMoiGiaoDien() {
-        txtSearch.setText("Mã hóa đơn");
-        txtSearch.setForeground(Color.GRAY); // Trả về màu nhạt để gợi ý nhập tiếp
+        txtSearch.setText("");
 
         txtMaHoaGoc.setText("");
         txtMaHoaDon.setText("");
@@ -601,9 +624,9 @@ public class TraHangPanel extends JPanel {
         txtTienTra.setText(zero);
         txtThue.setText(zero);
         txtThanhTien.setText(zero);
-        txtTienTraLai.setText(zero);         
+        txtTienTraLai.setText(zero);
         txtChenhLech.setText("Không");
-        
+
         // Dọn dẹp dữ liệu logic
         model.setRowCount(0);
         this.hd = null;
@@ -616,13 +639,14 @@ public class TraHangPanel extends JPanel {
     // VÙNG 6: CÁC HÀM HỖ TRỢ VÀ INNER CLASS (HELPERS & COMPONENT)
     // =========================================================================
 
-    /** Hỗ trợ thêm từng dòng input có nhãn vào Panel */
-    private void addInputRow(JPanel pnl, String labelText, JTextField txt, GridBagConstraints gbc, int row) {
+    private void addInputRow(JPanel pnl, String labelText, RoundedTextField txt, GridBagConstraints gbc, int row) {
         gbc.gridy = row;
         JPanel rowPanel = new JPanel(new BorderLayout(10, 0));
         rowPanel.setOpaque(false);
         JLabel lbl = new JLabel(labelText);
-       lbl.setPreferredSize(new Dimension(150, 25)); // Tăng lên 150 để hiển thị nhãn dài "Khuyến mãi đã áp dụng"
+        lbl.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lbl.setPreferredSize(new Dimension(165, 35));
+        txt.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         rowPanel.add(lbl, BorderLayout.WEST);
         rowPanel.add(txt, BorderLayout.CENTER);
         pnl.add(rowPanel, gbc);
@@ -630,12 +654,11 @@ public class TraHangPanel extends JPanel {
 
     /** Cấu hình màu nền mờ cho các textfield chỉ đọc */
     private void setupStyles() {
-        JTextField[] readonly = { txtMaHoaGoc, txtMaHoaDon, txtNgayTao, txtNguoiTao, txtTenKhachHang,
+        RoundedTextField[] readonly = { txtMaHoaGoc, txtMaHoaDon, txtNgayTao, txtNguoiTao, txtTenKhachHang,
                 txtTienGoc, txtTienTra, txtChenhLech, txtThue, txtThanhTien, txtTienTraLai };
-        for (JTextField f : readonly) {
+        for (RoundedTextField f : readonly) {
             f.setEditable(false);
-            f.setBackground(new Color(200, 200, 200));
-            f.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+            f.setBackground(new Color(235, 235, 235));
             f.setHorizontalAlignment(JTextField.LEFT);
         }
     }

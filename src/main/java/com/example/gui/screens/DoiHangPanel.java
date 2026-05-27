@@ -983,7 +983,7 @@ public class DoiHangPanel extends JPanel {
             
             if (pnlThanhTienContainer.getComponentCount() > 0 &&
                     pnlThanhTienContainer.getComponent(0) instanceof JLabel) {
-                ((JLabel) pnlThanhTienContainer.getComponent(0)).setText("Thành tiền (đã làm tròn):");
+                ((JLabel) pnlThanhTienContainer.getComponent(0)).setText("Thành tiền (làm tròn):");
             }
             tinhTienThoi();
         }
@@ -1539,23 +1539,46 @@ public class DoiHangPanel extends JPanel {
         p.setPreferredSize(new Dimension(420, 0));
         p.setBackground(Color.WHITE);
         p.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220)));
-        JLabel title = new JLabel("Hóa đơn đổi hàng", 0);
+
+        // --- Tiêu đề ---
+        JLabel title = new JLabel("Hóa đơn đổi hàng", SwingConstants.CENTER);
         title.setFont(new Font("Segoe UI", Font.BOLD, 22));
         title.setBorder(new EmptyBorder(15, 0, 15, 0));
         p.add(title, BorderLayout.NORTH);
+
+        // --- Panel trung tâm chứa toàn bộ nội dung ---
         JPanel c = new JPanel(new GridBagLayout());
         c.setBackground(Color.WHITE);
         GridBagConstraints g = new GridBagConstraints();
-        g.fill = 1;
+        g.fill = GridBagConstraints.HORIZONTAL;
         g.insets = new Insets(6, 15, 6, 15);
         g.weightx = 1.0;
         int r = 0;
+
+        // --- Thông tin hóa đơn ---
         addInputRow(c, "Mã hóa đơn gốc:", txtMaHoaDonGoc = new JTextField(), g, r++);
         addInputRow(c, "Ngày tạo:", txtNgayTao = new JTextField(), g, r++);
         addInputRow(c, "Người tạo:", txtNguoiTao = new JTextField(), g, r++);
         addInputRow(c, "Khách hàng:", txtTenKhachHang = new JTextField(), g, r++);
 
-        // Khởi tạo ComboBox Khuyến Mãi
+        // --- Ghi chú ---
+        g.gridy = r++;
+        c.add(new JLabel("Ghi chú:"), g);
+        g.gridy = r++;
+        txtGhiChu = new JTextArea(5, 20);
+        txtGhiChu.setLineWrap(true);
+        txtGhiChu.setWrapStyleWord(true);
+        txtGhiChu.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        JScrollPane scrollGhiChu = new JScrollPane(txtGhiChu);
+        scrollGhiChu.setPreferredSize(new Dimension(0, 80));
+        scrollGhiChu.setMinimumSize(new Dimension(0, 80));
+        c.add(scrollGhiChu, g);
+
+        // --- Thông tin tiền ---
+        addInputRow(c, "Tiền HĐ gốc:", txtTienGoc = new JTextField("0 VNĐ"), g, r++);
+        addInputRow(c, "Tiền HĐ đổi:", txtTienDoi = new JTextField("0 VNĐ"), g, r++);
+
+        // --- Khởi tạo ComboBox Khuyến Mãi ---
         cboKhuyenMai = new JComboBox<>();
         cboKhuyenMai.addItem("-- Không áp dụng --");
         dsKhuyenMai = khuyenMaiService.layKhuyenMaiConHan(false);
@@ -1640,62 +1663,85 @@ public class DoiHangPanel extends JPanel {
             }
         });
 
-        g.gridy = r++;
-        c.add(new JLabel("Ghi chú:"), g);
-        g.gridy = r++;
-        txtGhiChu = new JTextArea(2, 20);
-        txtGhiChu.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
-        c.add(new JScrollPane(txtGhiChu), g);
-        addInputRow(c, "Tiền HĐ gốc:", txtTienGoc = new JTextField("0 VNĐ"), g, r++);
-        addInputRow(c, "Tiền HĐ đổi:", txtTienDoi = new JTextField("0 VNĐ"), g, r++);
         addInputRow(c, "KM mới:", cboKhuyenMai, g, r++);
-        addInputRow(c, "Tiền KM giảm:", txtKhuyenMaiMoi = new JTextField("0 VNĐ"), g, r++);
+        addInputRow(c, "Tiền KM giảm:", txtKhuyenMaiMoi = new JTextField("-0 VNĐ"), g, r++);
         addInputRow(c, "Chênh lệch:", txtChenhLech = new JTextField("0 VNĐ"), g, r++);
 
-        g.gridy = r++;
-        JPanel rad = new JPanel(new FlowLayout(0, 0, 10));
-        rad.setOpaque(false);
-        rad.add(new JLabel("PT Thanh toán: "));
-        rad.add(radTienMat = new JRadioButton("Tiền mặt", true));
-        rad.add(radChuyenKhoan = new JRadioButton("Chuyển khoản"));
-        ButtonGroup bg = new ButtonGroup();
-        bg.add(radTienMat);
-        bg.add(radChuyenKhoan);
-        c.add(rad, g);
-
-        g.gridy = r++;
-        g.weighty = 1.0;
-        pnlDynamicContent = new JPanel(new CardLayout());
-        pnlDynamicContent.setOpaque(false);
-        JPanel cash = new JPanel(new GridBagLayout());
-        cash.setOpaque(false);
+        // --- Thành tiền (làm tròn) - nằm trên khung thanh toán ---
         txtThanhTienLamTron = new JTextField("0 VNĐ");
         txtThanhTienLamTron.setEditable(false);
         txtThanhTienLamTron.setBackground(new Color(245, 245, 245));
+        pnlThanhTienContainer = new JPanel(new BorderLayout(10, 0));
+        pnlThanhTienContainer.setOpaque(false);
+        JLabel lblThanhTien = new JLabel("Thành tiền (làm tròn):");
+        lblThanhTien.setPreferredSize(new Dimension(150, 25));
+        pnlThanhTienContainer.add(lblThanhTien, BorderLayout.WEST);
+        pnlThanhTienContainer.add(txtThanhTienLamTron, BorderLayout.CENTER);
+        g.gridy = r++;
+        c.add(pnlThanhTienContainer, g);
+
+        // --- Khung thanh toán có viền ---
+        JPanel paymentBox = new JPanel(new GridBagLayout());
+        paymentBox.setBackground(Color.WHITE);
+        paymentBox.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(200, 200, 200)),
+                new EmptyBorder(8, 10, 8, 10)));
+        GridBagConstraints pg = new GridBagConstraints();
+        pg.fill = GridBagConstraints.HORIZONTAL;
+        pg.weightx = 1.0;
+        pg.insets = new Insets(3, 0, 3, 0);
+        int pr = 0;
+
+        // Dòng phương thức thanh toán
+        pg.gridy = pr++;
+        JPanel rad = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        rad.setOpaque(false);
+        JLabel lblPhuongThuc = new JLabel("Phương thức:");
+        lblPhuongThuc.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        rad.add(lblPhuongThuc);
+        rad.add(radTienMat = new JRadioButton("Tiền mặt", true));
+        rad.add(radChuyenKhoan = new JRadioButton("Chuyển khoản"));
+        radTienMat.setOpaque(false);
+        radChuyenKhoan.setOpaque(false);
+        ButtonGroup bg = new ButtonGroup();
+        bg.add(radTienMat);
+        bg.add(radChuyenKhoan);
+        paymentBox.add(rad, pg);
+
+        // Dynamic content (CASH / QR)
+        pnlDynamicContent = new JPanel(new CardLayout());
+        pnlDynamicContent.setOpaque(false);
+
+        // Panel tiền mặt
+        JPanel cash = new JPanel(new GridBagLayout());
+        cash.setOpaque(false);
         txtKhachDua = new JTextField();
         txtTienThoi = new JTextField("0 VNĐ");
         txtTienThoi.setEditable(false);
         txtTienThoi.setBackground(new Color(245, 245, 245));
-        pnlThanhTienContainer = new JPanel(new BorderLayout(10, 0));
-        pnlThanhTienContainer.setOpaque(false);
-        JLabel lblThanhTien = new JLabel("Thành tiền (đã làm tròn):");
-        lblThanhTien.setPreferredSize(new Dimension(150, 25));
-        pnlThanhTienContainer.add(lblThanhTien, BorderLayout.WEST);
-        pnlThanhTienContainer.add(txtThanhTienLamTron, BorderLayout.CENTER);
-        GridBagConstraints gc = new GridBagConstraints() {
-            {
-                fill = 1;
-                weightx = 1;
-                gridy = 0;
-                insets = new Insets(0, 0, 15, 0);
-            }
-        };
-        cash.add(pnlThanhTienContainer, gc);
-        addInputRow(cash, "Tiền khách đưa:", txtKhachDua, gc, 1);
-        addInputRow(cash, "Tiền thối lại:", txtTienThoi, gc, 2);
+        GridBagConstraints gc = new GridBagConstraints();
+        gc.fill = GridBagConstraints.HORIZONTAL;
+        gc.weightx = 1.0;
+        gc.insets = new Insets(3, 0, 3, 0);
+        addInputRow(cash, "Tiền khách đưa:", txtKhachDua, gc, 0);
+        addInputRow(cash, "Tiền thối lại:", txtTienThoi, gc, 1);
         pnlDynamicContent.add(cash, "CASH");
         pnlDynamicContent.add(createQRPanel(), "QR");
-        c.add(pnlDynamicContent, g);
+
+        pg.gridy = pr++;
+        paymentBox.add(pnlDynamicContent, pg);
+
+        g.gridy = r++;
+        c.add(paymentBox, g);
+
+        // Spacer để đẩy nội dung lên trên
+        g.gridy = r++;
+        g.weighty = 1.0;
+        JPanel spacer = new JPanel();
+        spacer.setOpaque(false);
+        c.add(spacer, g);
+
+        // --- Action listeners cho phương thức thanh toán ---
         radTienMat.addActionListener(e -> {
             ((CardLayout) pnlDynamicContent.getLayout()).show(pnlDynamicContent, "CASH");
             tinhToanToanBoTien();
@@ -1704,11 +1750,15 @@ public class DoiHangPanel extends JPanel {
             ((CardLayout) pnlDynamicContent.getLayout()).show(pnlDynamicContent, "QR");
             tinhToanToanBoTien();
         });
+
+        // --- Nút thanh toán ---
         btnThanhToan = new JButton("THANH TOÁN");
         btnThanhToan.setBackground(new Color(40, 167, 69));
         btnThanhToan.setForeground(Color.WHITE);
         btnThanhToan.setFont(new Font("Segoe UI", Font.BOLD, 18));
         btnThanhToan.setPreferredSize(new Dimension(0, 50));
+        btnThanhToan.setFocusPainted(false);
+
         p.add(c, BorderLayout.CENTER);
         p.add(btnThanhToan, BorderLayout.SOUTH);
         setupReadOnlyFields();
