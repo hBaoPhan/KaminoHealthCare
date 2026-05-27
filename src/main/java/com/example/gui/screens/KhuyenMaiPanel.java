@@ -706,7 +706,7 @@ public class KhuyenMaiPanel extends JPanel {
                 refreshTableData();
                 clearForm();
             } else {
-                JOptionPane.showMessageDialog(this, "Xóa thất bại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Xóa thất bại! Khuyến mãi này có thể đã được sử dụng trong hóa đơn.", "Lỗi xóa dữ liệu", JOptionPane.ERROR_MESSAGE);
             }
         }
     }

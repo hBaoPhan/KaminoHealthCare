@@ -80,8 +80,7 @@ public class ThongKeDAO {
                     "FROM Lo l " +
                     "JOIN SanPham sp ON l.maSanPham = sp.maSanPham " +
                     "WHERE l.soLuongSanPham > 0 " +
-                    "AND l.ngayHetHan >= DATEADD(day, 7, CAST(GETDATE() AS DATE)) " +
-                    "AND l.ngayHetHan <= DATEADD(month, 1, CAST(GETDATE() AS DATE)) " +
+                    "AND l.ngayHetHan <= DATEADD(day, 37, CAST(GETDATE() AS DATE)) " +
                     "ORDER BY l.ngayHetHan ASC";
             PreparedStatement stmt = con.prepareStatement(sql);
             ResultSet rs = stmt.executeQuery();

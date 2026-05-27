@@ -164,7 +164,7 @@ public class KhuyenMaiDAO {
                 return lenh.executeUpdate() > 0;
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            // Không in stack trace ra console nếu là lỗi ràng buộc dữ liệu khóa ngoại
             return false;
         }
     }

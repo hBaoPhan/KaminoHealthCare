@@ -556,7 +556,7 @@ public class ThongKePanel extends JPanel {
         lblSapHetHanTitle.setForeground(new Color(40, 50, 60));
         cardSapHetHan.add(lblSapHetHanTitle, BorderLayout.NORTH);
 
-        String[] colsSHH = { "Mã lô", "Số lô", "Mã sản phẩm", "Tên sản phẩm", "Số lượng", "Ngày hết hạn" };
+        String[] colsSHH = { "Mã lô", "Số lô", "Mã sản phẩm", "Tên sản phẩm", "Số lượng", "Ngày hết hạn", "Trạng thái" };
         modelSapHetHan = new DefaultTableModel(colsSHH, 0) {
             @Override
             public boolean isCellEditable(int r, int c) {
@@ -570,6 +570,7 @@ public class ThongKePanel extends JPanel {
         tableSapHetHan.getColumnModel().getColumn(2).setCellRenderer(centerRenderer);
         tableSapHetHan.getColumnModel().getColumn(4).setCellRenderer(centerRenderer);
         tableSapHetHan.getColumnModel().getColumn(5).setCellRenderer(centerRenderer);
+        tableSapHetHan.getColumnModel().getColumn(6).setCellRenderer(centerRenderer);
 
         JScrollPane scrollSHH = new JScrollPane(tableSapHetHan);
         scrollSHH.getViewport().setBackground(Color.WHITE);
@@ -1258,14 +1259,28 @@ public class ThongKePanel extends JPanel {
         } else if (activeTabSp.equals("Sắp hết hạn")) {
             List<Object[]> ds = thongKeService.layLoSapHetHan();
             modelSapHetHan.setRowCount(0);
+            LocalDate today = LocalDate.now();
             for (Object[] row : ds) {
+                LocalDate ngayHetHan = (LocalDate) row[5];
+                long soNgay = java.time.Duration.between(today.atStartOfDay(), ngayHetHan.atStartOfDay()).toDays();
+                
+                String trangThai = "";
+                if (soNgay <= 0) {
+                    trangThai = "HẾT HẠN";
+                } else if (soNgay <= 30) {
+                    trangThai = "NGỪNG BÁN";
+                } else if (soNgay <= 37) {
+                    trangThai = "SẮP HẾT HẠN";
+                }
+
                 modelSapHetHan.addRow(new Object[] {
                         row[0], // maLo
                         row[1], // soLo
                         row[2], // maSanPham
                         row[3], // tenSanPham
                         row[4], // soLuongTon
-                        ((LocalDate) row[5]).format(dateFormatter) // ngayHetHan
+                        ngayHetHan.format(dateFormatter), // ngayHetHan
+                        trangThai // trangThai
                 });
             }
         } else if (activeTabSp.equals("Tồn kho lâu")) {
@@ -1512,9 +1527,9 @@ public class ThongKePanel extends JPanel {
                         activeModel = modelBanChay;
                     } else if ("Sắp hết hạn".equals(activeTabSp)) {
                         periodStr = "Thời điểm kiểm tra: " + java.time.LocalDate.now().format(dateFormatter)
-                                + " (Thời hạn từ 7 ngày đến 1 tháng)";
-                        headers = new String[] { "Mã lô", "Số lô", "Mã SP", "Tên sản phẩm", "Số lượng", "Hạn dùng" };
-                        colWidths = new int[] { 80, 80, 80, 160, 60, 80 };
+                                + " (Thời hạn <= 37 ngày)";
+                        headers = new String[] { "Mã lô", "Số lô", "Mã SP", "Tên sản phẩm", "Số lượng", "Hạn dùng", "Trạng thái" };
+                        colWidths = new int[] { 60, 60, 60, 140, 50, 70, 100 };
                         activeModel = modelSapHetHan;
                     } else {
                         periodStr = "Thời điểm kiểm tra: " + java.time.LocalDate.now().format(dateFormatter);
@@ -1635,6 +1650,9 @@ public class ThongKePanel extends JPanel {
         if (ok) {
             try {
                 job.print();
+            } catch (java.awt.print.PrinterAbortException ex) {
+                // Người dùng hoặc máy in đã hủy quá trình in ấn
+                System.out.println("Đã hủy in ấn báo cáo Thống Kê.");
             } catch (PrinterException ex) {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(this, "Lỗi in ấn: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);

@@ -593,9 +593,14 @@ public class LoPanel extends JPanel {
         String maLo = (String) model.getValueAt(row, 1);
         int confirm = JOptionPane.showConfirmDialog(this, "Xóa lô " + maLo + "?", "Xác nhận",
                 JOptionPane.YES_NO_OPTION);
-        if (confirm == JOptionPane.YES_OPTION && loService.xoa(maLo)) {
-            loadDataToTable();
-            lamMoi();
+        if (confirm == JOptionPane.YES_OPTION) {
+            if (loService.xoa(maLo)) {
+                JOptionPane.showMessageDialog(this, "Xóa lô thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                loadDataToTable();
+                lamMoi();
+            } else {
+                JOptionPane.showMessageDialog(this, "Xóa thất bại! Lô này có thể đã được phân bổ cho các hóa đơn.", "Lỗi xóa dữ liệu", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 

@@ -166,7 +166,7 @@ public class LoDAO {
             stmt.setString(1, maLo);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
+            // Không in stack trace ra console nếu là lỗi ràng buộc khóa ngoại (SuPhanBoLo)
             return false;
         }
     }

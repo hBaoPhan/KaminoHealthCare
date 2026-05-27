@@ -1465,6 +1465,27 @@ public class BanHangPanel extends JPanel {
             return;
         }
 
+        // --- Ràng buộc tiền khách đưa >= tiền hóa đơn (nếu thanh toán tiền mặt) ---
+        if (rdoTienMat.isSelected()) {
+            double tienKhachDua = 0;
+            double thanhTien = 0;
+            try {
+                String kd = txtTienKhachDua.getText().replaceAll("[^\\d]", "");
+                tienKhachDua = kd.isEmpty() ? 0 : Double.parseDouble(kd);
+
+                String ttStr = lblThanhTien.getText().replaceAll("[^\\d]", "");
+                thanhTien = ttStr.isEmpty() ? 0 : Double.parseDouble(ttStr);
+            } catch (Exception ex) {
+            }
+
+            if (tienKhachDua < thanhTien) {
+                JOptionPane.showMessageDialog(this, "Tiền khách đưa không đủ để thanh toán hóa đơn!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+                txtTienKhachDua.requestFocusInWindow();
+                return;
+            }
+        }
+        // --------------------------------------------------------------------------
+
         String soTien = lblThanhTien.getText().replace("Thành tiền : ", "");
         int confirm = JOptionPane.showConfirmDialog(this,
                 "Bạn có chắc chắn muốn hoàn tất thanh toán hóa đơn này không?\nTổng tiền: " + soTien,
