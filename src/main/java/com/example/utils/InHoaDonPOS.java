@@ -37,7 +37,7 @@ public class InHoaDonPOS {
             height += 20;
         }
         if (hd.getHoaDonDoiTra() != null) {
-            height += 12;
+            height += 36;
         }
 
         paper.setSize(width, height);
@@ -222,6 +222,33 @@ public class InHoaDonPOS {
                     }
                 }
 
+                // Tiền KM của các sản phẩm hóa đơn gốc được đem đổi (đổi ngang)
+                double soTienKMGoc = 0;
+                if (laDoiHang && tiLeGiamGocFinal > 0) {
+                    double tongTienSPCu = 0;
+                    for (ChiTietHoaDon ct : dsChiTiet) {
+                        if (ct.isLaQuaTangKem()) continue;
+                        String maSPi = ct.getDonViQuyDoi().getSanPham() != null
+                                ? ct.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
+                        String tenDVi = ct.getDonViQuyDoi().getTenDonVi() != null
+                                ? ct.getDonViQuyDoi().getTenDonVi().name() : "";
+                        int slGocI = 0;
+                        for (ChiTietHoaDon ctGoc : dsChiTietGocFinal) {
+                            if (ctGoc.isLaQuaTangKem()) continue;
+                            String maSPGoc = ctGoc.getDonViQuyDoi().getSanPham() != null
+                                    ? ctGoc.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
+                            String tenDVGoc = ctGoc.getDonViQuyDoi().getTenDonVi() != null
+                                    ? ctGoc.getDonViQuyDoi().getTenDonVi().name() : "";
+                            if (maSPGoc.equals(maSPi) && tenDVGoc.equals(tenDVi)) {
+                                slGocI += ctGoc.getSoLuongBan();
+                            }
+                        }
+                        int slCuDangDoi = Math.min(ct.getSoLuongBan(), slGocI);
+                        tongTienSPCu += slCuDangDoi * ct.getDonGia();
+                    }
+                    soTienKMGoc = tongTienSPCu * (tiLeGiamGocFinal / 100.0);
+                }
+
                 // discountRatio chỉ dùng để tính thuế theo từng phần
                 // Với đổi hàng: tính thuế riêng theo đổi ngang (KM cũ) và mua thêm (KM mới)
                 double discountRatio = (tongTienHang > 0) ? (tongTienHang - soTienGiam) / tongTienHang : 1.0;
@@ -293,16 +320,23 @@ public class InHoaDonPOS {
                 // Dùng entity methods sau khi inject dsChiTiet, giống createInvoiceDetailPanel()
                 hd.setDsChiTiet(dsChiTiet);
                 double tongTienHangFinal  = hd.tinhTongTienTamThoi();   // Σ(SL×giá), bỏ quà tặng
-                double tongThueFinal      = hd.tinhTongThue();           // Thuế theo discountRatio KM
-                double tongTienCuoiCung   = hd.tinhTongTienThanhToan();  // = tongTienHangFinal - giamNoi + tongThueFinal
-                // soTienGiam đã tính ở trên (DOI_HANG: chỉ phần mua thêm; còn lại: toàn bộ)
+                double tongThueFinal      = laDoiHang ? tongThue : hd.tinhTongThue();
+                double tongTienCuoiCung   = laDoiHang 
+                        ? (tongTienHangFinal - soTienGiam - soTienKMGoc + tongThueFinal)
+                        : hd.tinhTongTienThanhToan();
 
                 g2d.drawString("Cộng tiền hàng:", startX, y);
                 g2d.drawString(df.format(tongTienHangFinal), startX + 165, y);
                 y += 10;
 
+                if (laDoiHang && soTienKMGoc > 0) {
+                    g2d.drawString("KM hóa đơn gốc:", startX, y);
+                    g2d.drawString("-" + df.format(soTienKMGoc), startX + 165, y);
+                    y += 10;
+                }
+
                 if (soTienGiam > 0) {
-                    g2d.drawString("Khuyến mãi:", startX, y);
+                    g2d.drawString(laDoiHang ? "KM hàng mua thêm:" : "Khuyến mãi:", startX, y);
                     g2d.drawString("-" + df.format(soTienGiam), startX + 165, y);
                     y += 10;
                 }

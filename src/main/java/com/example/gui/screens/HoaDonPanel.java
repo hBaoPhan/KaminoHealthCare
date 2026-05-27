@@ -328,7 +328,104 @@ public class HoaDonPanel extends JPanel {
             String nguoiTao = h.getNhanVien() != null ? h.getNhanVien().getTenNhanVien() : "";
             String loaiHoaDon = h.getLoaiHoaDon() != null ? h.getLoaiHoaDon().getMoTa() : "";
             String khachHang = h.getKhachHang() != null ? h.getKhachHang().getTenKhachHang() : "";
-            String tongTien = nf.format(h.tinhTongTienThanhToan());
+            double dTongTien = h.tinhTongTienThanhToan();
+            if (h.getLoaiHoaDon() == LoaiHoaDon.DOI_HANG && h.getHoaDonDoiTra() != null && h.getHoaDonDoiTra().getMaHoaDon() != null) {
+                try {
+                    String maHDGocRef = h.getHoaDonDoiTra().getMaHoaDon();
+                    com.example.service.ChiTietHoaDonService ctSvcRef = new com.example.service.ChiTietHoaDonService();
+                    java.util.List<com.example.entity.ChiTietHoaDon> dsChiTiet = ctSvcRef.layTheoMaHoaDon(h.getMaHoaDon());
+                    java.util.List<com.example.entity.ChiTietHoaDon> dsGoc = ctSvcRef.layTheoMaHoaDon(maHDGocRef);
+                    
+                    HoaDon hdGocRef = hoaDonService.timTheoMa(maHDGocRef);
+                    double kmMoiPt = (h.getKhuyenMai() != null
+                            && h.getKhuyenMai().getLoaiKhuyenMai() == com.example.entity.enums.LoaiKhuyenMai.PHAN_TRAM)
+                            ? h.getKhuyenMai().getKhuyenMaiPhanTram() : 0;
+                    double tiLeGiamGoc = (hdGocRef != null && hdGocRef.getKhuyenMai() != null
+                            && hdGocRef.getKhuyenMai().getLoaiKhuyenMai() == com.example.entity.enums.LoaiKhuyenMai.PHAN_TRAM)
+                            ? hdGocRef.getKhuyenMai().getKhuyenMaiPhanTram() : 0;
+
+                    double tongTienHang = 0;
+                    double soTienGiam = 0;
+                    double soTienKMGoc = 0;
+                    double tongThue = 0;
+
+                    for (com.example.entity.ChiTietHoaDon ctDoi : dsChiTiet) {
+                        if (ctDoi.isLaQuaTangKem()) continue;
+                        tongTienHang += ctDoi.getSoLuongBan() * ctDoi.getDonGia();
+                    }
+
+                    // Tính KM mới (soTienGiam)
+                    if (h.getKhuyenMai() != null && h.getKhuyenMai().getLoaiKhuyenMai() == com.example.entity.enums.LoaiKhuyenMai.PHAN_TRAM) {
+                        double tongTienMuaThem = 0;
+                        for (com.example.entity.ChiTietHoaDon ctDoi : dsChiTiet) {
+                            if (ctDoi.isLaQuaTangKem()) continue;
+                            String maSP = ctDoi.getDonViQuyDoi().getSanPham() != null ? ctDoi.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
+                            String tenDV = ctDoi.getDonViQuyDoi().getTenDonVi() != null ? ctDoi.getDonViQuyDoi().getTenDonVi().name() : "";
+                            int slGoc = 0;
+                            for (com.example.entity.ChiTietHoaDon ctGoc : dsGoc) {
+                                if (ctGoc.isLaQuaTangKem()) continue;
+                                String maSPGoc = ctGoc.getDonViQuyDoi().getSanPham() != null ? ctGoc.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
+                                String tenDVGoc = ctGoc.getDonViQuyDoi().getTenDonVi() != null ? ctGoc.getDonViQuyDoi().getTenDonVi().name() : "";
+                                if (maSPGoc.equals(maSP) && tenDVGoc.equals(tenDV)) {
+                                    slGoc += ctGoc.getSoLuongBan();
+                                }
+                            }
+                            int slMuaThem = Math.max(0, ctDoi.getSoLuongBan() - slGoc);
+                            tongTienMuaThem += slMuaThem * ctDoi.getDonGia();
+                        }
+                        if (tongTienMuaThem >= h.getKhuyenMai().getGiaTriDonHangToiThieu()) {
+                            soTienGiam = tongTienMuaThem * (kmMoiPt / 100.0);
+                        }
+                    }
+
+                    // Tính KM gốc (soTienKMGoc)
+                    double tongTienSPCu = 0;
+                    for (com.example.entity.ChiTietHoaDon ctDoi : dsChiTiet) {
+                        if (ctDoi.isLaQuaTangKem()) continue;
+                        String maSPDoi = ctDoi.getDonViQuyDoi().getSanPham() != null ? ctDoi.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
+                        String tenDVDoi = ctDoi.getDonViQuyDoi().getTenDonVi() != null ? ctDoi.getDonViQuyDoi().getTenDonVi().name() : "";
+                        int slTrongGoc = 0;
+                        for (com.example.entity.ChiTietHoaDon ctGoc : dsGoc) {
+                            if (ctGoc.isLaQuaTangKem()) continue;
+                            String maSPGocX = ctGoc.getDonViQuyDoi().getSanPham() != null ? ctGoc.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
+                            String tenDVGocX = ctGoc.getDonViQuyDoi().getTenDonVi() != null ? ctGoc.getDonViQuyDoi().getTenDonVi().name() : "";
+                            if (maSPGocX.equals(maSPDoi) && tenDVGocX.equals(tenDVDoi)) {
+                                slTrongGoc += ctGoc.getSoLuongBan();
+                            }
+                        }
+                        int slCuDangDoi = Math.min(ctDoi.getSoLuongBan(), slTrongGoc);
+                        tongTienSPCu += slCuDangDoi * ctDoi.getDonGia();
+                    }
+                    soTienKMGoc = tongTienSPCu * (tiLeGiamGoc / 100.0);
+
+                    // Tính Thuế
+                    for (com.example.entity.ChiTietHoaDon ctDoi : dsChiTiet) {
+                        if (ctDoi.isLaQuaTangKem()) continue;
+                        String maSPDoi = ctDoi.getDonViQuyDoi().getSanPham() != null ? ctDoi.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
+                        String tenDVDoi = ctDoi.getDonViQuyDoi().getTenDonVi() != null ? ctDoi.getDonViQuyDoi().getTenDonVi().name() : "";
+                        int slTrongGoc = 0;
+                        for (com.example.entity.ChiTietHoaDon ctGoc : dsGoc) {
+                            if (ctGoc.isLaQuaTangKem()) continue;
+                            String maSPGocX = ctGoc.getDonViQuyDoi().getSanPham() != null ? ctGoc.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
+                            String tenDVGocX = ctGoc.getDonViQuyDoi().getTenDonVi() != null ? ctGoc.getDonViQuyDoi().getTenDonVi().name() : "";
+                            if (maSPGocX.equals(maSPDoi) && tenDVGocX.equals(tenDVDoi)) {
+                                slTrongGoc += ctGoc.getSoLuongBan();
+                            }
+                        }
+                        int slDoiNgang = Math.min(ctDoi.getSoLuongBan(), slTrongGoc);
+                        int slMuaThem = Math.max(0, ctDoi.getSoLuongBan() - slTrongGoc);
+                        double thuePt = ctDoi.getDonViQuyDoi().getSanPham() != null ? ctDoi.getDonViQuyDoi().getSanPham().getThue() : 0;
+                        double price = ctDoi.getDonGia();
+
+                        tongThue += slDoiNgang * price * (thuePt / 100.0) * (1 - tiLeGiamGoc / 100.0);
+                        tongThue += slMuaThem * price * (thuePt / 100.0) * (1 - kmMoiPt / 100.0);
+                    }
+
+                    dTongTien = tongTienHang - soTienGiam - soTienKMGoc + tongThue;
+                } catch (Exception ignored) {
+                }
+            }
+            String tongTien = nf.format(dTongTien);
             String khuyenMai = h.getKhuyenMai() != null ? h.getKhuyenMai().getTenKhuyenMai() : "Không có";
             String trangThai = h.isTrangThaiThanhToan() ? "Đã thanh toán" : "Chưa thanh toán";
 
@@ -499,7 +596,8 @@ public class HoaDonPanel extends JPanel {
             String tenSP = ct.getDonViQuyDoi() != null && ct.getDonViQuyDoi().getSanPham() != null
                     ? ct.getDonViQuyDoi().getSanPham().getTenSanPham()
                     : "";
-            if (ct.isLaQuaTangKem()) tenSP += " (Quà tặng)";
+            if (ct.isLaQuaTangKem())
+                tenSP += " (Quà tặng)";
             String dvt = ct.getDonViQuyDoi() != null && ct.getDonViQuyDoi().getTenDonVi() != null
                     ? ct.getDonViQuyDoi().getTenDonVi().toString()
                     : "";
@@ -507,11 +605,12 @@ public class HoaDonPanel extends JPanel {
             // Thành tiền = trước thuế (SL × đơn giá); quà tặng = 0
             double giaTruocThue = ct.isLaQuaTangKem() ? 0 : sl * ct.getDonGia();
             double thueSuat = (ct.getDonViQuyDoi() != null && ct.getDonViQuyDoi().getSanPham() != null)
-                    ? ct.getDonViQuyDoi().getSanPham().getThue() : 0;
-            String donGia       = ct.isLaQuaTangKem() ? "Miễn phí" : nf.format(ct.getDonGia());
-            String thanhTien    = ct.isLaQuaTangKem() ? "0 đ"       : nf.format(giaTruocThue);
-            String phanTramThue = ct.isLaQuaTangKem() ? "-"         : (int) thueSuat + "%";
-            String quaTang      = ct.isLaQuaTangKem() ? "Có"        : "Không";
+                    ? ct.getDonViQuyDoi().getSanPham().getThue()
+                    : 0;
+            String donGia = ct.isLaQuaTangKem() ? "Miễn phí" : nf.format(ct.getDonGia());
+            String thanhTien = ct.isLaQuaTangKem() ? "0 đ" : nf.format(giaTruocThue);
+            String phanTramThue = ct.isLaQuaTangKem() ? "-" : (int) thueSuat + "%";
+            String quaTang = ct.isLaQuaTangKem() ? "Có" : "Không";
 
             ctModel.addRow(new Object[] { tenSP, dvt, sl, donGia, thanhTien, phanTramThue, quaTang });
         }
@@ -521,7 +620,7 @@ public class HoaDonPanel extends JPanel {
         ctTable.setFont(FONT_TEXT);
         ctTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
         ctTable.getTableHeader().setBackground(new Color(240, 240, 240));
-        
+
         // Căn chỉnh số sang phải
         javax.swing.table.DefaultTableCellRenderer rightRenderer = new javax.swing.table.DefaultTableCellRenderer();
         rightRenderer.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
@@ -540,32 +639,42 @@ public class HoaDonPanel extends JPanel {
 
         hd.setDsChiTiet(dsChiTiet);
         double tongTienHang = hd.tinhTongTienTamThoi();
-        double tongThue = hd.tinhTongThue();
-        double tongTienCuoiCung = hd.tinhTongTienThanhToan();
-        double soTienGiam = 0.0;
+        
+        boolean laDoiHang = hd.getLoaiHoaDon() == com.example.entity.enums.LoaiHoaDon.DOI_HANG;
+        boolean coHoaDonGoc = hd.getHoaDonDoiTra() != null && hd.getHoaDonDoiTra().getMaHoaDon() != null;
 
-        if (hd.getKhuyenMai() != null && hd.getKhuyenMai().getLoaiKhuyenMai() == com.example.entity.enums.LoaiKhuyenMai.PHAN_TRAM) {
-            if (hd.getLoaiHoaDon() == com.example.entity.enums.LoaiHoaDon.DOI_HANG
-                    && hd.getHoaDonDoiTra() != null && hd.getHoaDonDoiTra().getMaHoaDon() != null) {
+        double soTienGiam = 0.0;
+        double soTienKMGoc = 0.0;
+
+        // 1. Tính KM mới (soTienGiam)
+        if (hd.getKhuyenMai() != null
+                && hd.getKhuyenMai().getLoaiKhuyenMai() == com.example.entity.enums.LoaiKhuyenMai.PHAN_TRAM) {
+            if (laDoiHang && coHoaDonGoc) {
                 // Hóa đơn đổi hàng: chỉ áp KM lên phần mua thêm (giống DoiHangPanel)
                 try {
-                    String maHDGoc = hd.getHoaDonDoiTra().getMaHoaDon();
-                    java.util.List<com.example.entity.ChiTietHoaDon> dsGoc =
-                            new com.example.service.ChiTietHoaDonService().layTheoMaHoaDon(maHDGoc);
+                    String maHDGocRef = hd.getHoaDonDoiTra().getMaHoaDon();
+                    com.example.service.ChiTietHoaDonService ctSvcRef = new com.example.service.ChiTietHoaDonService();
+                    java.util.List<com.example.entity.ChiTietHoaDon> dsGoc = ctSvcRef.layTheoMaHoaDon(maHDGocRef);
                     double tongTienMuaThem = 0;
                     for (com.example.entity.ChiTietHoaDon ctDoi : dsChiTiet) {
-                        if (ctDoi.isLaQuaTangKem()) continue;
+                        if (ctDoi.isLaQuaTangKem())
+                            continue;
                         String maSP = ctDoi.getDonViQuyDoi().getSanPham() != null
-                                ? ctDoi.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
+                                ? ctDoi.getDonViQuyDoi().getSanPham().getMaSanPham()
+                                : "";
                         String tenDV = ctDoi.getDonViQuyDoi().getTenDonVi() != null
-                                ? ctDoi.getDonViQuyDoi().getTenDonVi().name() : "";
+                                ? ctDoi.getDonViQuyDoi().getTenDonVi().name()
+                                : "";
                         int slGoc = 0;
                         for (com.example.entity.ChiTietHoaDon ctGoc : dsGoc) {
-                            if (ctGoc.isLaQuaTangKem()) continue;
+                            if (ctGoc.isLaQuaTangKem())
+                                continue;
                             String maSPGoc = ctGoc.getDonViQuyDoi().getSanPham() != null
-                                    ? ctGoc.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
+                                    ? ctGoc.getDonViQuyDoi().getSanPham().getMaSanPham()
+                                    : "";
                             String tenDVGoc = ctGoc.getDonViQuyDoi().getTenDonVi() != null
-                                    ? ctGoc.getDonViQuyDoi().getTenDonVi().name() : "";
+                                    ? ctGoc.getDonViQuyDoi().getTenDonVi().name()
+                                    : "";
                             if (maSPGoc.equals(maSP) && tenDVGoc.equals(tenDV)) {
                                 slGoc += ctGoc.getSoLuongBan();
                             }
@@ -577,40 +686,161 @@ public class HoaDonPanel extends JPanel {
                     if (tongTienMuaThem >= hd.getKhuyenMai().getGiaTriDonHangToiThieu()) {
                         soTienGiam = tongTienMuaThem * (kmPt / 100.0);
                     }
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             } else {
                 // Hóa đơn bán hàng thường: áp KM lên toàn bộ
                 soTienGiam = tongTienHang * (hd.getKhuyenMai().getKhuyenMaiPhanTram() / 100.0);
             }
         }
 
+        // 2. Tính KM gốc (soTienKMGoc) độc lập của các sản phẩm gốc đem đổi
+        if (laDoiHang && coHoaDonGoc) {
+            try {
+                String maHDGocRef = hd.getHoaDonDoiTra().getMaHoaDon();
+                com.example.service.ChiTietHoaDonService ctSvcRef = new com.example.service.ChiTietHoaDonService();
+                java.util.List<com.example.entity.ChiTietHoaDon> dsGoc = ctSvcRef.layTheoMaHoaDon(maHDGocRef);
+                
+                HoaDon hdGocRef = hoaDonService.timTheoMa(maHDGocRef);
+                if (hdGocRef != null && hdGocRef.getKhuyenMai() != null
+                        && hdGocRef.getKhuyenMai().getLoaiKhuyenMai() == com.example.entity.enums.LoaiKhuyenMai.PHAN_TRAM) {
+                    double tongTienSPCu = 0;
+                    for (com.example.entity.ChiTietHoaDon ctDoi : dsChiTiet) {
+                        if (ctDoi.isLaQuaTangKem()) continue;
+                        String maSPDoi = ctDoi.getDonViQuyDoi().getSanPham() != null
+                                ? ctDoi.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
+                        String tenDVDoi = ctDoi.getDonViQuyDoi().getTenDonVi() != null
+                                ? ctDoi.getDonViQuyDoi().getTenDonVi().name() : "";
+                        int slTrongGoc = 0;
+                        for (com.example.entity.ChiTietHoaDon ctGoc : dsGoc) {
+                            if (ctGoc.isLaQuaTangKem()) continue;
+                            String maSPGocX = ctGoc.getDonViQuyDoi().getSanPham() != null
+                                    ? ctGoc.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
+                            String tenDVGocX = ctGoc.getDonViQuyDoi().getTenDonVi() != null
+                                    ? ctGoc.getDonViQuyDoi().getTenDonVi().name() : "";
+                            if (maSPGocX.equals(maSPDoi) && tenDVGocX.equals(tenDVDoi)) {
+                                slTrongGoc += ctGoc.getSoLuongBan();
+                            }
+                        }
+                        int slCuDangDoi = Math.min(ctDoi.getSoLuongBan(), slTrongGoc);
+                        tongTienSPCu += slCuDangDoi * ctDoi.getDonGia();
+                    }
+                    double kmPtGoc = hdGocRef.getKhuyenMai().getKhuyenMaiPhanTram();
+                    soTienKMGoc = tongTienSPCu * (kmPtGoc / 100.0);
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+        // 3. Tính thuế GTGT (tongThue) theo nghiệp vụ đổi hàng hoặc bán hàng thường
+        double tongThue = 0;
+        if (laDoiHang && coHoaDonGoc) {
+            try {
+                String maHDGocRef = hd.getHoaDonDoiTra().getMaHoaDon();
+                com.example.service.ChiTietHoaDonService ctSvcRef = new com.example.service.ChiTietHoaDonService();
+                java.util.List<com.example.entity.ChiTietHoaDon> dsGoc = ctSvcRef.layTheoMaHoaDon(maHDGocRef);
+                
+                HoaDon hdGocRef = hoaDonService.timTheoMa(maHDGocRef);
+                double kmMoiPt = (hd.getKhuyenMai() != null
+                        && hd.getKhuyenMai().getLoaiKhuyenMai() == com.example.entity.enums.LoaiKhuyenMai.PHAN_TRAM)
+                        ? hd.getKhuyenMai().getKhuyenMaiPhanTram() : 0;
+                double tiLeGiamGoc = (hdGocRef != null && hdGocRef.getKhuyenMai() != null
+                        && hdGocRef.getKhuyenMai().getLoaiKhuyenMai() == com.example.entity.enums.LoaiKhuyenMai.PHAN_TRAM)
+                        ? hdGocRef.getKhuyenMai().getKhuyenMaiPhanTram() : 0;
+
+                for (com.example.entity.ChiTietHoaDon ctDoi : dsChiTiet) {
+                    if (ctDoi.isLaQuaTangKem()) continue;
+                    String maSPDoi = ctDoi.getDonViQuyDoi().getSanPham() != null
+                            ? ctDoi.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
+                    String tenDVDoi = ctDoi.getDonViQuyDoi().getTenDonVi() != null
+                            ? ctDoi.getDonViQuyDoi().getTenDonVi().name() : "";
+                    int slTrongGoc = 0;
+                    for (com.example.entity.ChiTietHoaDon ctGoc : dsGoc) {
+                        if (ctGoc.isLaQuaTangKem()) continue;
+                        String maSPGocX = ctGoc.getDonViQuyDoi().getSanPham() != null
+                                ? ctGoc.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
+                        String tenDVGocX = ctGoc.getDonViQuyDoi().getTenDonVi() != null
+                                ? ctGoc.getDonViQuyDoi().getTenDonVi().name() : "";
+                        if (maSPGocX.equals(maSPDoi) && tenDVGocX.equals(tenDVDoi)) {
+                            slTrongGoc += ctGoc.getSoLuongBan();
+                        }
+                    }
+                    int slDoiNgang = Math.min(ctDoi.getSoLuongBan(), slTrongGoc);
+                    int slMuaThem = Math.max(0, ctDoi.getSoLuongBan() - slTrongGoc);
+                    double thuePt = ctDoi.getDonViQuyDoi().getSanPham() != null
+                            ? ctDoi.getDonViQuyDoi().getSanPham().getThue() : 0;
+                    double price = ctDoi.getDonGia();
+
+                    // Thuế đổi ngang: áp KM gốc
+                    tongThue += slDoiNgang * price * (thuePt / 100.0) * (1 - tiLeGiamGoc / 100.0);
+                    // Thuế mua thêm: áp KM mới
+                    tongThue += slMuaThem * price * (thuePt / 100.0) * (1 - kmMoiPt / 100.0);
+                }
+            } catch (Exception ignored) {
+                tongThue = hd.tinhTongThue();
+            }
+        } else {
+            tongThue = hd.tinhTongThue();
+        }
+
+        // 4. Tính tổng tiền cuối cùng (khấu trừ KM mới và KM hàng đổi ngang)
+        double tongTienCuoiCung = laDoiHang 
+                ? (tongTienHang - soTienGiam - soTienKMGoc + tongThue)
+                : hd.tinhTongTienThanhToan();
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(4, 5, 4, 5);
 
         // Row 1: Cộng tiền hàng
-        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 1.0; gbc.anchor = GridBagConstraints.EAST;
-        JLabel lblCongLabel = new JLabel("Cộng tiền hàng:", SwingConstants.RIGHT);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        gbc.anchor = GridBagConstraints.EAST;
+        JLabel lblCongLabel = new JLabel("Tổng tiền hàng:", SwingConstants.RIGHT);
         lblCongLabel.setFont(FONT_TEXT);
         lblCongLabel.setForeground(COLOR_TEXT_DIM);
         footerPanel.add(lblCongLabel, gbc);
 
-        gbc.gridx = 1; gbc.weightx = 0.0;
+        gbc.gridx = 1;
+        gbc.weightx = 0.0;
         JLabel lblCongVal = new JLabel(nf.format(tongTienHang), SwingConstants.RIGHT);
         lblCongVal.setFont(FONT_LABEL);
         lblCongVal.setPreferredSize(new Dimension(150, 20));
         footerPanel.add(lblCongVal, gbc);
 
-        // Row 2: Khuyến mãi (chỉ hiện khi có giảm giá > 0)
+        // Row 2: Khuyến mãi hóa đơn gốc (chỉ hiện với hóa đơn đổi hàng có KM gốc)
         int rowIdx = 1;
+        if (soTienKMGoc > 0) {
+            gbc.gridx = 0;
+            gbc.gridy = rowIdx;
+            gbc.weightx = 1.0;
+            JLabel lblKMGocLabel = new JLabel("Khuyến mãi (hàng đổi ngang):", SwingConstants.RIGHT);
+            lblKMGocLabel.setFont(FONT_TEXT);
+            lblKMGocLabel.setForeground(new Color(255, 140, 0)); // Orange - KM của hóa đơn gốc
+            footerPanel.add(lblKMGocLabel, gbc);
+
+            gbc.gridx = 1;
+            gbc.weightx = 0.0;
+            JLabel lblKMGocVal = new JLabel("-" + nf.format(soTienKMGoc), SwingConstants.RIGHT);
+            lblKMGocVal.setFont(FONT_LABEL);
+            lblKMGocVal.setForeground(new Color(255, 140, 0));
+            footerPanel.add(lblKMGocVal, gbc);
+            rowIdx++;
+        }
+
+        // Row 3 (optional): Khuyến mãi phần mua thêm (chỉ hiện khi có giảm giá > 0)
         if (soTienGiam > 0) {
-            gbc.gridx = 0; gbc.gridy = rowIdx; gbc.weightx = 1.0;
-            JLabel lblKMLabel = new JLabel("Khuyến mãi (" + hd.getKhuyenMai().getTenKhuyenMai() + "):", SwingConstants.RIGHT);
+            gbc.gridx = 0;
+            gbc.gridy = rowIdx;
+            gbc.weightx = 1.0;
+            JLabel lblKMLabel = new JLabel("Khuyến mãi (hàng mua):", SwingConstants.RIGHT);
             lblKMLabel.setFont(FONT_TEXT);
             lblKMLabel.setForeground(new Color(40, 167, 69)); // Green color for promotions
             footerPanel.add(lblKMLabel, gbc);
 
-            gbc.gridx = 1; gbc.weightx = 0.0;
+            gbc.gridx = 1;
+            gbc.weightx = 0.0;
             JLabel lblKMVal = new JLabel("-" + nf.format(soTienGiam), SwingConstants.RIGHT);
             lblKMVal.setFont(FONT_LABEL);
             lblKMVal.setForeground(new Color(40, 167, 69));
@@ -619,33 +849,43 @@ public class HoaDonPanel extends JPanel {
         }
 
         // Row 3: Tổng tiền thuế
-        gbc.gridx = 0; gbc.gridy = rowIdx; gbc.weightx = 1.0;
+        gbc.gridx = 0;
+        gbc.gridy = rowIdx;
+        gbc.weightx = 1.0;
         JLabel lblThueLabel = new JLabel("Thuế GTGT:", SwingConstants.RIGHT);
         lblThueLabel.setFont(FONT_TEXT);
         lblThueLabel.setForeground(COLOR_TEXT_DIM);
         footerPanel.add(lblThueLabel, gbc);
 
-        gbc.gridx = 1; gbc.weightx = 0.0;
+        gbc.gridx = 1;
+        gbc.weightx = 0.0;
         JLabel lblThueVal = new JLabel(nf.format(tongThue), SwingConstants.RIGHT);
         lblThueVal.setFont(FONT_LABEL);
         footerPanel.add(lblThueVal, gbc);
         rowIdx++;
 
         // Row 4: Divider Line
-        gbc.gridx = 0; gbc.gridy = rowIdx; gbc.gridwidth = 2; gbc.weightx = 1.0;
+        gbc.gridx = 0;
+        gbc.gridy = rowIdx;
+        gbc.gridwidth = 2;
+        gbc.weightx = 1.0;
         JSeparator sep = new JSeparator(JSeparator.HORIZONTAL);
         sep.setForeground(COLOR_BORDER);
         footerPanel.add(sep, gbc);
         rowIdx++;
 
         // Row 5: Tổng cộng thanh toán
-        gbc.gridx = 0; gbc.gridy = rowIdx; gbc.gridwidth = 1; gbc.weightx = 1.0;
+        gbc.gridx = 0;
+        gbc.gridy = rowIdx;
+        gbc.gridwidth = 1;
+        gbc.weightx = 1.0;
         JLabel lblTongLabel = new JLabel("Tổng tiền thanh toán:", SwingConstants.RIGHT);
         lblTongLabel.setFont(new Font("Segoe UI", Font.BOLD, 15));
         lblTongLabel.setForeground(Color.BLACK);
         footerPanel.add(lblTongLabel, gbc);
 
-        gbc.gridx = 1; gbc.weightx = 0.0;
+        gbc.gridx = 1;
+        gbc.weightx = 0.0;
         JLabel lblTongVal = new JLabel(nf.format(tongTienCuoiCung), SwingConstants.RIGHT);
         lblTongVal.setFont(new Font("Segoe UI", Font.BOLD, 18));
         lblTongVal.setForeground(new Color(220, 53, 69)); // Bold red total
@@ -704,18 +944,20 @@ public class HoaDonPanel extends JPanel {
             String tenSP = ct.getDonViQuyDoi() != null && ct.getDonViQuyDoi().getSanPham() != null
                     ? ct.getDonViQuyDoi().getSanPham().getTenSanPham()
                     : "";
-            if (ct.isLaQuaTangKem()) tenSP += " (Quà tặng)";
+            if (ct.isLaQuaTangKem())
+                tenSP += " (Quà tặng)";
             String dvt = ct.getDonViQuyDoi() != null && ct.getDonViQuyDoi().getTenDonVi() != null
                     ? ct.getDonViQuyDoi().getTenDonVi().toString()
                     : "";
             int sl = ct.getSoLuongBan();
             double giaTruocThue = ct.isLaQuaTangKem() ? 0 : sl * ct.getDonGia();
             double thueSuat = (ct.getDonViQuyDoi() != null && ct.getDonViQuyDoi().getSanPham() != null)
-                    ? ct.getDonViQuyDoi().getSanPham().getThue() : 0;
-            String donGia       = ct.isLaQuaTangKem() ? "Miễn phí" : nf.format(ct.getDonGia());
-            String thanhTien    = ct.isLaQuaTangKem() ? "0 đ"       : nf.format(giaTruocThue);
-            String phanTramThue = ct.isLaQuaTangKem() ? "-"         : (int) thueSuat + "%";
-            String quaTang      = ct.isLaQuaTangKem() ? "Có"        : "Không";
+                    ? ct.getDonViQuyDoi().getSanPham().getThue()
+                    : 0;
+            String donGia = ct.isLaQuaTangKem() ? "Miễn phí" : nf.format(ct.getDonGia());
+            String thanhTien = ct.isLaQuaTangKem() ? "0 đ" : nf.format(giaTruocThue);
+            String phanTramThue = ct.isLaQuaTangKem() ? "-" : (int) thueSuat + "%";
+            String quaTang = ct.isLaQuaTangKem() ? "Có" : "Không";
 
             ctModel.addRow(new Object[] { tenSP, dvt, sl, donGia, thanhTien, phanTramThue, quaTang });
         }
@@ -729,7 +971,7 @@ public class HoaDonPanel extends JPanel {
         // Căn phải các cột số: Số lượng(2), Đơn giá(3), Thành tiền(4), % Thuế(5)
         javax.swing.table.DefaultTableCellRenderer rightRenderer2 = new javax.swing.table.DefaultTableCellRenderer();
         rightRenderer2.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        for (int col : new int[]{2, 3, 4, 5}) {
+        for (int col : new int[] { 2, 3, 4, 5 }) {
             ctTable.getColumnModel().getColumn(col).setCellRenderer(rightRenderer2);
         }
 
