@@ -19,10 +19,7 @@ import com.example.service.ChiTietHoaDonService;
 import com.example.service.KhachHangService;
 import com.example.entity.SuPhanBoLo;
 
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.data.general.DefaultPieDataset;
+
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -44,7 +41,7 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
 
     private JLabel lblHoaDonDaLap, lblDoanhThuCa, lblKhachHang, lblCanhBao;
     private DefaultTableModel modelHoaDon, modelKhuyenMai, modelSanPhamMoi, modelLoHetHan;
-    private DefaultPieDataset<String> donutDataset;
+    private CustomPieChart donutChart;
 
     private RoundedButton btnTroGiup, btnBanHang, btnTimThuoc, btnTimKhachHang, btnThanhToan;
 
@@ -193,24 +190,13 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
     }
 
     private JPanel createDonutChartPanel() {
-        donutDataset = new DefaultPieDataset<>();
-        JFreeChart chart = ChartFactory.createRingChart(null, donutDataset, false, true, false);
-        chart.setBackgroundPaint(Color.WHITE);
-
-        org.jfree.chart.plot.RingPlot plot = (org.jfree.chart.plot.RingPlot) chart.getPlot();
-        plot.setBackgroundPaint(Color.WHITE);
-        plot.setOutlineVisible(false);
-        plot.setSectionDepth(0.35);
-        plot.setLabelGenerator(null); // Hide labels for clean look
-
-        // Colors from image: Blue, Purple, Salmon, Cyan, Orange
-        plot.setSectionPaint("Thuốc kê đơn", new Color(108, 117, 255));
-        plot.setSectionPaint("Thuốc không kê đơn", new Color(147, 108, 255));
-        plot.setSectionPaint("Thực phẩm chức năng", new Color(255, 148, 148));
-        plot.setSectionPaint("Mỹ phẩm", new Color(108, 218, 255));
-        plot.setSectionPaint("Khác", new Color(255, 178, 108));
-
-        return new ChartPanel(chart);
+        donutChart = new CustomPieChart();
+        donutChart.setShowTotal(false);
+        donutChart.setShowHover(false);
+        JPanel p = new JPanel(new BorderLayout());
+        p.setOpaque(false);
+        p.add(donutChart, BorderLayout.CENTER);
+        return p;
     }
 
     private JPanel createBottomPanel() {
@@ -449,7 +435,6 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
     }
 
     private void updateDonutChart(List<HoaDon> dsHoaDon) {
-        donutDataset.clear();
         double etc = 0, otc = 0, tpcn = 0, myPham = 0, khac = 0;
 
         for (HoaDon hd : dsHoaDon) {
@@ -474,18 +459,17 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
             }
         }
 
-        if (etc > 0)
-            donutDataset.setValue("Thuốc kê đơn", etc);
-        if (otc > 0)
-            donutDataset.setValue("Thuốc không kê đơn", otc);
-        if (tpcn > 0)
-            donutDataset.setValue("Thực phẩm chức năng", tpcn);
-        if (myPham > 0)
-            donutDataset.setValue("Mỹ phẩm", myPham);
-        if (khac > 0)
-            donutDataset.setValue("Khác", khac);
+        List<String> labels = new java.util.ArrayList<>();
+        List<Double> values = new java.util.ArrayList<>();
 
-        if (donutDataset.getItemCount() == 0)
-            donutDataset.setValue("Chưa có dữ liệu", 1);
+        if (etc > 0) { labels.add("Thuốc kê đơn"); values.add(etc); }
+        if (otc > 0) { labels.add("Thuốc không kê đơn"); values.add(otc); }
+        if (tpcn > 0) { labels.add("Thực phẩm chức năng"); values.add(tpcn); }
+        if (myPham > 0) { labels.add("Mỹ phẩm"); values.add(myPham); }
+        if (khac > 0) { labels.add("Khác"); values.add(khac); }
+
+        if (donutChart != null) {
+            donutChart.setValues(labels, values);
+        }
     }
 }

@@ -85,7 +85,7 @@ public class ThongKePanel extends JPanel {
     private DefaultTableModel modelKhachHang;
     private JLabel lblTotalKhachHang;
     private CustomPieChart pieChartCustTypes;
-    private CustomLineChart chartNewCustRegistrations;
+    private CustomBarChart barChartCustRevenue;
 
     private ThongKeService thongKeService;
     private final DecimalFormat currencyDf;
@@ -556,7 +556,8 @@ public class ThongKePanel extends JPanel {
         lblSapHetHanTitle.setForeground(new Color(40, 50, 60));
         cardSapHetHan.add(lblSapHetHanTitle, BorderLayout.NORTH);
 
-        String[] colsSHH = { "Mã lô", "Số lô", "Mã sản phẩm", "Tên sản phẩm", "Số lượng", "Ngày hết hạn", "Trạng thái" };
+        String[] colsSHH = { "Mã lô", "Số lô", "Mã sản phẩm", "Tên sản phẩm", "Số lượng", "Ngày hết hạn",
+                "Trạng thái" };
         modelSapHetHan = new DefaultTableModel(colsSHH, 0) {
             @Override
             public boolean isCellEditable(int r, int c) {
@@ -677,24 +678,24 @@ public class ThongKePanel extends JPanel {
         RoundedPanel chartLeft = createRoundedCard();
         chartLeft.setLayout(new BorderLayout(0, 8));
         chartLeft.setBorder(new EmptyBorder(12, 16, 12, 16));
-        JLabel lblLeftTitle = new JLabel("Biểu đồ so sánh tỷ trọng khách hàng", SwingConstants.CENTER);
+        JLabel lblLeftTitle = new JLabel("Biểu đồ so sánh số lượng hóa đơn", SwingConstants.CENTER);
         lblLeftTitle.setFont(new Font("Segoe UI", Font.BOLD, 14));
         lblLeftTitle.setForeground(new Color(40, 50, 60));
         chartLeft.add(lblLeftTitle, BorderLayout.NORTH);
         pieChartCustTypes = new CustomPieChart();
         chartLeft.add(pieChartCustTypes, BorderLayout.CENTER);
 
-        // Chart Right: Line Chart for new registrations
+        // Chart Right: Bar Chart for revenue by segment
         RoundedPanel chartRight = createRoundedCard();
         chartRight.setLayout(new BorderLayout(0, 8));
         chartRight.setBorder(new EmptyBorder(12, 16, 12, 16));
-        JLabel lblRightTitle = new JLabel("Biểu đồ thể hiện số lượng khách hàng mới đăng ký", SwingConstants.CENTER);
+        JLabel lblRightTitle = new JLabel("So sánh doanh thu theo tệp khách hàng", SwingConstants.CENTER);
         lblRightTitle.setFont(new Font("Segoe UI", Font.BOLD, 14));
         lblRightTitle.setForeground(new Color(40, 50, 60));
         chartRight.add(lblRightTitle, BorderLayout.NORTH);
-        chartNewCustRegistrations = new CustomLineChart();
-        chartNewCustRegistrations.setyUnit("khách hàng");
-        chartRight.add(chartNewCustRegistrations, BorderLayout.CENTER);
+        barChartCustRevenue = new CustomBarChart();
+        barChartCustRevenue.setyUnit("VNĐ");
+        chartRight.add(barChartCustRevenue, BorderLayout.CENTER);
 
         chartsPanel.add(chartLeft);
         chartsPanel.add(chartRight);
@@ -1263,7 +1264,7 @@ public class ThongKePanel extends JPanel {
             for (Object[] row : ds) {
                 LocalDate ngayHetHan = (LocalDate) row[5];
                 long soNgay = java.time.Duration.between(today.atStartOfDay(), ngayHetHan.atStartOfDay()).toDays();
-                
+
                 String trangThai = "";
                 if (soNgay <= 0) {
                     trangThai = "HẾT HẠN";
@@ -1314,6 +1315,7 @@ public class ThongKePanel extends JPanel {
         Map<String, CustomerStatItem> stats = new HashMap<>();
         double retailSpending = 0.0;
         int retailInvoicesCount = 0;
+        int memberInvoicesCount = 0;
 
         for (HoaDon hd : dsHoaDon) {
             double finalTotal = hd.tinhTongTienThanhToan();
@@ -1327,7 +1329,8 @@ public class ThongKePanel extends JPanel {
             }
             com.example.entity.KhachHang kh = hd.getKhachHang();
 
-            if (kh == null || kh.getMaKhachHang() == null || kh.getMaKhachHang().trim().isEmpty()) {
+            if (kh == null || kh.getMaKhachHang() == null || kh.getMaKhachHang().trim().isEmpty()
+                    || kh.getMaKhachHang().equals("KH_LE")) {
                 if (hd.getLoaiHoaDon() == LoaiHoaDon.BAN_HANG || hd.getLoaiHoaDon() == LoaiHoaDon.DOI_HANG
                         || hd.getLoaiHoaDon() == null) {
                     retailSpending += finalTotal;
@@ -1355,6 +1358,7 @@ public class ThongKePanel extends JPanel {
             if (hd.getLoaiHoaDon() == LoaiHoaDon.BAN_HANG || hd.getLoaiHoaDon() == LoaiHoaDon.DOI_HANG) {
                 item.tongChiTieu += finalTotal;
                 item.soDonHang++;
+                memberInvoicesCount++;
                 if (item.ngayMuaGanNhat == null || hd.getThoiGianTao().isAfter(item.ngayMuaGanNhat)) {
                     item.ngayMuaGanNhat = hd.getThoiGianTao();
                 }
@@ -1383,14 +1387,14 @@ public class ThongKePanel extends JPanel {
             totalMemberSpending += Math.max(0, item.tongChiTieu);
         }
 
-        lblTotalKhachHang.setText("Tổng số khách hàng: " + (stats.size() + retailInvoicesCount));
+        int soLuongKhachLe = (retailInvoicesCount > 0) ? 1 : 0;
+        lblTotalKhachHang.setText("Tổng số khách hàng: " + (stats.size() + soLuongKhachLe));
 
         List<String> pieLabels = new ArrayList<>();
         List<Double> pieValues = new ArrayList<>();
-        double memberCount = stats.size();
-        if (memberCount > 0) {
+        if (memberInvoicesCount > 0) {
             pieLabels.add("Khách hàng thành viên");
-            pieValues.add(memberCount);
+            pieValues.add((double) memberInvoicesCount);
         }
         if (retailInvoicesCount > 0) {
             pieLabels.add("Khách lẻ");
@@ -1398,59 +1402,29 @@ public class ThongKePanel extends JPanel {
         }
         pieChartCustTypes.setValues(pieLabels, pieValues);
 
-        // Line Chart: New customer registrations
-        List<Object[]> allRegs = thongKeService.layNgayDangKyKhachHang();
+        // Bar Chart: Revenue by Customer Segment
+        Map<String, Double> revenueBySegment = new HashMap<>();
+        revenueBySegment.put("Khách lẻ", retailSpending);
 
-        List<String> lineLabels = new ArrayList<>();
-        List<Double> lineValues = new ArrayList<>();
-        List<Double> emptyProfits = new ArrayList<>();
-
-        if (tuNgay.equals(denNgay)) {
-            Map<Integer, Integer> hourlyCount = new HashMap<>();
-            for (int h = 7; h <= 21; h++)
-                hourlyCount.put(h, 0);
-
-            for (Object[] row : allRegs) {
-                java.time.LocalDateTime dt = (java.time.LocalDateTime) row[1];
-                if (dt.toLocalDate().equals(tuNgay)) {
-                    int hr = dt.getHour();
-                    if (hr >= 7 && hr <= 21) {
-                        hourlyCount.put(hr, hourlyCount.get(hr) + 1);
-                    }
-                }
+        for (CustomerStatItem item : stats.values()) {
+            String segment = item.phanLoai;
+            if (segment == null || segment.trim().isEmpty()) {
+                segment = "Thành viên";
             }
+            revenueBySegment.put(segment, revenueBySegment.getOrDefault(segment, 0.0) + item.tongChiTieu);
+        }
 
-            for (int h = 7; h <= 21; h++) {
-                lineLabels.add(h + ":00");
-                lineValues.add((double) hourlyCount.get(h));
-                emptyProfits.add(0.0);
-            }
-        } else {
-            Map<LocalDate, Integer> dailyCount = new HashMap<>();
-            LocalDate curr = tuNgay;
-            while (!curr.isAfter(denNgay)) {
-                dailyCount.put(curr, 0);
-                curr = curr.plusDays(1);
-            }
+        List<String> barLabels = new ArrayList<>();
+        List<Integer> barValues = new ArrayList<>();
 
-            for (Object[] row : allRegs) {
-                java.time.LocalDateTime dt = (java.time.LocalDateTime) row[1];
-                LocalDate d = dt.toLocalDate();
-                if (dailyCount.containsKey(d)) {
-                    dailyCount.put(d, dailyCount.get(d) + 1);
-                }
-            }
-
-            curr = tuNgay;
-            while (!curr.isAfter(denNgay)) {
-                lineLabels.add(curr.format(DateTimeFormatter.ofPattern("dd/MM")));
-                lineValues.add((double) dailyCount.get(curr));
-                emptyProfits.add(0.0);
-                curr = curr.plusDays(1);
+        for (Map.Entry<String, Double> entry : revenueBySegment.entrySet()) {
+            if (entry.getValue() > 0) {
+                barLabels.add(entry.getKey());
+                barValues.add(entry.getValue().intValue());
             }
         }
 
-        chartNewCustRegistrations.setValues(lineLabels, lineValues, emptyProfits);
+        barChartCustRevenue.setValues(barLabels, barValues);
     }
 
     public void capNhatDuLieuThongKe() {
@@ -1528,7 +1502,8 @@ public class ThongKePanel extends JPanel {
                     } else if ("Sắp hết hạn".equals(activeTabSp)) {
                         periodStr = "Thời điểm kiểm tra: " + java.time.LocalDate.now().format(dateFormatter)
                                 + " (Thời hạn <= 37 ngày)";
-                        headers = new String[] { "Mã lô", "Số lô", "Mã SP", "Tên sản phẩm", "Số lượng", "Hạn dùng", "Trạng thái" };
+                        headers = new String[] { "Mã lô", "Số lô", "Mã SP", "Tên sản phẩm", "Số lượng", "Hạn dùng",
+                                "Trạng thái" };
                         colWidths = new int[] { 60, 60, 60, 140, 50, 70, 100 };
                         activeModel = modelSapHetHan;
                     } else {
@@ -1580,12 +1555,22 @@ public class ThongKePanel extends JPanel {
 
                 // Draw Row Content
                 g2.setFont(new Font("Segoe UI", Font.PLAIN, 9));
+                FontMetrics fm = g2.getFontMetrics();
                 int rowCount = activeModel.getRowCount();
                 for (int row = 0; row < rowCount; row++) {
                     currX = 30;
                     for (int col = 0; col < headers.length; col++) {
                         Object cellVal = activeModel.getValueAt(row, col);
                         String val = cellVal != null ? cellVal.toString() : "";
+
+                        int maxWidth = colWidths[col] - 5;
+                        if (fm.stringWidth(val) > maxWidth) {
+                            while (val.length() > 0 && fm.stringWidth(val + "...") > maxWidth) {
+                                val = val.substring(0, val.length() - 1);
+                            }
+                            val = val + "...";
+                        }
+
                         g2.drawString(val, currX, startY);
                         currX += colWidths[col];
                     }
@@ -1746,10 +1731,10 @@ public class ThongKePanel extends JPanel {
                             }
                             double avgUnitCost = (totalQtyGoc > 0) ? (totalCostGoc / totalQtyGoc) : 0.0;
                             int qtyTraBase = qtyTra * ctGoc.getDonViQuyDoi().getHeSoQuyDoi();
-                            
+
                             // Trừ đi số lượng lỗi (không hoàn kho -> không được tính vào vốn hoàn lại)
                             int qtyTraHopLe = Math.max(0, qtyTraBase - slLoiNhoNhat);
-                            
+
                             refundedCost += qtyTraHopLe * avgUnitCost;
                         }
                     }

@@ -18,7 +18,6 @@ import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
-import org.jfree.data.general.DefaultPieDataset;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -45,7 +44,7 @@ public class ManHinhChinhPanel extends JPanel {
     private DefaultTableModel modelLoThuoc;
 
     private DefaultCategoryDataset barDataset;
-    private DefaultPieDataset<String> donutDataset;
+    private CustomPieChart donutChart;
 
     private RoundedButton btnTroGiup;
     private RoundedButton btnBanHang;
@@ -162,9 +161,13 @@ public class ManHinhChinhPanel extends JPanel {
         barChartWrapper.add(createBarChartPanel(), BorderLayout.CENTER);
 
         RoundedPanel donutChartWrapper = new RoundedPanel(16, true);
-        donutChartWrapper.setLayout(new BorderLayout());
+        donutChartWrapper.setLayout(new BorderLayout(0, 10));
         donutChartWrapper.setBackground(Color.WHITE);
         donutChartWrapper.setBorder(new EmptyBorder(10, 10, 10, 10));
+        
+        JLabel lblDonutTitle = new JLabel("Cơ cấu doanh thu theo Nhóm hàng", SwingConstants.CENTER);
+        lblDonutTitle.setFont(FONT_TITLE);
+        donutChartWrapper.add(lblDonutTitle, BorderLayout.NORTH);
         donutChartWrapper.add(createDonutChartPanel(), BorderLayout.CENTER);
 
         chartContainer.add(barChartWrapper);
@@ -222,24 +225,11 @@ public class ManHinhChinhPanel extends JPanel {
     }
 
     private JPanel createDonutChartPanel() {
-        donutDataset = new DefaultPieDataset<>();
-
-        JFreeChart chart = ChartFactory.createRingChart(
-                "Cơ cấu doanh thu theo Nhóm hàng",
-                donutDataset, true, true, false);
-        chart.setBackgroundPaint(Color.WHITE);
-
-        org.jfree.chart.plot.RingPlot plot = (org.jfree.chart.plot.RingPlot) chart.getPlot();
-        plot.setBackgroundPaint(Color.WHITE);
-        plot.setOutlineVisible(false);
-
-        plot.setLabelGenerator(new org.jfree.chart.labels.StandardPieSectionLabelGenerator(
-                "{0}: {1} ({2})",
-                new java.text.DecimalFormat("###,### VND"),
-                new java.text.DecimalFormat("0.0%")));
-        plot.setLabelBackgroundPaint(Color.WHITE);
-
-        return new ChartPanel(chart);
+        donutChart = new CustomPieChart();
+        JPanel p = new JPanel(new BorderLayout());
+        p.setOpaque(false);
+        p.add(donutChart, BorderLayout.CENTER);
+        return p;
     }
 
     private JPanel createBottomPanel() {
@@ -469,20 +459,16 @@ public class ManHinhChinhPanel extends JPanel {
             }
         }
 
-        if (donutDataset != null) {
-            donutDataset.clear();
-            if (dtETC > 0)
-                donutDataset.setValue("Thuốc kê đơn", dtETC);
-            if (dtOTC > 0)
-                donutDataset.setValue("Thuốc không kê đơn", dtOTC);
-            if (dtTPCN > 0)
-                donutDataset.setValue("Thực phẩm chức năng", dtTPCN);
-            if (dtMyPham > 0)
-                donutDataset.setValue("Mỹ phẩm", dtMyPham);
+        if (donutChart != null) {
+            List<String> labels = new java.util.ArrayList<>();
+            List<Double> values = new java.util.ArrayList<>();
+            
+            if (dtETC > 0) { labels.add("Thuốc kê đơn"); values.add(dtETC); }
+            if (dtOTC > 0) { labels.add("Thuốc không kê đơn"); values.add(dtOTC); }
+            if (dtTPCN > 0) { labels.add("Thực phẩm chức năng"); values.add(dtTPCN); }
+            if (dtMyPham > 0) { labels.add("Mỹ phẩm"); values.add(dtMyPham); }
 
-            if (dtETC == 0 && dtOTC == 0 && dtTPCN == 0 && dtMyPham == 0) {
-                donutDataset.setValue("Chưa có dữ liệu", 1);
-            }
+            donutChart.setValues(labels, values);
         }
     }
 

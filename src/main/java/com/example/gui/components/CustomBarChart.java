@@ -45,7 +45,7 @@ public class CustomBarChart extends JComponent {
         g2.setColor(getBackground());
         g2.fillRect(0, 0, width, height);
 
-        int leftMargin = 45;
+        int leftMargin = "VNĐ".equals(yUnit) ? 75 : 45;
         int rightMargin = 20;
         int topMargin = 25;
         int bottomMargin = 40;
@@ -69,7 +69,8 @@ public class CustomBarChart extends JComponent {
         // Find max value
         int maxVal = 10;
         for (int v : values) {
-            if (v > maxVal) maxVal = v;
+            if (v > maxVal)
+                maxVal = v;
         }
 
         // Round maxVal to a clean number based on yUnit
@@ -84,6 +85,12 @@ public class CustomBarChart extends JComponent {
                 maxVal = 50;
             } else {
                 maxVal = (int) (Math.ceil((double) maxVal / 50) * 50);
+            }
+        } else if ("VNĐ".equals(yUnit)) {
+            if (maxVal < 100000) {
+                maxVal = 100000;
+            } else {
+                maxVal = (int) (Math.ceil((double) maxVal / 50000) * 50000);
             }
         } else {
             maxVal = (int) (Math.ceil((double) maxVal / 10) * 10);
@@ -109,7 +116,9 @@ public class CustomBarChart extends JComponent {
 
             g2.setColor(new Color(120, 130, 140));
             // Right align Y-axis labels slightly
-            String valStr = String.valueOf(val);
+            java.text.DecimalFormat numDf = new java.text.DecimalFormat("#,###");
+            numDf.setDecimalFormatSymbols(new java.text.DecimalFormatSymbols(java.util.Locale.GERMAN));
+            String valStr = numDf.format(val);
             FontMetrics fm = g2.getFontMetrics();
             g2.drawString(valStr, leftMargin - fm.stringWidth(valStr) - 6, y + 4);
         }
@@ -137,13 +146,15 @@ public class CustomBarChart extends JComponent {
             g2.setColor(new Color(50, 60, 70));
             g2.setFont(VALUE_FONT);
             FontMetrics fm = g2.getFontMetrics();
-            String valStr = String.valueOf(val);
+            java.text.DecimalFormat numDf = new java.text.DecimalFormat("#,###");
+            numDf.setDecimalFormatSymbols(new java.text.DecimalFormatSymbols(java.util.Locale.GERMAN));
+            String valStr = numDf.format(val);
             g2.drawString(valStr, x + (barWidth - fm.stringWidth(valStr)) / 2, y - 6);
 
             // Draw label
             g2.setFont(LABEL_FONT);
             fm = g2.getFontMetrics();
-            
+
             // Truncate label if too long
             String displayLabel = label;
             if (fm.stringWidth(displayLabel) > barWidth + barGap) {
@@ -152,7 +163,7 @@ public class CustomBarChart extends JComponent {
                     displayLabel = displayLabel.substring(0, 8) + "..";
                 }
             }
-            
+
             int lblX = x + (barWidth - fm.stringWidth(displayLabel)) / 2;
             g2.setColor(new Color(80, 90, 100));
             g2.drawString(displayLabel, lblX, height - bottomMargin + 18);
