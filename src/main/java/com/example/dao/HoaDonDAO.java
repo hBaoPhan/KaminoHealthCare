@@ -329,7 +329,7 @@ public class HoaDonDAO {
 
     public double tinhTongDoanhThuCa(String maCa) {
         double tong = 0;
-        String sql = "SELECT SUM(ct.soLuong * ct.donGia * (1 + sp.thue/100)) as tong " +
+        String sql = "SELECT SUM(ct.soLuongBan * ct.donGia * (1 + sp.thue/100)) as tong " +
                 "FROM ChiTietHoaDon ct " +
                 "JOIN HoaDon hd ON ct.maHoaDon = hd.maHoaDon " +
                 "JOIN DonViQuyDoi dv ON ct.maDonVi = dv.maDonVi " +
