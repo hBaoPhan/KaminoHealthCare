@@ -198,6 +198,25 @@ public class DangNhapPanel extends JFrame implements ActionListener {
 
         // Thiết lập phím tắt Enter để kích hoạt nút đăng nhập
         getRootPane().setDefaultButton(btnLogin);
+
+        // Chuyển focus bằng phím mũi tên
+        txtUsername.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyPressed(java.awt.event.KeyEvent e) {
+                if (e.getKeyCode() == java.awt.event.KeyEvent.VK_DOWN) {
+                    txtPassword.requestFocusInWindow();
+                }
+            }
+        });
+
+        txtPassword.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyPressed(java.awt.event.KeyEvent e) {
+                if (e.getKeyCode() == java.awt.event.KeyEvent.VK_UP) {
+                    txtUsername.requestFocusInWindow();
+                }
+            }
+        });
     }
 
     private ImageIcon loadScaledIcon(String path, int w, int h) {

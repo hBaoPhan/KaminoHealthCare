@@ -297,6 +297,8 @@ public class DoiHangPanel extends JPanel {
                             }
                         }
                     }
+                } else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+                    txtSearchSanPham.requestFocusInWindow();
                 }
             }
         });
@@ -326,6 +328,17 @@ public class DoiHangPanel extends JPanel {
                                 popupGoiY.setVisible(false);
                             }
                         }
+                    }
+                }
+            }
+        });
+
+        txtSearchSanPham.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_UP) {
+                    if (popupGoiY == null || !popupGoiY.isVisible()) {
+                        txtSearchHoaDon.requestFocusInWindow();
                     }
                 }
             }

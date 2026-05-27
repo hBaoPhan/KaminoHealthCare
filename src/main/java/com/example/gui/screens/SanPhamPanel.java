@@ -119,6 +119,20 @@ public class SanPhamPanel extends JPanel {
 
         // Load dữ liệu ban đầu
         loadDanhSachSanPham();
+
+        // Focus vào ô tìm kiếm khi vào trang
+        this.addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentShown(java.awt.event.ComponentEvent e) {
+                javax.swing.SwingUtilities.invokeLater(() -> {
+                    if (isTabNormalActive && txtSearch != null) {
+                        txtSearch.requestFocusInWindow();
+                    } else if (!isTabNormalActive && txtSearchLoi != null) {
+                        txtSearchLoi.requestFocusInWindow();
+                    }
+                });
+            }
+        });
     }
 
     // ====================== LEFT PANEL ======================
@@ -147,7 +161,7 @@ public class SanPhamPanel extends JPanel {
         JPanel rightBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
         rightBar.setBackground(new Color(245, 245, 245));
 
-        txtSearch = new JTextField("Tìm kiếm theo mã hoặc tên...");
+        txtSearch = new JTextField("Tìm kiếm theo mã, tên hoặc barcode...");
         txtSearch.setForeground(Color.GRAY);
         txtSearch.setPreferredSize(new Dimension(220, 35));
 
@@ -157,7 +171,7 @@ public class SanPhamPanel extends JPanel {
         txtSearch.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
-                if ("Tìm kiếm theo mã hoặc tên...".equals(txtSearch.getText().trim())) {
+                if ("Tìm kiếm theo mã, tên hoặc barcode...".equals(txtSearch.getText().trim())) {
                     isUpdatingSearch = true;
                     txtSearch.setText("");
                     txtSearch.setForeground(Color.BLACK);
@@ -169,7 +183,7 @@ public class SanPhamPanel extends JPanel {
             public void focusLost(FocusEvent e) {
                 if (txtSearch.getText().trim().isEmpty()) {
                     isUpdatingSearch = true;
-                    txtSearch.setText("Tìm kiếm theo mã hoặc tên...");
+                    txtSearch.setText("Tìm kiếm theo mã, tên hoặc barcode...");
                     txtSearch.setForeground(Color.GRAY);
                     isUpdatingSearch = false;
                 }
@@ -578,7 +592,7 @@ public class SanPhamPanel extends JPanel {
             return;
 
         String text = txtSearch.getText().trim();
-        if (text.isEmpty() || text.equals("Tìm kiếm theo mã hoặc tên...")) {
+        if (text.isEmpty() || text.equals("Tìm kiếm theo mã, tên hoặc barcode...")) {
             searchPopup.setVisible(false);
             if (text.isEmpty()) {
                 locVaHienThiSanPham();
@@ -589,8 +603,20 @@ public class SanPhamPanel extends JPanel {
         SwingUtilities.invokeLater(() -> {
             List<SanPham> results = new ArrayList<>();
             for (SanPham sp : danhSachSanPham) {
-                if (sp.getMaSanPham().toLowerCase().contains(text.toLowerCase()) ||
-                        sp.getTenSanPham().toLowerCase().contains(text.toLowerCase())) {
+                boolean match = sp.getMaSanPham().toLowerCase().contains(text.toLowerCase()) ||
+                        sp.getTenSanPham().toLowerCase().contains(text.toLowerCase());
+                if (!match) {
+                    List<DonViQuyDoi> dvList = donViCache.get(sp.getMaSanPham());
+                    if (dvList != null) {
+                        for (DonViQuyDoi dv : dvList) {
+                            if (dv.getBarcode() != null && dv.getBarcode().toLowerCase().contains(text.toLowerCase())) {
+                                match = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (match) {
                     results.add(sp);
                 }
             }
@@ -628,7 +654,7 @@ public class SanPhamPanel extends JPanel {
 
     private void locVaHienThiSanPham() {
         String tuKhoa = txtSearch.getText().trim();
-        if ("Tìm kiếm theo mã hoặc tên...".equals(tuKhoa))
+        if ("Tìm kiếm theo mã, tên hoặc barcode...".equals(tuKhoa))
             tuKhoa = "";
 
         String danhMuc = (String) cbDanhMuc.getSelectedItem();
@@ -639,6 +665,18 @@ public class SanPhamPanel extends JPanel {
             boolean khopTuKhoa = tuKhoa.isEmpty() ||
                     sp.getMaSanPham().toLowerCase().contains(tuKhoa.toLowerCase()) ||
                     sp.getTenSanPham().toLowerCase().contains(tuKhoa.toLowerCase());
+
+            if (!khopTuKhoa && !tuKhoa.isEmpty()) {
+                List<DonViQuyDoi> dvList = donViCache.get(sp.getMaSanPham());
+                if (dvList != null) {
+                    for (DonViQuyDoi dv : dvList) {
+                        if (dv.getBarcode() != null && dv.getBarcode().toLowerCase().contains(tuKhoa.toLowerCase())) {
+                            khopTuKhoa = true;
+                            break;
+                        }
+                    }
+                }
+            }
 
             boolean khopDanhMuc = danhMuc.equals("Tất cả") ||
                     (danhMuc.equals("Thuốc ETC") && sp.getLoaiSanPham() == LoaiSanPham.ETC) ||
@@ -1400,6 +1438,7 @@ public class SanPhamPanel extends JPanel {
             btnTabNormal.repaint();
             btnTabLoi.repaint();
             loadDanhSachSanPham();
+            if (txtSearch != null) txtSearch.requestFocusInWindow();
         });
 
         btnTabLoi.addActionListener(e -> {
@@ -1408,6 +1447,7 @@ public class SanPhamPanel extends JPanel {
             btnTabNormal.repaint();
             btnTabLoi.repaint();
             loadDanhSachLoi();
+            if (txtSearchLoi != null) txtSearchLoi.requestFocusInWindow();
         });
 
         bar.add(btnTabNormal);
