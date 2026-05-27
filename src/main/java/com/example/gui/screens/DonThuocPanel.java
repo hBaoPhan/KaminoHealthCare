@@ -108,15 +108,8 @@ public class DonThuocPanel extends JPanel {
         btnUpdate.setBackground(COLOR_WARNING);
         btnUpdate.setPreferredSize(new Dimension(100, 35));
 
-        RoundedButton btnDelete = new RoundedButton("Xóa");
-        btnDelete.setFont(FONT_LABEL);
-        btnDelete.setBackground(COLOR_DANGER);
-        btnDelete.setForeground(Color.WHITE);
-        btnDelete.setPreferredSize(new Dimension(100, 35));
-
         rightPanel.add(btnAdd);
         rightPanel.add(btnUpdate);
-        rightPanel.add(btnDelete);
 
         panel.add(leftPanel, BorderLayout.WEST);
         panel.add(rightPanel, BorderLayout.EAST);
@@ -126,7 +119,6 @@ public class DonThuocPanel extends JPanel {
         btnRefresh.addActionListener(e -> lamMoiDLRST());
         btnAdd.addActionListener(e -> themDonThuoc());
         btnUpdate.addActionListener(e -> suaDonThuoc());
-        btnDelete.addActionListener(e -> xoaDonThuoc());
 
         return panel;
     }
@@ -309,25 +301,7 @@ public class DonThuocPanel extends JPanel {
         }
     }
 
-    private void xoaDonThuoc() {
-        int row = table.getSelectedRow();
-        if (row < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn đơn thuốc cần xóa!");
-            return;
-        }
 
-        String ma = (String) model.getValueAt(row, 0);
-        int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc chắn muốn xóa đơn thuốc " + ma + "?", "Xác nhận", JOptionPane.YES_NO_OPTION);
-        if (confirm == JOptionPane.YES_OPTION) {
-            if (donThuocService.xoa(ma)) {
-                JOptionPane.showMessageDialog(this, "Xóa thành công!");
-                taiLaiDanhSach();
-                lamMoiForm();
-            } else {
-                JOptionPane.showMessageDialog(this, "Xóa thất bại!");
-            }
-        }
-    }
     
     private void timKiem() {
         String keyword = txtSearch.getText().trim().toLowerCase();

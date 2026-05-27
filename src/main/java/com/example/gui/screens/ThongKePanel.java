@@ -1712,6 +1712,24 @@ public class ThongKePanel extends JPanel {
 
                         if (qtyGoc > qtyMoi) {
                             int qtyTra = qtyGoc - qtyMoi; // Đây chính xác là lượng trả lại
+
+                            // Tính số lượng bị lỗi trong hóa đơn đổi
+                            int slLoiNhoNhat = 0;
+                            if (hd.getDsChiTiet() != null) {
+                                for (ChiTietHoaDon ctMoi2 : hd.getDsChiTiet()) {
+                                    if (ctMoi2.getDonViQuyDoi().getMaDonVi().equals(maDv)) {
+                                        if (ctMoi2.getDsPhanBoLo() != null) {
+                                            for (SuPhanBoLo spbl : ctMoi2.getDsPhanBoLo()) {
+                                                if (spbl.isLoi()) {
+                                                    slLoiNhoNhat += spbl.getSoLuongPhanBo();
+                                                }
+                                            }
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+
                             double totalCostGoc = 0.0;
                             int totalQtyGoc = 0;
                             if (ctGoc.getDsPhanBoLo() != null) {
@@ -1728,7 +1746,11 @@ public class ThongKePanel extends JPanel {
                             }
                             double avgUnitCost = (totalQtyGoc > 0) ? (totalCostGoc / totalQtyGoc) : 0.0;
                             int qtyTraBase = qtyTra * ctGoc.getDonViQuyDoi().getHeSoQuyDoi();
-                            refundedCost += qtyTraBase * avgUnitCost;
+                            
+                            // Trừ đi số lượng lỗi (không hoàn kho -> không được tính vào vốn hoàn lại)
+                            int qtyTraHopLe = Math.max(0, qtyTraBase - slLoiNhoNhat);
+                            
+                            refundedCost += qtyTraHopLe * avgUnitCost;
                         }
                     }
                 }

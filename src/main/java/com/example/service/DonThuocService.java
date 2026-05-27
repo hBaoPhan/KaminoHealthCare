@@ -33,6 +33,9 @@ public class DonThuocService {
     }
 
     public boolean xoa(String maDT) {
+        if (donThuocDAO.coHoaDonChuaDonThuoc(maDT)) {
+            throw new RuntimeException("Đơn thuốc này đã được sử dụng trong hóa đơn. Không thể xóa!");
+        }
         return donThuocDAO.xoa(maDT);
     }
 }

@@ -281,17 +281,14 @@ public class LoPanel extends JPanel {
 
         JButton btnThem = createStyledButton("Thêm", new Color(40, 167, 69), Color.WHITE);
         JButton btnSua = createStyledButton("Sửa", new Color(0, 123, 255), Color.WHITE);
-        JButton btnXoa = createStyledButton("Xóa", new Color(220, 53, 69), Color.WHITE);
         JButton btnLamMoi = createStyledButton("Làm mới", new Color(108, 117, 125), Color.WHITE);
 
         btnThem.addActionListener(e -> themLo());
         btnSua.addActionListener(e -> suaLo());
-        btnXoa.addActionListener(e -> xoaLo());
         btnLamMoi.addActionListener(e -> lamMoi());
 
         buttonPanel.add(btnThem);
         buttonPanel.add(btnSua);
-        buttonPanel.add(btnXoa);
         buttonPanel.add(btnLamMoi);
 
         rightPanel.add(buttonPanel, BorderLayout.SOUTH);
@@ -585,24 +582,7 @@ public class LoPanel extends JPanel {
         }
     }
 
-    private void xoaLo() {
-        int row = table.getSelectedRow();
-        if (row == -1)
-            return;
 
-        String maLo = (String) model.getValueAt(row, 1);
-        int confirm = JOptionPane.showConfirmDialog(this, "Xóa lô " + maLo + "?", "Xác nhận",
-                JOptionPane.YES_NO_OPTION);
-        if (confirm == JOptionPane.YES_OPTION) {
-            if (loService.xoa(maLo)) {
-                JOptionPane.showMessageDialog(this, "Xóa lô thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
-                loadDataToTable();
-                lamMoi();
-            } else {
-                JOptionPane.showMessageDialog(this, "Xóa thất bại! Lô này có thể đã được phân bổ cho các hóa đơn.", "Lỗi xóa dữ liệu", JOptionPane.ERROR_MESSAGE);
-            }
-        }
-    }
 
     // RoundedButton class (giữ nguyên)
     private static class RoundedButton extends JButton {

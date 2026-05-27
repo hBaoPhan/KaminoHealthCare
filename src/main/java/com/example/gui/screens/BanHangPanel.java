@@ -81,6 +81,7 @@ public class BanHangPanel extends JPanel {
     private NhanVien nhanVienHienTai;
     private final StringBuilder barcodeBuffer = new StringBuilder();
     private long lastKeyTime = 0;
+    private boolean isResettingAfterPayment = false;
 
     public BanHangPanel(TaiKhoan taiKhoan) {
         this.nhanVienHienTai = taiKhoan.getNhanVien();
@@ -532,7 +533,9 @@ public class BanHangPanel extends JPanel {
                 if (lblTongTienHoaDon != null) {
                     autoSelectBestKhuyenMai();
                     updateSummary();
-                    SwingUtilities.invokeLater(() -> luuHoaDon(false));
+                    if (!isResettingAfterPayment) {
+                        SwingUtilities.invokeLater(() -> luuHoaDon(false));
+                    }
                 }
             }
         });
@@ -1526,17 +1529,23 @@ public class BanHangPanel extends JPanel {
                 com.example.utils.InHoaDonPOS.inHoaDon(hd, dsChiTiet, tienKhachDua, tienThoi);
 
                 // Tiến hành reset giao diện phục vụ giao dịch tiếp theo
-                model.setRowCount(0);
-                maHoaDonHienTai = sinhMaHoaDon();
-                lblMaHoaDon.setText(maHoaDonHienTai);
-                txtSoDienThoai.setText("");
-                txtTenKhachHang.setText("");
-                cboKhuyenMai.setSelectedIndex(0);
-                if (cboDonThuoc != null)
-                    cboDonThuoc.setSelectedIndex(0);
-                areaNotes.setText("");
-                txtTienKhachDua.setText("");
-                khachHangHienTai = null;
+                // Bật cờ để ngăn TableModelListener tự tạo hóa đơn rỗng khi xóa bảng
+                isResettingAfterPayment = true;
+                try {
+                    model.setRowCount(0);
+                    maHoaDonHienTai = sinhMaHoaDon();
+                    lblMaHoaDon.setText(maHoaDonHienTai);
+                    txtSoDienThoai.setText("");
+                    txtTenKhachHang.setText("");
+                    cboKhuyenMai.setSelectedIndex(0);
+                    if (cboDonThuoc != null)
+                        cboDonThuoc.setSelectedIndex(0);
+                    areaNotes.setText("");
+                    txtTienKhachDua.setText("");
+                    khachHangHienTai = null;
+                } finally {
+                    isResettingAfterPayment = false;
+                }
             } else {
                 JOptionPane.showMessageDialog(this, "Lỗi khi thanh toán!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             }

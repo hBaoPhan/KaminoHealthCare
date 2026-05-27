@@ -40,7 +40,7 @@ public class KhuyenMaiPanel extends JPanel {
     private int hoveredRow = -1;
     private int currentSelectedIndex = -1;
 
-    private JButton btnThem, btnXoa, btnSua, btnLamMoi;
+    private JButton btnThem, btnSua, btnLamMoi;
     private JTextField txtSearch;
     private JComboBox<String> cboFilterLoai;
     private JComboBox<String> cboFilterTrangThai;
@@ -349,23 +349,19 @@ public class KhuyenMaiPanel extends JPanel {
 
         btnThem   = createStyledButton("Thêm",    new Color(40, 167, 69),  Color.WHITE);
         btnSua    = createStyledButton("Sửa",     new Color(255, 193, 7),  Color.BLACK);
-        btnXoa    = createStyledButton("Xóa",     new Color(220, 53, 69),  Color.WHITE);
         btnLamMoi = createStyledButton("Làm mới", new Color(108, 117, 125), Color.WHITE);
 
         Dimension btnSize = new Dimension(85, 36);
         btnThem.setPreferredSize(btnSize);
         btnSua.setPreferredSize(btnSize);
-        btnXoa.setPreferredSize(btnSize);
         btnLamMoi.setPreferredSize(btnSize);
 
         btnThem.addActionListener(e -> themKhuyenMai());
         btnSua.addActionListener(e -> suaKhuyenMai());
-        btnXoa.addActionListener(e -> xoaKhuyenMai());
         btnLamMoi.addActionListener(e -> clearForm());
 
         buttonPanel.add(btnThem);
         buttonPanel.add(btnSua);
-        buttonPanel.add(btnXoa);
         buttonPanel.add(btnLamMoi);
 
         rightPanel.add(buttonPanel, BorderLayout.SOUTH);
@@ -690,26 +686,7 @@ public class KhuyenMaiPanel extends JPanel {
         }
     }
 
-    private void xoaKhuyenMai() {
-        if (currentSelectedIndex < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn khuyến mãi cần xóa!", "Thông báo", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
 
-        String ma = txtMaKhuyenMai.getText().trim();
-        int confirm = JOptionPane.showConfirmDialog(this, "Xóa khuyến mãi " + ma + "?",
-                "Xác nhận", JOptionPane.YES_NO_OPTION);
-        if (confirm == JOptionPane.YES_OPTION) {
-            if (khuyenMaiService.xoa(ma)) {
-                JOptionPane.showMessageDialog(this, "Xóa thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
-                loadDataFromDatabase();
-                refreshTableData();
-                clearForm();
-            } else {
-                JOptionPane.showMessageDialog(this, "Xóa thất bại! Khuyến mãi này có thể đã được sử dụng trong hóa đơn.", "Lỗi xóa dữ liệu", JOptionPane.ERROR_MESSAGE);
-            }
-        }
-    }
 
     // FIX 5: Thêm validation ngày kết thúc > ngày bắt đầu
     // FIX 6: Thêm validation cho giaTriDonHangToiThieu
@@ -981,6 +958,5 @@ public class KhuyenMaiPanel extends JPanel {
     private void updateButtonStates() {
         boolean selected = currentSelectedIndex >= 0;
         btnSua.setEnabled(selected);
-        btnXoa.setEnabled(selected);
     }
 }

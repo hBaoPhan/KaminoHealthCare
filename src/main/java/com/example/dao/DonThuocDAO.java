@@ -100,4 +100,21 @@ public class DonThuocDAO {
         }
         return soDongThayDoi > 0;
     }
+
+    public boolean coHoaDonChuaDonThuoc(String maDT) {
+        boolean tonTai = false;
+        try {
+            Connection ketNoi = ConnectDB.getConnection();
+            String truyVan = "SELECT COUNT(*) FROM HoaDon WHERE maDonThuoc = ?";
+            PreparedStatement lenh = ketNoi.prepareStatement(truyVan);
+            lenh.setString(1, maDT);
+            ResultSet ketQua = lenh.executeQuery();
+            if (ketQua.next()) {
+                tonTai = ketQua.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return tonTai;
+    }
 }
