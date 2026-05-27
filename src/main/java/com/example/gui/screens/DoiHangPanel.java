@@ -1136,6 +1136,16 @@ public class DoiHangPanel extends JPanel {
                 }
             }
 
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "Bạn có chắc chắn muốn hoàn tất giao dịch đổi hàng này không?\nTổng tiền chênh lệch: "
+                            + txtChenhLech.getText(),
+                    "Xác nhận đổi hàng",
+                    JOptionPane.YES_NO_OPTION);
+
+            if (confirm != JOptionPane.YES_OPTION) {
+                return;
+            }
+
             LocalDateTime now = LocalDateTime.now();
             String maHoaDonMoi = hoaDonService.sinhMaHoaDon(LoaiHoaDon.DOI_HANG);
 

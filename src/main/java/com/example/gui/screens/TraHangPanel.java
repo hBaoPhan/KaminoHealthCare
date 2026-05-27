@@ -342,14 +342,7 @@ public class TraHangPanel extends JPanel {
         addInputRow(pnlContent, "Tổng tiền thuế:", txtThue = new JTextField("5.250Đ"), gbc, r++);
         addInputRow(pnlContent, "Thành tiền :", txtThanhTien = new JTextField("114.750Đ"), gbc, r++);
 
-        // Phương thức thanh toán
-        JPanel pnlPayMethod = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
-        pnlPayMethod.setOpaque(false);
-        pnlPayMethod.add(new JLabel("Phương thức thanh toán:"));
-        pnlPayMethod.add(chkTienMat = new JCheckBox("Tiền mặt", true));
-        pnlPayMethod.add(chkChuyenKhoan = new JCheckBox("Chuyển khoản"));
-        gbc.gridy = r++;
-        pnlContent.add(pnlPayMethod, gbc);
+        // Phương thức thanh toán mặc định là tiền mặt (không cho chọn trên UI)
 
         addInputRow(pnlContent, "Tiền trả lại:", txtTienTraLai = new JTextField("114.750Đ"), gbc, r++);
 
@@ -498,11 +491,11 @@ public class TraHangPanel extends JPanel {
         dsChiTietGoc = chiTietHoaDonService.layTheoMaHoaDon(maHD);
 
         // --- XỬ LÝ LỖI DUPLICATE ---
-        // Không load các sản phẩm là Quà Tặng (isLaQuaTangKem = true) lên danh sách trả
-        // hàng.
-        // Điều này đảm bảo mỗi maDonVi chỉ xuất hiện 1 lần, tránh lỗi Duplicate Primary
-        // Key (maHD, maDonVi, laQuaTangKem)
+        // Không load các sản phẩm là Quà Tặng (isLaQuaTangKem = true) lên danh sách trả hàng.
         dsChiTietGoc.removeIf(ChiTietHoaDon::isLaQuaTangKem);
+
+        // --- KHÔNG CHO TRẢ THUỐC ETC ---
+        dsChiTietGoc.removeIf(ct -> ct.getDonViQuyDoi().getSanPham().getLoaiSanPham() == com.example.entity.enums.LoaiSanPham.ETC);
 
         this.hd.setDsChiTiet(dsChiTietGoc);
 

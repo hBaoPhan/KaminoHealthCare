@@ -91,7 +91,7 @@ public class ManHinhChinhPanel extends JPanel {
 
         panel.add(createStatCard("Hóa đơn hôm nay", lblHoaDonHomNay));
         panel.add(createStatCard("Doanh thu hôm nay", lblDoanhThuHomNay));
-        panel.add(createStatCard("Lợi Nhuận", lblLoiNhuan));
+        panel.add(createStatCard("Lợi Nhuận hôm nay", lblLoiNhuan));
         panel.add(createStatCard("Cảnh báo", lblCanhBao));
 
         return panel;
@@ -572,7 +572,8 @@ public class ManHinhChinhPanel extends JPanel {
                 double refundedCost = 0.0;
                 double addedCost = 0.0;
 
-                // 1. Tính vốn hoàn lại (từ các sản phẩm trả) dựa vào SoLuongBan của ChiTietHoaDon
+                // 1. Tính vốn hoàn lại (từ các sản phẩm trả) dựa vào SoLuongBan của
+                // ChiTietHoaDon
                 if (hdGoc.getDsChiTiet() != null) {
                     for (ChiTietHoaDon ctGoc : hdGoc.getDsChiTiet()) {
                         String maDv = ctGoc.getDonViQuyDoi().getMaDonVi();
@@ -656,19 +657,23 @@ public class ManHinhChinhPanel extends JPanel {
 
     private double tinhTongTienThucTeHoaDon(HoaDon h) {
         double dTongTien = h.tinhTongTienThanhToan();
-        if (h.getLoaiHoaDon() == LoaiHoaDon.DOI_HANG && h.getHoaDonDoiTra() != null && h.getHoaDonDoiTra().getMaHoaDon() != null) {
+        if (h.getLoaiHoaDon() == LoaiHoaDon.DOI_HANG && h.getHoaDonDoiTra() != null
+                && h.getHoaDonDoiTra().getMaHoaDon() != null) {
             try {
                 String maHDGocRef = h.getHoaDonDoiTra().getMaHoaDon();
                 List<ChiTietHoaDon> dsChiTiet = chiTietHoaDonService.layTheoMaHoaDon(h.getMaHoaDon());
                 List<ChiTietHoaDon> dsGoc = chiTietHoaDonService.layTheoMaHoaDon(maHDGocRef);
-                
+
                 HoaDon hdGocRef = hoaDonService.timTheoMa(maHDGocRef);
                 double kmMoiPt = (h.getKhuyenMai() != null
                         && h.getKhuyenMai().getLoaiKhuyenMai() == com.example.entity.enums.LoaiKhuyenMai.PHAN_TRAM)
-                        ? h.getKhuyenMai().getKhuyenMaiPhanTram() : 0;
+                                ? h.getKhuyenMai().getKhuyenMaiPhanTram()
+                                : 0;
                 double tiLeGiamGoc = (hdGocRef != null && hdGocRef.getKhuyenMai() != null
-                        && hdGocRef.getKhuyenMai().getLoaiKhuyenMai() == com.example.entity.enums.LoaiKhuyenMai.PHAN_TRAM)
-                        ? hdGocRef.getKhuyenMai().getKhuyenMaiPhanTram() : 0;
+                        && hdGocRef.getKhuyenMai()
+                                .getLoaiKhuyenMai() == com.example.entity.enums.LoaiKhuyenMai.PHAN_TRAM)
+                                        ? hdGocRef.getKhuyenMai().getKhuyenMaiPhanTram()
+                                        : 0;
 
                 double tongTienHang = 0;
                 double soTienGiam = 0;
@@ -676,22 +681,34 @@ public class ManHinhChinhPanel extends JPanel {
                 double tongThue = 0;
 
                 for (ChiTietHoaDon ctDoi : dsChiTiet) {
-                    if (ctDoi.isLaQuaTangKem()) continue;
+                    if (ctDoi.isLaQuaTangKem())
+                        continue;
                     tongTienHang += ctDoi.getSoLuongBan() * ctDoi.getDonGia();
                 }
 
                 // Tính KM mới (soTienGiam)
-                if (h.getKhuyenMai() != null && h.getKhuyenMai().getLoaiKhuyenMai() == com.example.entity.enums.LoaiKhuyenMai.PHAN_TRAM) {
+                if (h.getKhuyenMai() != null
+                        && h.getKhuyenMai().getLoaiKhuyenMai() == com.example.entity.enums.LoaiKhuyenMai.PHAN_TRAM) {
                     double tongTienMuaThem = 0;
                     for (ChiTietHoaDon ctDoi : dsChiTiet) {
-                        if (ctDoi.isLaQuaTangKem()) continue;
-                        String maSP = ctDoi.getDonViQuyDoi().getSanPham() != null ? ctDoi.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
-                        String tenDV = ctDoi.getDonViQuyDoi().getTenDonVi() != null ? ctDoi.getDonViQuyDoi().getTenDonVi().name() : "";
+                        if (ctDoi.isLaQuaTangKem())
+                            continue;
+                        String maSP = ctDoi.getDonViQuyDoi().getSanPham() != null
+                                ? ctDoi.getDonViQuyDoi().getSanPham().getMaSanPham()
+                                : "";
+                        String tenDV = ctDoi.getDonViQuyDoi().getTenDonVi() != null
+                                ? ctDoi.getDonViQuyDoi().getTenDonVi().name()
+                                : "";
                         int slGoc = 0;
                         for (ChiTietHoaDon ctGoc : dsGoc) {
-                            if (ctGoc.isLaQuaTangKem()) continue;
-                            String maSPGoc = ctGoc.getDonViQuyDoi().getSanPham() != null ? ctGoc.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
-                            String tenDVGoc = ctGoc.getDonViQuyDoi().getTenDonVi() != null ? ctGoc.getDonViQuyDoi().getTenDonVi().name() : "";
+                            if (ctGoc.isLaQuaTangKem())
+                                continue;
+                            String maSPGoc = ctGoc.getDonViQuyDoi().getSanPham() != null
+                                    ? ctGoc.getDonViQuyDoi().getSanPham().getMaSanPham()
+                                    : "";
+                            String tenDVGoc = ctGoc.getDonViQuyDoi().getTenDonVi() != null
+                                    ? ctGoc.getDonViQuyDoi().getTenDonVi().name()
+                                    : "";
                             if (maSPGoc.equals(maSP) && tenDVGoc.equals(tenDV)) {
                                 slGoc += ctGoc.getSoLuongBan();
                             }
@@ -707,14 +724,24 @@ public class ManHinhChinhPanel extends JPanel {
                 // Tính KM gốc (soTienKMGoc)
                 double tongTienSPCu = 0;
                 for (ChiTietHoaDon ctDoi : dsChiTiet) {
-                    if (ctDoi.isLaQuaTangKem()) continue;
-                    String maSPDoi = ctDoi.getDonViQuyDoi().getSanPham() != null ? ctDoi.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
-                    String tenDVDoi = ctDoi.getDonViQuyDoi().getTenDonVi() != null ? ctDoi.getDonViQuyDoi().getTenDonVi().name() : "";
+                    if (ctDoi.isLaQuaTangKem())
+                        continue;
+                    String maSPDoi = ctDoi.getDonViQuyDoi().getSanPham() != null
+                            ? ctDoi.getDonViQuyDoi().getSanPham().getMaSanPham()
+                            : "";
+                    String tenDVDoi = ctDoi.getDonViQuyDoi().getTenDonVi() != null
+                            ? ctDoi.getDonViQuyDoi().getTenDonVi().name()
+                            : "";
                     int slTrongGoc = 0;
                     for (ChiTietHoaDon ctGoc : dsGoc) {
-                        if (ctGoc.isLaQuaTangKem()) continue;
-                        String maSPGocX = ctGoc.getDonViQuyDoi().getSanPham() != null ? ctGoc.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
-                        String tenDVGocX = ctGoc.getDonViQuyDoi().getTenDonVi() != null ? ctGoc.getDonViQuyDoi().getTenDonVi().name() : "";
+                        if (ctGoc.isLaQuaTangKem())
+                            continue;
+                        String maSPGocX = ctGoc.getDonViQuyDoi().getSanPham() != null
+                                ? ctGoc.getDonViQuyDoi().getSanPham().getMaSanPham()
+                                : "";
+                        String tenDVGocX = ctGoc.getDonViQuyDoi().getTenDonVi() != null
+                                ? ctGoc.getDonViQuyDoi().getTenDonVi().name()
+                                : "";
                         if (maSPGocX.equals(maSPDoi) && tenDVGocX.equals(tenDVDoi)) {
                             slTrongGoc += ctGoc.getSoLuongBan();
                         }
@@ -726,21 +753,33 @@ public class ManHinhChinhPanel extends JPanel {
 
                 // Tính Thuế
                 for (ChiTietHoaDon ctDoi : dsChiTiet) {
-                    if (ctDoi.isLaQuaTangKem()) continue;
-                    String maSPDoi = ctDoi.getDonViQuyDoi().getSanPham() != null ? ctDoi.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
-                    String tenDVDoi = ctDoi.getDonViQuyDoi().getTenDonVi() != null ? ctDoi.getDonViQuyDoi().getTenDonVi().name() : "";
+                    if (ctDoi.isLaQuaTangKem())
+                        continue;
+                    String maSPDoi = ctDoi.getDonViQuyDoi().getSanPham() != null
+                            ? ctDoi.getDonViQuyDoi().getSanPham().getMaSanPham()
+                            : "";
+                    String tenDVDoi = ctDoi.getDonViQuyDoi().getTenDonVi() != null
+                            ? ctDoi.getDonViQuyDoi().getTenDonVi().name()
+                            : "";
                     int slTrongGoc = 0;
                     for (ChiTietHoaDon ctGoc : dsGoc) {
-                        if (ctGoc.isLaQuaTangKem()) continue;
-                        String maSPGocX = ctGoc.getDonViQuyDoi().getSanPham() != null ? ctGoc.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
-                        String tenDVGocX = ctGoc.getDonViQuyDoi().getTenDonVi() != null ? ctGoc.getDonViQuyDoi().getTenDonVi().name() : "";
+                        if (ctGoc.isLaQuaTangKem())
+                            continue;
+                        String maSPGocX = ctGoc.getDonViQuyDoi().getSanPham() != null
+                                ? ctGoc.getDonViQuyDoi().getSanPham().getMaSanPham()
+                                : "";
+                        String tenDVGocX = ctGoc.getDonViQuyDoi().getTenDonVi() != null
+                                ? ctGoc.getDonViQuyDoi().getTenDonVi().name()
+                                : "";
                         if (maSPGocX.equals(maSPDoi) && tenDVGocX.equals(tenDVDoi)) {
                             slTrongGoc += ctGoc.getSoLuongBan();
                         }
                     }
                     int slDoiNgang = Math.min(ctDoi.getSoLuongBan(), slTrongGoc);
                     int slMuaThem = Math.max(0, ctDoi.getSoLuongBan() - slTrongGoc);
-                    double thuePt = ctDoi.getDonViQuyDoi().getSanPham() != null ? ctDoi.getDonViQuyDoi().getSanPham().getThue() : 0;
+                    double thuePt = ctDoi.getDonViQuyDoi().getSanPham() != null
+                            ? ctDoi.getDonViQuyDoi().getSanPham().getThue()
+                            : 0;
                     double price = ctDoi.getDonGia();
 
                     tongThue += slDoiNgang * price * (thuePt / 100.0) * (1 - tiLeGiamGoc / 100.0);
@@ -748,7 +787,8 @@ public class ManHinhChinhPanel extends JPanel {
                 }
 
                 dTongTien = tongTienHang - soTienGiam - soTienKMGoc + tongThue;
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
         return dTongTien;
     }
