@@ -153,7 +153,9 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 			contentPanel.add(pnlCaLam = new CaLamPanel(), "Quản Lý Ca Làm");
 		}
 		contentPanel.add(pnlDonThuoc = new DonThuocPanel(), "Quản Lý Đơn Thuốc");
-		contentPanel.add(pnlThongKe = new ThongKePanel(), "Thống Kê");
+		if (isQuanLy) {
+			contentPanel.add(pnlThongKe = new ThongKePanel(), "Thống Kê");
+		}
 		contentPanel.add(pnlMoCa = new MoCaPanel(taiKhoan), "Mở Ca");
 		contentPanel.add(pnlDongCa = new DongCaPanel(taiKhoan), "Kết Ca");
 		contentPanel.add(pnlTroGiup = new TroGiupPanel(), "Trợ Giúp");
@@ -378,8 +380,8 @@ public class ThanhDieuHuongPanel extends JFrame implements MouseListener, Action
 			nhanVien.children.add(new MenuItem("Quản Lý Tài Khoản", null, true));
 			nhanVien.children.add(new MenuItem("Quản Lý Ca Làm", null, true));
 			menuStructure.add(nhanVien);
+			menuStructure.add(new MenuItem("Thống Kê", "chart.png"));
 		}
-		menuStructure.add(new MenuItem("Thống Kê", "chart.png"));
 		menuStructure.add(new MenuItem("Trợ Giúp", "help.png"));
 	}
 
