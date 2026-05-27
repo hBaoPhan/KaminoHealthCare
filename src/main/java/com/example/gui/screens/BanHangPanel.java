@@ -1345,11 +1345,9 @@ public class BanHangPanel extends JPanel {
 
     /** Xây dựng đối tượng HoaDon từ UI, trả null nếu lỗi */
     private HoaDon xayDungHoaDon(boolean hienThongBao) {
-        if (model.getRowCount() == 0) {
-            if (hienThongBao) {
-                JOptionPane.showMessageDialog(this, "Vui lòng thêm sản phẩm vào hóa đơn!",
-                        "Cảnh báo", JOptionPane.WARNING_MESSAGE);
-            }
+        if (model.getRowCount() == 0 && hienThongBao) {
+            JOptionPane.showMessageDialog(this, "Vui lòng thêm sản phẩm vào hóa đơn!",
+                    "Cảnh báo", JOptionPane.WARNING_MESSAGE);
             return null;
         }
 
@@ -1388,7 +1386,9 @@ public class BanHangPanel extends JPanel {
 
         CaLam caHienTai = hoaDonService.layCaHienTai(nhanVienHienTai.getMaNhanVien());
         if (caHienTai == null) {
-            JOptionPane.showMessageDialog(this, "Bạn chưa mở ca làm việc!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            if (hienThongBao) {
+                JOptionPane.showMessageDialog(this, "Bạn chưa mở ca làm việc!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
             return null;
         }
 
@@ -1426,9 +1426,7 @@ public class BanHangPanel extends JPanel {
 
     /** Tạo / Lưu hóa đơn (không trừ kho) */
     private boolean luuHoaDon(boolean hienThongBao) {
-        // Nếu đang cập nhật UI hoặc bảng trống thì không lưu tự động
-        if (model.getRowCount() == 0)
-            return false;
+
 
         HoaDon hd = xayDungHoaDon(hienThongBao);
         if (hd == null)

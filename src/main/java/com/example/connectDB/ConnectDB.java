@@ -7,16 +7,27 @@ import java.sql.SQLException;
 public class ConnectDB {
 	public static Connection con = null;
 	private static ConnectDB instance = new ConnectDB();
+	private static ThreadLocal<Connection> threadLocalCon = new ThreadLocal<>();
 
 	public static Connection getConnection() {
+		Connection localCon = threadLocalCon.get();
 		try {
-			if (con == null || con.isClosed()) {
-				instance.connect();
+			if (localCon == null || localCon.isClosed()) {
+				String url = "jdbc:sqlserver://localhost:1433;databaseName=QUANLYKAMINOHEALTHCARE;encrypt=true;trustServerCertificate=true;multipleActiveResultSets=true;";
+				String user = "sa";
+				String password = "sapassword";
+				localCon = DriverManager.getConnection(url, user, password);
+				threadLocalCon.set(localCon);
+				
+				// Keep legacy global var updated for any edge cases
+				if (con == null || con.isClosed()) {
+					con = localCon;
+				}
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		return con;
+		return localCon;
 	}
 
 	public static ConnectDB getInstance() {
@@ -24,21 +35,19 @@ public class ConnectDB {
 	}
 
 	public void connect() throws SQLException {
-		String url = "jdbc:sqlserver://localhost:1433;databaseName=QUANLYKAMINOHEALTHCARE;encrypt=true;trustServerCertificate=true;";
-		String user = "sa";
-		String password = "sapassword";
-		con = DriverManager.getConnection(url, user, password);
+		getConnection();
 	}
 
 	public void disconnnect() {
-		if (con != null) {
+		Connection localCon = threadLocalCon.get();
+		if (localCon != null) {
 			try {
-				con.close();
+				localCon.close();
+				threadLocalCon.remove();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
-
 	}
 
 	public void connect1() throws SQLException {
@@ -48,7 +57,8 @@ public class ConnectDB {
 
 		try {
 			Class.forName("com.mysql.cj.jdbc.Driver");
-			con = DriverManager.getConnection(url, user, pwd);
+			Connection localCon = DriverManager.getConnection(url, user, pwd);
+			threadLocalCon.set(localCon);
 			System.out.println("✅ Kết nối MySQL thành công!");
 		} catch (ClassNotFoundException e) {
 			System.out.println("❌ Không tìm thấy driver MySQL JDBC!");
@@ -58,5 +68,4 @@ public class ConnectDB {
 			e.printStackTrace();
 		}
 	}
-
 }
