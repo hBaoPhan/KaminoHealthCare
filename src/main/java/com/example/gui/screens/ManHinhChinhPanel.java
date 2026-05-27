@@ -361,13 +361,15 @@ public class ManHinhChinhPanel extends JPanel {
         double dtETC = 0;
         double dtOTC = 0;
         double dtTPCN = 0;
+        double dtMyPham = 0;
 
         for (HoaDon hd : dsHoaDon) {
             // Chỉ tính doanh thu/lợi nhuận cho các hóa đơn ĐÃ THANH TOÁN
             if (!hd.isTrangThaiThanhToan())
                 continue;
 
-            double finalTotal = hd.tinhTongTienThanhToan();
+            hd.setDsChiTiet(chiTietHoaDonService.layTheoMaHoaDon(hd.getMaHoaDon()));
+            double finalTotal = tinhTongTienThucTeHoaDon(hd);
             LoaiHoaDon loai = hd.getLoaiHoaDon();
 
             if (loai == LoaiHoaDon.DOI_HANG && hd.getHoaDonDoiTra() != null) {
@@ -375,7 +377,7 @@ public class ManHinhChinhPanel extends JPanel {
                 HoaDon hdGoc = hoaDonService.timTheoMa(maGoc);
                 if (hdGoc != null) {
                     hdGoc.setDsChiTiet(chiTietHoaDonService.layTheoMaHoaDon(maGoc));
-                    finalTotal -= hdGoc.tinhTongTienThanhToan();
+                    finalTotal -= tinhTongTienThucTeHoaDon(hdGoc);
                 }
             }
 
@@ -397,7 +399,7 @@ public class ManHinhChinhPanel extends JPanel {
                 doanhThuTheoGio[gio] += tienHD;
             }
 
-            double tongHienTai = hd.tinhTongTienThanhToan();
+            double tongHienTai = tinhTongTienThucTeHoaDon(hd);
             if (hd.getDsChiTiet() != null) {
                 for (ChiTietHoaDon ct : hd.getDsChiTiet()) {
                     if (ct.getDonViQuyDoi() != null && ct.getDonViQuyDoi().getSanPham() != null) {
@@ -418,6 +420,8 @@ public class ManHinhChinhPanel extends JPanel {
                             dtOTC += tienCT;
                         else if (pl == LoaiSanPham.TPCN)
                             dtTPCN += tienCT;
+                        else if (pl == LoaiSanPham.MY_PHAM)
+                            dtMyPham += tienCT;
                     }
                 }
             }
@@ -473,8 +477,10 @@ public class ManHinhChinhPanel extends JPanel {
                 donutDataset.setValue("Thuốc không kê đơn", dtOTC);
             if (dtTPCN > 0)
                 donutDataset.setValue("Thực phẩm chức năng", dtTPCN);
+            if (dtMyPham > 0)
+                donutDataset.setValue("Mỹ phẩm", dtMyPham);
 
-            if (dtETC == 0 && dtOTC == 0 && dtTPCN == 0) {
+            if (dtETC == 0 && dtOTC == 0 && dtTPCN == 0 && dtMyPham == 0) {
                 donutDataset.setValue("Chưa có dữ liệu", 1);
             }
         }
@@ -489,6 +495,7 @@ public class ManHinhChinhPanel extends JPanel {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
         for (HoaDon hd : dsHoaDon) {
+            hd.setDsChiTiet(chiTietHoaDonService.layTheoMaHoaDon(hd.getMaHoaDon()));
             modelHoaDon.addRow(new Object[] {
                     hd.getMaHoaDon(),
                     hd.getKhachHang() != null ? hd.getKhachHang().getTenKhachHang() : "Khách lẻ",
@@ -496,7 +503,7 @@ public class ManHinhChinhPanel extends JPanel {
                     hd.getKhuyenMai() != null ? hd.getKhuyenMai().getTenKhuyenMai() : "Không có",
                     hd.getNhanVien() != null ? hd.getNhanVien().getTenNhanVien() : "",
                     hd.getLoaiHoaDon() != null ? hd.getLoaiHoaDon().getMoTa() : "",
-                    df.format(hd.tinhTongTienThanhToan()),
+                    df.format(tinhTongTienThucTeHoaDon(hd)),
                     hd.isTrangThaiThanhToan() ? "Đã thanh toán" : "Chưa thanh toán"
             });
         }
@@ -535,68 +542,214 @@ public class ManHinhChinhPanel extends JPanel {
 
     private double tinhGiaVonHoaDon(HoaDon hd) {
         double cost = 0.0;
-        if (hd.getDsChiTiet() != null) {
-            for (ChiTietHoaDon ct : hd.getDsChiTiet()) {
-                if (ct.getDsPhanBoLo() != null) {
-                    for (SuPhanBoLo spbl : ct.getDsPhanBoLo()) {
-                        if (spbl.getLo() != null) {
-                            double giaNhapLoo = spbl.getLo().getGiaNhap();
-                            int slBanDau = loService.tinhSoLuongNhapBanDau(spbl.getLo().getMaLo());
-                            double giaNhapDonVi = slBanDau > 0 ? (giaNhapLoo / slBanDau) : 0;
-                            cost += spbl.getSoLuongPhanBo() * giaNhapDonVi;
+
+        // Nếu là hóa đơn bán hàng hoặc trả hàng: cost bằng SuPhanBo (thì +)
+        if (hd.getLoaiHoaDon() != LoaiHoaDon.DOI_HANG) {
+            if (hd.getDsChiTiet() != null) {
+                for (ChiTietHoaDon ct : hd.getDsChiTiet()) {
+                    if (ct.getDsPhanBoLo() != null) {
+                        for (SuPhanBoLo spbl : ct.getDsPhanBoLo()) {
+                            if (spbl.getLo() != null) {
+                                double giaNhapLoo = spbl.getLo().getGiaNhap();
+                                int slBanDau = loService.tinhSoLuongNhapBanDau(spbl.getLo().getMaLo());
+                                double giaNhapDonVi = slBanDau > 0 ? (giaNhapLoo / slBanDau) : 0;
+                                cost += spbl.getSoLuongPhanBo() * giaNhapDonVi;
+                            }
                         }
                     }
                 }
             }
+            return cost;
         }
 
+        // Nếu là hóa đơn đổi hàng (hd_đổi)
         if (hd.getLoaiHoaDon() == LoaiHoaDon.DOI_HANG && hd.getHoaDonDoiTra() != null) {
             String maGoc = hd.getHoaDonDoiTra().getMaHoaDon();
             HoaDon hdGoc = hoaDonService.timTheoMa(maGoc);
             if (hdGoc != null) {
                 hdGoc.setDsChiTiet(chiTietHoaDonService.layTheoMaHoaDon(maGoc));
-                
-                java.util.List<ChiTietHoaDon> dsChiTietTra = new java.util.ArrayList<>();
-                for (ChiTietHoaDon ctGoc : hdGoc.getDsChiTiet()) {
-                    if (ctGoc.isLaQuaTangKem()) continue;
-                    
-                    int qtyGoc = ctGoc.getSoLuongBan();
-                    int qtyMoi = 0;
-                    
-                    if (hd.getDsChiTiet() != null) {
-                        for (ChiTietHoaDon ctMoi : hd.getDsChiTiet()) {
-                            if (!ctMoi.isLaQuaTangKem() && 
-                                ctMoi.getDonViQuyDoi().getMaDonVi().equals(ctGoc.getDonViQuyDoi().getMaDonVi())) {
-                                qtyMoi = ctMoi.getSoLuongBan();
-                                break;
+
+                double refundedCost = 0.0;
+                double addedCost = 0.0;
+
+                // 1. Tính vốn hoàn lại (từ các sản phẩm trả) dựa vào SoLuongBan của ChiTietHoaDon
+                if (hdGoc.getDsChiTiet() != null) {
+                    for (ChiTietHoaDon ctGoc : hdGoc.getDsChiTiet()) {
+                        String maDv = ctGoc.getDonViQuyDoi().getMaDonVi();
+                        int qtyGoc = ctGoc.getSoLuongBan();
+                        int qtyMoi = 0;
+
+                        if (hd.getDsChiTiet() != null) {
+                            for (ChiTietHoaDon ctMoi : hd.getDsChiTiet()) {
+                                if (ctMoi.getDonViQuyDoi().getMaDonVi().equals(maDv)) {
+                                    qtyMoi = ctMoi.getSoLuongBan();
+                                    break;
+                                }
                             }
                         }
-                    }
-                    
-                    if (qtyGoc > qtyMoi) {
-                        ChiTietHoaDon ctTra = new ChiTietHoaDon();
-                        ctTra.setDonViQuyDoi(ctGoc.getDonViQuyDoi());
-                        ctTra.setSoLuongBan(qtyGoc - qtyMoi);
-                        ctTra.setDonGia(ctGoc.getDonGia());
-                        dsChiTietTra.add(ctTra);
-                    }
-                }
-                
-                if (!dsChiTietTra.isEmpty()) {
-                    java.util.List<SuPhanBoLo> dsPhanBoTra = hoaDonService.layDanhSachPhanBoLoCanTra(maGoc, dsChiTietTra);
-                    double costTraLai = 0.0;
-                    for (SuPhanBoLo spbl : dsPhanBoTra) {
-                        if (spbl.getLo() != null) {
-                            double giaNhapLoo = spbl.getLo().getGiaNhap();
-                            int slBanDau = loService.tinhSoLuongNhapBanDau(spbl.getLo().getMaLo());
-                            double giaNhapDonVi = slBanDau > 0 ? (giaNhapLoo / slBanDau) : 0;
-                            costTraLai += spbl.getSoLuongPhanBo() * giaNhapDonVi;
+
+                        if (qtyGoc > qtyMoi) {
+                            int qtyTra = qtyGoc - qtyMoi; // Lượng trả lại
+                            double totalCostGoc = 0.0;
+                            int totalQtyGoc = 0;
+                            if (ctGoc.getDsPhanBoLo() != null) {
+                                for (SuPhanBoLo spbl : ctGoc.getDsPhanBoLo()) {
+                                    if (spbl.getLo() != null) {
+                                        double giaNhapLoo = spbl.getLo().getGiaNhap();
+                                        int slBanDau = loService.tinhSoLuongNhapBanDau(spbl.getLo().getMaLo());
+                                        double giaNhapDonVi = slBanDau > 0 ? (giaNhapLoo / slBanDau) : 0;
+                                        totalCostGoc += spbl.getSoLuongPhanBo() * giaNhapDonVi;
+                                        totalQtyGoc += spbl.getSoLuongPhanBo();
+                                    }
+                                }
+                            }
+                            double avgUnitCost = (totalQtyGoc > 0) ? (totalCostGoc / totalQtyGoc) : 0.0;
+                            int qtyTraBase = qtyTra * ctGoc.getDonViQuyDoi().getHeSoQuyDoi();
+                            refundedCost += qtyTraBase * avgUnitCost;
                         }
                     }
-                    cost -= 2 * costTraLai;
                 }
+
+                // 2. Tính vốn mua thêm (từ các sản phẩm mới)
+                if (hd.getDsChiTiet() != null) {
+                    for (ChiTietHoaDon ctMoi : hd.getDsChiTiet()) {
+                        String maDv = ctMoi.getDonViQuyDoi().getMaDonVi();
+                        int qtyMoi = ctMoi.getSoLuongBan();
+                        int qtyGoc = 0;
+
+                        if (hdGoc.getDsChiTiet() != null) {
+                            for (ChiTietHoaDon ctGoc : hdGoc.getDsChiTiet()) {
+                                if (ctGoc.getDonViQuyDoi().getMaDonVi().equals(maDv)) {
+                                    qtyGoc = ctGoc.getSoLuongBan();
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (qtyMoi > qtyGoc) {
+                            int qtyThem = qtyMoi - qtyGoc;
+                            double totalCostMoi = 0.0;
+                            int totalQtyMoi = 0;
+                            if (ctMoi.getDsPhanBoLo() != null) {
+                                for (SuPhanBoLo spbl : ctMoi.getDsPhanBoLo()) {
+                                    if (spbl.getLo() != null) {
+                                        double giaNhapLoo = spbl.getLo().getGiaNhap();
+                                        int slBanDau = loService.tinhSoLuongNhapBanDau(spbl.getLo().getMaLo());
+                                        double giaNhapDonVi = slBanDau > 0 ? (giaNhapLoo / slBanDau) : 0;
+                                        totalCostMoi += spbl.getSoLuongPhanBo() * giaNhapDonVi;
+                                        totalQtyMoi += spbl.getSoLuongPhanBo();
+                                    }
+                                }
+                            }
+                            double avgUnitCost = (totalQtyMoi > 0) ? (totalCostMoi / totalQtyMoi) : 0.0;
+                            int qtyThemBase = qtyThem * ctMoi.getDonViQuyDoi().getHeSoQuyDoi();
+                            addedCost += qtyThemBase * avgUnitCost;
+                        }
+                    }
+                }
+
+                cost = addedCost - refundedCost;
             }
         }
         return cost;
+    }
+
+    private double tinhTongTienThucTeHoaDon(HoaDon h) {
+        double dTongTien = h.tinhTongTienThanhToan();
+        if (h.getLoaiHoaDon() == LoaiHoaDon.DOI_HANG && h.getHoaDonDoiTra() != null && h.getHoaDonDoiTra().getMaHoaDon() != null) {
+            try {
+                String maHDGocRef = h.getHoaDonDoiTra().getMaHoaDon();
+                List<ChiTietHoaDon> dsChiTiet = chiTietHoaDonService.layTheoMaHoaDon(h.getMaHoaDon());
+                List<ChiTietHoaDon> dsGoc = chiTietHoaDonService.layTheoMaHoaDon(maHDGocRef);
+                
+                HoaDon hdGocRef = hoaDonService.timTheoMa(maHDGocRef);
+                double kmMoiPt = (h.getKhuyenMai() != null
+                        && h.getKhuyenMai().getLoaiKhuyenMai() == com.example.entity.enums.LoaiKhuyenMai.PHAN_TRAM)
+                        ? h.getKhuyenMai().getKhuyenMaiPhanTram() : 0;
+                double tiLeGiamGoc = (hdGocRef != null && hdGocRef.getKhuyenMai() != null
+                        && hdGocRef.getKhuyenMai().getLoaiKhuyenMai() == com.example.entity.enums.LoaiKhuyenMai.PHAN_TRAM)
+                        ? hdGocRef.getKhuyenMai().getKhuyenMaiPhanTram() : 0;
+
+                double tongTienHang = 0;
+                double soTienGiam = 0;
+                double soTienKMGoc = 0;
+                double tongThue = 0;
+
+                for (ChiTietHoaDon ctDoi : dsChiTiet) {
+                    if (ctDoi.isLaQuaTangKem()) continue;
+                    tongTienHang += ctDoi.getSoLuongBan() * ctDoi.getDonGia();
+                }
+
+                // Tính KM mới (soTienGiam)
+                if (h.getKhuyenMai() != null && h.getKhuyenMai().getLoaiKhuyenMai() == com.example.entity.enums.LoaiKhuyenMai.PHAN_TRAM) {
+                    double tongTienMuaThem = 0;
+                    for (ChiTietHoaDon ctDoi : dsChiTiet) {
+                        if (ctDoi.isLaQuaTangKem()) continue;
+                        String maSP = ctDoi.getDonViQuyDoi().getSanPham() != null ? ctDoi.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
+                        String tenDV = ctDoi.getDonViQuyDoi().getTenDonVi() != null ? ctDoi.getDonViQuyDoi().getTenDonVi().name() : "";
+                        int slGoc = 0;
+                        for (ChiTietHoaDon ctGoc : dsGoc) {
+                            if (ctGoc.isLaQuaTangKem()) continue;
+                            String maSPGoc = ctGoc.getDonViQuyDoi().getSanPham() != null ? ctGoc.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
+                            String tenDVGoc = ctGoc.getDonViQuyDoi().getTenDonVi() != null ? ctGoc.getDonViQuyDoi().getTenDonVi().name() : "";
+                            if (maSPGoc.equals(maSP) && tenDVGoc.equals(tenDV)) {
+                                slGoc += ctGoc.getSoLuongBan();
+                            }
+                        }
+                        int slMuaThem = Math.max(0, ctDoi.getSoLuongBan() - slGoc);
+                        tongTienMuaThem += slMuaThem * ctDoi.getDonGia();
+                    }
+                    if (tongTienMuaThem >= h.getKhuyenMai().getGiaTriDonHangToiThieu()) {
+                        soTienGiam = tongTienMuaThem * (kmMoiPt / 100.0);
+                    }
+                }
+
+                // Tính KM gốc (soTienKMGoc)
+                double tongTienSPCu = 0;
+                for (ChiTietHoaDon ctDoi : dsChiTiet) {
+                    if (ctDoi.isLaQuaTangKem()) continue;
+                    String maSPDoi = ctDoi.getDonViQuyDoi().getSanPham() != null ? ctDoi.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
+                    String tenDVDoi = ctDoi.getDonViQuyDoi().getTenDonVi() != null ? ctDoi.getDonViQuyDoi().getTenDonVi().name() : "";
+                    int slTrongGoc = 0;
+                    for (ChiTietHoaDon ctGoc : dsGoc) {
+                        if (ctGoc.isLaQuaTangKem()) continue;
+                        String maSPGocX = ctGoc.getDonViQuyDoi().getSanPham() != null ? ctGoc.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
+                        String tenDVGocX = ctGoc.getDonViQuyDoi().getTenDonVi() != null ? ctGoc.getDonViQuyDoi().getTenDonVi().name() : "";
+                        if (maSPGocX.equals(maSPDoi) && tenDVGocX.equals(tenDVDoi)) {
+                            slTrongGoc += ctGoc.getSoLuongBan();
+                        }
+                    }
+                    int slCuDangDoi = Math.min(ctDoi.getSoLuongBan(), slTrongGoc);
+                    tongTienSPCu += slCuDangDoi * ctDoi.getDonGia();
+                }
+                soTienKMGoc = tongTienSPCu * (tiLeGiamGoc / 100.0);
+
+                // Tính Thuế
+                for (ChiTietHoaDon ctDoi : dsChiTiet) {
+                    if (ctDoi.isLaQuaTangKem()) continue;
+                    String maSPDoi = ctDoi.getDonViQuyDoi().getSanPham() != null ? ctDoi.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
+                    String tenDVDoi = ctDoi.getDonViQuyDoi().getTenDonVi() != null ? ctDoi.getDonViQuyDoi().getTenDonVi().name() : "";
+                    int slTrongGoc = 0;
+                    for (ChiTietHoaDon ctGoc : dsGoc) {
+                        if (ctGoc.isLaQuaTangKem()) continue;
+                        String maSPGocX = ctGoc.getDonViQuyDoi().getSanPham() != null ? ctGoc.getDonViQuyDoi().getSanPham().getMaSanPham() : "";
+                        String tenDVGocX = ctGoc.getDonViQuyDoi().getTenDonVi() != null ? ctGoc.getDonViQuyDoi().getTenDonVi().name() : "";
+                        if (maSPGocX.equals(maSPDoi) && tenDVGocX.equals(tenDVDoi)) {
+                            slTrongGoc += ctGoc.getSoLuongBan();
+                        }
+                    }
+                    int slDoiNgang = Math.min(ctDoi.getSoLuongBan(), slTrongGoc);
+                    int slMuaThem = Math.max(0, ctDoi.getSoLuongBan() - slTrongGoc);
+                    double thuePt = ctDoi.getDonViQuyDoi().getSanPham() != null ? ctDoi.getDonViQuyDoi().getSanPham().getThue() : 0;
+                    double price = ctDoi.getDonGia();
+
+                    tongThue += slDoiNgang * price * (thuePt / 100.0) * (1 - tiLeGiamGoc / 100.0);
+                    tongThue += slMuaThem * price * (thuePt / 100.0) * (1 - kmMoiPt / 100.0);
+                }
+
+                dTongTien = tongTienHang - soTienGiam - soTienKMGoc + tongThue;
+            } catch (Exception ignored) {}
+        }
+        return dTongTien;
     }
 }

@@ -192,6 +192,7 @@ public class HoaDonService {
             List<SuPhanBoLo> dsTraLai,
             List<ChiTietHoaDon> dsChiTietMoi,
             List<SuPhanBoLo> dsPhanBoMoi,
+            List<SuPhanBoLo> dsPhanBoKept,
             double soTienChenhLech) {
         Connection ketNoi = null;
         try {
@@ -258,6 +259,29 @@ public class HoaDonService {
             }
             if (dsPhanBoMoi != null) {
                 for (SuPhanBoLo pb : dsPhanBoMoi) {
+                    boolean found = false;
+                    for (SuPhanBoLo existing : dsGop) {
+                        if (existing.getChiTietHoaDon().getDonViQuyDoi().getMaDonVi().equals(pb.getChiTietHoaDon().getDonViQuyDoi().getMaDonVi())
+                                && existing.getLo().getMaLo().equals(pb.getLo().getMaLo())
+                                && existing.getChiTietHoaDon().isLaQuaTangKem() == pb.getChiTietHoaDon().isLaQuaTangKem()
+                                && existing.isLoi() == pb.isLoi()) {
+                            existing.setSoLuongPhanBo(existing.getSoLuongPhanBo() + pb.getSoLuongPhanBo());
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        SuPhanBoLo clone = new SuPhanBoLo();
+                        clone.setChiTietHoaDon(pb.getChiTietHoaDon());
+                        clone.setLo(pb.getLo());
+                        clone.setSoLuongPhanBo(pb.getSoLuongPhanBo());
+                        clone.setLoi(pb.isLoi());
+                        dsGop.add(clone);
+                    }
+                }
+            }
+            if (dsPhanBoKept != null) {
+                for (SuPhanBoLo pb : dsPhanBoKept) {
                     boolean found = false;
                     for (SuPhanBoLo existing : dsGop) {
                         if (existing.getChiTietHoaDon().getDonViQuyDoi().getMaDonVi().equals(pb.getChiTietHoaDon().getDonViQuyDoi().getMaDonVi())

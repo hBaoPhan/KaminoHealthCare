@@ -31,7 +31,8 @@ public class DongCaPanel extends JPanel implements ActionListener {
 
     // Components
     private JLabel lblNhanVien, lblMaNhanVien, lblThoiGian;
-    private JTextField txtTienHeThong, txtTienTrongKet;
+    private JTextField txtTienTrongKet;
+    private double tienHeThongCalc = 0;
     private JComboBox<String> cbMenhGia;
     private JTextField txtSoLuong;
     private RoundedButton btnNhap, btnDongCa;
@@ -138,21 +139,9 @@ public class DongCaPanel extends JPanel implements ActionListener {
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // Tiền hệ thống
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        pnlInputs.add(new JLabel("Tiền hệ thống:"), gbc);
-        gbc.gridx = 1;
-        gbc.gridwidth = 3;
-        txtTienHeThong = new JTextField();
-        txtTienHeThong.setEditable(false);
-        txtTienHeThong.setBackground(new Color(230, 230, 230));
-        txtTienHeThong.setPreferredSize(new Dimension(300, 30));
-        pnlInputs.add(txtTienHeThong, gbc);
-
         // Tiền trong két
         gbc.gridx = 0;
-        gbc.gridy = 1;
+        gbc.gridy = 0;
         gbc.gridwidth = 1;
         pnlInputs.add(new JLabel("Tiền mặt trong két:"), gbc);
         gbc.gridx = 1;
@@ -163,7 +152,7 @@ public class DongCaPanel extends JPanel implements ActionListener {
 
         // Mệnh giá
         gbc.gridx = 0;
-        gbc.gridy = 2;
+        gbc.gridy = 1;
         gbc.gridwidth = 1;
         pnlInputs.add(new JLabel("Mệnh giá:"), gbc);
         gbc.gridx = 1;
@@ -181,7 +170,7 @@ public class DongCaPanel extends JPanel implements ActionListener {
 
         // Nút Nhập
         gbc.gridx = 3;
-        gbc.gridy = 3;
+        gbc.gridy = 2;
         btnNhap = new RoundedButton("Nhập");
         btnNhap.setBackground(new Color(0x2ECC71));
         btnNhap.setForeground(Color.WHITE);
@@ -293,10 +282,10 @@ public class DongCaPanel extends JPanel implements ActionListener {
                 doanhThu += tienHD;
             }
             
-            txtTienHeThong.setText(df.format(doanhThu));
+            tienHeThongCalc = doanhThu;
             btnDongCa.setEnabled(true);
         } else {
-            txtTienHeThong.setText("");
+            tienHeThongCalc = 0;
             btnDongCa.setEnabled(false);
         }
     }
@@ -360,7 +349,7 @@ public class DongCaPanel extends JPanel implements ActionListener {
         }
 
         double tienKetCa = Double.parseDouble(tongTienStr);
-        double tienHeThong = Double.parseDouble(txtTienHeThong.getText().replaceAll("[^\\d]", ""));
+        double tienHeThong = tienHeThongCalc;
 
         caHienTai.setGioKetThuc(LocalDateTime.now());
         caHienTai.setTrangThai(TrangThaiCaLam.DONG);
@@ -393,7 +382,7 @@ public class DongCaPanel extends JPanel implements ActionListener {
     }
 
     private void clearFields() {
-        txtTienHeThong.setText("");
+        tienHeThongCalc = 0;
         txtTienTrongKet.setText("");
         txtGhiChu.setText("");
         txtSoLuong.setText("");

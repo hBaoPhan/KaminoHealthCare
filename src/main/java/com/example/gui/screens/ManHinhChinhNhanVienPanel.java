@@ -207,7 +207,7 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
         plot.setSectionPaint("Thuốc kê đơn", new Color(108, 117, 255));
         plot.setSectionPaint("Thuốc không kê đơn", new Color(147, 108, 255));
         plot.setSectionPaint("Thực phẩm chức năng", new Color(255, 148, 148));
-        plot.setSectionPaint("Dụng cụ y tế", new Color(108, 218, 255));
+        plot.setSectionPaint("Mỹ phẩm", new Color(108, 218, 255));
         plot.setSectionPaint("Khác", new Color(255, 178, 108));
 
         return new ChartPanel(chart);
@@ -450,7 +450,7 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
 
     private void updateDonutChart(List<HoaDon> dsHoaDon) {
         donutDataset.clear();
-        double etc = 0, otc = 0, tpcn = 0, dcyt = 0, khac = 0;
+        double etc = 0, otc = 0, tpcn = 0, myPham = 0, khac = 0;
 
         for (HoaDon hd : dsHoaDon) {
             if (!hd.isTrangThaiThanhToan())
@@ -467,6 +467,8 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
                     otc += thanhTien;
                 else if (loai == LoaiSanPham.TPCN)
                     tpcn += thanhTien;
+                else if (loai == LoaiSanPham.MY_PHAM)
+                    myPham += thanhTien;
                 else
                     khac += thanhTien;
             }
@@ -478,6 +480,8 @@ public class ManHinhChinhNhanVienPanel extends JPanel {
             donutDataset.setValue("Thuốc không kê đơn", otc);
         if (tpcn > 0)
             donutDataset.setValue("Thực phẩm chức năng", tpcn);
+        if (myPham > 0)
+            donutDataset.setValue("Mỹ phẩm", myPham);
         if (khac > 0)
             donutDataset.setValue("Khác", khac);
 

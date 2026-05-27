@@ -8,6 +8,7 @@ import com.example.entity.DonViQuyDoi;
 import com.example.entity.SanPham;
 import com.example.entity.SuPhanBoLo;
 import com.example.entity.CaLam;
+import com.example.entity.TaiKhoan;
 import com.example.entity.enums.DonVi;
 import com.example.entity.enums.LoaiSanPham;
 import com.example.gui.components.*;
@@ -85,8 +86,10 @@ public class SanPhamPanel extends JPanel {
     private File selectedImageFile = null;
     private JPopupMenu searchPopup;
     private boolean isUpdatingSearch = false;
+    private TaiKhoan taiKhoan;
 
-    public SanPhamPanel() {
+    public SanPhamPanel(TaiKhoan taiKhoan) {
+        this.taiKhoan = taiKhoan;
         setLayout(new BorderLayout());
         setBackground(new Color(241, 246, 255));
 
@@ -391,12 +394,14 @@ public class SanPhamPanel extends JPanel {
         });
 
         btnThemDonVi = new RoundedButton("+ Thêm");
+        if (taiKhoan.getNhanVien().getChucVu() != com.example.entity.enums.ChucVu.NHAN_VIEN_QUAN_LY) btnThemDonVi.setVisible(false);
         btnThemDonVi.setBackground(new Color(40, 167, 69)); // Premium Green
         btnThemDonVi.setForeground(Color.WHITE);
         btnThemDonVi.setPreferredSize(new Dimension(100, 32));
         btnThemDonVi.addActionListener(e -> themDonViVaoBang());
 
         btnXoaDonVi = new RoundedButton("- Xóa");
+        if (taiKhoan.getNhanVien().getChucVu() != com.example.entity.enums.ChucVu.NHAN_VIEN_QUAN_LY) btnXoaDonVi.setVisible(false);
         btnXoaDonVi.setBackground(new Color(220, 53, 69)); // Premium Red
         btnXoaDonVi.setForeground(Color.WHITE);
         btnXoaDonVi.setPreferredSize(new Dimension(100, 32));
@@ -504,9 +509,11 @@ public class SanPhamPanel extends JPanel {
         btnXoa.addActionListener(e -> xoaSanPham());
         btnLamMoi.addActionListener(e -> lamMoiForm());
 
-        buttonPanel.add(btnThem);
-        buttonPanel.add(btnSua);
-        buttonPanel.add(btnXoa);
+        if (taiKhoan.getNhanVien().getChucVu() == com.example.entity.enums.ChucVu.NHAN_VIEN_QUAN_LY) {
+            buttonPanel.add(btnThem);
+            buttonPanel.add(btnSua);
+            buttonPanel.add(btnXoa);
+        }
         buttonPanel.add(btnLamMoi);
 
         panel.add(buttonPanel, BorderLayout.SOUTH);

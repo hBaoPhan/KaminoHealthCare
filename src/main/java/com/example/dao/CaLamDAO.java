@@ -219,6 +219,10 @@ public class CaLamDAO {
                 Timestamp ketThuc = rs.getTimestamp("gioKetThuc");
                 if (ketThuc != null) cl.setGioKetThuc(ketThuc.toLocalDateTime());
                 cl.setTrangThai(TrangThaiCaLam.valueOf(rs.getString("trangThaiCaLam")));
+                cl.setTienMoCa(rs.getDouble("tienMoCa"));
+                cl.setTienKetCa(rs.getDouble("tienKetCa"));
+                cl.setTienHeThong(rs.getDouble("tienHeThong"));
+                cl.setGhiChu(rs.getString("ghiChu"));
                 danhSach.add(cl);
             }
         } catch (SQLException e) { e.printStackTrace(); }
@@ -247,6 +251,10 @@ public class CaLamDAO {
                 Timestamp ketThuc = rs.getTimestamp("gioKetThuc");
                 if (ketThuc != null) cl.setGioKetThuc(ketThuc.toLocalDateTime());
                 cl.setTrangThai(TrangThaiCaLam.valueOf(rs.getString("trangThaiCaLam")));
+                cl.setTienMoCa(rs.getDouble("tienMoCa"));
+                cl.setTienKetCa(rs.getDouble("tienKetCa"));
+                cl.setTienHeThong(rs.getDouble("tienHeThong"));
+                cl.setGhiChu(rs.getString("ghiChu"));
                 danhSach.add(cl);
             }
         } catch (SQLException e) { e.printStackTrace(); }

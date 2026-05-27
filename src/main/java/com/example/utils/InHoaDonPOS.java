@@ -21,8 +21,8 @@ public class InHoaDonPOS {
         Paper paper = new Paper();
 
         // Chiều rộng cuộn giấy 80mm = 80 / 25.4 * 72 = ~226.7 pt.
-        // Ta lấy 220 pt làm chiều rộng in ấn tiêu chuẩn của máy in POS.
-        double width = 220;
+        // Ta lấy 204 pt làm chiều rộng in ấn tiêu chuẩn để tránh lề máy in bị cắt sát mép phải.
+        double width = 204;
 
         // Tính toán chiều cao cuộn giấy động để vừa khít nội dung, tiết kiệm giấy in
         // nhiệt
@@ -86,9 +86,10 @@ public class InHoaDonPOS {
                 g2d.setColor(Color.BLACK);
 
                 int y = 15;
-                int startX = 8;
-                int endX = (int) (width - 8);
+                int startX = 5;
+                int endX = 195;
                 DecimalFormat df = new DecimalFormat("#,### đ");
+                DecimalFormat dfSo = new DecimalFormat("#,###");
                 DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
                 // Định nghĩa hệ thống Font chữ POS chuyên nghiệp
@@ -160,10 +161,10 @@ public class InHoaDonPOS {
 
                 // --- TIÊU ĐỀ BẢNG CHI TIẾT ---
                 g2d.setFont(fontHeader);
-                g2d.drawString("TÊN SẢN PHẨM / DV", startX, y);
-                g2d.drawString("SL", startX + 92, y);
-                g2d.drawString("Đ.GIÁ", startX + 115, y);
-                g2d.drawString("T.TIỀN", startX + 165, y);
+                g2d.drawString("TÊN SẢN PHẨM", startX, y);
+                drawRightAlignedString("SL", startX + 90, g2d, y);
+                drawRightAlignedString("Đ.GIÁ", startX + 140, g2d, y);
+                drawRightAlignedString("T.TIỀN", endX, g2d, y);
                 y += 10;
                 drawSeparator("------------------------------------------------------------------", g2d, startX, y);
                 y += 10;
@@ -277,9 +278,9 @@ public class InHoaDonPOS {
 
                     g2d.setFont(fontNormal);
                     g2d.drawString("  " + tenDonVi, startX, y);
-                    g2d.drawString(String.valueOf(qty), startX + 92, y);
-                    g2d.drawString(df.format(price), startX + 115, y);
-                    g2d.drawString(df.format(total), startX + 165, y);
+                    drawRightAlignedString(String.valueOf(qty), startX + 90, g2d, y);
+                    drawRightAlignedString(dfSo.format(price), startX + 140, g2d, y);
+                    drawRightAlignedString(dfSo.format(total), endX, g2d, y);
                     y += 12;
 
                     if (!ct.isLaQuaTangKem()) {
@@ -326,23 +327,23 @@ public class InHoaDonPOS {
                         : hd.tinhTongTienThanhToan();
 
                 g2d.drawString("Cộng tiền hàng:", startX, y);
-                g2d.drawString(df.format(tongTienHangFinal), startX + 165, y);
+                drawRightAlignedString(df.format(tongTienHangFinal), endX, g2d, y);
                 y += 10;
 
                 if (laDoiHang && soTienKMGoc > 0) {
                     g2d.drawString("KM hóa đơn gốc:", startX, y);
-                    g2d.drawString("-" + df.format(soTienKMGoc), startX + 165, y);
+                    drawRightAlignedString("-" + df.format(soTienKMGoc), endX, g2d, y);
                     y += 10;
                 }
 
                 if (soTienGiam > 0) {
                     g2d.drawString(laDoiHang ? "KM hàng mua thêm:" : "Khuyến mãi:", startX, y);
-                    g2d.drawString("-" + df.format(soTienGiam), startX + 165, y);
+                    drawRightAlignedString("-" + df.format(soTienGiam), endX, g2d, y);
                     y += 10;
                 }
 
                 g2d.drawString("Thuế GTGT:", startX, y);
-                g2d.drawString(df.format(tongThueFinal), startX + 165, y);
+                drawRightAlignedString(df.format(tongThueFinal), endX, g2d, y);
                 y += 10;
 
                 drawSeparator("------------------------------------------------------------------", g2d, startX, y);
@@ -354,7 +355,7 @@ public class InHoaDonPOS {
                 } else {
                     g2d.drawString("TỔNG CỘNG:", startX, y);
                 }
-                g2d.drawString(df.format(tongTienCuoiCung), startX + 165, y);
+                drawRightAlignedString(df.format(tongTienCuoiCung), endX, g2d, y);
                 y += 12;
 
                 // Thêm hàng chênh lệch so với hóa đơn gốc nếu là hóa đơn đổi/trả
@@ -383,7 +384,7 @@ public class InHoaDonPOS {
                                 g2d.drawString("Chênh lệch:", startX, y);
                             }
                             String sign = chenhLech > 0 ? "+" : (chenhLech < 0 ? "-" : "");
-                            g2d.drawString(sign + df.format(Math.abs(chenhLech)), startX + 165, y);
+                            drawRightAlignedString(sign + df.format(Math.abs(chenhLech)), endX, g2d, y);
                             y += 10;
                         }
                     } catch (Exception ignored) {
@@ -402,9 +403,11 @@ public class InHoaDonPOS {
 
                 if (hd.getPhuongThucThanhToan() == PhuongThucThanhToan.TIEN_MAT
                         && hd.getLoaiHoaDon() != LoaiHoaDon.TRA_HANG) {
-                    g2d.drawString("Khách đưa     : " + df.format(tienKhachDua), startX, y);
+                    g2d.drawString("Khách đưa:", startX, y);
+                    drawRightAlignedString(df.format(tienKhachDua), endX, g2d, y);
                     y += 10;
-                    g2d.drawString("Tiền thối lại : " + df.format(tienThoi), startX, y);
+                    g2d.drawString("Tiền thối lại:", startX, y);
+                    drawRightAlignedString(df.format(tienThoi), endX, g2d, y);
                     y += 12;
                 }
 
@@ -534,6 +537,12 @@ public class InHoaDonPOS {
 
     private static void drawSeparator(String s, Graphics2D g2d, int startX, int y) {
         g2d.drawString(s, startX, y);
+    }
+
+    private static void drawRightAlignedString(String s, int rightX, Graphics2D g2d, int y) {
+        FontMetrics fm = g2d.getFontMetrics();
+        int x = rightX - fm.stringWidth(s);
+        g2d.drawString(s, x, y);
     }
 
     /** Lớp Panel chuyên trách kết xuất (Render) hình ảnh hóa đơn in thử */

@@ -163,8 +163,6 @@ public class HoaDonPanel extends JPanel {
         btnHuy.setForeground(Color.BLACK);
         btnHuy.setBackground(new Color(220, 53, 69)); // Red color
         btnHuy.setPreferredSize(new Dimension(140, 35));
-        // Chỉ hiển thị nút hủy nếu là Quản lý
-        btnHuy.setVisible(taiKhoan.getNhanVien().getChucVu() == ChucVu.NHAN_VIEN_QUAN_LY);
 
         leftPanel.add(txtSearch);
         leftPanel.add(datePicker);

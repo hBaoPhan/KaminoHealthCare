@@ -82,6 +82,9 @@ public class DoiHangPanel extends JPanel {
         btnXoaDong.setPreferredSize(new Dimension(110, 35));
 
         btnXoaDong.addActionListener(e -> {
+            if (tblSanPham.isEditing()) {
+                tblSanPham.getCellEditor().cancelCellEditing();
+            }
             int selectedRow = tblSanPham.getSelectedRow();
             if (selectedRow >= 0) {
                 String maSP = tblSanPham.getValueAt(selectedRow, 0).toString();
@@ -553,6 +556,12 @@ public class DoiHangPanel extends JPanel {
             if (!ct.isLaQuaTangKem()) {
                 chiTietHoaDonGocList.add(ct);
             }
+        }
+        if (tblHoaDonGoc.isEditing()) {
+            tblHoaDonGoc.getCellEditor().cancelCellEditing();
+        }
+        if (tblSanPham.isEditing()) {
+            tblSanPham.getCellEditor().cancelCellEditing();
         }
         DefaultTableModel model = (DefaultTableModel) tblHoaDonGoc.getModel();
         model.setRowCount(0);
@@ -1066,10 +1075,25 @@ public class DoiHangPanel extends JPanel {
 
     private void xuLyThanhToan() {
         if (tblHoaDonGoc.isEditing()) {
-            tblHoaDonGoc.getCellEditor().stopCellEditing();
+            try {
+                tblHoaDonGoc.getCellEditor().stopCellEditing();
+            } catch (Exception ex) {
+                tblHoaDonGoc.getCellEditor().cancelCellEditing();
+            }
         }
         if (tblSanPham.isEditing()) {
-            tblSanPham.getCellEditor().stopCellEditing();
+            try {
+                tblSanPham.getCellEditor().stopCellEditing();
+            } catch (Exception ex) {
+                tblSanPham.getCellEditor().cancelCellEditing();
+            }
+        }
+
+        if (hoaDonGocHienTai == null) {
+            JOptionPane.showMessageDialog(this,
+                    "Vui lòng tìm kiếm hóa đơn gốc trước khi thực hiện đổi hàng!",
+                    "Chưa chọn hóa đơn gốc", JOptionPane.WARNING_MESSAGE);
+            return;
         }
 
         DefaultTableModel modelGoc = (DefaultTableModel) tblHoaDonGoc.getModel();
@@ -1143,6 +1167,7 @@ public class DoiHangPanel extends JPanel {
             List<SuPhanBoLo> dsTraLai = new ArrayList<>();
             List<ChiTietHoaDon> dsChiTietMoi = new ArrayList<>();
             List<SuPhanBoLo> dsPhanBoMoi = new ArrayList<>();
+            List<SuPhanBoLo> dsPhanBoKept = new ArrayList<>();
 
             // BƯỚC A: XỬ LÝ HÀNG BẢNG GỐC (Nhập kho hàng cũ)
             for (int i = 0; i < modelGoc.getRowCount(); i++) {
@@ -1170,7 +1195,7 @@ public class DoiHangPanel extends JPanel {
                     dsChiTietMoi.add(ctMoi);
                 }
 
-                if (slTra > 0 && ctMoi != null) {
+                if (ctMoi != null) {
                     int heSoQuyDoi = ctGoc.getDonViQuyDoi().getHeSoQuyDoi();
                     int slCanHoanNhoNhat = slTra * heSoQuyDoi;
                     int slLoiNhoNhat = slLoi * heSoQuyDoi;
@@ -1179,33 +1204,46 @@ public class DoiHangPanel extends JPanel {
 
                     if (dsPhanBoBanDau != null) {
                         for (SuPhanBoLo pbGoc : dsPhanBoBanDau) {
-                            if (slCanHoanNhoNhat <= 0)
-                                break;
                             int luongGocTrongDBDaQuyDoi = pbGoc.getSoLuongPhanBo();
-                            int hoanThucTe = Math.min(slCanHoanNhoNhat, luongGocTrongDBDaQuyDoi);
-
-                            int hoanLoi = Math.min(slLoiNhoNhat, hoanThucTe);
-                            if (hoanLoi > 0) {
-                                SuPhanBoLo traLaiLoi = new SuPhanBoLo();
-                                traLaiLoi.setLo(pbGoc.getLo());
-                                traLaiLoi.setSoLuongPhanBo(hoanLoi);
-                                traLaiLoi.setLoi(true);
-                                traLaiLoi.setChiTietHoaDon(ctMoi);
-                                dsTraLai.add(traLaiLoi);
-                                slLoiNhoNhat -= hoanLoi;
+                            int hoanThucTe = 0;
+                            if (slCanHoanNhoNhat > 0) {
+                                hoanThucTe = Math.min(slCanHoanNhoNhat, luongGocTrongDBDaQuyDoi);
+                                slCanHoanNhoNhat -= hoanThucTe;
                             }
 
-                            int hoanNormal = hoanThucTe - hoanLoi;
-                            if (hoanNormal > 0) {
-                                SuPhanBoLo traLaiNormal = new SuPhanBoLo();
-                                traLaiNormal.setLo(pbGoc.getLo());
-                                traLaiNormal.setSoLuongPhanBo(hoanNormal);
-                                traLaiNormal.setLoi(false);
-                                traLaiNormal.setChiTietHoaDon(ctMoi);
-                                dsTraLai.add(traLaiNormal);
+                            if (hoanThucTe > 0) {
+                                int hoanLoi = Math.min(slLoiNhoNhat, hoanThucTe);
+                                if (hoanLoi > 0) {
+                                    SuPhanBoLo traLaiLoi = new SuPhanBoLo();
+                                    traLaiLoi.setLo(pbGoc.getLo());
+                                    traLaiLoi.setSoLuongPhanBo(hoanLoi);
+                                    traLaiLoi.setLoi(true);
+                                    traLaiLoi.setChiTietHoaDon(ctMoi);
+                                    dsTraLai.add(traLaiLoi);
+                                    slLoiNhoNhat -= hoanLoi;
+                                }
+
+                                int hoanNormal = hoanThucTe - hoanLoi;
+                                if (hoanNormal > 0) {
+                                    SuPhanBoLo traLaiNormal = new SuPhanBoLo();
+                                    traLaiNormal.setLo(pbGoc.getLo());
+                                    traLaiNormal.setSoLuongPhanBo(hoanNormal);
+                                    traLaiNormal.setLoi(false);
+                                    traLaiNormal.setChiTietHoaDon(ctMoi);
+                                    dsTraLai.add(traLaiNormal);
+                                }
                             }
 
-                            slCanHoanNhoNhat -= hoanThucTe;
+                            // Tính số lượng giữ lại thực tế từ lô này
+                            int keptThucTe = luongGocTrongDBDaQuyDoi - hoanThucTe;
+                            if (keptThucTe > 0) {
+                                SuPhanBoLo pbKept = new SuPhanBoLo();
+                                pbKept.setLo(pbGoc.getLo());
+                                pbKept.setSoLuongPhanBo(keptThucTe);
+                                pbKept.setLoi(false);
+                                pbKept.setChiTietHoaDon(ctMoi);
+                                dsPhanBoKept.add(pbKept);
+                            }
                         }
                     }
                 }
@@ -1245,7 +1283,7 @@ public class DoiHangPanel extends JPanel {
 
                 if (dsLo == null || dsLo.isEmpty()) {
                     JOptionPane.showMessageDialog(this, "Sản phẩm '"
-                            + ctMoi.getDonViQuyDoi().getSanPham().getTenSanPham() + "' không có lô khả dụng!");
+                             + ctMoi.getDonViQuyDoi().getSanPham().getTenSanPham() + "' không có lô khả dụng!");
                     return;
                 }
 
@@ -1267,7 +1305,7 @@ public class DoiHangPanel extends JPanel {
             double soTienLamTron = Math.round(Math.abs(chenhLech) / 1000.0) * 1000;
             double soTienThucTeGiaoDich = (chenhLech < 0) ? -soTienLamTron : soTienLamTron;
 
-            if (hoaDonService.luuHoaDonDoiHang(hdMoi, dsTraLai, dsChiTietMoi, dsPhanBoMoi, soTienThucTeGiaoDich)) {
+            if (hoaDonService.luuHoaDonDoiHang(hdMoi, dsTraLai, dsChiTietMoi, dsPhanBoMoi, dsPhanBoKept, soTienThucTeGiaoDich)) {
                 JOptionPane.showMessageDialog(this, "Thanh toán thành công hóa đơn đổi: " + maHoaDonMoi);
 
                 double tienKhachDua = 0;
@@ -1296,6 +1334,12 @@ public class DoiHangPanel extends JPanel {
     }
 
     private void resetForm() {
+        if (tblHoaDonGoc.isEditing()) {
+            tblHoaDonGoc.getCellEditor().cancelCellEditing();
+        }
+        if (tblSanPham.isEditing()) {
+            tblSanPham.getCellEditor().cancelCellEditing();
+        }
         txtMaHoaDonGoc.setText("");
         txtNgayTao.setText("");
         txtTenKhachHang.setText("");

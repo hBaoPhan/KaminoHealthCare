@@ -57,12 +57,27 @@ public class CaLamPanel extends JPanel {
         // Bố cục chính
         add(createTopBar(), BorderLayout.NORTH);
 
-        JPanel centerArea = new JPanel(new BorderLayout(20, 0));
+        JPanel centerArea = new JPanel(new GridBagLayout());
         centerArea.setBackground(new Color(245, 245, 245));
         centerArea.setBorder(new EmptyBorder(10, 20, 20, 20));
 
-        centerArea.add(createFormPanel(), BorderLayout.WEST);
-        centerArea.add(createRightPanel(), BorderLayout.CENTER);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weighty = 1.0;
+
+        JPanel formPanel = createFormPanel();
+        // Cố định tỷ lệ 3:7 bằng cách reset preferred size
+        formPanel.setPreferredSize(new Dimension(0, 0));
+        gbc.weightx = 0.3;
+        gbc.insets = new Insets(0, 0, 0, 10);
+        centerArea.add(formPanel, gbc);
+
+        JPanel rightPanel = createRightPanel();
+        rightPanel.setPreferredSize(new Dimension(0, 0));
+        gbc.weightx = 0.7;
+        gbc.insets = new Insets(0, 10, 0, 0);
+        centerArea.add(rightPanel, gbc);
+
         add(centerArea, BorderLayout.CENTER);
 
         // Gắn sự kiện và load dữ liệu ban đầu
@@ -204,7 +219,7 @@ public class CaLamPanel extends JPanel {
         pnlDanhSach.setBackground(Color.WHITE);
         pnlDanhSach.setBorder(BorderFactory.createTitledBorder(new LineBorder(Color.LIGHT_GRAY), "DANH SÁCH CA LÀM", TitledBorder.LEFT, TitledBorder.TOP, new Font("Segoe UI", Font.BOLD, 16)));
         
-        String[] colsDS = {"Mã ca", "Mã NV", "Tên nhân viên", "Ngày làm", "Giờ bắt đầu", "Giờ kết thúc", "Trạng thái"};
+        String[] colsDS = {"Mã ca", "Mã NV", "Tên nhân viên", "Ngày làm", "Giờ bắt đầu", "Giờ kết thúc", "Trạng thái", "Tiền mặt đầu ca", "Tiền mặt kết ca", "Doanh thu", "Chênh lệch"};
         modelDanhSach = new DefaultTableModel(null, colsDS) { public boolean isCellEditable(int r, int c) { return false; } };
         tblDanhSach = new JTable(modelDanhSach);
         tblDanhSach.setRowHeight(28);
@@ -362,15 +377,38 @@ public class CaLamPanel extends JPanel {
 
         // 1. Load bảng Danh sách (Theo ngày chọn)
         List<CaLam> dsNgay = caLamService.layCaTheoNgayVaTen(selectedDate, timKiem);
+        List<com.example.entity.HoaDon> dsTatCaHD = new com.example.service.HoaDonService().layTatCa();
+        java.text.NumberFormat formatter = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("vi", "VN"));
+
         modelDanhSach.setRowCount(0);
         for (CaLam cl : dsNgay) {
             String tenNV = cl.getNhanVien() != null ? cl.getNhanVien().getTenNhanVien() : "";
+
+            double doanhThu = 0;
+            double doanhThuTienMat = 0;
+            for (com.example.entity.HoaDon hd : dsTatCaHD) {
+                if (hd.getCa() != null && hd.getCa().getMaCa().equals(cl.getMaCa()) && hd.isTrangThaiThanhToan()) {
+                    // Cần set danh sách chi tiết vì layTatCa() không tự động lấy chi tiết
+                    hd.setDsChiTiet(new com.example.service.ChiTietHoaDonService().layTheoMaHoaDon(hd.getMaHoaDon()));
+                    double tienThucTe = tinhTongTienThucTeHoaDon(hd);
+                    doanhThu += tienThucTe;
+                    if (hd.getPhuongThucThanhToan() != null && hd.getPhuongThucThanhToan().name().equals("TIEN_MAT")) {
+                        doanhThuTienMat += tienThucTe;
+                    }
+                }
+            }
+            double chenhLech = doanhThuTienMat - (cl.getTienKetCa() - cl.getTienMoCa());
+
             modelDanhSach.addRow(new Object[]{
                 cl.getMaCa(), cl.getNhanVien().getMaNhanVien(), tenNV,
                 selectedDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
                 cl.getGioBatDau().format(timeFormatter),
                 cl.getGioKetThuc() != null ? cl.getGioKetThuc().format(timeFormatter) : "",
-                cl.getTrangThai().name()
+                cl.getTrangThai().name(),
+                formatter.format(cl.getTienMoCa()),
+                formatter.format(cl.getTienKetCa()),
+                formatter.format(doanhThu),
+                formatter.format(chenhLech)
             });
         }
 
@@ -663,5 +701,144 @@ public class CaLamPanel extends JPanel {
                 timer.start();
             }
         });
+    }
+
+    private double tinhTongTienThucTeHoaDon(com.example.entity.HoaDon h) {
+        double dTongTien = h.tinhTongTienThanhToan();
+        if (h.getLoaiHoaDon() == com.example.entity.enums.LoaiHoaDon.DOI_HANG && h.getHoaDonDoiTra() != null
+                && h.getHoaDonDoiTra().getMaHoaDon() != null) {
+            try {
+                String maHDGocRef = h.getHoaDonDoiTra().getMaHoaDon();
+                List<com.example.entity.ChiTietHoaDon> dsChiTiet = new com.example.service.ChiTietHoaDonService()
+                        .layTheoMaHoaDon(h.getMaHoaDon());
+                List<com.example.entity.ChiTietHoaDon> dsGoc = new com.example.service.ChiTietHoaDonService().layTheoMaHoaDon(maHDGocRef);
+
+                com.example.entity.HoaDon hdGocRef = new com.example.service.HoaDonService().timTheoMa(maHDGocRef);
+                double kmMoiPt = (h.getKhuyenMai() != null
+                        && h.getKhuyenMai().getLoaiKhuyenMai() == com.example.entity.enums.LoaiKhuyenMai.PHAN_TRAM)
+                                ? h.getKhuyenMai().getKhuyenMaiPhanTram()
+                                : 0;
+                double tiLeGiamGoc = (hdGocRef != null && hdGocRef.getKhuyenMai() != null
+                        && hdGocRef.getKhuyenMai()
+                                .getLoaiKhuyenMai() == com.example.entity.enums.LoaiKhuyenMai.PHAN_TRAM)
+                                        ? hdGocRef.getKhuyenMai().getKhuyenMaiPhanTram()
+                                        : 0;
+
+                double tongTienHang = 0;
+                double soTienGiam = 0;
+                double soTienKMGoc = 0;
+                double tongThue = 0;
+
+                for (com.example.entity.ChiTietHoaDon ctDoi : dsChiTiet) {
+                    if (ctDoi.isLaQuaTangKem())
+                        continue;
+                    tongTienHang += ctDoi.getSoLuongBan() * ctDoi.getDonGia();
+                }
+
+                // Tính KM mới (soTienGiam)
+                if (h.getKhuyenMai() != null
+                        && h.getKhuyenMai().getLoaiKhuyenMai() == com.example.entity.enums.LoaiKhuyenMai.PHAN_TRAM) {
+                    double tongTienMuaThem = 0;
+                    for (com.example.entity.ChiTietHoaDon ctDoi : dsChiTiet) {
+                        if (ctDoi.isLaQuaTangKem())
+                            continue;
+                        String maSP = ctDoi.getDonViQuyDoi().getSanPham() != null
+                                ? ctDoi.getDonViQuyDoi().getSanPham().getMaSanPham()
+                                : "";
+                        String tenDV = ctDoi.getDonViQuyDoi().getTenDonVi() != null
+                                ? ctDoi.getDonViQuyDoi().getTenDonVi().name()
+                                : "";
+                        int slGoc = 0;
+                        for (com.example.entity.ChiTietHoaDon ctGoc : dsGoc) {
+                            if (ctGoc.isLaQuaTangKem())
+                                continue;
+                            String maSPGoc = ctGoc.getDonViQuyDoi().getSanPham() != null
+                                    ? ctGoc.getDonViQuyDoi().getSanPham().getMaSanPham()
+                                    : "";
+                            String tenDVGoc = ctGoc.getDonViQuyDoi().getTenDonVi() != null
+                                    ? ctGoc.getDonViQuyDoi().getTenDonVi().name()
+                                    : "";
+                            if (maSPGoc.equals(maSP) && tenDVGoc.equals(tenDV)) {
+                                slGoc += ctGoc.getSoLuongBan();
+                            }
+                        }
+                        int slMuaThem = Math.max(0, ctDoi.getSoLuongBan() - slGoc);
+                        tongTienMuaThem += slMuaThem * ctDoi.getDonGia();
+                    }
+                    if (tongTienMuaThem >= h.getKhuyenMai().getGiaTriDonHangToiThieu()) {
+                        soTienGiam = tongTienMuaThem * (kmMoiPt / 100.0);
+                    }
+                }
+
+                // Tính KM gốc (soTienKMGoc)
+                double tongTienSPCu = 0;
+                for (com.example.entity.ChiTietHoaDon ctDoi : dsChiTiet) {
+                    if (ctDoi.isLaQuaTangKem())
+                        continue;
+                    String maSPDoi = ctDoi.getDonViQuyDoi().getSanPham() != null
+                            ? ctDoi.getDonViQuyDoi().getSanPham().getMaSanPham()
+                            : "";
+                    String tenDVDoi = ctDoi.getDonViQuyDoi().getTenDonVi() != null
+                            ? ctDoi.getDonViQuyDoi().getTenDonVi().name()
+                            : "";
+                    int slTrongGoc = 0;
+                    for (com.example.entity.ChiTietHoaDon ctGoc : dsGoc) {
+                        if (ctGoc.isLaQuaTangKem())
+                            continue;
+                        String maSPGocX = ctGoc.getDonViQuyDoi().getSanPham() != null
+                                ? ctGoc.getDonViQuyDoi().getSanPham().getMaSanPham()
+                                : "";
+                        String tenDVGocX = ctGoc.getDonViQuyDoi().getTenDonVi() != null
+                                ? ctGoc.getDonViQuyDoi().getTenDonVi().name()
+                                : "";
+                        if (maSPGocX.equals(maSPDoi) && tenDVGocX.equals(tenDVDoi)) {
+                            slTrongGoc += ctGoc.getSoLuongBan();
+                        }
+                    }
+                    int slCuDangDoi = Math.min(ctDoi.getSoLuongBan(), slTrongGoc);
+                    tongTienSPCu += slCuDangDoi * ctDoi.getDonGia();
+                }
+                soTienKMGoc = tongTienSPCu * (tiLeGiamGoc / 100.0);
+
+                // Tính Thuế
+                for (com.example.entity.ChiTietHoaDon ctDoi : dsChiTiet) {
+                    if (ctDoi.isLaQuaTangKem())
+                        continue;
+                    String maSPDoi = ctDoi.getDonViQuyDoi().getSanPham() != null
+                            ? ctDoi.getDonViQuyDoi().getSanPham().getMaSanPham()
+                            : "";
+                    String tenDVDoi = ctDoi.getDonViQuyDoi().getTenDonVi() != null
+                            ? ctDoi.getDonViQuyDoi().getTenDonVi().name()
+                            : "";
+                    int slTrongGoc = 0;
+                    for (com.example.entity.ChiTietHoaDon ctGoc : dsGoc) {
+                        if (ctGoc.isLaQuaTangKem())
+                            continue;
+                        String maSPGocX = ctGoc.getDonViQuyDoi().getSanPham() != null
+                                ? ctGoc.getDonViQuyDoi().getSanPham().getMaSanPham()
+                                : "";
+                        String tenDVGocX = ctGoc.getDonViQuyDoi().getTenDonVi() != null
+                                ? ctGoc.getDonViQuyDoi().getTenDonVi().name()
+                                : "";
+                        if (maSPGocX.equals(maSPDoi) && tenDVGocX.equals(tenDVDoi)) {
+                            slTrongGoc += ctGoc.getSoLuongBan();
+                        }
+                    }
+                    int slDoiNgang = Math.min(ctDoi.getSoLuongBan(), slTrongGoc);
+                    int slMuaThem = Math.max(0, ctDoi.getSoLuongBan() - slTrongGoc);
+                    double thuePt = ctDoi.getDonViQuyDoi().getSanPham() != null
+                            ? ctDoi.getDonViQuyDoi().getSanPham().getThue()
+                            : 0;
+                    double price = ctDoi.getDonGia();
+
+                    tongThue += slDoiNgang * price * (thuePt / 100.0) * (1 - tiLeGiamGoc / 100.0);
+                    tongThue += slMuaThem * price * (thuePt / 100.0) * (1 - kmMoiPt / 100.0);
+                }
+
+                dTongTien = tongTienHang - soTienGiam - soTienKMGoc + tongThue;
+            } catch (Exception ignored) {
+            }
+        }
+        return dTongTien;
     }
 } 

@@ -247,7 +247,15 @@ VALUES (
         '079200000005',
         '0901234571',
         N'DUOC_SI',
-        0
+        1
+    ),
+    (
+        'DS002',
+        N'Nguyễn Văn An',
+        '079200000006',
+        '0901234572',
+        N'DUOC_SI',
+        1
     );
 INSERT INTO TaiKhoan (tenDangNhap, matKhau, maNhanVien)
 VALUES (
@@ -274,6 +282,11 @@ VALUES (
         'nv',
         '$2a$12$bfiVg8.pufHx/TEcJYISSeteaaAWStGxzGbIzNkwdgY.2HFhp79Ym',
         'DS001'
+    ),
+    (
+        'ds002',
+        '$2a$12$bfiVg8.pufHx/TEcJYISSeteaaAWStGxzGbIzNkwdgY.2HFhp79Ym',
+        'DS002'
     );
 --  KHÁCH HÀNG
 INSERT INTO KhachHang (
@@ -510,6 +523,39 @@ VALUES (
         5000000,
         4000000,
         N'Đang trực'
+    ),
+    (
+        'CA27052601',
+        'DS001',
+        '2026-05-27 16:00:00',
+        '2026-05-27 23:00:00',
+        N'CHUA_MO',
+        0,
+        0,
+        0,
+        N'Chưa mở'
+    ),
+    (
+        'CA28052601',
+        'DS001',
+        '2026-05-28 06:30:00',
+        '2026-05-28 11:00:00',
+        N'CHUA_MO',
+        0,
+        0,
+        0,
+        N'Chưa mở'
+    ),
+    (
+        'CA28052602',
+        'DS002',
+        '2026-05-28 13:00:00',
+        '2026-05-28 17:00:00',
+        N'CHUA_MO',
+        0,
+        0,
+        0,
+        N'Chưa mở'
     );
 --  SẢN PHẨM & ĐƠN VỊ QUY ĐỔI 
 INSERT INTO SanPham (
@@ -1259,6 +1305,17 @@ VALUES (
         195000,
         1,
         10
+    ),
+    (
+        'MY_PHAM-FAR-006', 
+        N'Kem dưỡng giảm đỏ Farmona Dermacos Anti-Redness', 
+        N'MY_PHAM', 
+        50, 
+        N'Kem dưỡng hỗ trợ làm dịu da nhạy cảm, giảm kích ứng và mẩn đỏ. Giúp củng cố, bảo vệ và tăng cường sức bền thành mạch mạch máu, rất phù hợp cho da có mao mạch mỏng yếu.', 
+        N'Vitamin C, Rutin, Chiết xuất bạch quả (Ginkgo Biloba), Chiết xuất hoa Arnica', 
+        385000, 
+        1, 
+        10
     );
 INSERT INTO DonViQuyDoi (maDonVi, tenDonVi, heSoQuyDoi, maSanPham, barcode)
 VALUES ('DV001', N'TUYP', 1, 'OTC-BIA-001', '8934567890123'),
@@ -1367,7 +1424,8 @@ VALUES ('DV001', N'TUYP', 1, 'OTC-BIA-001', '8934567890123'),
     ('DV106', N'CHAI', 1, 'MY_PHAM-VIC-002', '8931111222222'),
     ('DV107', N'CHAI', 1, 'MY_PHAM-CER-003', '8931111222223'),
     ('DV108', N'TUYP', 1, 'MY_PHAM-EUC-004', '8931111222224'),
-    ('DV109', N'CHAI', 1, 'MY_PHAM-BIO-005', '8931111222225');
+    ('DV109', N'CHAI', 1, 'MY_PHAM-BIO-005', '8931111222225'),
+    ('DV110', N'TUYP', 1, 'MY_PHAM-FAR-006', '5900117095690');
 
 -- LÔ HÀNG (SỬA LẠI GIÁ NHẬP CHO CÓ LÃI VÀ KHỚP ĐƠN VỊ CƠ BẢN)
 INSERT INTO Lo (
@@ -1382,7 +1440,7 @@ VALUES (
         'LO010126001',
         'L001',
         '2028-01-01',
-        498,
+        383,
         'OTC-BIA-001',
         4980000
     ),
@@ -1406,7 +1464,7 @@ VALUES (
         'LO200326001',
         'L004',
         '2026-10-01',
-        795,
+        793,
         'OTC-ALL-006',
         397500
     ),
@@ -1841,6 +1899,14 @@ VALUES (
         500,
         'MY_PHAM-BIO-005',
         65000000
+    ),
+    (
+        'LO070526054',
+        'LN049',
+        '2028-12-31',
+        50,
+        'MY_PHAM-FAR-006',
+        12500000
     );
 -- QUÀ TẶNG 
 INSERT INTO QuaTang (maKhuyenMai, maDonVi, soLuongTang)
@@ -1994,6 +2060,36 @@ VALUES ('HDB200426001', 'DV001', 'LO010126001', 2, 0),
     ('HDB260426001', 'DV016', 'LO200326001', 10, 0),
     ('HDB300426001', 'DV015', 'LO200326001', 2, 0),
     ('HDB020526001', 'DV017', 'LO200326001', 5, 0);
+
+-- Dữ liệu hóa đơn từ tháng 5/2026 đến nay
+INSERT INTO HoaDon (maHoaDon, thoiGianTao, maNhanVien, trangThaiThanhToan, maKhachHang, maKhuyenMai, loaiHoaDon, maCa, ghiChu, maHoaDonDoiTra, maDonThuoc, phuongThucThanhToan)
+VALUES 
+    ('HDB080526001', '2026-05-08 10:00:00', 'QL001', 1, 'TV000001', NULL, N'BAN_HANG', 'CA20042601', N'', NULL, NULL, N'TIEN_MAT'),
+    ('HDB100526001', '2026-05-10 11:30:00', 'DS001', 1, 'TV000002', NULL, N'BAN_HANG', 'CA21042601', N'', NULL, NULL, N'CHUYEN_KHOAN'),
+    ('HDB150526001', '2026-05-15 14:15:00', 'QL001', 1, 'KH_LE', NULL, N'BAN_HANG', 'CA20042601', N'', NULL, NULL, N'TIEN_MAT'),
+    ('HDB200526001', '2026-05-20 09:45:00', 'DS001', 1, 'TV000003', NULL, N'BAN_HANG', 'CA21042601', N'', NULL, NULL, N'CHUYEN_KHOAN'),
+    ('HDB250526001', '2026-05-25 15:20:00', 'QL001', 1, 'TV000004', NULL, N'BAN_HANG', 'CA20042601', N'', NULL, NULL, N'TIEN_MAT'),
+    ('HDB270526001', '2026-05-27 08:30:00', 'DS001', 1, 'KH_LE', NULL, N'BAN_HANG', 'CA21042601', N'', NULL, NULL, N'TIEN_MAT');
+
+INSERT INTO ChiTietHoaDon (maHoaDon, maDonVi, soLuongBan, donGia, laQuaTangKem)
+VALUES 
+    ('HDB080526001', 'DV001', 32, 95000, 0),
+    ('HDB100526001', 'DV001', 53, 95000, 0),
+    ('HDB150526001', 'DV001', 11, 95000, 0),
+    ('HDB200526001', 'DV001', 16, 95000, 0),
+    ('HDB250526001', 'DV001', 3, 95000, 0),
+    ('HDB270526001', 'DV015', 2, 850, 0);
+
+INSERT INTO SuPhanBoLo (maHoaDon, maDonVi, maLo, soLuongPhanBo, laQuaTangKem)
+VALUES 
+    ('HDB080526001', 'DV001', 'LO010126001', 32, 0),
+    ('HDB100526001', 'DV001', 'LO010126001', 53, 0),
+    ('HDB150526001', 'DV001', 'LO010126001', 11, 0),
+    ('HDB200526001', 'DV001', 'LO010126001', 16, 0),
+    ('HDB250526001', 'DV001', 'LO010126001', 3, 0),
+    ('HDB270526001', 'DV015', 'LO200326001', 2, 0);
+
+-- Số lượng đã được trừ trực tiếp ở lệnh INSERT INTO Lo bên trên.
 GO 
     --- Trigger  -----
     CREATE TRIGGER trg_Lo_UpdateTonKho ON Lo
